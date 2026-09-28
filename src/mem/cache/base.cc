@@ -58,6 +58,7 @@
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/cache/retention/retention_manager.hh"
 #include "mem/cache/tags/compressed_tags.hh"
 #include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/cache/tags/super_blk.hh"
@@ -81,24 +82,19 @@ BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
 
 BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     : ClockedObject(p),
-      cpuSidePort(p.name + ".cpu_side_port", *this, "CpuSidePort"),
+      cpuSidePort (p.name + ".cpu_side_port", *this, "CpuSidePort"),
       memSidePort(p.name + ".mem_side_port", this, "MemSidePort"),
       accessor(*this),
       mshrQueue("MSHRs", p.mshrs, 0, p.demand_mshr_reserve, p.name),
       writeBuffer("write buffer", p.write_buffers, p.mshrs, p.name),
       tags(p.tags),
-      debugDRTMode(p.debug_drt_mode),
-      topMRU(p.top_mru),
-      refreshDirtyDaemon(p.refresh_dirty_daemon),
       compressor(p.compressor),
       partitionManager(p.partitioning_manager),
       prefetcher(p.prefetcher),
       writeAllocator(p.write_allocator),
-      refreshSetIdx(0),
-      refreshEvent([this] { processRefreshEvent(); }, name()),
       writebackClean(p.writeback_clean),
       tempBlockWriteback(nullptr),
-      writebackTempBlockAtomicEvent([this] { writebackTempBlockAtomic(); },
+      writebackTempBlockAtomicEvent([this]{ writebackTempBlockAtomic(); },
                                     name(), false,
                                     EventBase::Delayed_Writeback_Pri),
       blkSize(blk_size),
@@ -146,6 +142,9 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+
+    if (p.drt > 0)
+        retention = std::make_unique<RetentionManager>(*this, p);
 }
 
 BaseCache::~BaseCache()
@@ -156,115 +155,10 @@ BaseCache::~BaseCache()
 void
 BaseCache::startup()
 {
-    // Run parent startup before
     ClockedObject::startup();
 
-    if (topMRU > 0 || refreshDirtyDaemon) {
-        schedule(refreshEvent, clockEdge(Cycles(1)));
-    }
-}
-
-void
-BaseCache::processRefreshEvent()
-{
-    bool is_blocked = cpuSidePort.isBlocked() || blocked;
-
-    DPRINTF(Cache, "RefreshDaemon: Set %d | Blocked: %d\n",
-            refreshSetIdx, is_blocked);
-
-    // Adaptive Thresholds
-    double sweep_cycles = double(tags->getNumSets());
-    double drt_cycles   = double(tags->getDRT()) / double(clockPeriod());
-
-    double force_thresh = 0.95;
-    if (drt_cycles > 0.0) {
-        // leave a window >= sweep time, plus 2% safety margin
-        double needed = 1.0 - (sweep_cycles / drt_cycles) - 0.02;
-        force_thresh = std::min(0.95, std::max(0.50, needed));
-    }
-    double opp_thresh = std::min(0.80, force_thresh - 0.05);
-
-    // ------------------------------------------------------------------
-    if (refreshDirtyDaemon) {
-        std::vector<CacheBlk *> setBlks = tags->getSetBlks(refreshSetIdx);
-
-        for (CacheBlk *blk : setBlks) {
-            if (!(blk && blk->isValid() && tags->isForgetting()))
-                continue;
-            if (!blk->isSet(CacheBlk::DirtyBit))
-                continue;
-
-            Tick age = curTick() - blk->getLastUpdateTick();
-            Tick drt = tags->getDRT();
-
-            bool force_refresh = (age >= drt * force_thresh);
-            bool opp_refresh   = (!is_blocked && age >= drt * opp_thresh);
-
-            if (force_refresh || opp_refresh) {
-                DPRINTF(Cache, "RefreshDaemon: %s dirty block %#lx age %lu\n",
-                        force_refresh ? "FORCE" : "OPP", blk->getTag(), age);
-
-                blk->setLastUpdateTick(curTick());
-                blk->setWasOppRefreshed(true);
-
-                stats.totalRefreshes++;
-                if (force_refresh) {
-                    stats.forceRefresh++;
-                } else   {
-                    stats.oppRefresh++;   // mutually exclusive
-                }
-            }
-        }
-    }
-
-    if (topMRU > 0) {
-        std::vector<CacheBlk *> topMRUBlks =
-            tags->getNTopMRU(refreshSetIdx, topMRU);
-        int rank_tracker = 0;
-
-        for (CacheBlk *mru : topMRUBlks) {
-            if (!(mru && mru->isValid() && tags->isForgetting())) {
-                rank_tracker++;
-                continue;
-            }
-
-            // EXPLICIT DOUBLE-COUNTING CHECK
-            // If this block was just refreshed in the Dirty loop above,
-            // its update tick is exactly curTick(). Skip it.
-            if (mru->getLastUpdateTick() == curTick()) {
-                rank_tracker++;
-                continue;
-            }
-
-            Tick age = curTick() - mru->getLastUpdateTick();
-            Tick drt = tags->getDRT();
-
-            if (!tags->isExpired(mru)) {
-                bool force_refresh = (age >= drt * force_thresh);
-                bool opp_refresh   = (!is_blocked && age >= drt * opp_thresh);
-
-                if (force_refresh || opp_refresh) {
-                    DPRINTF(Cache, "RefreshDaemon: %s MRU rank %d block %#lx\n",
-                            force_refresh ? "FORCE" : "OPP",
-                            rank_tracker, mru->getTag());
-
-                    mru->setLastUpdateTick(curTick());
-                    mru->setWasOppRefreshed(true);
-
-                    stats.totalRefreshes++;
-                    if (force_refresh) {
-                        stats.forceRefresh++;
-                    } else {
-                        stats.oppRefresh++;
-                    }
-                }
-            }
-            rank_tracker++;
-        }
-    }
-
-    refreshSetIdx = (refreshSetIdx + 1) % tags->getNumSets();
-    schedule(refreshEvent, clockEdge(Cycles(1)));
+    if (retention)
+        retention->startup();
 }
 
 void
@@ -953,10 +847,6 @@ BaseCache::updateBlockData(CacheBlk *blk, const PacketPtr cpkt,
     // Actually perform the data update
     if (cpkt) {
         cpkt->writeDataToBlock(blk->data, blkSize);
-        // If cache is forgetting, update lastUpdateTick to keep track on drt
-        if (tags->isForgetting()) {
-            // blk->setLastUpdateTick(curTick());
-        }
     }
 
     if (ppDataUpdate->hasListeners()) {
@@ -1020,10 +910,6 @@ BaseCache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
             data_update.newData = std::vector<uint64_t>(blk->data,
                 blk->data + (blkSize / sizeof(uint64_t)));
             ppDataUpdate->notify(data_update);
-        }
-
-        if (tags->isForgetting()) {
-            // blk->setLastUpdateTick(curTick());
         }
     }
 }
@@ -1307,11 +1193,6 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
             // execute AMO operation
             (*(pkt->getAtomicOp()))(blk_data);
 
-            // refresh DRT because data was written in place
-            if (tags->isForgetting()) {
-                // blk->setLastUpdateTick(curTick());
-            }
-
             // Inform of this block's data contents update
             if (ppDataUpdate->hasListeners()) {
                 data_update.newData = std::vector<uint64_t>(blk->data,
@@ -1322,7 +1203,6 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 
             // set block status to dirty
             blk->setCoherenceBits(CacheBlk::DirtyBit);
-
         } else {
             cmpAndSwap(blk, pkt);
         }
@@ -1341,9 +1221,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         // supply data to any snoops that have appended themselves to
         // this cache before knowing the store will fail.
         blk->setCoherenceBits(CacheBlk::DirtyBit);
-
         DPRINTF(CacheVerbose, "%s for %s (write)\n", __func__, pkt->print());
-
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
             blk->trackLoadLocked(pkt);
@@ -1432,92 +1310,16 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 "Should never see a write in a read-only cache %s\n",
                 name());
 
+    // Access block in the tags
     Cycles tag_latency(0);
-
-    // Set stats and hanldler status
-    bool expired_mode_1 = false;
-
-    CacheBlk* candidate = nullptr;
-
-    if (tags->isForgetting() && pkt->isRead()) {
-
-        if (debugDRTMode != 0 && debugDRTMode != 1) {
-            fatal("Unknown debug DRT mode");
-        }
-
-        // Finds the block
-        Addr blk_addr = pkt->getBlockAddr(blkSize);
-        candidate = tags->findBlock({blk_addr, pkt->isSecure()});
-
-        if (candidate && tags->isExpired(candidate)) {
-            // Gaurd if the block waits in mshr (O3)
-            if (mshrQueue.findMatch(blk_addr, pkt->isSecure()) ||
-                writeBuffer.findMatch(blk_addr, pkt->isSecure())) {
-                expired_mode_1 = false;
-            } else {
-                stats.retentionMisses++;
-
-                /* TODO: implement blk->getSet()
-                if (candidate == tags->getMRU(candidate->getSet())) {
-                    tags->stats.expiredMru++;
-                } else {
-                    tags->stats.expiredDeadBlk++;
-                }
-                */
-
-                if (candidate -> isSet(CacheBlk::DirtyBit)) {
-                    stats.dirtyRetentionMisses++;
-                }
-
-                Tick age = curTick() - candidate->getLastUpdateTick();
-                Tick drt = tags->getDRT();
-
-                // If it died recently: between 100% and 120% of DRT
-                if (drt > 0 && age >= drt && age < (drt * 1.2)) {
-                    stats.expiredHitPot++;
-                }
-
-                // MODE 1
-                if (debugDRTMode == 1) {
-                    expired_mode_1 = true; // Flag to not override
-                }
-            }
-        }
-    }
-
-    // Handles block as for expiration policy
-    if (expired_mode_1 && candidate) {
-        // Perform writeback -> invalidates -> continues as miss
-
-        if (candidate -> isSet(CacheBlk::DirtyBit)) {
-            // writeback
-            PacketPtr wb_packet = writebackBlk(candidate);
-            if (wb_packet) {
-                writebacks.push_back(wb_packet);
-            }
-        }
-
-        // invalidate
-        invalidateBlock(candidate);
-
-        // continue as a miss
+    if (retention && retention->expireOnAccess(pkt, writebacks)) {
+        // The block expired and was invalidated: continue as a miss
         blk = nullptr;
-    } else { // continue with block
+    } else {
         blk = tags->accessBlock(pkt, tag_latency);
-
-        if (blk && tags->isForgetting()) {
-            if (blk->getWasOppRefreshed()) {
-                stats.refreshedBlockUtility++;
-                blk->setWasOppRefreshed(false);
-            }
-        }
-
-        // Refresh on each non-expired access
-        if (blk && tags->isForgetting()) {
-            //blk->setLastUpdateTick(curTick());
-        }
+        if (retention && blk)
+            retention->onAccessHit(blk);
     }
-
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
@@ -1646,7 +1448,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
-
         incHitCount(pkt);
 
         // When the packet metadata arrives, the tag lookup will be done while
@@ -1753,7 +1554,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
 
         satisfyRequest(pkt, blk);
-
         maintainClusivity(pkt->fromCache(), blk);
 
         return true;
@@ -1761,6 +1561,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     // Can't satisfy access normally... either no block (blk == nullptr)
     // or have block but need writable
+
     incMissCount(pkt);
 
     lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
@@ -1875,7 +1676,6 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         updateBlockData(blk, pkt, has_old_data);
     }
-
     // The block will be ready when the payload arrives and the fill is done
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
                       pkt->payloadDelay);
@@ -1933,10 +1733,8 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Insert new block at victimized entry
     tags->insertBlock(pkt, victim);
 
-    // Start DRT timer for allocated block
-    if (tags->isForgetting()) {
-        victim->setLastUpdateTick(curTick());
-    }
+    if (retention)
+        retention->onAllocate(victim);
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.
@@ -2485,107 +2283,83 @@ BaseCache::CacheCmdStats::regStatsFromParent()
 }
 
 BaseCache::CacheStats::CacheStats(BaseCache &c)
-    : statistics::Group(&c),
-      cache(c),
+    : statistics::Group(&c), cache(c),
 
-      ADD_STAT(demandHits, statistics::units::Count::get(),
-               "number of demand (read+write) hits"),
-      ADD_STAT(overallHits, statistics::units::Count::get(),
-               "number of overall hits"),
-      ADD_STAT(demandHitLatency, statistics::units::Tick::get(),
-               "number of demand (read+write) hit ticks"),
-      ADD_STAT(overallHitLatency, statistics::units::Tick::get(),
-               "number of overall hit ticks"),
-      ADD_STAT(demandMisses, statistics::units::Count::get(),
-               "number of demand (read+write) misses"),
-      ADD_STAT(overallMisses, statistics::units::Count::get(),
-               "number of overall misses"),
-      ADD_STAT(retentionMisses, statistics::units::Count::get(),
-               "number of retention misses"),
-      ADD_STAT(dirtyRetentionMisses, statistics::units::Count::get(),
-               "number of expired dirty blocks"),
-      ADD_STAT(demandMissLatency, statistics::units::Tick::get(),
-               "number of demand (read+write) miss ticks"),
-      ADD_STAT(overallMissLatency, statistics::units::Tick::get(),
-               "number of overall miss ticks"),
-      ADD_STAT(demandAccesses, statistics::units::Count::get(),
-               "number of demand (read+write) accesses"),
-      ADD_STAT(overallAccesses, statistics::units::Count::get(),
-               "number of overall (read+write) accesses"),
-      ADD_STAT(demandMissRate, statistics::units::Ratio::get(),
-               "miss rate for demand accesses"),
-      ADD_STAT(overallMissRate, statistics::units::Ratio::get(),
-               "miss rate for overall accesses"),
-      ADD_STAT(demandAvgMissLatency,
-               statistics::units::Rate<statistics::units::Tick,
-                                       statistics::units::Count>::get(),
-               "average overall miss latency in ticks"),
-      ADD_STAT(overallAvgMissLatency,
-               statistics::units::Rate<statistics::units::Tick,
-                                       statistics::units::Count>::get(),
-               "average overall miss latency"),
-      ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
-               "number of cycles access was blocked"),
-      ADD_STAT(blockedCauses, statistics::units::Count::get(),
-               "number of times access was blocked"),
-      ADD_STAT(avgBlocked,
-               statistics::units::Rate<statistics::units::Cycle,
-                                       statistics::units::Count>::get(),
-               "average number of cycles each access was blocked"),
-      ADD_STAT(writebacks, statistics::units::Count::get(),
-               "number of writebacks"),
-      ADD_STAT(demandMshrHits, statistics::units::Count::get(),
-               "number of demand (read+write) MSHR hits"),
-      ADD_STAT(overallMshrHits, statistics::units::Count::get(),
-               "number of overall MSHR hits"),
-      ADD_STAT(demandMshrMisses, statistics::units::Count::get(),
-               "number of demand (read+write) MSHR misses"),
-      ADD_STAT(overallMshrMisses, statistics::units::Count::get(),
-               "number of overall MSHR misses"),
-      ADD_STAT(overallMshrUncacheable, statistics::units::Count::get(),
-               "number of overall MSHR uncacheable misses"),
-      ADD_STAT(demandMshrMissLatency, statistics::units::Tick::get(),
-               "number of demand (read+write) MSHR miss ticks"),
-      ADD_STAT(overallMshrMissLatency, statistics::units::Tick::get(),
-               "number of overall MSHR miss ticks"),
-      ADD_STAT(overallMshrUncacheableLatency, statistics::units::Tick::get(),
-               "number of overall MSHR uncacheable ticks"),
-      ADD_STAT(demandMshrMissRate, statistics::units::Ratio::get(),
-               "mshr miss ratio for demand accesses"),
-      ADD_STAT(overallMshrMissRate, statistics::units::Ratio::get(),
-               "mshr miss ratio for overall accesses"),
-      ADD_STAT(demandAvgMshrMissLatency,
-               statistics::units::Rate<statistics::units::Tick,
-                                       statistics::units::Count>::get(),
-               "average overall mshr miss latency"),
-      ADD_STAT(overallAvgMshrMissLatency,
-               statistics::units::Rate<statistics::units::Tick,
-                                       statistics::units::Count>::get(),
-               "average overall mshr miss latency"),
-      ADD_STAT(overallAvgMshrUncacheableLatency,
-               statistics::units::Rate<statistics::units::Tick,
-                                       statistics::units::Count>::get(),
-               "average overall mshr uncacheable latency"),
-      ADD_STAT(replacements, statistics::units::Count::get(),
-               "number of replacements"),
-      ADD_STAT(dataExpansions, statistics::units::Count::get(),
-               "number of data expansions"),
-      ADD_STAT(dataContractions, statistics::units::Count::get(),
-               "number of data contractions"),
-
-      ADD_STAT(oppRefresh, statistics::units::Count::get(),
-               "number of refreshes in 80% window in idle cycle"),
-      ADD_STAT(forceRefresh, statistics::units::Count::get(),
-               "number of forced refreshes in 95% window"),
-      ADD_STAT(totalRefreshes, statistics::units::Count::get(),
-               "number of total refreshes"),
-
-      ADD_STAT(expiredHitPot, statistics::units::Count::get(),
-               "number of misses due to a block being recently expired"),
-      ADD_STAT(refreshedBlockUtility, statistics::units::Count::get(),
-               "number of hits on blocks that could've been refreshed"),
-
-      cmd(MemCmd::NUM_MEM_CMDS)
+    ADD_STAT(demandHits, statistics::units::Count::get(),
+             "number of demand (read+write) hits"),
+    ADD_STAT(overallHits, statistics::units::Count::get(),
+             "number of overall hits"),
+    ADD_STAT(demandHitLatency, statistics::units::Tick::get(),
+             "number of demand (read+write) hit ticks"),
+    ADD_STAT(overallHitLatency, statistics::units::Tick::get(),
+            "number of overall hit ticks"),
+    ADD_STAT(demandMisses, statistics::units::Count::get(),
+             "number of demand (read+write) misses"),
+    ADD_STAT(overallMisses, statistics::units::Count::get(),
+             "number of overall misses"),
+    ADD_STAT(demandMissLatency, statistics::units::Tick::get(),
+             "number of demand (read+write) miss ticks"),
+    ADD_STAT(overallMissLatency, statistics::units::Tick::get(),
+             "number of overall miss ticks"),
+    ADD_STAT(demandAccesses, statistics::units::Count::get(),
+             "number of demand (read+write) accesses"),
+    ADD_STAT(overallAccesses, statistics::units::Count::get(),
+             "number of overall (read+write) accesses"),
+    ADD_STAT(demandMissRate, statistics::units::Ratio::get(),
+             "miss rate for demand accesses"),
+    ADD_STAT(overallMissRate, statistics::units::Ratio::get(),
+             "miss rate for overall accesses"),
+    ADD_STAT(demandAvgMissLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "average overall miss latency in ticks"),
+    ADD_STAT(overallAvgMissLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "average overall miss latency"),
+    ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
+            "number of cycles access was blocked"),
+    ADD_STAT(blockedCauses, statistics::units::Count::get(),
+            "number of times access was blocked"),
+    ADD_STAT(avgBlocked, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
+             "average number of cycles each access was blocked"),
+    ADD_STAT(writebacks, statistics::units::Count::get(),
+             "number of writebacks"),
+    ADD_STAT(demandMshrHits, statistics::units::Count::get(),
+             "number of demand (read+write) MSHR hits"),
+    ADD_STAT(overallMshrHits, statistics::units::Count::get(),
+             "number of overall MSHR hits"),
+    ADD_STAT(demandMshrMisses, statistics::units::Count::get(),
+             "number of demand (read+write) MSHR misses"),
+    ADD_STAT(overallMshrMisses, statistics::units::Count::get(),
+            "number of overall MSHR misses"),
+    ADD_STAT(overallMshrUncacheable, statistics::units::Count::get(),
+             "number of overall MSHR uncacheable misses"),
+    ADD_STAT(demandMshrMissLatency, statistics::units::Tick::get(),
+             "number of demand (read+write) MSHR miss ticks"),
+    ADD_STAT(overallMshrMissLatency, statistics::units::Tick::get(),
+             "number of overall MSHR miss ticks"),
+    ADD_STAT(overallMshrUncacheableLatency, statistics::units::Tick::get(),
+             "number of overall MSHR uncacheable ticks"),
+    ADD_STAT(demandMshrMissRate, statistics::units::Ratio::get(),
+             "mshr miss ratio for demand accesses"),
+    ADD_STAT(overallMshrMissRate, statistics::units::Ratio::get(),
+             "mshr miss ratio for overall accesses"),
+    ADD_STAT(demandAvgMshrMissLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "average overall mshr miss latency"),
+    ADD_STAT(overallAvgMshrMissLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "average overall mshr miss latency"),
+    ADD_STAT(overallAvgMshrUncacheableLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "average overall mshr uncacheable latency"),
+    ADD_STAT(replacements, statistics::units::Count::get(),
+             "number of replacements"),
+    ADD_STAT(dataExpansions, statistics::units::Count::get(),
+             "number of data expansions"),
+    ADD_STAT(dataContractions, statistics::units::Count::get(),
+             "number of data contractions"),
+    cmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
         cmd[idx].reset(new CacheCmdStats(c, MemCmd(idx).toString()));
@@ -2640,9 +2414,6 @@ BaseCache::CacheStats::regStats()
     for (int i = 0; i < max_requestors; i++) {
         overallMisses.subname(i, system->getRequestorName(i));
     }
-
-    retentionMisses.flags(total);
-    dirtyRetentionMisses.flags(total);
 
     demandMissLatency.flags(total | nozero | nonan);
     demandMissLatency = SUM_DEMAND(missLatency);
@@ -2820,13 +2591,6 @@ BaseCache::CacheStats::regStats()
 
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
-
-    oppRefresh.flags(total);
-    forceRefresh.flags(total);
-    totalRefreshes.flags(total);
-
-    expiredHitPot.flags(total);
-    refreshedBlockUtility.flags(total);
 }
 
 void

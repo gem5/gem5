@@ -178,10 +178,6 @@ class BaseCache(ClockedObject):
     # data cache.
     write_allocator = Param.WriteAllocator(NULL, "Write allocator")
 
-    debug_drt_mode = Param.Int(
-        0, "Debug DRT mode: 0=count only, 1=WB on every access"
-    )
-
 
 class Cache(BaseCache):
     type = "Cache"

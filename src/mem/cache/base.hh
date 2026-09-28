@@ -49,7 +49,6 @@
 #include <cassert>
 #include <cstdint>
 #include <string>
-#include <vector>
 
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
@@ -70,7 +69,6 @@
 #include "mem/request.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/clocked_object.hh"
-#include "sim/cur_tick.hh"
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 #include "sim/serialize.hh"
@@ -96,6 +94,7 @@ class MSHR;
 class MSHRQueue;
 class RequestPort;
 class QueueEntry;
+class RetentionManager;
 class WriteQueueEntry;
 struct BaseCacheParams;
 
@@ -358,14 +357,12 @@ class BaseCache : public ClockedObject
     /** Tag and data Storage */
     BaseTags *tags;
 
-    /** Flag for debug drt mode */
-    int debugDRTMode;
-
-    /** Number of top mru block to actively refresh */
-    unsigned topMRU;
-
-    /** Refresh dirty blocks using a daemon process */
-    bool refreshDirtyDaemon;
+    /**
+     * Selective Retention Cache logic. Only exists when drt > 0; with
+     * drt == 0 the cache is stock gem5.
+     */
+    friend class RetentionManager;
+    std::unique_ptr<RetentionManager> retention;
 
     /** Compression method being used. */
     compression::Base* compressor;
@@ -422,10 +419,7 @@ class BaseCache : public ClockedObject
      */
     std::unique_ptr<Packet> pendingDelete;
 
-
-    /**
-     * Startup function to get daemon process running
-     */
+    /** Starts the retention refresh daemon, if any. */
     void startup() override;
 
     /**
@@ -443,13 +437,6 @@ class BaseCache : public ClockedObject
     }
 
     void markInService(WriteQueueEntry *entry);
-
-    /**
-     * A daemon process that refreshes MRU block
-     */
-    int refreshSetIdx;
-    EventFunctionWrapper refreshEvent;
-    void processRefreshEvent();
 
     /**
      * Determine whether we should allocate on a fill or not. If this
@@ -1079,9 +1066,8 @@ class BaseCache : public ClockedObject
 
         /** Number of hits for demand accesses. */
         statistics::Formula demandHits;
-        /** Number of hits for all accesses. */
+        /** Number of hit for all accesses. */
         statistics::Formula overallHits;
-
         /** Total number of ticks spent waiting for demand hits. */
         statistics::Formula demandHitLatency;
         /** Total number of ticks spent waiting for all hits. */
@@ -1091,11 +1077,6 @@ class BaseCache : public ClockedObject
         statistics::Formula demandMisses;
         /** Number of misses for all accesses. */
         statistics::Formula overallMisses;
-
-        /** Number of retention misses */
-        statistics::Scalar retentionMisses;
-        /** Number of expired dirty blocks */
-        statistics::Scalar dirtyRetentionMisses;
 
         /** Total number of ticks spent waiting for demand misses. */
         statistics::Formula demandMissLatency;
@@ -1173,16 +1154,6 @@ class BaseCache : public ClockedObject
          * factor improved).
          */
         statistics::Scalar dataContractions;
-
-        /** Total successful refreshes performed during idle cycles */
-        statistics::Scalar oppRefresh;
-        statistics::Scalar forceRefresh;
-        statistics::Scalar totalRefreshes;
-
-        /** Number of misses due to a block being recently expired */
-        statistics::Scalar expiredHitPot;
-        /** Blocks used that were recently refreshed */
-        statistics::Scalar refreshedBlockUtility;
 
         /** Per-command statistics */
         std::vector<std::unique_ptr<CacheCmdStats>> cmd;

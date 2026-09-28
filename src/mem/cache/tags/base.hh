@@ -159,12 +159,6 @@ class BaseTags : public ClockedObject
         statistics::Scalar tagAccesses;
         /** Number of data blocks consulted over all accesses. */
         statistics::Scalar dataAccesses;
-
-        /** Number of expired MRU blocks */
-        statistics::Scalar expiredMru;
-        /** Number of expired dead blocks */
-        statistics::Scalar expiredDeadBlk;
-
     } stats;
 
   public:
@@ -193,11 +187,6 @@ class BaseTags : public ClockedObject
      * Computes stats just prior to dump event
      */
     void computeStats();
-
-    /**
-     * Gets the number of blocks in system.
-     */
-    virtual unsigned getNumBlocks() const;
 
     /**
      * Print all tags used
@@ -391,18 +380,6 @@ class BaseTags : public ClockedObject
      * @param visitor Visitor to call on each block.
      */
     virtual bool anyBlk(std::function<bool(CacheBlk &)> visitor) = 0;
-
-    /**
-     * Returns the MRU block inside a set
-     *
-     * @param set Set idx to get the MRU
-     * @return pointer for the blk
-     */
-    virtual CacheBlk *
-    getMRU(int set)
-    {
-        return nullptr;
-    }
 
     virtual std::vector<CacheBlk*> getNTopMRU(int set, int n)
     {

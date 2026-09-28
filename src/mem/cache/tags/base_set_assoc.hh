@@ -138,7 +138,7 @@ class BaseSetAssoc : public BaseTags
     bool
     isExpired(CacheBlk *blk) const override
     {
-        return isForgetting() && curTick() >= blk->getLastUpdateTick() + drt;
+        return isForgetting() && curTick() >= blk->getFullChargeTick() + drt;
     }
 
     /**
@@ -289,14 +289,6 @@ class BaseSetAssoc : public BaseTags
         }
         return false;
     }
-
-    /**
-     * Get the MRU block of a given set
-     *
-     * @param set Set idx to get the MRU
-     * @return pointer for the blk
-     */
-    CacheBlk* getMRU(int set) override;
 
     /**
      * Get the N top MRU blocks of a given set

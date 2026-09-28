@@ -152,13 +152,14 @@ class CacheBlk : public TaggedEntry
      * on the block since the last store. */
     std::list<Lock> lockList;
 
-    /** Last time an update was performed to keep track of retention. */
-    Tick lastUpdatedTick;
+    /**
+     * Retention (SRC) state, only used by RetentionManager (drt > 0).
+     * fullChargeTick is the last time the whole line was written (fill or
+     * refresh); the block expires drt ticks after it.
+     */
+    Tick fullChargeTick;
 
-    /** Debug flag - mark if the block can forget */
-    bool isForgettingBlk;
-
-    /** Mark if a block was opp refreshed to track */
+    /** The retention daemon refreshed this block since its last hit. */
     bool wasOppRefreshed;
 
   public:
@@ -199,8 +200,7 @@ class CacheBlk : public TaggedEntry
         setSrcRequestorId(other.getSrcRequestorId());
         std::swap(lockList, other.lockList);
 
-        setLastUpdateTick(other.getLastUpdateTick());
-        setIsForgettingBlk(other.getIsForgettingBlk());
+        setFullChargeTick(other.getFullChargeTick());
         setWasOppRefreshed(other.getWasOppRefreshed());
 
         other.invalidate();
@@ -210,27 +210,15 @@ class CacheBlk : public TaggedEntry
     virtual ~CacheBlk() {};
 
     Tick
-    getLastUpdateTick() const
+    getFullChargeTick() const
     {
-        return lastUpdatedTick;
+        return fullChargeTick;
     }
 
     void
-    setLastUpdateTick(Tick const tick)
+    setFullChargeTick(Tick const tick)
     {
-        lastUpdatedTick = tick;
-    }
-
-    bool
-    getIsForgettingBlk() const
-    {
-        return isForgettingBlk;
-    }
-
-    void
-    setIsForgettingBlk(bool status)
-    {
-        isForgettingBlk = status;
+        fullChargeTick = tick;
     }
 
     void
@@ -261,8 +249,7 @@ class CacheBlk : public TaggedEntry
         setRefCount(0);
         setSrcRequestorId(Request::invldRequestorId);
         lockList.clear();
-        setLastUpdateTick(MaxTick);
-        setIsForgettingBlk(true); // default the block is forgetting
+        setFullChargeTick(MaxTick);
         setWasOppRefreshed(false);
     }
 
