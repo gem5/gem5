@@ -51,10 +51,6 @@
 #include <string>
 #include <vector>
 
-// For Shadow FA cache to keep track on conflicts.
-#include <list>
-#include <unordered_map>
-
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
 #include "base/statistics.hh"
@@ -371,10 +367,6 @@ class BaseCache : public ClockedObject
     /** Refresh dirty blocks using a daemon process */
     bool refreshDirtyDaemon;
 
-    /** Shadow FA LRU cache to keep track on conflicts */
-    std::list<Addr> shadowLRU;
-    std::unordered_map<Addr, std::list<Addr>::iterator> shadowMap;
-
     /** Compression method being used. */
     compression::Base* compressor;
 
@@ -458,13 +450,6 @@ class BaseCache : public ClockedObject
     int refreshSetIdx;
     EventFunctionWrapper refreshEvent;
     void processRefreshEvent();
-
-    /**
-     * Makes a "shadow access" -
-     * accessing the shadow FA cache and compare evictions to FA lru cache.
-     * That way we can determine if a miss is capacity or conflict.
-     */
-    bool shadowAccess(Addr blk_addr);
 
     /**
      * Determine whether we should allocate on a fill or not. If this
@@ -1096,10 +1081,6 @@ class BaseCache : public ClockedObject
         statistics::Formula demandHits;
         /** Number of hits for all accesses. */
         statistics::Formula overallHits;
-        /** Number of hits for dirty reads. */
-        statistics::Scalar dirtyReadHits;
-        /** Number of hits for dirty writes. */
-        statistics::Scalar dirtyWriteHits;
 
         /** Total number of ticks spent waiting for demand hits. */
         statistics::Formula demandHitLatency;
@@ -1110,9 +1091,6 @@ class BaseCache : public ClockedObject
         statistics::Formula demandMisses;
         /** Number of misses for all accesses. */
         statistics::Formula overallMisses;
-
-        /** Number of conflict misses */
-        statistics::Scalar conflictMisses;
 
         /** Number of retention misses */
         statistics::Scalar retentionMisses;
@@ -1330,45 +1308,21 @@ class BaseCache : public ClockedObject
         return mshrQueue.findMatch(addr, is_secure);
     }
 
-    void incMissCount(PacketPtr pkt, CacheBlk* blk)
+    void incMissCount(PacketPtr pkt)
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
         pkt->req->incAccessDepth();
-
-        // Track conflicts using teh FA shadow cache
-        if (pkt->isRead() || pkt->isWrite()) {
-            // conflict miss = miss in real cache but hit in shadow cache
-            if (shadowAccess(pkt->getBlockAddr(blkSize))) {
-                stats.conflictMisses++;
-            }
-        }
-
         if (missCount) {
             --missCount;
             if (missCount == 0)
                 exitSimLoop("A cache reached the maximum miss count");
         }
     }
-    void incHitCount(PacketPtr pkt, CacheBlk *blk)
+    void incHitCount(PacketPtr pkt)
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
-
-        // This is for the total amount of these stats, later make it for each core
-        if (blk && blk->isSet(CacheBlk::DirtyBit)) {
-            if (pkt->isRead()) {
-                stats.dirtyReadHits++;
-            } else if (pkt->isWrite()) {
-                stats.dirtyWriteHits++;
-            }
-        }
-
-        // keep shadow LRU updated
-        if (pkt->isRead() || pkt->isWrite()) {
-            shadowAccess(pkt->getBlockAddr(blkSize));
-        }
-
     }
 
     /**

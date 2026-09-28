@@ -210,7 +210,7 @@ BaseCache::processRefreshEvent()
                 stats.totalRefreshes++;
                 if (force_refresh) {
                     stats.forceRefresh++;
-                } else   {             
+                } else   {
                     stats.oppRefresh++;   // mutually exclusive
                 }
             }
@@ -229,13 +229,13 @@ BaseCache::processRefreshEvent()
             }
 
             // EXPLICIT DOUBLE-COUNTING CHECK
-            // If this block was just refreshed in the Dirty loop above, 
+            // If this block was just refreshed in the Dirty loop above,
             // its update tick is exactly curTick(). Skip it.
             if (mru->getLastUpdateTick() == curTick()) {
                 rank_tracker++;
                 continue;
             }
-            
+
             Tick age = curTick() - mru->getLastUpdateTick();
             Tick drt = tags->getDRT();
 
@@ -1612,7 +1612,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             blk = allocateBlock(pkt, writebacks);
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
-                incMissCount(pkt, blk);
+                incMissCount(pkt);
                 return false;
             }
 
@@ -1633,9 +1633,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // and leave it as is for a clean writeback
         if (pkt->cmd == MemCmd::WritebackDirty) {
             // TODO: the coherent cache can assert that the dirty bit is set
-            if (!pkt->writeThrough()) {
-                blk->setCoherenceBits(CacheBlk::DirtyBit);
-            }
+            blk->setCoherenceBits(CacheBlk::DirtyBit);
         }
         // if the packet does not have sharers, it is passing
         // writable, and we got the writeback in Modified or Exclusive
@@ -1649,7 +1647,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
 
-        incHitCount(pkt, blk);
+        incHitCount(pkt);
 
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
@@ -1693,7 +1691,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 if (!blk) {
                     // no replaceable block available: give up, fwd to
                     // next level.
-                    incMissCount(pkt, blk);
+                    incMissCount(pkt);
                     return false;
                 }
 
@@ -1716,15 +1714,16 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // cache, we need to update the data and the block flags
         assert(blk);
         // TODO: the coherent cache can assert that the dirty bit is set
-        blk->setCoherenceBits(CacheBlk::DirtyBit);
-
+        if (!pkt->writeThrough()) {
+            blk->setCoherenceBits(CacheBlk::DirtyBit);
+        }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
 
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
 
-        incHitCount(pkt, blk);
+        incHitCount(pkt);
 
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
@@ -1734,9 +1733,11 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         // If this a write-through packet it will be sent to cache below
         return !pkt->writeThrough();
-    } else if (blk &&
-               (pkt->needsWritable() ? blk->isSet(CacheBlk::WritableBit)
-                                     : blk->isSet(CacheBlk::ReadableBit))) {
+    } else if (blk && (pkt->needsWritable() ?
+            blk->isSet(CacheBlk::WritableBit) :
+            blk->isSet(CacheBlk::ReadableBit))) {
+        // OK to satisfy access
+        incHitCount(pkt);
 
         // Calculate access latency based on the need to access the data array
         if (pkt->isRead()) {
@@ -1755,15 +1756,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         maintainClusivity(pkt->fromCache(), blk);
 
-        // OK to satisfy access
-        incHitCount(pkt, blk);
-
         return true;
     }
 
     // Can't satisfy access normally... either no block (blk == nullptr)
     // or have block but need writable
-    incMissCount(pkt, blk);
+    incMissCount(pkt);
 
     lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
@@ -1877,17 +1875,6 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         updateBlockData(blk, pkt, has_old_data);
     }
-
-    // TESTING PARTIAL FORGGETING BLOCKS - REMOVE
-    if (blk && pkt->req) {
-        Addr va = pkt->req->getVaddr();
-        bool inTestRegion = (va >= 0x4abbc0 && va < 0x4abc00);
-
-        if (inTestRegion) {
-            blk->setIsForgettingBlk(true);
-        }
-    }
-    // UP HERE REMOVE
 
     // The block will be ready when the payload arrives and the fill is done
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
@@ -2505,10 +2492,6 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
                "number of demand (read+write) hits"),
       ADD_STAT(overallHits, statistics::units::Count::get(),
                "number of overall hits"),
-      ADD_STAT(dirtyReadHits, statistics::units::Count::get(),
-                "number of dirty read hits"),
-      ADD_STAT(dirtyWriteHits, statistics::units::Count::get(),
-                "number of dirty write hits"),
       ADD_STAT(demandHitLatency, statistics::units::Tick::get(),
                "number of demand (read+write) hit ticks"),
       ADD_STAT(overallHitLatency, statistics::units::Tick::get(),
@@ -2517,10 +2500,6 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
                "number of demand (read+write) misses"),
       ADD_STAT(overallMisses, statistics::units::Count::get(),
                "number of overall misses"),
-      /*
-      ADD_STAT(conflictMisses, statistics::units::Count::get(),
-               "number of conflict misses"),
-        */
       ADD_STAT(retentionMisses, statistics::units::Count::get(),
                "number of retention misses"),
       ADD_STAT(dirtyRetentionMisses, statistics::units::Count::get(),
@@ -2644,9 +2623,6 @@ BaseCache::CacheStats::regStats()
         demandHits.subname(i, system->getRequestorName(i));
     }
 
-    dirtyReadHits.flags(total);
-    dirtyWriteHits.flags(total);
-
     overallHits.flags(total);
     overallHits = demandHits + SUM_NON_DEMAND(hits);
     for (int i = 0; i < max_requestors; i++) {
@@ -2664,8 +2640,6 @@ BaseCache::CacheStats::regStats()
     for (int i = 0; i < max_requestors; i++) {
         overallMisses.subname(i, system->getRequestorName(i));
     }
-
-    conflictMisses.flags(total);
 
     retentionMisses.flags(total);
     dirtyRetentionMisses.flags(total);
@@ -3081,37 +3055,6 @@ WriteAllocator::updateMode(Addr write_addr, unsigned write_size,
         resetDelay(blk_addr);
     }
     nextAddr = write_addr + write_size;
-}
-
-bool
-BaseCache::shadowAccess(Addr blk_addr)
-{
-    bool is_hit = false;
-
-    // Chek if it is already in use
-    auto it = shadowMap.find(blk_addr);
-
-    if (it != shadowMap.end()) {
-        // hit - MRU remove and later will be added as head
-        shadowLRU.erase(it->second);
-        is_hit = true;
-    } else {
-        // miss - check if max capacity
-        if (shadowLRU.size() >= tags->getNumBlocks()) {
-            // evict LRU - tail of list
-            Addr lru_addr = shadowLRU.back();
-            shadowMap.erase(lru_addr);
-            shadowLRU.pop_back();
-        }
-    }
-
-    // make current addr MRU - head of list
-    shadowLRU.push_front(blk_addr);
-
-    // update map
-    shadowMap[blk_addr] = shadowLRU.begin();
-
-    return is_hit;
 }
 
 } // namespace gem5
