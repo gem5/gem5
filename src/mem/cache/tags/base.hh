@@ -395,6 +395,14 @@ class BaseTags : public ClockedObject
         return 1;
     }
 
+    /**
+     * Return the set an address maps to
+     */
+    virtual unsigned getSetIndex(const CacheBlk::KeyType &key) const
+    {
+        return 0;
+    }
+
   private:
     /**
      * Update the reference stats using data from the input block

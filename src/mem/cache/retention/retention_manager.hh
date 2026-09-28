@@ -9,14 +9,25 @@
  * instance exists, every hook in BaseCache is skipped, and the cache
  * behaves exactly like stock gem5.
  *
+ * Data-array banks. The data array has B banks (refresh_banks); set s
+ * lives in bank s mod B. A refresh occupies only its bank, a hit waits
+ * only for its own bank, and banks refresh in parallel. One daemon (a
+ * single scanner, as with B = 1) visits the sets in order and hands
+ * each set's refreshes to that set's bank; it waits only when the bank
+ * of the next set is still busy. B = 1 is a single unbanked array.
+ *
  * Retention guarantee. The refresh daemon visits one set per step; a
  * step scans the set's tags (refresh_set_scan_cycles) and refreshes the
- * chosen blocks one after the other, each occupying the data array for
- * refresh_line_cycles. So the daemon comes back to a set within
+ * chosen blocks one after the other in the set's bank, each occupying
+ * that bank for refresh_line_cycles. Take rounds of B consecutive sets:
+ * a round scans B sets and waits only for each bank's refreshes from the
+ * previous round, at most k_max * line. So the daemon comes back to a
+ * set within
  *
- *   T_sweep = numSets * (scan + k_max * line) cycles,
+ *   T_sweep = ceil(numSets / B) * (B * scan + k_max * line) cycles,
  *
- * k_max being the most blocks a step can refresh. The daemon therefore
+ * which is numSets * (scan + k_max * line) for B = 1, k_max being the
+ * most blocks a step can refresh. The daemon therefore
  * force-refreshes a block whose remaining life is below
  *
  *   T_guard = T_sweep + line + margin * DRT,
@@ -112,8 +123,11 @@ class RetentionManager
     /** Recharge blk with a full-line read and write. */
     void refresh(CacheBlk *blk, bool force);
 
-    /** Occupy the data array with one full-line refresh. */
-    void occupyDataArray();
+    /** Data-array bank of a set. */
+    unsigned bankOf(unsigned set) const { return set % banks; }
+
+    /** Occupy a bank with one full-line refresh. */
+    void occupyBank(unsigned bank);
 
     /** Whether an access of this kind triggers inline refreshes. */
     bool inlineApplies(PacketPtr pkt) const;
@@ -121,8 +135,8 @@ class RetentionManager
     /** Valid blocks of a set, most recently touched first, at most n. */
     std::vector<CacheBlk *> topMRUBlks(unsigned set, unsigned n) const;
 
-    /** No demand access this cycle and no refresh in progress. */
-    bool dataIdle() const;
+    /** No demand access to the bank this cycle and no refresh in it. */
+    bool bankIdle(unsigned bank) const;
 
     /** Ticks since blk was last fully written. */
     Tick age(const CacheBlk *blk) const;
@@ -153,6 +167,9 @@ class RetentionManager
     /** Data-array cycles of one full-line refresh (read + write). */
     const Cycles lineCycles;
 
+    /** Number of data-array banks. */
+    const unsigned banks;
+
     /** Age (fraction of DRT) from which idle-time refreshes start. */
     const double oppAge;
 
@@ -174,11 +191,11 @@ class RetentionManager
     /** Force-refresh a block whose remaining life is below this. */
     Tick tGuard;
 
-    /** The data array is busy with refreshes until this tick. */
-    Tick dataBusyUntil;
+    /** Each bank is busy with refreshes until this tick. */
+    std::vector<Tick> bankBusyUntil;
 
-    /** Tick of the last demand access. */
-    Tick lastAccessTick;
+    /** Tick of the last demand access to each bank. */
+    std::vector<Tick> bankLastAccess;
 
     /** Tick the current daemon sweep started at set 0. */
     Tick sweepStart;
@@ -252,6 +269,12 @@ class RetentionManager
         statistics::Scalar expiredHitPot;
         /** Hits on blocks the daemon refreshed. */
         statistics::Scalar refreshedBlockUtility;
+        /** Line refreshes (daemon and inline) per bank. */
+        statistics::Vector bankRefreshes;
+        /** Hits delayed by a refresh, per bank. */
+        statistics::Vector bankStalledHits;
+        /** Cycles hits waited for refreshes, per bank. */
+        statistics::Vector bankStallCycles;
     } stats;
 };
 

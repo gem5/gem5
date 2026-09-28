@@ -99,6 +99,12 @@ class BaseCache(ClockedObject):
         1, "Cycles for the refresh daemon to scan one set's tags"
     )
 
+    refresh_banks = Param.Unsigned(
+        1,
+        "Data-array banks (bank = set mod banks); a refresh occupies only "
+        "its bank and banks refresh in parallel",
+    )
+
     refresh_line_cycles = Param.Cycles(
         0,
         "Data-array cycles of one full-line refresh (read + write); "

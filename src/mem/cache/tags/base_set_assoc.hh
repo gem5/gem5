@@ -304,6 +304,14 @@ class BaseSetAssoc : public BaseTags
     {
         return blks.size() / allocAssoc;
     }
+
+    /**
+     * Get the set an address maps to
+     */
+    unsigned getSetIndex(const CacheBlk::KeyType &key) const override
+    {
+        return indexingPolicy->getPossibleEntries(key)[0]->getSet();
+    }
 };
 
 } // namespace gem5

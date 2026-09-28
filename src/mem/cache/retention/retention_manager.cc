@@ -24,6 +24,7 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       scanCycles(p.refresh_set_scan_cycles),
       lineCycles(p.refresh_line_cycles > 0 ? p.refresh_line_cycles :
                  Cycles(2 * p.data_latency)),
+      banks(std::max(p.refresh_banks, 1u)),
       oppAge(p.refresh_opp_age),
       margin(p.retention_margin),
       inlineOnWrite(p.inline_refresh),
@@ -32,8 +33,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                    Cycles(p.data_latency)),
       tSweep(0),
       tGuard(0),
-      dataBusyUntil(0),
-      lastAccessTick(0),
+      bankBusyUntil(banks, 0),
+      bankLastAccess(banks, 0),
       sweepStart(0),
       refreshSetIdx(0),
       refreshEvent([this] { processRefreshEvent(); },
@@ -47,6 +48,10 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              cache.name(), topMRU, assoc);
     fatal_if(scanCycles == 0, "%s: refresh_set_scan_cycles must be > 0",
              cache.name());
+    fatal_if(p.refresh_banks == 0 ||
+             p.refresh_banks > cache.tags->getNumSets(),
+             "%s: refresh_banks (%u) must be in [1, numSets = %u]",
+             cache.name(), p.refresh_banks, cache.tags->getNumSets());
 }
 
 void
@@ -66,22 +71,25 @@ RetentionManager::startup()
 
     const unsigned num_sets = cache.tags->getNumSets();
     const unsigned k_max = refreshDirtyDaemon ? assoc : topMRU;
+    // Rounds of B sets: B scans + the previous round's refreshes
+    const unsigned rounds = (num_sets + banks - 1) / banks;
 
-    tSweep = num_sets *
-        cache.cyclesToTicks(Cycles(scanCycles + k_max * lineCycles));
+    tSweep = rounds * cache.cyclesToTicks(
+        Cycles(banks * scanCycles + k_max * lineCycles));
     tGuard = tSweep + cache.cyclesToTicks(lineCycles) +
         Tick(margin * double(drt));
 
     fatal_if(tGuard >= drt,
              "%s: retention cannot be guaranteed: T_guard = %lu ticks >= "
-             "DRT = %lu ticks (T_sweep = %u sets x (%u + %u x %u) cycles). "
-             "Use a larger DRT or a faster refresh.",
-             cache.name(), tGuard, drt, num_sets, (unsigned)scanCycles,
-             k_max, (unsigned)lineCycles);
+             "DRT = %lu ticks (T_sweep = %u rounds x (%u banks x %u + "
+             "%u x %u) cycles). Use a larger DRT or a faster refresh.",
+             cache.name(), tGuard, drt, rounds, banks,
+             (unsigned)scanCycles, k_max, (unsigned)lineCycles);
 
-    inform("%s: retention DRT %lu ticks, T_sweep %lu, T_guard %lu "
-           "(force-refresh from %.1f%% of DRT)", cache.name(), drt, tSweep,
-           tGuard, 100.0 * double(drt - tGuard) / double(drt));
+    inform("%s: retention DRT %lu ticks, %u bank(s), T_sweep %lu, "
+           "T_guard %lu (force-refresh from %.1f%% of DRT)", cache.name(),
+           drt, banks, tSweep, tGuard,
+           100.0 * double(drt - tGuard) / double(drt));
 
     sweepStart = curTick();
     cache.schedule(refreshEvent, cache.clockEdge(Cycles(1)));
@@ -112,9 +120,12 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
         return;
     }
 
-    lastAccessTick = curTick();
-
     Addr blk_addr = pkt->getBlockAddr(cache.blkSize);
+
+    // The access uses the bank of its set this cycle
+    const unsigned bank = banks == 1 ? 0 :
+        bankOf(cache.tags->getSetIndex({blk_addr, pkt->isSecure()}));
+    bankLastAccess[bank] = curTick();
     CacheBlk *blk = cache.tags->findBlock({blk_addr, pkt->isSecure()});
 
     if (!blk) {
@@ -194,12 +205,15 @@ Cycles
 RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
 {
     Cycles delay(0);
+    const unsigned bank = bankOf(blk->getSet());
 
-    // A refresh occupies the data array: wait for it
-    if (dataBusyUntil > curTick()) {
-        delay = cache.ticksToCycles(dataBusyUntil - curTick());
+    // A refresh occupies the block's bank: wait for it
+    if (bankBusyUntil[bank] > curTick()) {
+        delay = cache.ticksToCycles(bankBusyUntil[bank] - curTick());
         stats.refreshStalledHits++;
         stats.refreshStallCycles += delay;
+        stats.bankStalledHits[bank]++;
+        stats.bankStallCycles[bank] += delay;
     }
 
     if (!inlineApplies(pkt)) {
@@ -228,18 +242,19 @@ RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
     DPRINTF(Cache, "Inline refresh: %s block %#lx age %lu\n",
             pkt->isWrite() ? "write" : "read", blk->getTag(), a);
 
-    occupyDataArray();
+    occupyBank(bank);
     blk->setFullChargeTick(curTick());
 
     return delay + inlineCycles;
 }
 
 void
-RetentionManager::occupyDataArray()
+RetentionManager::occupyBank(unsigned bank)
 {
-    // Full-line read + write; refreshes are serialized on the data array
-    Tick start = std::max(curTick(), dataBusyUntil);
-    dataBusyUntil = start + cache.cyclesToTicks(lineCycles);
+    // Full-line read + write; refreshes are serialized within a bank
+    Tick start = std::max(curTick(), bankBusyUntil[bank]);
+    bankBusyUntil[bank] = start + cache.cyclesToTicks(lineCycles);
+    stats.bankRefreshes[bank]++;
 }
 
 void
@@ -293,10 +308,10 @@ RetentionManager::onSnoop(CacheBlk *blk)
 }
 
 bool
-RetentionManager::dataIdle() const
+RetentionManager::bankIdle(unsigned bank) const
 {
-    return dataBusyUntil <= curTick() &&
-        curTick() >= lastAccessTick + cache.clockPeriod();
+    return bankBusyUntil[bank] <= curTick() &&
+        curTick() >= bankLastAccess[bank] + cache.clockPeriod();
 }
 
 std::vector<CacheBlk *>
@@ -336,7 +351,7 @@ RetentionManager::refresh(CacheBlk *blk, bool force)
     }
     stats.totalRefreshes++;
 
-    occupyDataArray();
+    occupyBank(bankOf(blk->getSet()));
 
     blk->setFullChargeTick(curTick());
     blk->setWasOppRefreshed(true);
@@ -351,7 +366,8 @@ RetentionManager::maybeRefresh(CacheBlk *blk)
     // Would expire before the daemon comes back: must refresh now
     if (drt - a < tGuard) {
         refresh(blk, true);
-    } else if (a >= oppAge * double(drt) && dataIdle()) {
+    } else if (a >= oppAge * double(drt) &&
+               bankIdle(bankOf(blk->getSet()))) {
         refresh(blk, false);
     }
 }
@@ -402,10 +418,12 @@ RetentionManager::processRefreshEvent()
         sweepStart = curTick();
     }
 
-    // Next set after scanning this one and finishing its refreshes
+    // Next set after scanning this one, once the next set's bank has
+    // finished its refreshes (with one bank: this set's refreshes)
+    const Tick busy = bankBusyUntil[bankOf(refreshSetIdx)];
     Cycles wait = scanCycles;
-    if (dataBusyUntil > curTick()) {
-        wait = std::max(wait, cache.ticksToCycles(dataBusyUntil - curTick()));
+    if (busy > curTick()) {
+        wait = std::max(wait, cache.ticksToCycles(busy - curTick()));
     }
     cache.schedule(refreshEvent, cache.clockEdge(wait));
 }
@@ -469,7 +487,13 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(expiredHitPot, statistics::units::Count::get(),
                "expired blocks accessed within 1.2 DRT of their charge"),
       ADD_STAT(refreshedBlockUtility, statistics::units::Count::get(),
-               "hits on blocks the daemon refreshed")
+               "hits on blocks the daemon refreshed"),
+      ADD_STAT(bankRefreshes, statistics::units::Count::get(),
+               "line refreshes (daemon and inline) per bank"),
+      ADD_STAT(bankStalledHits, statistics::units::Count::get(),
+               "hits delayed by a refresh, per bank"),
+      ADD_STAT(bankStallCycles, statistics::units::Cycle::get(),
+               "cycles hits waited for refreshes, per bank")
 {
 }
 
@@ -482,6 +506,9 @@ RetentionManager::RetentionStats::regStats()
     ageAtForceRefresh.init(0.0, 1.0, 0.02);
     ageAtInlineRefresh.init(0.0, 1.0, 0.02);
     daemonSweepCycles.init(20);
+    bankRefreshes.init(mgr.banks);
+    bankStalledHits.init(mgr.banks);
+    bankStallCycles.init(mgr.banks);
     tSweepCycles.functor([this] {
         return double(mgr.tSweep) / double(mgr.cache.clockPeriod());
     });
