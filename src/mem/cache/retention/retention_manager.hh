@@ -23,6 +23,14 @@
  *
  * since it would expire before the next visit. Startup fails if
  * T_guard >= DRT: no refresh schedule can then keep dirty data alive.
+ *
+ * The same bound, seen from the write side: a store hit that leaves a
+ * block dirty with less than T_guard of life left may have arrived just
+ * after the daemon passed its set, so the store itself recharges the
+ * line (inline refresh: read the line, merge the store, write the whole
+ * line back), costing inline_refresh_cycles of extra latency. A store
+ * that finds less life left than that read needs is too late and is
+ * handled like an expired block.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
@@ -71,13 +79,16 @@ class RetentionManager
     void onAccessHit(CacheBlk *blk);
 
     /**
-     * Cycles a hit waits for the data array, which a refresh occupies.
-     * Added to the hit latency.
+     * Extra hit latency: waiting for a refresh that occupies the data
+     * array, plus an inline refresh if this hit triggers one.
      */
-    Cycles dataStall();
+    Cycles hitDelay(PacketPtr pkt, CacheBlk *blk);
 
-    /** A block was allocated and filled: start its retention timer. */
-    void onAllocate(CacheBlk *blk);
+    /**
+     * The whole line of blk was written (allocation, fill): it is fully
+     * charged again.
+     */
+    void onFullLineWrite(CacheBlk *blk);
 
     /**
      * A block is being evicted. An expired dirty block is still written
@@ -100,6 +111,12 @@ class RetentionManager
 
     /** Recharge blk with a full-line read and write. */
     void refresh(CacheBlk *blk, bool force);
+
+    /** Occupy the data array with one full-line refresh. */
+    void occupyDataArray();
+
+    /** Whether an access of this kind triggers inline refreshes. */
+    bool inlineApplies(PacketPtr pkt) const;
 
     /** Valid blocks of a set, most recently touched first, at most n. */
     std::vector<CacheBlk *> topMRUBlks(unsigned set, unsigned n) const;
@@ -141,6 +158,15 @@ class RetentionManager
 
     /** Safety margin of the guarantee, as a fraction of DRT. */
     const double margin;
+
+    /** Store hits near expiry recharge the line. */
+    const bool inlineOnWrite;
+
+    /** Read hits near expiry recharge the line. */
+    const bool inlineOnRead;
+
+    /** Extra latency of an inline refresh (reading the line first). */
+    const Cycles inlineCycles;
 
     /** Worst-case time for the daemon to come back to a set. */
     Tick tSweep;
@@ -204,6 +230,18 @@ class RetentionManager
         statistics::Scalar refreshStalledHits;
         /** Cycles hits waited for refreshes. */
         statistics::Scalar refreshStallCycles;
+        /** Inline refreshes triggered by a store hit. */
+        statistics::Scalar refreshInlineWrite;
+        /** Inline refreshes triggered by a read hit. */
+        statistics::Scalar refreshInlineRead;
+        /** Block age at an inline refresh, as a fraction of DRT. */
+        statistics::Distribution ageAtInlineRefresh;
+        /** Stores that made a clean block dirty inside T_guard. */
+        statistics::Scalar cleanToDirtyInDanger;
+        /** Cycles added to hits by inline refreshes. */
+        statistics::Scalar inlineRefreshCycles;
+        /** Hits with too little life left for an inline refresh. */
+        statistics::Scalar inlineTooLate;
         /** Duration of each full daemon sweep, in cycles. */
         statistics::Histogram daemonSweepCycles;
         /** Worst-case sweep time the guarantee assumes, in cycles. */

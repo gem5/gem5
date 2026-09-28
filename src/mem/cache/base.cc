@@ -1554,9 +1554,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
 
-        // Wait for a refresh that occupies the data array
+        // Retention: wait for a refresh in progress, refresh near expiry
         if (retention)
-            lat += retention->dataStall();
+            lat += retention->hitDelay(pkt, blk);
 
         satisfyRequest(pkt, blk);
         maintainClusivity(pkt->fromCache(), blk);
@@ -1680,6 +1680,10 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         assert(pkt->getSize() == blkSize);
 
         updateBlockData(blk, pkt, has_old_data);
+
+        // A fill writes the whole line, also into a block already present
+        if (retention && blk != tempBlock)
+            retention->onFullLineWrite(blk);
     }
     // The block will be ready when the payload arrives and the fill is done
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
@@ -1739,7 +1743,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     tags->insertBlock(pkt, victim);
 
     if (retention)
-        retention->onAllocate(victim);
+        retention->onFullLineWrite(victim);
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.

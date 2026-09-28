@@ -26,6 +26,10 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                  Cycles(2 * p.data_latency)),
       oppAge(p.refresh_opp_age),
       margin(p.retention_margin),
+      inlineOnWrite(p.inline_refresh),
+      inlineOnRead(p.inline_refresh_on_read),
+      inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
+                   Cycles(p.data_latency)),
       tSweep(0),
       tGuard(0),
       dataBusyUntil(0),
@@ -48,11 +52,18 @@ RetentionManager::RetentionManager(BaseCache &_cache,
 void
 RetentionManager::startup()
 {
-    if (!(topMRU > 0 || refreshDirtyDaemon)) {
+    const Tick drt = cache.tags->getDRT();
+    const bool daemon = topMRU > 0 || refreshDirtyDaemon;
+
+    if (!daemon) {
+        // No daemon to wait for: inline refreshes just before expiry
+        tGuard = cache.cyclesToTicks(lineCycles) +
+            Tick(margin * double(drt));
+        inform("%s: retention DRT %lu ticks, no refresh daemon, "
+               "T_guard %lu", cache.name(), drt, tGuard);
         return;
     }
 
-    const Tick drt = cache.tags->getDRT();
     const unsigned num_sets = cache.tags->getNumSets();
     const unsigned k_max = refreshDirtyDaemon ? assoc : topMRU;
 
@@ -106,8 +117,22 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
     Addr blk_addr = pkt->getBlockAddr(cache.blkSize);
     CacheBlk *blk = cache.tags->findBlock({blk_addr, pkt->isSecure()});
 
-    if (!blk || !cache.tags->isExpired(blk)) {
+    if (!blk) {
         return;
+    }
+
+    // An inline refresh first reads the line; with less life left than
+    // that read takes, the data is gone by the time it is read
+    const Tick drt = cache.tags->getDRT();
+    const bool expired = cache.tags->isExpired(blk);
+    const bool too_late = !expired && inlineApplies(pkt) &&
+        drt - age(blk) < cache.cyclesToTicks(inlineCycles);
+
+    if (!expired && !too_late) {
+        return;
+    }
+    if (too_late) {
+        stats.inlineTooLate++;
     }
 
     const bool dirty = blk->isSet(CacheBlk::DirtyBit);
@@ -126,7 +151,6 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
     stats.retentionMisses++;
 
     // Died recently: between 100% and 120% of DRT
-    Tick drt = cache.tags->getDRT();
     if (age(blk) < drt * 1.2) {
         stats.expiredHitPot++;
     }
@@ -160,21 +184,66 @@ RetentionManager::onAccessHit(CacheBlk *blk)
     }
 }
 
-Cycles
-RetentionManager::dataStall()
+bool
+RetentionManager::inlineApplies(PacketPtr pkt) const
 {
-    if (dataBusyUntil <= curTick()) {
-        return Cycles(0);
+    return pkt->isWrite() ? inlineOnWrite : inlineOnRead;
+}
+
+Cycles
+RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
+{
+    Cycles delay(0);
+
+    // A refresh occupies the data array: wait for it
+    if (dataBusyUntil > curTick()) {
+        delay = cache.ticksToCycles(dataBusyUntil - curTick());
+        stats.refreshStalledHits++;
+        stats.refreshStallCycles += delay;
     }
 
-    Cycles stall = cache.ticksToCycles(dataBusyUntil - curTick());
-    stats.refreshStalledHits++;
-    stats.refreshStallCycles += stall;
-    return stall;
+    if (!inlineApplies(pkt)) {
+        return delay;
+    }
+
+    // Too little life left for the daemon to come back in time: this hit
+    // recharges the line (read, merge a store, write the whole line)
+    const Tick drt = cache.tags->getDRT();
+    const Tick a = age(blk);
+    if (drt - a >= tGuard) {
+        return delay;
+    }
+
+    if (pkt->isWrite()) {
+        stats.refreshInlineWrite++;
+        if (!blk->isSet(CacheBlk::DirtyBit)) {
+            stats.cleanToDirtyInDanger++;
+        }
+    } else {
+        stats.refreshInlineRead++;
+    }
+    stats.ageAtInlineRefresh.sample(double(a) / double(drt));
+    stats.inlineRefreshCycles += inlineCycles;
+
+    DPRINTF(Cache, "Inline refresh: %s block %#lx age %lu\n",
+            pkt->isWrite() ? "write" : "read", blk->getTag(), a);
+
+    occupyDataArray();
+    blk->setFullChargeTick(curTick());
+
+    return delay + inlineCycles;
 }
 
 void
-RetentionManager::onAllocate(CacheBlk *blk)
+RetentionManager::occupyDataArray()
+{
+    // Full-line read + write; refreshes are serialized on the data array
+    Tick start = std::max(curTick(), dataBusyUntil);
+    dataBusyUntil = start + cache.cyclesToTicks(lineCycles);
+}
+
+void
+RetentionManager::onFullLineWrite(CacheBlk *blk)
 {
     blk->setFullChargeTick(curTick());
     blk->setLastTouchTick(curTick());
@@ -267,9 +336,7 @@ RetentionManager::refresh(CacheBlk *blk, bool force)
     }
     stats.totalRefreshes++;
 
-    // Full-line read + write; refreshes are serialized on the data array
-    Tick start = std::max(curTick(), dataBusyUntil);
-    dataBusyUntil = start + cache.cyclesToTicks(lineCycles);
+    occupyDataArray();
 
     blk->setFullChargeTick(curTick());
     blk->setWasOppRefreshed(true);
@@ -381,6 +448,18 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "hits delayed because a refresh occupied the data array"),
       ADD_STAT(refreshStallCycles, statistics::units::Cycle::get(),
                "cycles hits waited for refreshes"),
+      ADD_STAT(refreshInlineWrite, statistics::units::Count::get(),
+               "inline refreshes triggered by a store hit"),
+      ADD_STAT(refreshInlineRead, statistics::units::Count::get(),
+               "inline refreshes triggered by a read hit"),
+      ADD_STAT(ageAtInlineRefresh, statistics::units::Ratio::get(),
+               "block age at an inline refresh, as a fraction of DRT"),
+      ADD_STAT(cleanToDirtyInDanger, statistics::units::Count::get(),
+               "stores that made a clean block dirty inside T_guard"),
+      ADD_STAT(inlineRefreshCycles, statistics::units::Cycle::get(),
+               "cycles added to hits by inline refreshes"),
+      ADD_STAT(inlineTooLate, statistics::units::Count::get(),
+               "hits with too little life left for an inline refresh"),
       ADD_STAT(daemonSweepCycles, statistics::units::Cycle::get(),
                "duration of each full daemon sweep"),
       ADD_STAT(tSweepCycles, statistics::units::Cycle::get(),
@@ -401,6 +480,7 @@ RetentionManager::RetentionStats::regStats()
 
     lazyWritebacks = lazyWritebacksRead + lazyWritebacksWrite;
     ageAtForceRefresh.init(0.0, 1.0, 0.02);
+    ageAtInlineRefresh.init(0.0, 1.0, 0.02);
     daemonSweepCycles.init(20);
     tSweepCycles.functor([this] {
         return double(mgr.tSweep) / double(mgr.cache.clockPeriod());

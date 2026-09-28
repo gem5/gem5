@@ -115,6 +115,20 @@ class BaseCache(ClockedObject):
         0.02, "Safety margin of the retention guarantee, fraction of DRT"
     )
 
+    inline_refresh = Param.Bool(
+        True,
+        "A store hit to a block with less than T_guard of retention left "
+        "recharges the line (read, merge, write the full line)",
+    )
+
+    inline_refresh_on_read = Param.Bool(
+        False, "Read hits near expiry also recharge the line"
+    )
+
+    inline_refresh_cycles = Param.Cycles(
+        0, "Extra hit latency of an inline refresh; 0 means data_latency"
+    )
+
     drt_strict = Param.Bool(
         False,
         "Panic when a dirty block expires (retention invariant violation) "
