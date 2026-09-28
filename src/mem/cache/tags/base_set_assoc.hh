@@ -61,8 +61,6 @@
 #include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
-#include "mem/cache/replacement_policies/mru_rp.hh"
-
 #include "sim/cur_tick.hh"
 
 namespace gem5
@@ -293,17 +291,9 @@ class BaseSetAssoc : public BaseTags
     }
 
     /**
-     * Get the N top MRU blocks of a given set
-     * @param set Set idx to get the MRU
-     * @param n the number of top MRU blocks
-     * @return vecotr of pointers for top blks
-     */
-    std::vector<CacheBlk*> getNTopMRU(int set, int n) override;
-
-    /**
      * Get the blocks of a given set
-     * @param set Set idx to get the MRU
-     * @return vecotr of pointers for top blks
+     * @param set Set index
+     * @return The set's blocks, one per way
      */
     std::vector<CacheBlk *> getSetBlks(int set) override;
 

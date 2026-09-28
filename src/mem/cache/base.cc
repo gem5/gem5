@@ -1554,6 +1554,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
 
+        // Wait for a refresh that occupies the data array
+        if (retention)
+            lat += retention->dataStall();
+
         satisfyRequest(pkt, blk);
         maintainClusivity(pkt->fromCache(), blk);
 

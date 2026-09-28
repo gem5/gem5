@@ -8,10 +8,27 @@
  * BaseCache owns an instance only when drt > 0. With drt == 0 no
  * instance exists, every hook in BaseCache is skipped, and the cache
  * behaves exactly like stock gem5.
+ *
+ * Retention guarantee. The refresh daemon visits one set per step; a
+ * step scans the set's tags (refresh_set_scan_cycles) and refreshes the
+ * chosen blocks one after the other, each occupying the data array for
+ * refresh_line_cycles. So the daemon comes back to a set within
+ *
+ *   T_sweep = numSets * (scan + k_max * line) cycles,
+ *
+ * k_max being the most blocks a step can refresh. The daemon therefore
+ * force-refreshes a block whose remaining life is below
+ *
+ *   T_guard = T_sweep + line + margin * DRT,
+ *
+ * since it would expire before the next visit. Startup fails if
+ * T_guard >= DRT: no refresh schedule can then keep dirty data alive.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
 #define __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
+
+#include <vector>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -30,7 +47,10 @@ class RetentionManager
   public:
     RetentionManager(BaseCache &cache, const BaseCacheParams &p);
 
-    /** Start the refresh daemon. Called from BaseCache::startup(). */
+    /**
+     * Compute the retention guarantee and start the refresh daemon.
+     * Called from BaseCache::startup().
+     */
     void startup();
 
     /**
@@ -50,6 +70,12 @@ class RetentionManager
     /** Bookkeeping for a block returned by the tag access. */
     void onAccessHit(CacheBlk *blk);
 
+    /**
+     * Cycles a hit waits for the data array, which a refresh occupies.
+     * Added to the hit latency.
+     */
+    Cycles dataStall();
+
     /** A block was allocated and filled: start its retention timer. */
     void onAllocate(CacheBlk *blk);
 
@@ -68,6 +94,18 @@ class RetentionManager
   private:
     /** One daemon step: visit set refreshSetIdx, then the next set. */
     void processRefreshEvent();
+
+    /** Daemon policy for one valid, unexpired block. */
+    void maybeRefresh(CacheBlk *blk);
+
+    /** Recharge blk with a full-line read and write. */
+    void refresh(CacheBlk *blk, bool force);
+
+    /** Valid blocks of a set, most recently touched first, at most n. */
+    std::vector<CacheBlk *> topMRUBlks(unsigned set, unsigned n) const;
+
+    /** No demand access this cycle and no refresh in progress. */
+    bool dataIdle() const;
 
     /** Ticks since blk was last fully written. */
     Tick age(const CacheBlk *blk) const;
@@ -89,6 +127,36 @@ class RetentionManager
     /** Panic on a retention invariant violation instead of counting. */
     const bool strict;
 
+    /** Associativity, the most blocks one daemon step can refresh. */
+    const unsigned assoc;
+
+    /** Cycles for the daemon to scan one set's tags. */
+    const Cycles scanCycles;
+
+    /** Data-array cycles of one full-line refresh (read + write). */
+    const Cycles lineCycles;
+
+    /** Age (fraction of DRT) from which idle-time refreshes start. */
+    const double oppAge;
+
+    /** Safety margin of the guarantee, as a fraction of DRT. */
+    const double margin;
+
+    /** Worst-case time for the daemon to come back to a set. */
+    Tick tSweep;
+
+    /** Force-refresh a block whose remaining life is below this. */
+    Tick tGuard;
+
+    /** The data array is busy with refreshes until this tick. */
+    Tick dataBusyUntil;
+
+    /** Tick of the last demand access. */
+    Tick lastAccessTick;
+
+    /** Tick the current daemon sweep started at set 0. */
+    Tick sweepStart;
+
     /** Set the daemon visits next. */
     unsigned refreshSetIdx;
 
@@ -96,7 +164,11 @@ class RetentionManager
 
     struct RetentionStats : public statistics::Group
     {
-        RetentionStats(BaseCache &cache);
+        RetentionStats(RetentionManager &mgr, BaseCache &cache);
+
+        void regStats() override;
+
+        RetentionManager &mgr;
 
         /** Accesses that found their block expired and missed. */
         statistics::Scalar retentionMisses;
@@ -120,12 +192,24 @@ class RetentionManager
         statistics::Scalar daemonRevivedDirty;
         /** Dirty blocks found expired, anywhere (should be 0). */
         statistics::Scalar invariantViolations;
-        /** Daemon refreshes done while the cache was not blocked. */
+        /** Daemon refreshes done while the data array was idle. */
         statistics::Scalar oppRefresh;
-        /** Daemon refreshes forced by the age threshold. */
+        /** Daemon refreshes forced by the retention guarantee. */
         statistics::Scalar forceRefresh;
-        /** All daemon refreshes. */
+        /** All daemon refreshes (each is one line read + one write). */
         statistics::Scalar totalRefreshes;
+        /** Block age at a forced refresh, as a fraction of DRT. */
+        statistics::Distribution ageAtForceRefresh;
+        /** Hits delayed because a refresh occupied the data array. */
+        statistics::Scalar refreshStalledHits;
+        /** Cycles hits waited for refreshes. */
+        statistics::Scalar refreshStallCycles;
+        /** Duration of each full daemon sweep, in cycles. */
+        statistics::Histogram daemonSweepCycles;
+        /** Worst-case sweep time the guarantee assumes, in cycles. */
+        statistics::Value tSweepCycles;
+        /** Force-refresh threshold on remaining life, in cycles. */
+        statistics::Value tGuardCycles;
         /** Expired blocks accessed within 1.2 DRT of their charge. */
         statistics::Scalar expiredHitPot;
         /** Hits on blocks the daemon refreshed. */

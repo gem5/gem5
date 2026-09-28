@@ -159,6 +159,9 @@ class CacheBlk : public TaggedEntry
      */
     Tick fullChargeTick;
 
+    /** Last hit or fill; orders blocks for the top-MRU refresh. */
+    Tick lastTouchTick;
+
     /** The retention daemon refreshed this block since its last hit. */
     bool wasOppRefreshed;
 
@@ -201,6 +204,7 @@ class CacheBlk : public TaggedEntry
         std::swap(lockList, other.lockList);
 
         setFullChargeTick(other.getFullChargeTick());
+        setLastTouchTick(other.getLastTouchTick());
         setWasOppRefreshed(other.getWasOppRefreshed());
 
         other.invalidate();
@@ -219,6 +223,18 @@ class CacheBlk : public TaggedEntry
     setFullChargeTick(Tick const tick)
     {
         fullChargeTick = tick;
+    }
+
+    Tick
+    getLastTouchTick() const
+    {
+        return lastTouchTick;
+    }
+
+    void
+    setLastTouchTick(Tick const tick)
+    {
+        lastTouchTick = tick;
     }
 
     void
@@ -250,6 +266,7 @@ class CacheBlk : public TaggedEntry
         setSrcRequestorId(Request::invldRequestorId);
         lockList.clear();
         setFullChargeTick(MaxTick);
+        setLastTouchTick(0);
         setWasOppRefreshed(false);
     }
 

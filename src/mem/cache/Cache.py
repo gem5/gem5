@@ -95,6 +95,26 @@ class BaseCache(ClockedObject):
         0, "Refresh dirty blocks using daemon process"
     )
 
+    refresh_set_scan_cycles = Param.Cycles(
+        1, "Cycles for the refresh daemon to scan one set's tags"
+    )
+
+    refresh_line_cycles = Param.Cycles(
+        0,
+        "Data-array cycles of one full-line refresh (read + write); "
+        "0 means 2 x data_latency",
+    )
+
+    refresh_opp_age = Param.Float(
+        0.8,
+        "Age, as a fraction of DRT, from which the daemon refreshes a "
+        "block while the data array is idle",
+    )
+
+    retention_margin = Param.Float(
+        0.02, "Safety margin of the retention guarantee, fraction of DRT"
+    )
+
     drt_strict = Param.Bool(
         False,
         "Panic when a dirty block expires (retention invariant violation) "

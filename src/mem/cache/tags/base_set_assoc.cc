@@ -45,7 +45,6 @@
 
 #include "mem/cache/tags/base_set_assoc.hh"
 
-#include <algorithm>
 #include <string>
 
 #include "base/intmath.hh"
@@ -117,35 +116,6 @@ BaseSetAssoc::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
     // the one that is being moved.
     replacementPolicy->invalidate(src_blk->replacementData);
     replacementPolicy->reset(dest_blk->replacementData);
-}
-
-std::vector<CacheBlk*>
-BaseSetAssoc::getNTopMRU(int set, int n)
-{
-    fatal_if(n > allocAssoc, "MRU N top can't be greater than assoc");
-
-    std::vector<CacheBlk*> set_blks;
-
-    // Fill the vector with the entire set
-    for (int way = 0; way < allocAssoc; way++) {
-        set_blks.push_back(&blks.at(way + set * allocAssoc));
-    }
-
-    // Sort them according to lastTouchTick
-    std::sort(set_blks.begin(), set_blks.end(), [](CacheBlk* a, CacheBlk* b){
-        auto data_a = std::static_pointer_cast<replacement_policy::MRU::MRUReplData>(
-                a->replacementData);
-        auto data_b = std::static_pointer_cast<replacement_policy::MRU::MRUReplData>(
-                b->replacementData);
-        return data_a->lastTouchTick > data_b->lastTouchTick;
-    });
-
-    // Get first N
-    if (set_blks.size() > n) {
-        set_blks.resize(n);
-    }
-
-    return set_blks;
 }
 
 std::vector<CacheBlk *>

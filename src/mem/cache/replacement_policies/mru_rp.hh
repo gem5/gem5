@@ -49,7 +49,7 @@ namespace replacement_policy
 
 class MRU : public Base
 {
-  public:
+  protected:
     /** MRU-specific implementation of replacement data. */
     struct MRUReplData : ReplacementData
     {

@@ -381,11 +381,6 @@ class BaseTags : public ClockedObject
      */
     virtual bool anyBlk(std::function<bool(CacheBlk &)> visitor) = 0;
 
-    virtual std::vector<CacheBlk*> getNTopMRU(int set, int n)
-    {
-        return {};
-    }
-
     virtual std::vector<CacheBlk *>
     getSetBlks(int set)
     {

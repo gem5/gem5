@@ -20,22 +20,60 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       topMRU(p.top_mru),
       refreshDirtyDaemon(p.refresh_dirty_daemon),
       strict(p.drt_strict),
+      assoc(p.assoc),
+      scanCycles(p.refresh_set_scan_cycles),
+      lineCycles(p.refresh_line_cycles > 0 ? p.refresh_line_cycles :
+                 Cycles(2 * p.data_latency)),
+      oppAge(p.refresh_opp_age),
+      margin(p.retention_margin),
+      tSweep(0),
+      tGuard(0),
+      dataBusyUntil(0),
+      lastAccessTick(0),
+      sweepStart(0),
       refreshSetIdx(0),
       refreshEvent([this] { processRefreshEvent(); },
                    _cache.name() + ".refreshDaemon"),
-      stats(_cache)
+      stats(*this, _cache)
 {
     fatal_if(!cache.tags->isForgetting(),
              "%s: drt > 0 but the tags do not support retention",
+             cache.name());
+    fatal_if(topMRU > assoc, "%s: top_mru (%u) > assoc (%u)",
+             cache.name(), topMRU, assoc);
+    fatal_if(scanCycles == 0, "%s: refresh_set_scan_cycles must be > 0",
              cache.name());
 }
 
 void
 RetentionManager::startup()
 {
-    if (topMRU > 0 || refreshDirtyDaemon) {
-        cache.schedule(refreshEvent, cache.clockEdge(Cycles(1)));
+    if (!(topMRU > 0 || refreshDirtyDaemon)) {
+        return;
     }
+
+    const Tick drt = cache.tags->getDRT();
+    const unsigned num_sets = cache.tags->getNumSets();
+    const unsigned k_max = refreshDirtyDaemon ? assoc : topMRU;
+
+    tSweep = num_sets *
+        cache.cyclesToTicks(Cycles(scanCycles + k_max * lineCycles));
+    tGuard = tSweep + cache.cyclesToTicks(lineCycles) +
+        Tick(margin * double(drt));
+
+    fatal_if(tGuard >= drt,
+             "%s: retention cannot be guaranteed: T_guard = %lu ticks >= "
+             "DRT = %lu ticks (T_sweep = %u sets x (%u + %u x %u) cycles). "
+             "Use a larger DRT or a faster refresh.",
+             cache.name(), tGuard, drt, num_sets, (unsigned)scanCycles,
+             k_max, (unsigned)lineCycles);
+
+    inform("%s: retention DRT %lu ticks, T_sweep %lu, T_guard %lu "
+           "(force-refresh from %.1f%% of DRT)", cache.name(), drt, tSweep,
+           tGuard, 100.0 * double(drt - tGuard) / double(drt));
+
+    sweepStart = curTick();
+    cache.schedule(refreshEvent, cache.clockEdge(Cycles(1)));
 }
 
 Tick
@@ -62,6 +100,8 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
         pkt->cmd == MemCmd::WriteClean) {
         return;
     }
+
+    lastAccessTick = curTick();
 
     Addr blk_addr = pkt->getBlockAddr(cache.blkSize);
     CacheBlk *blk = cache.tags->findBlock({blk_addr, pkt->isSecure()});
@@ -112,16 +152,32 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
 void
 RetentionManager::onAccessHit(CacheBlk *blk)
 {
+    blk->setLastTouchTick(curTick());
+
     if (blk->getWasOppRefreshed()) {
         stats.refreshedBlockUtility++;
         blk->setWasOppRefreshed(false);
     }
 }
 
+Cycles
+RetentionManager::dataStall()
+{
+    if (dataBusyUntil <= curTick()) {
+        return Cycles(0);
+    }
+
+    Cycles stall = cache.ticksToCycles(dataBusyUntil - curTick());
+    stats.refreshStalledHits++;
+    stats.refreshStallCycles += stall;
+    return stall;
+}
+
 void
 RetentionManager::onAllocate(CacheBlk *blk)
 {
     blk->setFullChargeTick(curTick());
+    blk->setLastTouchTick(curTick());
 }
 
 void
@@ -167,117 +223,130 @@ RetentionManager::onSnoop(CacheBlk *blk)
     }
 }
 
+bool
+RetentionManager::dataIdle() const
+{
+    return dataBusyUntil <= curTick() &&
+        curTick() >= lastAccessTick + cache.clockPeriod();
+}
+
+std::vector<CacheBlk *>
+RetentionManager::topMRUBlks(unsigned set, unsigned n) const
+{
+    std::vector<CacheBlk *> blks;
+    for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
+        if (blk->isValid()) {
+            blks.push_back(blk);
+        }
+    }
+
+    std::stable_sort(blks.begin(), blks.end(),
+        [](const CacheBlk *a, const CacheBlk *b) {
+            return a->getLastTouchTick() > b->getLastTouchTick();
+        });
+
+    if (blks.size() > n) {
+        blks.resize(n);
+    }
+    return blks;
+}
+
+void
+RetentionManager::refresh(CacheBlk *blk, bool force)
+{
+    const Tick drt = cache.tags->getDRT();
+
+    DPRINTF(Cache, "RefreshDaemon: %s block %#lx age %lu\n",
+            force ? "FORCE" : "OPP", blk->getTag(), age(blk));
+
+    if (force) {
+        stats.forceRefresh++;
+        stats.ageAtForceRefresh.sample(double(age(blk)) / double(drt));
+    } else {
+        stats.oppRefresh++;
+    }
+    stats.totalRefreshes++;
+
+    // Full-line read + write; refreshes are serialized on the data array
+    Tick start = std::max(curTick(), dataBusyUntil);
+    dataBusyUntil = start + cache.cyclesToTicks(lineCycles);
+
+    blk->setFullChargeTick(curTick());
+    blk->setWasOppRefreshed(true);
+}
+
+void
+RetentionManager::maybeRefresh(CacheBlk *blk)
+{
+    const Tick drt = cache.tags->getDRT();
+    const Tick a = age(blk);
+
+    // Would expire before the daemon comes back: must refresh now
+    if (drt - a < tGuard) {
+        refresh(blk, true);
+    } else if (a >= oppAge * double(drt) && dataIdle()) {
+        refresh(blk, false);
+    }
+}
+
 void
 RetentionManager::processRefreshEvent()
 {
     BaseTags *tags = cache.tags;
-    bool is_blocked = cache.cpuSidePort.isBlocked() || cache.blocked;
 
-    DPRINTF(Cache, "RefreshDaemon: Set %d | Blocked: %d\n",
-            refreshSetIdx, is_blocked);
-
-    // Adaptive thresholds
-    double sweep_cycles = double(tags->getNumSets());
-    double drt_cycles = double(tags->getDRT()) / double(cache.clockPeriod());
-
-    double force_thresh = 0.95;
-    if (drt_cycles > 0.0) {
-        // leave a window >= sweep time, plus 2% safety margin
-        double needed = 1.0 - (sweep_cycles / drt_cycles) - 0.02;
-        force_thresh = std::min(0.95, std::max(0.50, needed));
-    }
-    double opp_thresh = std::min(0.80, force_thresh - 0.05);
+    DPRINTF(Cache, "RefreshDaemon: set %d\n", refreshSetIdx);
 
     if (refreshDirtyDaemon) {
-        std::vector<CacheBlk *> set_blks = tags->getSetBlks(refreshSetIdx);
-
-        for (CacheBlk *blk : set_blks) {
-            if (!(blk && blk->isValid()))
+        for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
+            if (!blk->isValid() || !blk->isSet(CacheBlk::DirtyBit)) {
                 continue;
-            if (!blk->isSet(CacheBlk::DirtyBit))
-                continue;
+            }
 
-            Tick age = curTick() - blk->getFullChargeTick();
-            Tick drt = tags->getDRT();
-
-            // Already expired: the refresh below revives lost data
-            // (backdoor, counted)
             if (tags->isExpired(blk)) {
+                // Refreshing revives lost data (backdoor, counted)
                 stats.daemonRevivedDirty++;
                 violation(blk, "daemon visit");
+                refresh(blk, true);
+                continue;
             }
 
-            bool force_refresh = (age >= drt * force_thresh);
-            bool opp_refresh = (!is_blocked && age >= drt * opp_thresh);
-
-            if (force_refresh || opp_refresh) {
-                DPRINTF(Cache, "RefreshDaemon: %s dirty block %#lx age %lu\n",
-                        force_refresh ? "FORCE" : "OPP", blk->getTag(), age);
-
-                blk->setFullChargeTick(curTick());
-                blk->setWasOppRefreshed(true);
-
-                stats.totalRefreshes++;
-                if (force_refresh) {
-                    stats.forceRefresh++;
-                } else {
-                    stats.oppRefresh++;
-                }
-            }
+            maybeRefresh(blk);
         }
     }
 
     if (topMRU > 0) {
-        std::vector<CacheBlk *> top_mru_blks =
-            tags->getNTopMRU(refreshSetIdx, topMRU);
-        int rank = 0;
-
-        for (CacheBlk *mru : top_mru_blks) {
-            if (!(mru && mru->isValid())) {
-                rank++;
-                continue;
-            }
-
+        for (CacheBlk *blk : topMRUBlks(refreshSetIdx, topMRU)) {
             // Refreshed by the dirty loop above in this same step
-            if (mru->getFullChargeTick() == curTick()) {
-                rank++;
+            if (blk->getFullChargeTick() == curTick()) {
                 continue;
             }
-
-            Tick age = curTick() - mru->getFullChargeTick();
-            Tick drt = tags->getDRT();
-
-            if (!tags->isExpired(mru)) {
-                bool force_refresh = (age >= drt * force_thresh);
-                bool opp_refresh = (!is_blocked && age >= drt * opp_thresh);
-
-                if (force_refresh || opp_refresh) {
-                    DPRINTF(Cache,
-                            "RefreshDaemon: %s MRU rank %d block %#lx\n",
-                            force_refresh ? "FORCE" : "OPP", rank,
-                            mru->getTag());
-
-                    mru->setFullChargeTick(curTick());
-                    mru->setWasOppRefreshed(true);
-
-                    stats.totalRefreshes++;
-                    if (force_refresh) {
-                        stats.forceRefresh++;
-                    } else {
-                        stats.oppRefresh++;
-                    }
-                }
+            // A clean block that already expired has nothing to save
+            if (tags->isExpired(blk)) {
+                continue;
             }
-            rank++;
+            maybeRefresh(blk);
         }
     }
 
     refreshSetIdx = (refreshSetIdx + 1) % tags->getNumSets();
-    cache.schedule(refreshEvent, cache.clockEdge(Cycles(1)));
+    if (refreshSetIdx == 0) {
+        stats.daemonSweepCycles.sample(
+            cache.ticksToCycles(curTick() - sweepStart));
+        sweepStart = curTick();
+    }
+
+    // Next set after scanning this one and finishing its refreshes
+    Cycles wait = scanCycles;
+    if (dataBusyUntil > curTick()) {
+        wait = std::max(wait, cache.ticksToCycles(dataBusyUntil - curTick()));
+    }
+    cache.schedule(refreshEvent, cache.clockEdge(wait));
 }
 
-RetentionManager::RetentionStats::RetentionStats(BaseCache &cache)
+RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
+                                                 BaseCache &cache)
     : statistics::Group(&cache, "retention"),
+      mgr(_mgr),
       ADD_STAT(retentionMisses, statistics::units::Count::get(),
                "accesses that found their block expired and missed"),
       ADD_STAT(lazyWritebacksRead, statistics::units::Count::get(),
@@ -301,17 +370,44 @@ RetentionManager::RetentionStats::RetentionStats(BaseCache &cache)
       ADD_STAT(invariantViolations, statistics::units::Count::get(),
                "dirty blocks found expired (data lost)"),
       ADD_STAT(oppRefresh, statistics::units::Count::get(),
-               "daemon refreshes done while the cache was not blocked"),
+               "daemon refreshes done while the data array was idle"),
       ADD_STAT(forceRefresh, statistics::units::Count::get(),
-               "daemon refreshes forced by the age threshold"),
+               "daemon refreshes forced by the retention guarantee"),
       ADD_STAT(totalRefreshes, statistics::units::Count::get(),
-               "all daemon refreshes"),
+               "all daemon refreshes (one line read + one write each)"),
+      ADD_STAT(ageAtForceRefresh, statistics::units::Ratio::get(),
+               "block age at a forced refresh, as a fraction of DRT"),
+      ADD_STAT(refreshStalledHits, statistics::units::Count::get(),
+               "hits delayed because a refresh occupied the data array"),
+      ADD_STAT(refreshStallCycles, statistics::units::Cycle::get(),
+               "cycles hits waited for refreshes"),
+      ADD_STAT(daemonSweepCycles, statistics::units::Cycle::get(),
+               "duration of each full daemon sweep"),
+      ADD_STAT(tSweepCycles, statistics::units::Cycle::get(),
+               "worst-case sweep time the retention guarantee assumes"),
+      ADD_STAT(tGuardCycles, statistics::units::Cycle::get(),
+               "force-refresh threshold on a block's remaining life"),
       ADD_STAT(expiredHitPot, statistics::units::Count::get(),
                "expired blocks accessed within 1.2 DRT of their charge"),
       ADD_STAT(refreshedBlockUtility, statistics::units::Count::get(),
                "hits on blocks the daemon refreshed")
 {
+}
+
+void
+RetentionManager::RetentionStats::regStats()
+{
+    statistics::Group::regStats();
+
     lazyWritebacks = lazyWritebacksRead + lazyWritebacksWrite;
+    ageAtForceRefresh.init(0.0, 1.0, 0.02);
+    daemonSweepCycles.init(20);
+    tSweepCycles.functor([this] {
+        return double(mgr.tSweep) / double(mgr.cache.clockPeriod());
+    });
+    tGuardCycles.functor([this] {
+        return double(mgr.tGuard) / double(mgr.cache.clockPeriod());
+    });
 }
 
 } // namespace gem5
