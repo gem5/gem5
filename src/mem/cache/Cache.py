@@ -95,6 +95,12 @@ class BaseCache(ClockedObject):
         0, "Refresh dirty blocks using daemon process"
     )
 
+    drt_strict = Param.Bool(
+        False,
+        "Panic when a dirty block expires (retention invariant violation) "
+        "instead of counting it",
+    )
+
     tag_latency = Param.Cycles("Tag lookup latency")
     data_latency = Param.Cycles("Data access latency")
     response_latency = Param.Cycles("Latency for the return path on a miss")

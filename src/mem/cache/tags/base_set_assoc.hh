@@ -138,7 +138,9 @@ class BaseSetAssoc : public BaseTags
     bool
     isExpired(CacheBlk *blk) const override
     {
-        return isForgetting() && curTick() >= blk->getFullChargeTick() + drt;
+        // A never-charged block (fullChargeTick == MaxTick) is not expired
+        return isForgetting() && blk->getFullChargeTick() <= curTick() &&
+               curTick() - blk->getFullChargeTick() >= drt;
     }
 
     /**

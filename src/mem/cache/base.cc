@@ -782,6 +782,9 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
     CacheBlk *blk = tags->findBlock({pkt->getAddr(), is_secure});
     MSHR *mshr = mshrQueue.findMatch(blk_addr, is_secure);
 
+    if (retention && blk)
+        retention->onFunctional(blk);
+
     pkt->pushLabel(name());
 
     CacheBlkPrintWrapper cbpw(blk);
@@ -1312,14 +1315,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
     // Access block in the tags
     Cycles tag_latency(0);
-    if (retention && retention->expireOnAccess(pkt, writebacks)) {
-        // The block expired and was invalidated: continue as a miss
-        blk = nullptr;
-    } else {
-        blk = tags->accessBlock(pkt, tag_latency);
-        if (retention && blk)
-            retention->onAccessHit(blk);
-    }
+    // An expired block is invalidated here, so the tag access misses
+    if (retention)
+        retention->expireOnAccess(pkt, writebacks);
+    blk = tags->accessBlock(pkt, tag_latency);
+    if (retention && blk)
+        retention->onAccessHit(blk);
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
@@ -1769,6 +1770,9 @@ BaseCache::invalidateBlock(CacheBlk *blk)
 void
 BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
 {
+    if (retention)
+        retention->onEvict(blk);
+
     PacketPtr pkt = evictBlock(blk);
     if (pkt) {
         writebacks.push_back(pkt);

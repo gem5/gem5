@@ -59,6 +59,7 @@
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
+#include "mem/cache/retention/retention_manager.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue_entry.hh"
 #include "mem/request.hh"
@@ -1053,6 +1054,9 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
     // pending_inval only makes sense on deferred snoops
     assert(!(pending_inval && !is_deferred));
     assert(pkt->isRequest());
+
+    if (retention && blk)
+        retention->onSnoop(blk);
 
     // the packet may get modified if we or a forwarded snooper
     // responds in atomic mode, so remember a few things about the
