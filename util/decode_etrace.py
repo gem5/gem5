@@ -31,40 +31,104 @@
 # discovery parameters carried in the header, Format 0/1/2/3 with
 # spec numeric codes, and the XOR-chain disambiguation bits.
 
+import importlib
 import os
+import subprocess
 import sys
 
 import protolib
 
-try:
-    import etrace_pb2
-except ImportError:
-    print("Did not find proto definition, attempting to generate")
-    from subprocess import call
 
-    # Resolve paths from this script's own location, not the current
-    # working directory -- the documented usage runs this from inside
-    # util/ (`cd util && python3 decode_etrace.py ...`), where the
-    # old repo-root-relative paths ("util", "src/proto") pointed at
-    # util/util and a nonexistent src/proto, silently breaking the
-    # auto-generation fallback in exactly the workflow it documents.
-    _script_dir = os.path.dirname(os.path.abspath(__file__))
-    _repo_root = os.path.dirname(_script_dir)
-    error = call(
-        [
-            "protoc",
-            f"--python_out={_script_dir}",
-            f"--proto_path={os.path.join(_repo_root, 'src', 'proto')}",
-            os.path.join(_repo_root, "src", "proto", "etrace.proto"),
-        ]
-    )
-    if not error:
-        import etrace_pb2
+def _load_etrace_pb2():
+    """Import the generated E-Trace protobuf module, generating it from
+    src/proto/etrace.proto on demand.
 
-        print("Generated proto definitions for E-Trace")
-    else:
-        print("Failed to import proto definitions")
-        exit(-1)
+    protobuf enforces runtime_version >= gencode_version: a stub emitted
+    by a newer protoc than the installed ``protobuf`` runtime raises
+    ``google.protobuf.runtime_version.VersionError`` at import -- which is
+    NOT an ImportError, so it must be handled explicitly rather than
+    crashing with a raw traceback. Prefer generating with the running
+    interpreter's own compiler (grpcio-tools) so gencode always matches
+    the runtime; fall back to the ``protoc`` binary on PATH (as gem5's
+    other decoders do); and if a skew still occurs, exit with the exact
+    remedy instead of a traceback.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(script_dir)
+    proto_path = os.path.join(repo_root, "src", "proto")
+    proto_file = os.path.join(proto_path, "etrace.proto")
+    if script_dir not in sys.path:
+        sys.path.insert(0, script_dir)
+
+    def _generate(compiler_argv):
+        return (
+            subprocess.call(
+                compiler_argv
+                + [
+                    f"--python_out={script_dir}",
+                    f"--proto_path={proto_path}",
+                    proto_file,
+                ]
+            )
+            == 0
+        )
+
+    def _generate_matching_runtime():
+        # grpcio-tools bundles a protoc whose gencode == this
+        # interpreter's protobuf runtime, so the two can never disagree.
+        try:
+            import grpc_tools.protoc  # noqa: F401
+        except ImportError:
+            return False
+        return _generate([sys.executable, "-m", "grpc_tools.protoc"])
+
+    def _import():
+        if "etrace_pb2" in sys.modules:
+            return importlib.reload(sys.modules["etrace_pb2"])
+        return importlib.import_module("etrace_pb2")
+
+    # 1) Use an already-generated stub if it imports cleanly.
+    try:
+        return _import()
+    except ImportError:
+        pass
+    except Exception:
+        # Stale/incompatible stub on disk; fall through to regenerate.
+        pass
+
+    # 2) Generate -- prefer the runtime's own compiler, else PATH protoc.
+    if not _generate_matching_runtime() and not _generate(["protoc"]):
+        sys.exit(
+            "error: cannot generate etrace_pb2.py -- no protobuf compiler "
+            "found.\n"
+            "  install one of:  apt-get install protobuf-compiler\n"
+            "                   pip install grpcio-tools"
+        )
+
+    # 3) Import the freshly generated stub, translating a version skew
+    #    into an actionable message.
+    try:
+        return _import()
+    except ImportError:
+        sys.exit("error: failed to import generated etrace_pb2.py")
+    except Exception as exc:
+        import google.protobuf as _pb
+
+        sys.exit(
+            "error: protobuf gencode/runtime version mismatch loading "
+            "etrace_pb2.py:\n"
+            f"  {exc}\n"
+            f"installed protobuf runtime: {_pb.__version__}\n"
+            "The protoc that generated the stub is newer than this "
+            "runtime (protobuf requires runtime >= gencode). Fix either "
+            "side:\n"
+            "  pip install -U protobuf    # raise the runtime (recommended)\n"
+            "  pip install grpcio-tools   # let this script regenerate with "
+            "a matching compiler"
+        )
+
+
+etrace_pb2 = _load_etrace_pb2()
 
 
 FORMAT_NAMES = {
