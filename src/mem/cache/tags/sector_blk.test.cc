@@ -43,7 +43,9 @@ class SectorBlkTestF : public ::testing::Test
   protected:
     void
     SetUp() override
-    { curEventQueue(&eventQueue); }
+    {
+        curEventQueue(&eventQueue);
+    }
 };
 
 /**
