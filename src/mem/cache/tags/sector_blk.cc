@@ -96,6 +96,13 @@ SectorSubBlk::operator=(SectorSubBlk &&other)
     return *this;
 }
 
+CacheBlk &
+SectorSubBlk::operator=(CacheBlk &&other)
+{
+    operator=(std::move(static_cast<SectorSubBlk &&>(other)));
+    return *this;
+}
+
 void
 SectorSubBlk::setValid()
 {

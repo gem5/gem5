@@ -76,6 +76,7 @@ class SectorSubBlk : public CacheBlk
      * its sector block nor its offset.
      */
     SectorSubBlk &operator=(SectorSubBlk &&other);
+    CacheBlk &operator=(CacheBlk &&other) override;
     ~SectorSubBlk() = default;
 
     /**

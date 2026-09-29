@@ -81,8 +81,10 @@ TEST_F(SectorBlkTestF, MoveSubBlockEmptySectorSucceeds)
     ASSERT_TRUE(src_sub.isValid());
     ASSERT_EQ(src_sub.getTag(), 0x12345);
 
-    // Move to empty sector
-    dest_sub = std::move(src_sub);
+    // Move to empty sector via polymorphic CacheBlk& (production path)
+    CacheBlk &dest_blk = dest_sub;
+    CacheBlk &src_blk = src_sub;
+    dest_blk = std::move(src_blk);
 
     EXPECT_TRUE(dest_sector.isValid());
     EXPECT_EQ(dest_sector.getTag(), 0x12345);
@@ -129,8 +131,10 @@ TEST_F(SectorBlkTestF, MoveSubBlockSameSectorSucceeds)
     TaggedEntry::KeyType src_key{0x12345080, false};
     src_sub.insert(src_key);
 
-    // Co-allocate into dest_sub1
-    dest_sub1 = std::move(src_sub);
+    // Co-allocate into dest_sub1 via polymorphic CacheBlk& (production path)
+    CacheBlk &dest_blk1 = dest_sub1;
+    CacheBlk &src_blk = src_sub;
+    dest_blk1 = std::move(src_blk);
 
     EXPECT_TRUE(dest_sector.isValid());
     EXPECT_EQ(dest_sector.getTag(), 0x12345);
@@ -180,8 +184,11 @@ TEST_F(SectorBlkTestF, MoveSubBlockDifferentSectorPanics)
     ASSERT_TRUE(src_sub.isValid());
     ASSERT_EQ(src_sub.getTag(), 0x99999);
 
-    // Attempting to move tag 0x99999 into sector with tag 0x12345 must panic!
-    EXPECT_THROW(dest_sub1 = std::move(src_sub), gem5::GTestException);
+    // Attempting to move tag 0x99999 into sector with tag 0x12345 via
+    // polymorphic CacheBlk& must panic!
+    CacheBlk &dest_blk1 = dest_sub1;
+    CacheBlk &src_blk = src_sub;
+    EXPECT_THROW(dest_blk1 = std::move(src_blk), gem5::GTestException);
     EXPECT_THAT(gtestLogOutput.str(),
                 ::testing::HasSubstr("Overwriting valid sector!"));
 }
