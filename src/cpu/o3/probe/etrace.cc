@@ -93,7 +93,7 @@ ETrace::ETrace(const ETraceParams &params)
              "lower threshold cannot be legally represented).\n",
              name());
 
-    std::string filename = simout.resolve(name() + "." + params.traceFile);
+    std::string filename = simout.resolve(params.traceFile);
     traceStream = new ProtoOutputStream(filename);
 
     ProtoMessage::ETraceHeader header;
@@ -137,7 +137,7 @@ ETrace::ETrace(const ETraceParams &params)
 
     if (dataTrace) {
         std::string dataFilename =
-            simout.resolve(name() + "." + params.dataTraceFile);
+            simout.resolve(params.dataTraceFile);
         dataTraceStream = new ProtoOutputStream(dataFilename);
         // Data trace has its own header (same schema) so the decoder
         // can identify the stream and align to packet boundaries.
