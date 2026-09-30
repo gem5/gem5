@@ -150,7 +150,7 @@ jobs:
         strategy:
             matrix:
                 type: [debug]
-        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        runs-on: [self-hosted, linux, x64]
         container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         timeout-minutes: 60
         steps:
@@ -220,7 +220,7 @@ jobs:
     testlib-long-tests:
         name: long-tests
         if: ${{ !cancelled() && needs.get-testlib-long-dirs.result == 'success' && (inputs.coverage || needs.build-testlib-gem5.result == 'success') }}
-        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        runs-on: [self-hosted, linux, x64]
         container:
             image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
@@ -349,7 +349,7 @@ jobs:
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
     sst-test:
-        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 240
         needs: get-date
@@ -399,7 +399,7 @@ jobs:
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
   # simulation with it.
     systemc-test:
-        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
         env:
@@ -451,7 +451,7 @@ jobs:
                       }}","run_continue":"${{ steps.run-continue.outcome }}"}'
 
     dramsys-tests:
-        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        runs-on: [self-hosted, linux, x64]
         container:
             image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:

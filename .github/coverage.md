@@ -30,7 +30,7 @@ beyond that platform limit are cancelled. Campaigns are serialized without
 cancelling an active campaign, and quick,
 Daily, and Weekly workloads run sequentially to retain the five-job TestLib
 matrix limit. Later workloads still collect coverage if an earlier one fails.
-Coverage builds and tests target the dedicated `gem5-coverage` runner group.
+Coverage builds and tests use the existing shared Linux x86_64 runner pool.
 Reporting and upload recovery run on GitHub-hosted runners.
 
 ## Enabling the completion trigger
@@ -39,7 +39,7 @@ Use this deployment order:
 
 1. Merge the coverage changes to `develop`. Set the repository Actions
    variable `GEM5_COVERAGE_DISABLED` to `true` while preparing deployment.
-2. Provision and check the dedicated runner group described below.
+2. Check the shared runner requirements described below.
 3. Install the matching workflows, configuration, and runtime tools on
    `stable`; remove the old coverage workflow and scheduler dispatch.
 4. Fetch both branches and run the deployment comparison below. Review the
@@ -50,7 +50,7 @@ Use this deployment order:
 
 Setting the variable back to `true` stops new automatic collections without
 changing ordinary tests or disabling report-only recovery. It does not cancel
-an active campaign. The dedicated runner group and branch installation are
+an active campaign. Runner capacity checks and branch installation are
 external deployment steps, not actions performed by merging this PR.
 
 GitHub requires a `workflow_run` workflow on the repository's default branch,
@@ -91,21 +91,12 @@ qualifying Weekly run's commit instead. The gate does not execute or download
 code from the completed run; it admits only same-repository `develop` runs
 started through the ordinary dispatch workflows.
 
-## Runner isolation and shared builds
+## Runner requirements and shared builds
 
-Provision the `gem5-coverage` group before activating collection. Its runners
-must be Linux x86_64 machines with Docker and the `/gem5-resource-cache`
-mount. Register them without default labels and give them only the
-`gem5-coverage` label, so ordinary jobs selecting `self-hosted`, `linux`, and
-`x64` cannot consume this pool. Group membership alone does not prevent those
-ordinary label-based jobs from using a runner.
-
-Restrict the group's workflow access to these definitions at
-`refs/heads/stable`: `gem5/gem5/.github/workflows/codecov.yaml`,
-`quick-tests.yaml`, `daily-tests.yaml`, and `weekly-tests.yaml` (use the full
-repository/workflow path for each). GitHub applies this restriction to the
-workflows directly defining jobs, including reusable workflows. Runner
-provisioning and group access settings are external to this PR.
+Coverage uses the same `[self-hosted, linux, x64]` selection as ordinary
+Linux tests. Those runners need Docker and the `/gem5-resource-cache`
+mount. No additional runner group or coverage label is required.
+Coverage shares available capacity with development and scheduled testing.
 
 The coordinator resolves the all-dependencies image to an immutable Linux
 x86_64 digest, discovers the union of TestLib build targets across all three

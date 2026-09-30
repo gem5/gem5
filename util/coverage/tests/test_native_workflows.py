@@ -35,6 +35,30 @@ import yaml
 
 
 class NativeWorkflowPlanTest(unittest.TestCase):
+    def test_coverage_uses_the_existing_shared_runner_selection(self):
+        root = Path(__file__).parents[3]
+        found = set()
+        for filename in (
+            "codecov.yaml",
+            "quick-tests.yaml",
+            "daily-tests.yaml",
+            "weekly-tests.yaml",
+        ):
+            workflow = yaml.safe_load(
+                (root / ".github/workflows" / filename).read_text()
+            )
+            for name, job in workflow["jobs"].items():
+                actions = {step.get("uses") for step in job.get("steps", [])}
+                if name == "coverage-builds" or actions & {
+                    "./.github/actions/collect-native-coverage",
+                    "./.github/actions/restore-coverage-build",
+                }:
+                    found.add((filename, name))
+                    self.assertEqual(
+                        job["runs-on"], ["self-hosted", "linux", "x64"]
+                    )
+        self.assertEqual(len(found), 9)
+
     def test_all_collected_groups_and_execution_stages_match_the_plan(self):
         root = Path(__file__).parents[3]
         plan = json.loads((root / ".github/coverage-native.json").read_text())
