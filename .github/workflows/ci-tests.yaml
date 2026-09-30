@@ -141,11 +141,21 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/clang-version-22:latest
-        needs: [pre-commit]
+        needs: [pre-commit, get-date]
         timeout-minutes: 90
         steps:
-            - uses: actions/checkout@v7
-            - name: Clang Compilation
+            - name: Repo checkout
+              uses: actions/checkout@v7
+
+            - name: Clang compilation cache restoration
+              uses: actions/cache/restore@v6
+              with:
+                  path: build/ALL
+                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      clang-build-ALL-fast
+
+            - name: Clang compilation
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/gem5.fast -j $(nproc)
 
