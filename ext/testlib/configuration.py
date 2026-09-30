@@ -273,7 +273,6 @@ def define_constants(constants):
     constants.host_isa_tag_type = "host"
     constants.host_x86_64_tag = "x86_64"
     constants.host_arm_tag = "aarch64"
-    constants.host_gcn_gpu_tag = "gcn_gpu"
 
     constants.kvm_tag = "kvm"
 
@@ -312,7 +311,10 @@ def define_constants(constants):
     constants.target_host = {
         constants.arm_tag: (constants.host_arm_tag,),
         constants.x86_tag: (constants.host_x86_64_tag,),
-        constants.vega_x86_tag: (constants.host_gcn_gpu_tag,),
+        constants.vega_x86_tag: (
+            constants.host_x86_64_tag,
+            constants.host_arm_tag,
+        ),
         constants.sparc_tag: (constants.host_x86_64_tag,),
         constants.riscv_tag: (constants.host_x86_64_tag,),
         constants.mips_tag: (constants.host_x86_64_tag,),

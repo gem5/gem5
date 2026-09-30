@@ -45,13 +45,15 @@ class OrderedDefaultDict(OrderedDict, defaultdict):
         self.default_factory = default_factory
 
 
-def diff_files(upstream, feature, paths=[]):
+def diff_files(upstream, feature, paths=None):
     """Given two git branches and an optional parameter 'path', determine
     which files differ between the two branches. Afterwards, organize the
     files with a printer-friendly data structure.
 
     Returns: Dictionary of directories with their corresponding files
     """
+
+    paths = [] if paths is None else paths
 
     raw = subprocess.check_output(
         ["git", "diff", "--name-status", f"{upstream}..{feature}", "--"]

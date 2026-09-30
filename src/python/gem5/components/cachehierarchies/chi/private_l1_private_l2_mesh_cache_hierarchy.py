@@ -125,14 +125,12 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
         )
 
         self._noc_params = noc_params
-        self._node_params: Dict[CHI_NodeType, Node_Params] = {}
+        self._node_params: dict[CHI_NodeType, Node_Params] = {}
 
     def add_nodes(self, node_params: Node_Params):
         self._node_params[node_params.node_type] = node_params
 
-    def _get_node_params(
-        self, node_type: CHI_NodeType
-    ) -> Optional[Node_Params]:
+    def _get_node_params(self, node_type: CHI_NodeType) -> Node_Params | None:
         mandatory_node_types = (
             CHI_NodeType.CHI_RNF,
             CHI_NodeType.CHI_HNF,
@@ -279,7 +277,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
     def _configure_controllers(
-        self, *node_groups: Tuple[List[SubSystem], Optional[Node_Params]]
+        self, *node_groups: tuple[list[SubSystem], Node_Params | None]
     ) -> None:
         req_channels = self._noc_params.req_ext_channels
         snp_channels = self._noc_params.snp_ext_channels
@@ -353,7 +351,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
 
     def _create_hnfs(
         self, board: AbstractBoard, num_hnfs: int
-    ) -> List[CHI_HNF]:
+    ) -> list[CHI_HNF]:
         hnfs = []
         mem_ranges = list(board.get_mem_ranges())
         for idx in range(num_hnfs):
@@ -384,9 +382,9 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
     def _create_rnfs(
         self,
         board: AbstractBoard,
-        cores: List[AbstractCore],
+        cores: list[AbstractCore],
         num_rnfs: int,
-    ) -> List[CHI_RNF]:
+    ) -> list[CHI_RNF]:
         """Given the core and core number, create a split I/D + private L2."""
         rnfs = []
         for core_num, core in enumerate(cores):
@@ -465,7 +463,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
         board: AbstractBoard,
         num_snfs: int,
         num_boot_snfs: int,
-    ) -> Tuple[List[CHI_SNF_MainMem], List[CHI_SNF_BootMem]]:
+    ) -> tuple[list[CHI_SNF_MainMem], list[CHI_SNF_BootMem]]:
 
         mem_ports = board.get_mem_ports()
 
@@ -495,7 +493,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
         self,
         board: AbstractBoard,
         num_rnis: int,
-    ) -> List[CHI_RNI_DMA]:
+    ) -> list[CHI_RNI_DMA]:
         rnis = []
 
         dma_ports = board.get_dma_ports()

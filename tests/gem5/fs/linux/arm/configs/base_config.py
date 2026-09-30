@@ -50,6 +50,8 @@ import m5
 from m5.objects import *
 from m5.proxy import *
 
+from gem5.isas import ISA
+
 _have_kvm_support = "BaseKvmCPU" in globals()
 
 
@@ -66,7 +68,7 @@ class BaseSystem(metaclass=ABCMeta):
         self,
         mem_mode="timing",
         mem_class=SimpleMemory,
-        cpu_class=TimingSimpleCPU,
+        cpu_class=ArmTimingSimpleCPU,
         num_cpus=1,
         num_threads=1,
         checker=False,
@@ -191,8 +193,10 @@ class BaseSystem(metaclass=ABCMeta):
         if self.use_ruby:
             # Add the ruby specific and protocol specific options
             parser = argparse.ArgumentParser()
-            Options.addCommonOptions(parser)
+            Options.addCommonOptions(parser, default_isa=ISA.ARM)
             Ruby.define_options(parser)
+            # Ruby defaults to an x86 CPU even for an Arm-only build.
+            parser.set_defaults(cpu_type=self.cpu_class.__name__)
             args, extra = parser.parse_known_args()
 
             # Set the default cache size and associativity to be very
@@ -218,7 +222,7 @@ class BaseSystem(metaclass=ABCMeta):
             for i, cpu in enumerate(system.cpu):
                 if not cpu.switched_out:
                     cpu.createInterruptController()
-                    cpu.connectCachedPorts(system.ruby._cpu_ports[i].in_ports)
+                    system.ruby._cpu_ports[i].connectCpuPorts(cpu)
         else:
             sha_bus = self.create_caches_shared(system)
             for cpu in system.cpu:
