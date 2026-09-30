@@ -23,7 +23,9 @@ safe-outputs:
   create-issue:
     title-prefix: "misc: [Test Failure Doctor] "
     labels: [misc, agentic-workflows]
-  add-comment:
+  create-pull-request-review-comment:
+    max: 10
+    target: "*"
   update-issue:
   noop:
   jobs:
@@ -178,8 +180,18 @@ information available to you.
      - If the failure category was **Flaky Tests**, *do not* open an issue.
      - If the failure category was **Infrastructure**, do not expose the runner
        name or runner filepaths in the issue.
-   - If the failing test was a `CI` Test, leave a comment on the related PR with analysis.
-      - If one of the failure types was **Clang format failure**, leave the following comment
+   - If the failing test was a `CI` Test, leave review comment(s) on the related PR with analysis.
+      - If there are multiple failing tests, split up the review comments/ failure analysis **by test**
+      and anchor them to the relevant lines or file that caused the failure.
+      - If there aren't any particular line(s) changed or file(s) that a test
+      failure is related to, or if you can't identify which line(s) or files(s)
+      a failure is caused by, anchor the review comment to the first file shown
+      in the `Files changed` tab on GitHub, and leave the following message at
+      the top of the review comment, below the title:
+      `Note: This comment is meant for the entire PR and is not related to only this file.`
+        - If there are multiple test failures not related to/ not identifiably
+        related to a line or file, consolidate the analysis into one review comment.
+      - If one of the failure types was **Clang format failure**, leave the following comment:
 
 ## Output Requirements
 
