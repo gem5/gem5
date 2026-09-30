@@ -879,6 +879,13 @@ LLVMInterface::finalize()
     simStop = std::chrono::high_resolution_clock::now();
     simTotal = simStop - timeStart;
     printResults();
+    assert(activeFunctions.empty());
+    for (auto &value : values) {
+        value->releaseGraphEdges();
+    }
+    for (auto &func : functions) {
+        func->releaseGraphEdges();
+    }
     functions.clear();
     values.clear();
     comm->finish();

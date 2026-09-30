@@ -111,6 +111,7 @@ class Instruction : public Value
     Instruction(uint64_t id, gem5::SimObject *owner, bool dbg, uint64_t OpCode,
                 uint64_t cycles, uint64_t functional_unit); //
     ~Instruction();                                         //
+    void releaseGraphEdges() override;
     bool
     operator==(const std::shared_ptr<SALAM::Instruction> inst) const
     {
@@ -418,6 +419,7 @@ class Br : public Instruction
     ~Br() = default;
     void initialize(llvm::Value *irval, irvmap *irmap,
                     SALAM::valueListTy *valueList);
+    void releaseGraphEdges() override;
     Br &
     isConditional(bool isConditional)
     {
@@ -504,6 +506,7 @@ class Switch : public Instruction
     ~Switch() = default;
     void initialize(llvm::Value *irval, irvmap *irmap,
                     SALAM::valueListTy *valueList);
+    void releaseGraphEdges() override;
     std::shared_ptr<SALAM::BasicBlock> getTarget() override;
     bool
     isTerminator() override
@@ -2260,6 +2263,7 @@ class Phi : public Instruction
     ~Phi() = default;
     void initialize(llvm::Value *irval, irvmap *irmap,
                     SALAM::valueListTy *valueList);
+    void releaseGraphEdges() override;
     virtual std::vector<uint64_t> runtimeInitialize() override;
     bool
     isPhi() override
@@ -2315,6 +2319,7 @@ class Call : public Instruction
     ~Call() = default;
     void initialize(llvm::Value *irval, irvmap *irmap,
                     SALAM::valueListTy *valueList);
+    void releaseGraphEdges() override;
     bool
     isCall() override
     {

@@ -63,6 +63,7 @@ class Function : public Value
     using SALAM::Value::initialize;
     void initialize(llvm::Value *irval, irvmap *vmap,
                     SALAM::valueListTy *valueList, std::string topName);
+    void releaseGraphEdges() override;
     bool
     isTop()
     {

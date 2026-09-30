@@ -114,6 +114,11 @@ class Value
         return uid == v.uid;
     }
     ~Value();
+    // Drop shared_ptr edges into the SALAM graph. Containers that own
+    // the nodes call this before they release those nodes.
+    virtual void
+    releaseGraphEdges()
+    {}
     virtual void initialize(llvm::Value *irval, SALAM::irvmap *irmap);
     uint64_t
     getSize()

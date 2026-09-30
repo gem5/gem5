@@ -88,6 +88,7 @@ class BasicBlock : public Value
     using SALAM::Value::initialize;
     void initialize(llvm::Value *irval, irvmap *vmap,
                     SALAM::valueListTy *valueList);
+    void releaseGraphEdges() override;
     std::vector<std::shared_ptr<SALAM::Instruction>> *
     Instructions()
     {

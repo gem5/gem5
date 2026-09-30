@@ -86,6 +86,14 @@ SALAM::Instruction::Instruction(uint64_t id, gem5::SimObject *owner, bool dbg,
 SALAM::Instruction::~Instruction()
 {}
 
+void
+SALAM::Instruction::releaseGraphEdges()
+{
+    staticDependencies.clear();
+    dynamicDependencies.clear();
+    dynamicUsers.clear();
+}
+
 SALAM::Instruction::Instruction_Debugger::Instruction_Debugger()
 {}
 
@@ -511,6 +519,16 @@ Br::initialize(llvm::Value *irval, irvmap *irmap,
 }
 
 void
+Br::releaseGraphEdges()
+{
+    condition.reset();
+    defaultDestination.reset();
+    trueDestination.reset();
+    falseDestination.reset();
+    Instruction::releaseGraphEdges();
+}
+
+void
 Br::compute()
 {
     // Br does not use compute.
@@ -556,6 +574,14 @@ Switch::getTarget()
         }
     }
     return defaultDestination;
+}
+
+void
+Switch::releaseGraphEdges()
+{
+    cases.clear();
+    defaultDestination.reset();
+    Instruction::releaseGraphEdges();
 }
 
 void
@@ -2953,6 +2979,14 @@ Phi::compute()
 }
 
 void
+Phi::releaseGraphEdges()
+{
+    previousBB.reset();
+    phiArgs.clear();
+    Instruction::releaseGraphEdges();
+}
+
+void
 Phi::setPrevBB(std::shared_ptr<SALAM::BasicBlock> prevBB)
 {
     auto it = phiArgs.find(prevBB);
@@ -2999,6 +3033,13 @@ Call::Call(uint64_t id, gem5::SimObject *owner, bool dbg, uint64_t OpCode,
     base_params.push_back(OpCode);
     base_params.push_back(cycles);
     conditions.push_back(base_params);
+}
+
+void
+Call::releaseGraphEdges()
+{
+    callee.reset();
+    Instruction::releaseGraphEdges();
 }
 
 void

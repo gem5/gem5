@@ -48,6 +48,14 @@ SALAM::Function::Function(uint64_t id, gem5::SimObject *owner, bool dbg)
 {}
 
 void
+SALAM::Function::releaseGraphEdges()
+{
+    for (auto &bb : bbList) {
+        bb->releaseGraphEdges();
+    }
+}
+
+void
 SALAM::Function::initialize(llvm::Value *irval, irvmap *vmap,
                             SALAM::valueListTy *valueList, std::string topName)
 {

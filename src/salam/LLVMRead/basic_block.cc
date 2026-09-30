@@ -52,6 +52,15 @@ SALAM::BasicBlock::BasicBlock(uint64_t id, gem5::SimObject *owner, bool dbg)
 SALAM::BasicBlock::~BasicBlock()
 {}
 
+void
+SALAM::BasicBlock::releaseGraphEdges()
+{
+    predecessors.clear();
+    for (auto &inst : instructions) {
+        inst->releaseGraphEdges();
+    }
+}
+
 SALAM::BasicBlock::BasicBlock_Debugger::BasicBlock_Debugger()
 {}
 
