@@ -1527,7 +1527,10 @@ Fault
     if (update_fault != NoFault) { return update_fault; }
 
 
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+    float vflmul = getVflmul(machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(machInst.width),
+                             getSew(machInst.vtype8.vsew), vflmul, false);
+    if (emul * this->numFields > 8)
         return std::make_shared<IllegalInstFault>(
             "LMUL value is illegal for vlseg inst", machInst);
 
@@ -1581,7 +1584,10 @@ Fault
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+    float vflmul = getVflmul(machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(machInst.width),
+                             getSew(machInst.vtype8.vsew), vflmul, false);
+    if (emul * this->numFields > 8)
         return std::make_shared<IllegalInstFault>(
             "LMUL value is illegal for vlseg inst", machInst);
 
@@ -1799,7 +1805,10 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+    float vflmul = getVflmul(machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(machInst.width),
+                             getSew(machInst.vtype8.vsew), vflmul, false);
+    if (emul * this->numFields > 8)
         return std::make_shared<IllegalInstFault>(
             "LMUL value is illegal for vsseg inst", machInst);
 
@@ -1854,7 +1863,10 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+    float vflmul = getVflmul(machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(machInst.width),
+                             getSew(machInst.vtype8.vsew), vflmul, false);
+    if (emul * this->numFields > 8)
         return std::make_shared<IllegalInstFault>(
             "LMUL value is illegal for vsseg inst", machInst);
 
