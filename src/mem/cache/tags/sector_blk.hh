@@ -63,8 +63,7 @@ class SectorSubBlk : public CacheBlk
 
   public:
     SectorSubBlk() : CacheBlk(), _sectorBlk(nullptr), _sectorOffset(0) {}
-    SectorSubBlk(const SectorSubBlk&) = delete;
-    using CacheBlk::operator=;
+    SectorSubBlk(const SectorSubBlk &) = delete;
     SectorSubBlk& operator=(const SectorSubBlk&) = delete;
     SectorSubBlk(SectorSubBlk&&) = delete;
     /**
@@ -72,10 +71,13 @@ class SectorSubBlk : public CacheBlk
      * This should only be used to move an existing valid entry into an
      * invalid one, not to create a new entry. In the end the valid entry
      * will become invalid, and the invalid, valid. All location related
-     * variables will remain the same, that is, an entry cannot change
-     * its sector block nor its offset.
+     * variables will remain the same, that is, an entry cannot move its
+     * data, just its metadata contents. As SectorSubBlk only holds additional
+     * location data, we can use the unmodified CacheBlk move assignment
+     * operator.
      */
-    SectorSubBlk& operator=(SectorSubBlk&& other) = default;
+    using CacheBlk::operator=;
+    SectorSubBlk &operator=(SectorSubBlk &&other);
     ~SectorSubBlk() = default;
 
     /**
@@ -144,6 +146,8 @@ class SectorBlk : public TaggedEntry
   public:
     SectorBlk();
     SectorBlk(const SectorBlk&) = delete;
+    SectorBlk(SectorBlk &&) = delete;
+    SectorBlk &operator=(SectorBlk &&) = delete;
     SectorBlk& operator=(const SectorBlk&) = delete;
     ~SectorBlk() {};
 

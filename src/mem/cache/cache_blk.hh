@@ -168,6 +168,15 @@ class CacheBlk : public TaggedEntry
      * will become invalid, and the invalid, valid. All location related
      * variables will remain the same, that is, an entry cannot move its
      * data, just its metadata contents.
+     *
+     * This implementation has to be virtual, because move assignments are
+     * generally performed on the CacheBlk object. If the CacheBlk is backed
+     * by an inheriting class like CompressionBlk, we need the inheritor to
+     * handle the move operation, even if it's called on a CacheBlk type.
+     *
+     * @param other A valid CacheBlk whose metadata should be moved into the
+     *              current entry
+     * @return *this
      */
     virtual CacheBlk&
     operator=(CacheBlk&& other)
@@ -177,10 +186,10 @@ class CacheBlk : public TaggedEntry
         assert(!isValid());
         assert(other.isValid());
 
-        insert({other.getTag(), other.isSecure()});
-
         if (other.wasPrefetched()) {
             setPrefetched();
+        } else {
+            clearPrefetched();
         }
         setCoherenceBits(other.coherence);
         setTaskId(other.getTaskId());
@@ -190,7 +199,13 @@ class CacheBlk : public TaggedEntry
         setSrcRequestorId(other.getSrcRequestorId());
         std::swap(lockList, other.lockList);
 
-        other.invalidate();
+        /*
+         * We assume that the TaggedEntry move assignment operator invalidates
+         * the source block. We cannot call invalidate again, as this would
+         * cause side effects on some CacheBlk implementations.
+         */
+        TaggedEntry::operator=(std::move(other));
+        assert(!other.isValid());
 
         return *this;
     }
@@ -532,8 +547,55 @@ class TempCacheBlk final : public CacheBlk
         registerTagExtractor(ext);
     }
     TempCacheBlk(const TempCacheBlk&) = delete;
-    using CacheBlk::operator=;
+    TempCacheBlk(TempCacheBlk &&) = delete;
     TempCacheBlk& operator=(const TempCacheBlk&) = delete;
+    /**
+     * Move assignment operator.
+     * This should only be used to move an existing valid entry into an
+     * invalid one, not to create a new entry. In the end the valid entry
+     * will become invalid, and the invalid, valid. All location related
+     * variables will remain the same, that is, an entry cannot move its
+     * data, just its metadata contents. Because of this, we do not interact
+     * with any stored ReplaceableEntry data.
+     *
+     * This operator must only be used with other instances of TempCacheBlk. A
+     * similar operation cannot be done using any other CacheBlk instance,
+     * because the tempBlock's address needs to be stored.
+     *
+     * @param other A valid TempCacheBlk whose metadata should be moved into
+     *              the current entry
+     * @return *this
+     */
+    TempCacheBlk &
+    operator=(TempCacheBlk &&other)
+    {
+        // Copying an entry into a valid one would imply in skipping all
+        // replacement steps, so it cannot be allowed
+        assert(!isValid());
+        assert(other.isValid());
+
+        _addr = other._addr;
+
+        CacheBlk::operator=(std::move(other));
+        assert(!other.isValid());
+
+        return *this;
+    }
+
+    CacheBlk &
+    operator=(CacheBlk &&other) override
+    {
+        auto *temp_other = dynamic_cast<TempCacheBlk *>(&other);
+
+        if (!temp_other) {
+            panic("A CacheBlk instance must not be moved into a TempCacheBlk, "
+                  "because we cannot restore the address.");
+        }
+
+        TempCacheBlk::operator=(std::move(*temp_other));
+        return *this;
+    }
+
     ~TempCacheBlk() { delete [] data; };
 
     /**
