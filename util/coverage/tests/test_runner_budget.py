@@ -255,6 +255,7 @@ class RunnerBudgetTest(unittest.TestCase):
                 "testlib-quick-execution",
             },
             "daily-tests.yaml": {
+                "build-clang-gem5-fast",
                 "build-testlib-gem5",
                 "unittests-debug",
                 "testlib-long-tests",

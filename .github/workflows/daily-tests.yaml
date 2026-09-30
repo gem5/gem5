@@ -98,6 +98,31 @@ jobs:
                   fi
               timeout-minutes: 120
 
+    build-clang-gem5-fast:
+        # Refresh the ordinary CI cache without consuming coverage runners.
+        if: ${{ !inputs.coverage }}
+        # Builds gem5.fast using the latest supported clang
+        # version. This is cached and used in the CI tests.
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/clang-version-22:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - name: Repo checkout
+              uses: actions/checkout@v7
+
+            - name: Clang compilation cache
+              uses: actions/cache@v6
+              with:
+                  path: build/ALL
+                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      clang-build-ALL-fast
+
+            - name: Clang compilation
+              run: scons build/ALL/gem5.fast -j $(nproc)
+
     build-testlib-gem5:
         if: ${{ !inputs.coverage }}
         runs-on: [self-hosted, linux, x64]
