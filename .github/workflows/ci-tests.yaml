@@ -92,7 +92,7 @@ jobs:
             - uses: actions/checkout@v7
             - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              run: python3 util/ci/native.py unittests-${{ matrix.type }} --jobs "$(nproc)" --status "$RUNNER_TEMP/native-status.json"
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -105,30 +105,13 @@ jobs:
         steps:
             - uses: actions/checkout@v7
             - name: Get directories for testlib-quick
-              working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q > "$RUNNER_TEMP/test-suites"
-                  test_dirs=$(jq -Rsc '
-                    split("\n") |
-                    map(select(startswith("SuiteUID:")) |
-                        split(":")[1] | split("/")[1:-1] | join("/")) |
-                    unique |
-                    if length == 0 then error("No TestLib suites found") else . end
-                  ' "$RUNNER_TEMP/test-suites")
-                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
-
+                  python3 util/ci/testlib.py discover --length quick > "$RUNNER_TEMP/test-plan.json"
+                  echo "test-dirs-matrix=$(jq -c '.directories' "$RUNNER_TEMP/test-plan.json")" >> "$GITHUB_OUTPUT"
             - name: Get the build targets for testlib-quick-gem5-builds
-              working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: |
-                  ./main.py list --build-targets -q > "$RUNNER_TEMP/build-targets"
-                  build_matrix=$(jq -Rsc '
-                    split("\n") | map(select(length > 0)) |
-                    if length == 0 then error("No TestLib build targets found") else . end
-                  ' "$RUNNER_TEMP/build-targets")
-                  echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
-
+              run: echo "build-matrix=$(jq -c '.targets' "$RUNNER_TEMP/test-plan.json")" >> "$GITHUB_OUTPUT"
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
@@ -280,9 +263,9 @@ jobs:
         # Run the testlib quick tests in the given directory.
             - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -t $(nproc) ${{  matrix.test-dir }}
-
+              env:
+                  TEST_DIR: ${{ matrix.test-dir }}
+              run: python3 util/ci/testlib.py run --directory "$TEST_DIR" --length quick --skip-build --jobs "$(nproc)"
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
