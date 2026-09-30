@@ -322,6 +322,43 @@ class CoverageTest(unittest.TestCase):
         self.assertFalse(list(self.target.rglob("*.gcda")))
         self.assertIn("gcc_versions", records[0]["build"])
 
+    def test_real_profiles_support_both_report_query_directions(self):
+        report_path = MODULE.parents[2] / "util/coverage/report.py"
+        spec = importlib.util.spec_from_file_location(
+            "fixture_coverage_report", report_path
+        )
+        report = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(report)
+        first, second = self.run_program("a"), self.run_program("b")
+        database = self.build.output / "index.sqlite3"
+        index = report.Index(database, self.build.output, self.build.revision)
+        self.addCleanup(index.db.close)
+        for record in (first, second):
+            index.profile(
+                self.build.output / record["invocation_id"] / "coverage.json"
+            )
+        index.db.commit()
+        # Only the b invocation reaches the second conditional.
+        covered_by = report.query(database, location="main.c:6")
+        self.assertEqual(
+            [row["uid"] for row in covered_by], [second["test_uid"]]
+        )
+        covered_lines = report.query(database, uid=first["test_uid"])
+        self.assertIn(
+            ("native", "main.c", 4),
+            [
+                (row["language"], row["path"], row["line"])
+                for row in covered_lines
+            ],
+        )
+        self.assertNotIn(
+            ("native", "main.c", 6),
+            [
+                (row["language"], row["path"], row["line"])
+                for row in covered_lines
+            ],
+        )
+
     def test_branch_identity_distinguishes_opposite_paths(self):
         records = [self.run_program(argument) for argument in "ab"]
         baseline = json.loads(
