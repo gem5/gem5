@@ -221,7 +221,7 @@ jobs:
         timeout-minutes: 180
         strategy:
             fail-fast: false
-            max-parallel: 2
+            max-parallel: 4
             matrix:
                 target: ${{ fromJSON(needs.coverage-build-plan.outputs.targets) }}
         steps:
@@ -249,27 +249,61 @@ jobs:
                   overwrite: true
                   if-no-files-found: error
 
-    quick:
+    # One phase at a time uses the shared self-hosted pool: four builds,
+    # two quick native jobs, four Daily native jobs, or four TestLib jobs.
+    quick-native:
+        name: Quick native coverage
         needs: [gate, coverage-image, coverage-build-plan, coverage-builds]
         if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
             == 'success' }}
         uses: ./.github/workflows/quick-tests.yaml
         with:
             coverage: true
+            coverage-phase: native
             coverage-image: ${{ needs.coverage-image.outputs.image }}
             source-ref: ${{ needs.gate.outputs.source-ref }}
         secrets:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-    daily:
-        # Keep the coverage matrices within the existing five-job limit.
-        # A failed workload must not prevent collection from the next one.
+    quick:
+        name: Quick TestLib coverage
+        needs: [gate, coverage-image, coverage-build-plan, quick-native]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
+        uses: ./.github/workflows/quick-tests.yaml
+        with:
+            coverage: true
+            coverage-phase: testlib
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    daily-native:
+        name: Daily native coverage
+        # Native jobs and TestLib matrices occupy separate phases.
+        # Continue collecting after a failed phase unless cancelled.
         needs: [gate, coverage-image, coverage-build-plan, quick]
         if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
             == 'success' }}
         uses: ./.github/workflows/daily-tests.yaml
         with:
             coverage: true
+            coverage-phase: native
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    daily:
+        name: Daily TestLib coverage
+        needs: [gate, coverage-image, coverage-build-plan, daily-native]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
+        uses: ./.github/workflows/daily-tests.yaml
+        with:
+            coverage: true
+            coverage-phase: testlib
             coverage-image: ${{ needs.coverage-image.outputs.image }}
             source-ref: ${{ needs.gate.outputs.source-ref }}
         secrets:
@@ -290,7 +324,7 @@ jobs:
 
     report:
         name: Build recoverable coverage reports
-        needs: [gate, quick, daily, weekly]
+        needs: [gate, quick-native, quick, daily-native, daily, weekly]
         if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.gate.outputs.allowed == 'true') }}
         runs-on: ubuntu-24.04
         outputs:

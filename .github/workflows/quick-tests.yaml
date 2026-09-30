@@ -13,6 +13,10 @@ on:
                 description: Tested commit to check out for a coverage campaign
                 type: string
                 default: ''
+            coverage-phase:
+                description: Coverage phase (native or testlib); ignored by ordinary runs
+                type: string
+                default: testlib
             coverage:
                 description: Build with gcov and upload coverage reports
                 type: boolean
@@ -44,6 +48,7 @@ jobs:
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     unittests-all-fast-opt:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'native' }}
         strategy:
             matrix:
                 type: [fast, opt]
@@ -68,6 +73,7 @@ jobs:
                   outcomes: '{"build_and_test":"${{ steps.run-native.outcome }}"}'
 
     testlib-quick-matrix:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'testlib' }}
         runs-on: ubuntu-24.04
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
@@ -175,8 +181,8 @@ jobs:
 
     testlib-quick-execution:
         name: quick-tests
-        if: ${{ !cancelled() && needs.testlib-quick-matrix.result == 'success' && (inputs.coverage || needs.testlib-quick-gem5-builds.result == 'success')
-            }}
+        if: ${{ !cancelled() && (!inputs.coverage || inputs.coverage-phase == 'testlib') && needs.testlib-quick-matrix.result == 'success' && (inputs.coverage
+            || needs.testlib-quick-gem5-builds.result == 'success') }}
         runs-on: [self-hosted, linux, x64]
         container:
             image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
@@ -186,7 +192,7 @@ jobs:
         timeout-minutes: ${{ inputs.coverage && 1800 || 360 }}
         strategy:
             fail-fast: false
-            max-parallel: ${{ inputs.coverage && 5 || 256 }}
+            max-parallel: ${{ inputs.coverage && 4 || 256 }}
             matrix:
                 test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
         steps:

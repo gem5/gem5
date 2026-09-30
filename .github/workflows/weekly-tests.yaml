@@ -71,7 +71,7 @@ jobs:
         name: very-long-tests
         strategy:
             fail-fast: false
-            max-parallel: 5
+            max-parallel: ${{ inputs.coverage && 4 || 5 }}
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
         runs-on: [self-hosted, linux, x64]

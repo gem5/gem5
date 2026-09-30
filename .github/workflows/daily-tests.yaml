@@ -17,6 +17,10 @@ on:
                 description: Tested commit to check out for a coverage campaign
                 type: string
                 default: ''
+            coverage-phase:
+                description: Coverage phase (native or testlib); ignored by ordinary runs
+                type: string
+                default: testlib
             coverage:
                 description: Build with gcov and upload coverage reports
                 type: boolean
@@ -147,6 +151,7 @@ jobs:
 
   # this builds and runs unittests.debug
     unittests-debug:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'native' }}
         strategy:
             matrix:
                 type: [debug]
@@ -170,6 +175,7 @@ jobs:
                   outcomes: '{"build_and_test":"${{ steps.run-native.outcome }}"}'
 
     get-testlib-long-dirs:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'testlib' }}
         runs-on: ubuntu-24.04
         container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         outputs:
@@ -219,7 +225,8 @@ jobs:
   # start running all of the long tests
     testlib-long-tests:
         name: long-tests
-        if: ${{ !cancelled() && needs.get-testlib-long-dirs.result == 'success' && (inputs.coverage || needs.build-testlib-gem5.result == 'success') }}
+        if: ${{ !cancelled() && (!inputs.coverage || inputs.coverage-phase == 'testlib') && needs.get-testlib-long-dirs.result == 'success' && (inputs.coverage
+            || needs.build-testlib-gem5.result == 'success') }}
         runs-on: [self-hosted, linux, x64]
         container:
             image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
@@ -234,7 +241,7 @@ jobs:
             - get-date
         strategy:
             fail-fast: false
-            max-parallel: ${{ inputs.coverage && 5 || 256 }}
+            max-parallel: ${{ inputs.coverage && 4 || 256 }}
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-long-dirs.outputs.test-dirs-matrix) }}
 
@@ -349,6 +356,7 @@ jobs:
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
     sst-test:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'native' }}
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 240
@@ -399,6 +407,7 @@ jobs:
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
   # simulation with it.
     systemc-test:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'native' }}
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
@@ -451,6 +460,7 @@ jobs:
                       }}","run_continue":"${{ steps.run-continue.outcome }}"}'
 
     dramsys-tests:
+        if: ${{ !inputs.coverage || inputs.coverage-phase == 'native' }}
         runs-on: [self-hosted, linux, x64]
         container:
             image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}

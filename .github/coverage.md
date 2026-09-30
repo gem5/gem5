@@ -27,11 +27,11 @@ preserve deduplication. Rerunning the same coverage run is allowed. Coverage
 uses GitHub's larger queue so later Daily completions do not replace waiting
 Weekly checks or recovery requests. Up to 100 requests can wait; requests
 beyond that platform limit are cancelled. Campaigns are serialized without
-cancelling an active campaign, and quick,
-Daily, and Weekly workloads run sequentially to retain the five-job TestLib
-matrix limit. Later workloads still collect coverage if an earlier one fails.
-Coverage builds and tests use the existing shared Linux x86_64 runner pool.
-Reporting and upload recovery run on GitHub-hosted runners.
+cancelling an active campaign. A campaign occupies at most four shared
+self-hosted runners at once. Later phases still collect coverage if an earlier
+phase fails. Reporting and upload recovery run on GitHub-hosted runners and
+do not occupy the self-hosted pool.
+
 
 ## Enabling the completion trigger
 
@@ -97,6 +97,30 @@ Coverage uses the same `[self-hosted, linux, x64]` selection as ordinary
 Linux tests. Those runners need Docker and the `/gem5-resource-cache`
 mount. No additional runner group or coverage label is required.
 Coverage shares available capacity with development and scheduled testing.
+
+The coordinator runs these phases sequentially:
+
+| Phase | Maximum self-hosted runners |
+| --- | ---: |
+| Shared TestLib builds | 4 |
+| Quick unit tests (fast and opt) | 2 |
+| Quick TestLib | 4 |
+| Daily unit and integration tests (debug, SST, SystemC, DRAMSys) | 4 |
+| Daily TestLib | 4 |
+| Weekly TestLib | 4 |
+
+Quick and Daily reusable workflows expose a `coverage-phase` input. Coverage
+callers select `native` or `testlib`; the coordinator invokes both separately.
+The default is `testlib`. Ordinary runs ignore this input and keep their
+existing test selection, dependencies, and parallelism. The phase split
+prevents native jobs from adding runners alongside a TestLib matrix; setting
+only a matrix's `max-parallel` would not enforce the campaign-wide bound.
+Keep new self-hosted coverage jobs within this budget when extending a phase.
+
+Coverage waits for available runners and may occupy four for a long period.
+This bounds contention but does not give ordinary jobs priority or reclaim
+runners from an active coverage job. Individual jobs can still use all CPU
+cores on their assigned runner.
 
 The coordinator resolves the all-dependencies image to an immutable Linux
 x86_64 digest, discovers the union of TestLib build targets across all three
