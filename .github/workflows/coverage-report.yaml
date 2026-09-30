@@ -1,0 +1,93 @@
+---
+# One reporting path is shared by collection and manual artifact recovery.
+name: Coverage Reports
+on:
+    workflow_call:
+        inputs:
+            source-run-id:
+                type: string
+                required: true
+        secrets:
+            CODECOV_TOKEN:
+                required: true
+permissions:
+    contents: read
+    actions: read
+jobs:
+    report:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 120
+        steps:
+            - name: Verify the original coverage run
+              id: source
+              uses: actions/github-script@v9
+              env:
+                  SOURCE_RUN: ${{ inputs.source-run-id }}
+              with:
+                  script: |
+                      if (!/^[1-9][0-9]*$/.test(process.env.SOURCE_RUN)) {
+                        throw new Error('Invalid coverage run ID');
+                      }
+                      const run = (await github.rest.actions.getWorkflowRun({
+                        ...context.repo, run_id: Number(process.env.SOURCE_RUN)
+                      })).data;
+                      if (run.path !== '.github/workflows/codecov.yaml' ||
+                          run.event !== 'workflow_run' ||
+                          run.head_repository?.full_name !==
+                            `${context.repo.owner}/${context.repo.repo}`) {
+                        throw new Error('Reports must come from a trusted coverage campaign');
+                      }
+            - uses: actions/download-artifact@v8
+              with:
+                  run-id: ${{ inputs.source-run-id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  pattern: coverage-{data-*,plan,source-*}
+                  path: coverage-input
+            - name: Read and verify the admitted source
+              id: revision
+              run: |
+                  python3 - <<'PY'
+                  import json, os, re
+                  from pathlib import Path
+                  root = Path('coverage-input')
+                  sources = list(root.glob('coverage-source-*/coverage-source.json'))
+                  if len(sources) != 1:
+                      raise ValueError('Expected one coverage admission manifest')
+                  source = json.loads(sources[0].read_text())
+                  plan = json.loads((root/'coverage-plan/plan.json').read_text())
+                  revision = source['commit']
+                  if not re.fullmatch('[0-9a-f]{40}', revision) or plan['revision'] != revision:
+                      raise ValueError('Coverage source and plan differ')
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                      output.write('sha=' + revision + '\n')
+                  PY
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ steps.revision.outputs.sha }}
+                  path: coverage-tools
+            - name: Generate reports and the line-to-test index
+              id: build
+              env:
+                  SOURCE_REVISION: ${{ steps.revision.outputs.sha }}
+              run: python3 coverage-tools/util/coverage/report.py build coverage-input --output coverage-report --revision "$SOURCE_REVISION"
+            - uses: actions/upload-artifact@v7
+              if: always()
+              with:
+                  name: coverage-report-${{ github.run_id }}
+                  path: coverage-report
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Prepare complete LCOV reports
+              run: |
+                  gzip -dc coverage-report/coverage-native.info.gz > coverage-native.info
+                  gzip -dc coverage-report/coverage-python.info.gz > coverage-python.info
+            - uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  files: coverage-native.info,coverage-python.info
+                  disable_search: true
+                  override_commit: ${{ steps.revision.outputs.sha }}
+                  override_branch: develop
+                  flags: weekly-coverage
+                  fail_ci_if_error: true
