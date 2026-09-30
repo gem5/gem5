@@ -106,10 +106,10 @@ class Visitor(ABC):
     def dump(self, roots: SimObject | list[SimObject], **kwargs) -> None:
         raise NotImplementedError
 
-    def _get_dump_values(
+    def visit_multiple_roots(
         self, roots: SimObject | list[SimObject]
     ) -> dict | list[dict]:
-        """Convert each selected root independently for a prepared dump.
+        """Visit each selected root independently with prepared statistics.
 
         Lists, including SimObjectVectors, retain their order and shape.
         Validate the entire selection before converting any statistics.
@@ -301,7 +301,7 @@ class CsvOutputVisitor(Visitor):
         :param roots: A SimObject or flat list/vector of SimObjects to export.
         """
 
-        vals = self._get_dump_values(roots)
+        vals = self.visit_multiple_roots(roots)
         collection_output = isinstance(vals, list)
         if collection_output:
             vals = {str(index): entry for index, entry in enumerate(vals)}
@@ -479,7 +479,7 @@ class JsonOutputVistor(Visitor):
         if "indent" not in kwargs:
             kwargs["indent"] = 4
 
-        values = self._get_dump_values(roots)
+        values = self.visit_multiple_roots(roots)
         with open(self.file, "w") as fp:
             json.dump(obj=values, fp=fp, **kwargs)
 
