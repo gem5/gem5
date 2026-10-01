@@ -658,9 +658,39 @@ TimingSimpleCPU::finishTranslation(WholeTranslationState *state)
         if (state->isPrefetch()) {
             state->setNoFault();
         }
+
+        // Give the instruction a chance to react to the fault before it is
+        // raised.  RISC-V fault-only-first loads (vle*ff/vlseg*ff) suppress a
+        // fault on any element but the first and trim vl instead.  The timing
+        // CPU delivers translation faults here -- asynchronously, long after
+        // initiateAcc() has already returned NoFault -- so that logic never
+        // runs unless we route the fault back through the instruction, the
+        // way the atomic CPU does by returning it from readMem().  See
+        // StaticInst::handleMemFault().
+        Fault fault = state->getFault();
+        if (fault != NoFault && curStaticInst) {
+            fault = curStaticInst->handleMemFault(fault,
+                                                  state->mainReq->getVaddr());
+        }
+
+        // The instruction suppressed the fault (fault-only-first).  If the
+        // access was split and only the high fragment faulted, the low
+        // fragment still points at valid memory holding the elements that
+        // precede the fault.  Deliver just that fragment so those elements
+        // are loaded, matching the atomic CPU; the trailing fault-only-first
+        // trim micro-op then fixes up vl.  The packet takes ownership of
+        // state->data, so it must not be freed here.
+        if (fault == NoFault && state->getFault() != NoFault &&
+            state->isPartialFault() && state->mode == BaseMMU::Read) {
+            sendData(state->sreqLow, state->data, state->res, true);
+            state->data = nullptr;
+            delete state;
+            return;
+        }
+
         delete [] state->data;
         state->deleteReqs();
-        translationFault(state->getFault());
+        translationFault(fault);
     } else {
         if (!state->isSplit) {
             sendData(state->mainReq, state->data, state->res,
