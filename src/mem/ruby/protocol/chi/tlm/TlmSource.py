@@ -78,12 +78,13 @@ class PySource(TlmSource):
 
         transaction = Transaction(payload, phase)
 
-        if when is not None:
-            self._transactions.append((when, transaction))
-            if self._cc_initialized:
+        if self._cc_initialized:
+            if when is not None:
                 self.getCCObject().injectTransactionAt(when, transaction)
+            else:
+                self.getCCObject().injectTransaction(transaction)
         else:
-            self.getCCObject().injectTransaction(transaction)
+            self._transactions.append((when, transaction))
 
         return transaction
 
@@ -91,5 +92,8 @@ class PySource(TlmSource):
         super().createCCObject()
 
         for when, tr in self._transactions:
-            self.getCCObject().injectTransactionAt(when, tr)
+            if when is not None:
+                self.getCCObject().injectTransactionAt(when, tr)
+            else:
+                self.getCCObject().injectTransaction(tr)
         self._cc_initialized = True
