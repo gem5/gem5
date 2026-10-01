@@ -624,6 +624,16 @@ class VsIndexMicroInst : public VectorMemMicroInst
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+class VectorUnaryMacroInst : public VectorArithMacroInst
+{
+  public:
+    using VectorArithMacroInst::VectorArithMacroInst;
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
 class VMvWholeMacroInst : public VectorArithMacroInst
 {
   protected:
@@ -634,6 +644,16 @@ class VMvWholeMacroInst : public VectorArithMacroInst
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorUnaryMicroInst : public VectorArithMicroInst
+{
+  public:
+    using VectorArithMicroInst::VectorArithMicroInst;
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class VMvWholeMicroInst : public VectorArithMicroInst

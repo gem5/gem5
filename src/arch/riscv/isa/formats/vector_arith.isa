@@ -367,7 +367,7 @@ def format VectorUnaryFormat(code, category, *flags) {{
     iop = InstObjParams(
         name,
         Name,
-        'VectorArithMacroInst',
+        'VectorUnaryMacroInst',
         {'code': code,
          'declare_varith_template': declareVArithTemplate(Name)},
         flags
@@ -391,7 +391,7 @@ def format VectorUnaryFormat(code, category, *flags) {{
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
-        'VectorArithMicroInst',
+        'VectorUnaryMicroInst',
         {'code': code,
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
