@@ -124,6 +124,22 @@ X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
     auto &cap_vec = capabilities[function];
     result = CpuidResult(cap_vec[cap_offset + 0], cap_vec[cap_offset + 1],
                          cap_vec[cap_offset + 2], cap_vec[cap_offset + 3]);
+
+    // For CPUID function 1, we need to check the value of CR4.OSXSAVE
+    // to determine whether to set the OSXSAVE bit in the returned value
+    if (function == 1) {
+        CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+        if (cr4.osxsave) {
+            result =
+                CpuidResult(cap_vec[cap_offset + 0], cap_vec[cap_offset + 1],
+                            cap_vec[cap_offset + 2], 0x0C000209);
+        } else {
+            result =
+                CpuidResult(cap_vec[cap_offset + 0], cap_vec[cap_offset + 1],
+                            cap_vec[cap_offset + 2], 0x04000209);
+        }
+    }
+
     DPRINTF(X86, "CPUID function %x returning (%x, %x, %x, %x)\n",
             function, result.rax, result.rbx, result.rdx, result.rcx);
 

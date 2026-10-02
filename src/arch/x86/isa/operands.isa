@@ -260,5 +260,7 @@ def operands {{
         'MiscRegSrc1':   ControlReg('src1', 211),
         'TscOp':         ControlReg('X86ISA::misc_reg::Tsc', 212),
         'M5Reg':         SquashCReg('X86ISA::misc_reg::M5Reg', 213),
+        'PkruOp':        ControlReg('X86ISA::misc_reg::Pkru', 214),
+        'Xcr0Op':        ControlReg('X86ISA::misc_reg::Xcr0', 215),
         'Mem':           MemOp('uqw', None, (None, 'IsLoad', 'IsStore'), 300)
 }};

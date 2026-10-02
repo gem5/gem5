@@ -90,6 +90,9 @@ namespace X86ISA
         bool noExec;
         // A sequence number to keep track of LRU.
         uint64_t lruSeq;
+        // Four bit value used to index the PKRU register to check
+        // memory protection (only enabled if bit 22 in Cr4 is set)
+        uint8_t memoryKey;
 
         TlbEntryTrie::Handle trieHandle;
 
@@ -138,6 +141,7 @@ namespace X86ISA
     // point in the future.
     BitUnion64(PageTableEntry)
         Bitfield<63> nx;
+        Bitfield<62, 59> mpk;
         Bitfield<51, 12> base;
         Bitfield<11, 9> avl;
         Bitfield<8> g;
