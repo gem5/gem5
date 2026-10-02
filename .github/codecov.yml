@@ -1,0 +1,5 @@
+---
+codecov:
+    # Keep original report timestamps. A long campaign followed by a recovery
+    # within the 30-day artifact retention period can exceed the default 12h.
+    max_report_age: 90d
