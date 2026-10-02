@@ -412,6 +412,28 @@ class SharedLib(TopLevelBase):
 class Executable(TopLevelBase):
     '''Base class for creating an executable from sources.'''
 
+    appleVirtEntitlement = False
+
+    def applyAppleVirtEntitlement(self, env, target):
+        if not self.appleVirtEntitlement or not env['CONF'].get(
+                'USE_APPLE_VIRT', False):
+            return
+
+        entitlement = File(
+            '#src/cpu/apple_virt/apple_virt.entitlements'
+        )
+        env['APPLE_VIRT_CODESIGN'] = env['CONF']['APPLE_VIRT_CODESIGN']
+        env['APPLE_VIRT_ENTITLEMENTS'] = entitlement.abspath
+        env.Depends(target, entitlement)
+        env.AddPostAction(
+            target,
+            MakeAction(
+                '"$APPLE_VIRT_CODESIGN" --force --sign - '
+                '--entitlements "$APPLE_VIRT_ENTITLEMENTS" "$TARGET"',
+                Transform('CODESIGN', 0),
+            ),
+        )
+
     def path(self, env):
         return self.dir.File(self.target + '.${ENV_LABEL}')
 
@@ -430,6 +452,7 @@ class Executable(TopLevelBase):
             env.Append(LIBS=list(lib.source for lib in libs))
 
         executable = env.Program(self.path(env).abspath, objs)[0]
+        self.applyAppleVirtEntitlement(env, executable)
 
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
@@ -438,11 +461,14 @@ class Executable(TopLevelBase):
         stripped = env.Command(executable.abspath + '.stripped',
                                executable.abspath,
                                MakeAction(cmd, Transform("STRIP")))[0]
+        self.applyAppleVirtEntitlement(env, stripped)
 
         return [executable, stripped]
 
 class Gem5(Executable):
     '''Base class for the main gem5 executable.'''
+
+    appleVirtEntitlement = True
 
     def declare(self, env):
         objs = self.srcs_to_objs(env, self.sources(env))
@@ -458,6 +484,9 @@ class GTest(Executable):
     '''Create a unit test based on the google test framework.'''
     all = []
     def __init__(self, *srcs_and_filts, **kwargs):
+        self.appleVirtEntitlement = kwargs.pop(
+            'apple_virt_entitlement', False
+        )
         if not kwargs.pop('skip_lib', False):
             srcs_and_filts = srcs_and_filts + (with_tag('gtest lib'),)
         super().__init__(*srcs_and_filts)
