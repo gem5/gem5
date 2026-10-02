@@ -27,63 +27,86 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-NUM_RUNNERS=0 # Set this to the desired number of runners.
-PERSONAL_ACCESS_TOKEN="<PERSONAL ACCESS TOKEN>"
-GITHUB_ORG="<GITHUB_ORG>"
-HOSTNAME="<VM NAME>"
+require "json"
+require "shellwords"
+
+NUM_RUNNERS = 0 # Set this to the desired number of runners.
+PERSONAL_ACCESS_TOKEN = "<PERSONAL ACCESS TOKEN>"
+GITHUB_ORG = "<GITHUB_ORG>"
+HOSTNAME = "<VM NAME>"
+RESOURCE_CACHE = File.expand_path("gem5-resource-cache", __dir__)
+settings_file = File.join(__dir__, "runner-settings.json")
+settings = File.exist?(settings_file) ? JSON.parse(File.read(settings_file)) : {}
 
 Vagrant.configure("2") do |config|
   config.ssh.username = "vagrant"
-  config.ssh.password = "vagrant"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  if File.directory?(RESOURCE_CACHE)
+    config.vm.synced_folder RESOURCE_CACHE, "/gem5-resource-cache",
+      type: "9p", accessmode: "mapped", access: "any",
+      mount_opts: "cache=none,msize=1048576"
+  end
 
   (1..NUM_RUNNERS).each do |i|
-
-    config.vm.define "#{HOSTNAME}-#{i}" do |runner|
-      runner.vm.hostname = "#{HOSTNAME}-#{i}"
-      runner.vm.box = "generic/ubuntu2204"
-      runner.vm.box_check_update = true
-
-      runner.vm.provider "libvirt" do |vb|
-        # Customize the amount of cpus, memory, and storage on the VM:
-        vb.cpus = "4".to_i
-        vb.memory = "16384".to_i
-        vb.machine_virtual_size = 128 # 128G is the minimum.
+    name = "#{HOSTNAME}-#{i}"
+    options = settings.fetch(name, {})
+    config.vm.define name do |runner|
+      runner.vm.hostname = name
+      runner.vm.box = options.fetch("box", "generic/ubuntu2204")
+      runner.vm.box_version = options.fetch("box_version", "4.3.6")
+      runner.vm.box_check_update = false
+      runner.vm.provider "libvirt" do |lv|
+        lv.cpus = options.fetch("cpus", 4)
+        lv.memory = options.fetch("memory", 32768)
+        lv.machine_virtual_size = 128
+        lv.storage_pool_name = options.fetch("storage_pool", "default")
+        if options.key?("disk_cache")
+          lv.disk_driver cache: options.fetch("disk_cache"), discard: "unmap"
+        end
       end
 
-      # sets up vm
-      runner.vm.provision :shell, path: "provision_root.sh"
-      runner.vm.provision :shell, privileged: false, path: "provision_nonroot.sh"
-      # The provision_root.sh adds the vagrant user to the docker group, so we need to reload the VM.
-      runner.vm.provision :reload
-      # Copy the "action-run.sh" script from the host to the VM.
-      runner.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
-      runner.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
-
-      # The following attempts to see if KVM can be used inside the docker
-      # container.
-      #
-      # Almost all github action jobs run within a docker container. Therefore
-      # to be compatible with KVM, KVM must be enabled inside the docker.
-      #
-      # We used existence of "kvm-works" in the VM home directory is how we
-      # indicate that KVM is working. It is created if the 'kvm-ok' command is
-      # successful. This is then passed to the action-run.sh script to indicate
-      # that the runner can be used for KVM via the `kvm` label.
-      runner.vm.provision :shell, privileged: false, run: 'always',  inline: <<-SHELL
-           rm -f kvm-works
-           docker run --device /dev/kvm -v$(pwd):/work -w /work --rm ubuntu:22.04 bash -c "apt update -y && apt install -y cpu-checker && kvm-ok"
-           status=$?
-           if [[ ${status} == 0 ]]; then
-                echo >&1 "Success. KVM enabled."
-                echo "success" > kvm-works
-           else
-                echo >&2 "Failure. KVM not enabled."
-           fi
-           exit 0
+      runner.vm.provision :shell, run: "always", inline: <<-SHELL
+        if systemctl is-active --quiet gem5-runner.service ||
+           pgrep -x Runner.Listener >/dev/null ||
+           pgrep -x Runner.Worker >/dev/null ||
+           pgrep -f '^(/bin/)?bash [^ ]*action-run.sh( |$)' >/dev/null; then
+          echo 'Drain and stop the runner before provisioning.' >&2
+          exit 1
+        fi
       SHELL
-      # Execute the actions-run.sh script on every boot. This configures and starts the runner.
-      # Note the 'kvm' label is applied to this runner if the "kvm-works" file eixsts. See above.
-      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} $(if [ -f 'kvm-works' ]; then echo 'kvm'; fi) >> action-run.log 2>&1 &"
+      unless options.fetch("prebuilt", false)
+        runner.vm.provision :shell, path: "provision_root.sh"
+        runner.vm.provision :reload
+      end
+      %w[action-run.sh runner-health.sh runner-cleanup.py provision_runner.sh
+         gem5-runner.service install-runner-service.sh].each do |file|
+        runner.vm.provision "file", source: File.join(__dir__, file),
+          destination: "/tmp/gem5-runner-#{file}", run: "always"
+      end
+      runner.vm.provision :shell, run: "always", inline: <<-SHELL
+        set -eu
+        for file in action-run.sh runner-health.sh runner-cleanup.py provision_runner.sh gem5-runner.service install-runner-service.sh; do
+          install -o vagrant -g vagrant -m 0755 "/tmp/gem5-runner-$file" "/home/vagrant/$file"
+        done
+      SHELL
+      runner.vm.provision :shell, privileged: false, run: "always", inline: <<-SHELL
+        cd /home/vagrant
+        ./provision_runner.sh
+      SHELL
+      # The service starts only after provisioning and group membership pass.
+      env = {
+        "PERSONAL_ACCESS_TOKEN" => PERSONAL_ACCESS_TOKEN,
+        "GITHUB_ORG" => GITHUB_ORG,
+        "RUNNER_LABELS" => options.fetch("labels", ""),
+        "RUNNER_RESOURCE_CACHE" => File.directory?(RESOURCE_CACHE) ? "/gem5-resource-cache" : ""
+      }
+      lines = env.map { |key, value| "#{key}=#{value}" }
+      runner.vm.provision :shell, run: "always", inline: <<-SHELL
+        set -eu
+        umask 077
+        printf '%s\n' #{lines.map { |line| Shellwords.escape(line) }.join(" ")} > /etc/gem5-runner.env
+        /home/vagrant/install-runner-service.sh
+      SHELL
     end
   end
 end
