@@ -1853,6 +1853,7 @@ Fault
     %(set_vlenb)s;
     %(vm_decl_rd)s;
 
+    %(get_vs2_regs)s;
     %(copy_old_vd)s;
 
     %(reduce_loop)s;

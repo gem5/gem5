@@ -368,10 +368,10 @@ Process::deallocateMem(Addr vaddr, int64_t size)
                 // achieve the same result, but would be more expensive
                 // because it would unnecessarily zero out pages that
                 // were allocated for the first time.
-                SETranslatingPortProxy virt_mem(
-                    system->threads[0], SETranslatingPortProxy::Always);
-                const std::vector<uint8_t> zero_page(page_size, 0);
-                virt_mem.writeBlob(page_vaddr, zero_page.data(), page_size);
+                // Write through the physical address: a virtual write
+                // would need a thread context of this process, and
+                // system->threads[0] may belong to another process.
+                system->physProxy.memsetBlob(page_paddr, 0, page_size);
             }
 
             // Unmap the virtual page.

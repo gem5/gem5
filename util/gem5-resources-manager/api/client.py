@@ -41,34 +41,34 @@ class Client(ABC):
         self.__undo_limit = 10
 
     @abstractmethod
-    def find_resource(self, query: Dict) -> Dict:
+    def find_resource(self, query: dict) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def get_versions(self, query: Dict) -> List[Dict]:
+    def get_versions(self, query: dict) -> list[dict]:
         raise NotImplementedError
 
     @abstractmethod
-    def update_resource(self, query: Dict) -> Dict:
+    def update_resource(self, query: dict) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def check_resource_exists(self, query: Dict) -> Dict:
+    def check_resource_exists(self, query: dict) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def insert_resource(self, query: Dict) -> Dict:
+    def insert_resource(self, query: dict) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_resource(self, query: Dict) -> Dict:
+    def delete_resource(self, query: dict) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def save_session(self) -> Dict:
+    def save_session(self) -> dict:
         raise NotImplementedError
 
-    def undo_operation(self) -> Dict:
+    def undo_operation(self) -> dict:
         """
         This function undoes the last operation performed on the database.
         """
@@ -92,7 +92,7 @@ class Client(ABC):
         self.__redo_stack.append(operation)
         return {"status": "Undone"}
 
-    def redo_operation(self) -> Dict:
+    def redo_operation(self) -> dict:
         """
         This function redoes the last operation performed on the database.
         """
@@ -116,14 +116,14 @@ class Client(ABC):
         self.__undo_stack.append(operation)
         return {"status": "Redone"}
 
-    def _add_to_stack(self, operation: Dict) -> Dict:
+    def _add_to_stack(self, operation: dict) -> dict:
         if len(self.__undo_stack) == self.__undo_limit:
             self.__undo_stack.pop(0)
         self.__undo_stack.append(operation)
         self.__redo_stack.clear()
         return {"status": "Added to stack"}
 
-    def get_revision_status(self) -> Dict:
+    def get_revision_status(self) -> dict:
         """
         This function saves the status of revision operations to a dictionary.
 

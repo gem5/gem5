@@ -389,6 +389,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         VPtr<> uaddr, int op, int val, int timeout, VPtr<> uaddr2, int val3)
 {
     auto process = tc->getProcessPtr();
+    const auto byte_order = process->objFile->getByteOrder();
 
     /*
      * Unsupported option that does not affect the correctness of the
@@ -403,7 +404,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
         buf.copyIn(SETranslatingPortProxy(tc));
-        int mem_val = *(int*)buf.bufferPtr();
+        int mem_val = gtoh(*(int *)buf.bufferPtr(), byte_order);
 
         /*
          * The value in memory at uaddr is not equal with the expected val
@@ -411,7 +412,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
          * invoked). In this case, we need to throw an error.
          */
         if (val != mem_val)
-            return -OS::TGT_EWOULDBLOCK;
+            return -static_cast<int>(OS::TGT_EWOULDBLOCK);
 
         if (OS::TGT_FUTEX_WAIT == op) {
             futex_map.suspend(uaddr, process->tgid(), tc);
@@ -430,13 +431,13 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
         buf.copyIn(SETranslatingPortProxy(tc));
-        int mem_val = *(int*)buf.bufferPtr();
+        int mem_val = gtoh(*(int *)buf.bufferPtr(), byte_order);
         /*
          * For CMP_REQUEUE, the whole operation is only started only if
          * val3 is still the value of the futex pointed to by uaddr.
          */
         if (OS::TGT_FUTEX_CMP_REQUEUE && val3 != mem_val)
-            return -OS::TGT_EWOULDBLOCK;
+            return -static_cast<int>(OS::TGT_EWOULDBLOCK);
         return futex_map.requeue(uaddr, process->tgid(), val, timeout, uaddr2);
     } else if (OS::TGT_FUTEX_WAKE_OP == op) {
         /*
@@ -463,7 +464,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         // get value from simulated-space
         BufferArg buf(uaddr2, sizeof(int));
         buf.copyIn(SETranslatingPortProxy(tc));
-        int oldval = *(int*)buf.bufferPtr();
+        int oldval = gtoh(*(int *)buf.bufferPtr(), byte_order);
         int newval = oldval;
         // extract op, oparg, cmp, cmparg from val3
         int wake_cmparg =  val3 & 0xfff;
@@ -485,7 +486,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         else if (wake_op == OS::TGT_FUTEX_OP_XOR)
             newval ^= wake_oparg;
         // copy updated value back to simulated-space
-        *(int*)buf.bufferPtr() = newval;
+        *(int *)buf.bufferPtr() = htog(newval, byte_order);
         buf.copyOut(SETranslatingPortProxy(tc));
         // perform the first wake-up
         int woken1 = futex_map.wakeup(uaddr, process->tgid(), val);
@@ -1838,6 +1839,7 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
                             " flags: %#llx, stack: %#llx\n",
             ptidPtr.addr(), ctidPtr.addr(), tlsPtr.addr(), flags, newStack);
     auto p = tc->getProcessPtr();
+    const auto byte_order = p->objFile->getByteOrder();
 
     if (((flags & OS::TGT_CLONE_SIGHAND)&& !(flags & OS::TGT_CLONE_VM)) ||
         ((flags & OS::TGT_CLONE_THREAD) && !(flags & OS::TGT_CLONE_SIGHAND)) ||
@@ -1931,9 +1933,8 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     }
 
     if (flags & OS::TGT_CLONE_PARENT_SETTID) {
-        BufferArg ptidBuf(ptidPtr, sizeof(long));
-        long *ptid = (long *)ptidBuf.bufferPtr();
-        *ptid = cp->pid();
+        TypedBufferArg<uint32_t> ptidBuf(ptidPtr);
+        *ptidBuf = htog(static_cast<uint32_t>(cp->pid()), byte_order);
         ptidBuf.copyOut(SETranslatingPortProxy(tc));
     }
 
@@ -1955,9 +1956,8 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     }
 
     if (flags & OS::TGT_CLONE_CHILD_SETTID) {
-        BufferArg ctidBuf(ctidPtr, sizeof(long));
-        long *ctid = (long *)ctidBuf.bufferPtr();
-        *ctid = cp->pid();
+        TypedBufferArg<uint32_t> ctidBuf(ctidPtr);
+        *ctidBuf = htog(static_cast<uint32_t>(cp->pid()), byte_order);
         ctidBuf.copyOut(SETranslatingPortProxy(ctc));
     }
 

@@ -419,8 +419,16 @@ opClassRE = re.compile(r".*Op|No_OpClass")
 
 class InstObjParams:
     def __init__(
-        self, parser, mnem, class_name, base_class="", snippets={}, opt_args=[]
+        self,
+        parser,
+        mnem,
+        class_name,
+        base_class="",
+        snippets=None,
+        opt_args=None,
     ):
+        snippets = {} if snippets is None else snippets
+        opt_args = [] if opt_args is None else opt_args
         self.mnemonic = mnem
         self.class_name = class_name
         self.base_class = base_class

@@ -72,9 +72,9 @@ class BaseDirectory(CacheController):
         cls,
         num_directories: int,
         dir_idx: int,
-        mem_ranges: List[AddrRange],
+        mem_ranges: list[AddrRange],
         cache_line_size,
-    ) -> List[AddrRange]:
+    ) -> list[AddrRange]:
         block_size_bits = int(math.log(cache_line_size, 2))
         llc_bits = int(math.log(num_directories, 2))
         numa_bit = block_size_bits + llc_bits - 1
@@ -104,7 +104,7 @@ class SimpleDirectory(BaseDirectory):
         network: RubyNetwork,
         cache_line_size: int,
         clk_domain: ClockDomain,
-        addr_ranges: List[AddrRange],
+        addr_ranges: list[AddrRange],
     ):
         super().__init__(network, cache_line_size)
 
@@ -166,7 +166,7 @@ class CachedDirectory(BaseDirectory):
         clk_domain: ClockDomain,
         cache: RubyCache,
         prefetcher,
-        addr_ranges: List[AddrRange],
+        addr_ranges: list[AddrRange],
     ):
         super().__init__(network, cache_line_size)
 

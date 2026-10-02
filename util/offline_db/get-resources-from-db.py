@@ -84,7 +84,7 @@ def get_token(auth_url: str, api_key: str) -> str:
 
 def get_all_resources(
     url: str, data_source: str, collection: str, database: str, token: str
-) -> List:
+) -> list:
     """
     This function gets all the JSON objects for resources from the database
     :param url: Database url to use Atlas data API
@@ -129,7 +129,7 @@ def get_all_resources(
     return resources
 
 
-def save_resources_to_file(resources: List[Dict], output: TextIO):
+def save_resources_to_file(resources: list[dict], output: TextIO):
     """
     This function saves all the JSON objects for resources to a file.
     :param resources: List of JSON objects for resources
@@ -158,7 +158,7 @@ def get_resource_local_filepath(
     return filepath
 
 
-def download_resources(resources: List[Dict], output: TextIO):
+def download_resources(resources: list[dict], output: TextIO):
     """
     This function downloads the resources which have a url field and
     updates the url field to point to the local download of the resource.

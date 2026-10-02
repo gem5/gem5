@@ -28,9 +28,9 @@ __all__ = ["multidict"]
 
 
 class multidict:
-    def __init__(self, parent={}, **kwargs):
+    def __init__(self, parent=None, **kwargs):
         self.local = dict(**kwargs)
-        self.parent = parent
+        self.parent = {} if parent is None else parent
         self.deleted = {}
 
     def __str__(self):

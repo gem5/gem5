@@ -83,7 +83,7 @@ class PrivateL1PrivateL2SharedL3MeshCacheHierarchy(
 
     def _create_hnfs(
         self, board: AbstractBoard, num_hnfs: int
-    ) -> List[CHI_HNF]:
+    ) -> list[CHI_HNF]:
         hnfs = []
         mem_ranges = list(board.get_mem_ranges())
         for idx in range(num_hnfs):

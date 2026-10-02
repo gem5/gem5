@@ -24,10 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import (
     List,
-    Mapping,
     Optional,
     Union,
 )
@@ -68,12 +68,13 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         pid: int = 100,
-        arguments: List[str] = [],
-        stdin_file: Optional[FileResource] = None,
-        stdout_file: Optional[Path] = None,
-        stderr_file: Optional[Path] = None,
-        env_list: Optional[List[str]] = None,
+        arguments: list[str] | None = None,
+        stdin_file: FileResource | None = None,
+        stdout_file: Path | None = None,
+        stderr_file: Path | None = None,
+        env_list: list[str] | None = None,
     ) -> Process:
+        arguments = [] if arguments is None else arguments
 
         process = Process(pid=pid)
         binary_path = binary.get_local_path()
@@ -99,7 +100,7 @@ class SEBinaryWorkload:
 
     def _set_checkpoint(
         self,
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
 
         # Here we set `self._checkpoint`. This is then used by the
@@ -117,14 +118,14 @@ class SEBinaryWorkload:
 
     def set_se_multi_binary_workload(
         self,
-        binaries: List[BinaryResource],
+        binaries: list[BinaryResource],
         exit_on_work_items: bool = True,
-        stdin_files: Optional[List[FileResource]] = None,
-        stdout_files: Optional[List[Path]] = None,
-        stderr_files: Optional[List[Path]] = None,
-        env_lists: Optional[List[List[str]]] = None,
-        arguments: List[List[str]] = [],
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        stdin_files: list[FileResource] | None = None,
+        stdout_files: list[Path] | None = None,
+        stderr_files: list[Path] | None = None,
+        env_lists: list[list[str]] | None = None,
+        arguments: list[list[str]] | None = None,
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -143,6 +144,8 @@ class SEBinaryWorkload:
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
         """
+
+        arguments = [] if arguments is None else arguments
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
@@ -228,14 +231,14 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         exit_on_work_items: bool = True,
-        stdin_file: Optional[FileResource] = None,
-        stdout_file: Optional[Path] = None,
-        stderr_file: Optional[Path] = None,
-        env_list: Optional[List[str]] = None,
-        arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
-        redirect_paths: Optional[Mapping[str, List[str]]] = None,
-        loader_path: Optional[str] = None,
+        stdin_file: FileResource | None = None,
+        stdout_file: Path | None = None,
+        stderr_file: Path | None = None,
+        env_list: list[str] | None = None,
+        arguments: list[str] | None = None,
+        checkpoint: Path | CheckpointResource | None = None,
+        redirect_paths: Mapping[str, list[str]] | None = None,
+        loader_path: str | None = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -254,6 +257,8 @@ class SEBinaryWorkload:
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
         """
+
+        arguments = [] if arguments is None else arguments
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
@@ -318,9 +323,9 @@ class SEBinaryWorkload:
     def set_se_simpoint_workload(
         self,
         binary: BinaryResource,
-        arguments: List[str] = [],
+        arguments: list[str] | None = None,
         simpoint: SimpointResource = None,
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
 
@@ -341,6 +346,8 @@ class SEBinaryWorkload:
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
         """
+
+        arguments = [] if arguments is None else arguments
 
         self._simpoint_resource = simpoint
 
@@ -371,9 +378,9 @@ class SEBinaryWorkload:
         self,
         binary: AbstractResource,
         looppoint: Looppoint,
-        arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
-        region_id: Optional[Union[int, str]] = None,
+        arguments: list[str] | None = None,
+        checkpoint: Path | AbstractResource | None = None,
+        region_id: int | str | None = None,
     ) -> None:
         """Set up the system to run a LoopPoint workload.
 
@@ -389,6 +396,8 @@ class SEBinaryWorkload:
         :param region_id: If set, will only load the Looppoint region
                           corresponding to that ID.
         """
+
+        arguments = [] if arguments is None else arguments
 
         assert isinstance(looppoint, Looppoint)
         self._looppoint_object = looppoint
@@ -407,8 +416,8 @@ class SEBinaryWorkload:
         self,
         elfie: AbstractResource,
         elfie_info: ELFieInfo,
-        arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        arguments: list[str] | None = None,
+        checkpoint: Path | AbstractResource | None = None,
     ) -> None:
         """Set up the system to run a ELFie workload.
 
@@ -421,6 +430,8 @@ class SEBinaryWorkload:
                            information for the ELFie.
         :param arguments: The input arguments for the binary.
         """
+
+        arguments = [] if arguments is None else arguments
 
         assert isinstance(elfie_info, ELFieInfo)
         self._elfie_info_object = elfie_info
