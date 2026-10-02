@@ -349,7 +349,7 @@ class DynInst : public ExecContext, public RefCounted
     Addr physEffAddr = 0;
 
     /** The memory request flags (from translation). */
-    unsigned memReqFlags = 0;
+    Request::Flags memReqFlags = 0;
 
     /** The size of the request */
     unsigned effSize;

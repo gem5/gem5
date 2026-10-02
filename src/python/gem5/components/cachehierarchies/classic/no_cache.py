@@ -83,7 +83,7 @@ class NoCache(AbstractClassicCacheHierarchy):
         membus.max_routing_table_size = 2048
         return membus
 
-    def __init__(self, membus: Optional[BaseXBar] = None) -> None:
+    def __init__(self, membus: BaseXBar | None = None) -> None:
         """
         :param membus: The memory bus for this setup. This parameter is
                        optional and will default toa 64 bit width SystemXBar

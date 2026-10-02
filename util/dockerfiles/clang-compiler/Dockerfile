@@ -1,4 +1,5 @@
-FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+ARG base=ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+FROM ${base}
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
@@ -15,3 +16,6 @@ RUN apt -y update && \
         /usr/bin/c++ c++ /usr/bin/clang++-${version} 100 && \
     update-alternatives --install \
         /usr/bin/cc cc /usr/bin/clang-${version} 100
+
+ENV CC=clang \
+    CXX=clang++
