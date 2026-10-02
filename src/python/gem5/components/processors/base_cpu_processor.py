@@ -52,6 +52,7 @@ from m5.objects import (
 )
 from m5.util import warn
 
+from ...isas import ISA
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from ..boards.mem_mode import MemMode
@@ -94,6 +95,17 @@ class BaseCPUProcessor(AbstractProcessor):
 
             self.kvm_vm = KvmVM()
 
+        if self._any_apple_virt_core():
+            if len(self.get_cores()) != 1:
+                raise ValueError(
+                    "AppleVirtCPU currently supports exactly one core"
+                )
+            if self.get_isa() != ISA.ARM:
+                raise ValueError("AppleVirtCPU only supports the ARM ISA")
+
+    def _any_apple_virt_core(self) -> bool:
+        return any(core.is_apple_virt_core() for core in self.get_cores())
+
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
         if any(core.is_kvm_core() for core in self.get_cores()):
@@ -104,6 +116,18 @@ class BaseCPUProcessor(AbstractProcessor):
                 for obj in core.get_simobject().descendants():
                     obj.eventq_index = 0
                 core.get_simobject().eventq_index = i + 1
+            board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
+        elif self._any_apple_virt_core():
+            if not board.is_fullsystem():
+                raise ValueError(
+                    "AppleVirtCPU only supports full-system simulation"
+                )
+            from m5.objects import AppleVirtVM
+
+            board.apple_virt_vm = AppleVirtVM()
+            for core in self.cores:
+                simobj = core.get_simobject()
+                simobj.vm = board.apple_virt_vm
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif isinstance(
             self.cores[0].get_simobject(),
