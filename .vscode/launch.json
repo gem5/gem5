@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gem5: debug current configuration script",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/${input:gem5ISA}/gem5.opt",
+            "args": [
+                "${file}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "text": "-enable-pretty-printing"
+                }
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "gem5ISA",
+            "type": "pickString",
+            "description": "gem5 build configuration",
+            "options": [
+                "ALL",
+                "X86",
+                "ARM",
+                "RISCV",
+                "NULL"
+            ],
+            "default": "ALL"
+        }
+    ]
+}

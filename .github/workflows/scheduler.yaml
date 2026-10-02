@@ -24,6 +24,8 @@ on:
         - cron: 30 21 * * 2
         # Weekly repository status at 4:30pm UTC on Tuesday.
         - cron: 30 16 * * 2
+        # Devcontainer refresh at 8:30am UTC on Monday.
+        - cron: 30 8 * * 1
         # Agentics maintenance at 4:30pm UTC on Friday.
         - cron: 30 16 * * 5
 
@@ -79,3 +81,10 @@ jobs:
                   gh workflow run agentics-maintenance.yml \
                       --ref develop >/dev/null
                   echo "Agentics maintenance scheduled on develop."
+
+            - name: Refresh Devcontainer
+              if: github.event.schedule == '30 8 * * 1'
+              run: |
+                  gh workflow run devcontainer-build.yaml \
+                      --ref develop >/dev/null
+                  echo "Devcontainer refresh scheduled on develop."
