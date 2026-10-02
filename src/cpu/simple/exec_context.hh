@@ -452,4 +452,4 @@ class SimpleExecContext : public ExecContext
 
 } // namespace gem5
 
-#endif // __CPU_EXEC_CONTEXT_HH__
+#endif // __CPU_SIMPLE_EXEC_CONTEXT_HH__
