@@ -478,8 +478,14 @@ IGbE::writeDevice(PacketPtr pkt)
         regs.mdic = val;
         if (regs.mdic.i())
             panic("No support for interrupt on mdic complete\n");
-        if (regs.mdic.phyadd() != 1)
-            panic("No support for reading anything but phy\n");
+        if (regs.mdic.phyadd() != 1) {
+            warn(
+                "i8254xGBe: MDIC access to invalid PHY %d. Signaling error.\n",
+                regs.mdic.phyadd());
+            regs.mdic.r(1); // Transaction complete
+            regs.mdic.e(1); // Transaction error
+            break;
+        }
         DPRINTF(Ethernet, "%s phy address %x\n",
                 regs.mdic.op() == 1 ? "Writing" : "Reading",
                 regs.mdic.regadd());
