@@ -58,6 +58,7 @@ Shader::Shader(const Params &p)
     : ClockedObject(p),
       _activeCus(0),
       _lastInactiveTick(0),
+      _lastActiveCycle(0),
       cpuThread(nullptr),
       gpuTc(nullptr),
       cpuPointer(p.cpu_pointer),
@@ -555,6 +556,38 @@ Shader::sampleLineRoundTrip(const std::map<Addr, std::vector<Tick>> &lineMap)
 }
 
 void
+Shader::notifyCuActive()
+{
+    const Cycles cycle = curCycle();
+
+    if (_accountedLastActiveCycle && cycle == _lastActiveCycle) {
+        return;
+    }
+
+    _accountedLastActiveCycle = true;
+    _lastActiveCycle = cycle;
+
+    stats.shaderActiveCycles++;
+}
+
+void
+Shader::emitKernelExitIfRequested()
+{
+    // The completion signal and the last CU going idle are two separate
+    // edges, and either can happen first. Check both here so we catch it
+    // no matter which one lands last. The flag reset keeps this from
+    // firing twice.
+    if (kernelExitRequested && !_activeCus) {
+        kernelExitRequested = false;
+        if (blitKernel) {
+            exitSimulationLoopClassicNow("GPU Blit Kernel Completed");
+        } else {
+            exitSimulationLoopClassicNow("GPU Kernel Completed");
+        }
+    }
+}
+
+void
 Shader::notifyCuSleep()
 {
     // If all CUs attached to his shader are asleep, update shaderActiveTicks
@@ -563,16 +596,18 @@ Shader::notifyCuSleep()
     _activeCus--;
     if (!_activeCus) {
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
-
-        if (kernelExitRequested) {
-            kernelExitRequested = false;
-            if (blitKernel) {
-                exitSimulationLoopClassic("GPU Blit Kernel Completed");
-            } else {
-                exitSimulationLoopClassic("GPU Kernel Completed");
-            }
-        }
     }
+    emitKernelExitIfRequested();
+}
+
+void
+Shader::requestKernelExitEvent(bool is_blit_kernel)
+{
+    kernelExitRequested = true;
+    blitKernel = is_blit_kernel;
+    // If every CU already went idle before this signal showed up, we
+    // missed the usual exit point -- fire it now instead.
+    emitKernelExitIfRequested();
 }
 
 void
@@ -630,6 +665,8 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
                "Number of cache lines for coalesced request"),
       ADD_STAT(shaderActiveTicks,
                "Total ticks that any CU attached to this shader is active"),
+      ADD_STAT(shaderActiveCycles,
+               "Total cycles that any CU attached to this shader is active"),
       ADD_STAT(vectorInstSrcOperand,
                "vector instruction source operand distribution"),
       ADD_STAT(vectorInstDstOperand,

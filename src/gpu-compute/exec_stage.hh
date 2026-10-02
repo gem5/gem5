@@ -123,6 +123,10 @@ class ExecStage
         // issued no instructions targeting a specific
         // execution resource type
         statistics::Vector numCyclesWithNoInstrTypeIssued;
+
+        // number of cycles the CU has any instruction issuing this cycle
+        // or still occupying an execution resource from a prior issue
+        statistics::Scalar numCyclesWithAnyWorkInFlight;
     } stats;
 };
 
