@@ -321,7 +321,10 @@ class MatchJSONStats(Verifier):
                         zip(trusted, actual)
                     ):
                         yield from compare(value, output, f"{path}[{index}]")
-            elif trusted != actual:
+            elif (
+                isinstance(trusted, bool) != isinstance(actual, bool)
+                or trusted != actual
+            ):
                 yield path, trusted, actual
 
         diffs = list(compare(trusted_stats, test_stats, "$"))
