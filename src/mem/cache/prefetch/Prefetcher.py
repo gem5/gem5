@@ -792,3 +792,53 @@ add_citation(
 }
 """,
 )
+
+
+class MLOPPrefetcher(QueuedPrefetcher):
+    type = "MLOPPrefetcher"
+    cxx_class = "gem5::prefetch::MLOP"
+    cxx_header = "mem/cache/prefetch/mlop.hh"
+
+    evaluation_period = Param.Unsigned(500, "Accesses per scoring epoch")
+    lookahead_levels = Param.Unsigned(16, "Number of lookahead levels")
+    max_offset = Param.Unsigned(63, "Max signed offset, in cache lines")
+    score_threshold = Param.Unsigned(
+        200,
+        "Min score for an offset to be selected at a given lookahead. "
+        "confidence threshold (0.40) times the default evaluation "
+        "period (500) from their implementation",
+    )
+    degree = Param.Unsigned(16, "Max number of prefetches issued per access")
+    amt_entries = Param.MemorySize(
+        "256", "Number of entries in the Access Map Table"
+    )
+    amt_assoc = Param.Unsigned(256, "Associativity of the Access Map Table")
+    amt_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
+            entry_size=1, assoc=Parent.amt_assoc, size=Parent.amt_entries
+        ),
+        "Indexing policy of the Access Map Table",
+    )
+    amt_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the Access Map Table"
+    )
+    bit_vector_size = Param.Unsigned(64, "Bit-vector length")
+
+    cache_snoop = True
+    on_inst = False
+
+
+add_citation(
+    MLOPPrefetcher,
+    """@inproceedings{mlop-dpc3,
+  author    = {Shakerinava, Mehran and
+               Bakhshalipour, Mohammad and
+               Lotfi-Kamran, Pejman and
+               Sarbazi-Azad, Hamid},
+  title     = {Multi-Lookahead Offset Prefetching},
+  year      = {2019},
+  booktitle = {The Third Data Prefetching Championship (DPC3), in
+               conjunction with ISCA 2019},
+}
+""",
+)
