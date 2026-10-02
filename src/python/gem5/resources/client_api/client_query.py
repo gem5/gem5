@@ -40,8 +40,8 @@ class ClientQuery:
     def __init__(
         self,
         resource_id: str,
-        resource_version: Optional[str] = None,
-        gem5_version: Optional[str] = core.gem5Version,
+        resource_version: str | None = None,
+        gem5_version: str | None = core.gem5Version,
     ):
         self.resource_id = resource_id
         self.resource_version = resource_version
@@ -50,8 +50,8 @@ class ClientQuery:
     def get_resource_id(self) -> str:
         return self.resource_id
 
-    def get_resource_version(self) -> Optional[str]:
+    def get_resource_version(self) -> str | None:
         return self.resource_version
 
-    def get_gem5_version(self) -> Optional[str]:
+    def get_gem5_version(self) -> str | None:
         return self.gem5_version

@@ -136,10 +136,11 @@ def createSystem(
     kernel,
     bootscript,
     machine_type="VExpress_GEM5",
-    disks=[],
+    disks=None,
     mem_size=default_mem_size,
     bootloader=None,
 ):
+    disks = [] if disks is None else disks
     platform = ObjectList.platform_list.get(machine_type)
     m5.util.inform("Simulated platform: %s", platform.__name__)
 

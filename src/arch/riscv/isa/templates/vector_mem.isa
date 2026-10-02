@@ -1380,20 +1380,18 @@ def template VlSegConstructor {{
     StaticInstPtr microop;
     uint32_t size_per_elem = width_EEW(_machInst.width) / 8;
 
-    {
-        float vflmul = getVflmul(_machInst.vtype8.vlmul);
-        uint32_t emul = get_emul(width_EEW(_machInst.width),
-                                 getSew(_machInst.vtype8.vsew), vflmul, false);
-        if (emul * NFIELDS > NumVecInternalRegs) {
-            microop = new VectorNopMicroInst(_machInst,
-                std::make_shared<IllegalInstFault>(
-                    "vlseg nf*EMUL > 8: reserved encoding", _machInst));
-            this->microops.push_back(microop);
-            this->microops.front()->setFlag(IsFirstMicroop);
-            this->microops.back()->setFlag(IsLastMicroop);
-            this->flags[IsVector] = true;
-            return;
-        }
+    float vflmul = getVflmul(_machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(_machInst.width),
+                             getSew(_machInst.vtype8.vsew), vflmul, false);
+    if (emul * NFIELDS > NumVecInternalRegs) {
+        microop = new VectorNopMicroInst(_machInst,
+            std::make_shared<IllegalInstFault>(
+                "vlseg nf*EMUL > 8: reserved encoding", _machInst));
+        this->microops.push_back(microop);
+        this->microops.front()->setFlag(IsFirstMicroop);
+        this->microops.back()->setFlag(IsLastMicroop);
+        this->flags[IsVector] = true;
+        return;
     }
 
     if (micro_vl == 0) {
@@ -1526,12 +1524,6 @@ Fault
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
-
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
-        return std::make_shared<IllegalInstFault>(
-            "LMUL value is illegal for vlseg inst", machInst);
-
-
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -1580,10 +1572,6 @@ Fault
     bool check_vill = true;
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
-
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
-        return std::make_shared<IllegalInstFault>(
-            "LMUL value is illegal for vlseg inst", machInst);
 
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
@@ -1654,20 +1642,18 @@ def template VsSegConstructor {{
     StaticInstPtr microop;
     uint32_t size_per_elem = width_EEW(_machInst.width) / 8;
 
-    {
-        float vflmul = getVflmul(_machInst.vtype8.vlmul);
-        uint32_t emul = get_emul(width_EEW(_machInst.width),
-                                 getSew(_machInst.vtype8.vsew), vflmul, false);
-        if (emul * NFIELDS > NumVecInternalRegs) {
-            microop = new VectorNopMicroInst(_machInst,
-                std::make_shared<IllegalInstFault>(
-                    "vsseg nf*EMUL > 8: reserved encoding", _machInst));
-            this->microops.push_back(microop);
-            this->microops.front()->setFlag(IsFirstMicroop);
-            this->microops.back()->setFlag(IsLastMicroop);
-            this->flags[IsVector] = true;
-            return;
-        }
+    float vflmul = getVflmul(_machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(_machInst.width),
+                             getSew(_machInst.vtype8.vsew), vflmul, false);
+    if (emul * NFIELDS > NumVecInternalRegs) {
+        microop = new VectorNopMicroInst(_machInst,
+            std::make_shared<IllegalInstFault>(
+                "vsseg nf*EMUL > 8: reserved encoding", _machInst));
+        this->microops.push_back(microop);
+        this->microops.front()->setFlag(IsFirstMicroop);
+        this->microops.back()->setFlag(IsLastMicroop);
+        this->flags[IsVector] = true;
+        return;
     }
 
     if (micro_vl == 0) {
@@ -1799,10 +1785,6 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
-        return std::make_shared<IllegalInstFault>(
-            "LMUL value is illegal for vsseg inst", machInst);
-
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 
     std::vector<bool> byte_enable(mem_size, false);
@@ -1853,10 +1835,6 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(ea_code)s;
-
-    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
-        return std::make_shared<IllegalInstFault>(
-            "LMUL value is illegal for vsseg inst", machInst);
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 

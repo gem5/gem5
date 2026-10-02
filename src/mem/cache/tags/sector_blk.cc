@@ -75,6 +75,34 @@ SectorSubBlk::getTag() const
     return tag;
 }
 
+SectorSubBlk &
+SectorSubBlk::operator=(SectorSubBlk &&other)
+{
+    assert(!isValid());
+    assert(other.isValid());
+
+    // Make sure it is not overwriting another sector
+    panic_if(_sectorBlk && _sectorBlk->isValid() &&
+                 ((_sectorBlk->getTag() != other.getTag()) ||
+                  (_sectorBlk->isSecure() != other.isSecure())),
+             "Overwriting valid sector!");
+
+    // If the destination sector is not valid, copy the tag from the source
+    if (_sectorBlk && !_sectorBlk->isValid()) {
+        _sectorBlk->copyTagsFrom(other);
+    }
+
+    CacheBlk::operator=(std::move(other));
+    return *this;
+}
+
+CacheBlk &
+SectorSubBlk::operator=(CacheBlk &&other)
+{
+    operator=(std::move(static_cast<SectorSubBlk &&>(other)));
+    return *this;
+}
+
 void
 SectorSubBlk::setValid()
 {
