@@ -127,6 +127,14 @@ class BaseCache(ClockedObject):
         "T_sweep + line + margin x DRT",
     )
 
+    cold_dirty = Param.String(
+        "refresh",
+        "Dirty lines with active_invalidate: refresh (keep them all), mru "
+        "(write back and invalidate dirty lines outside the top_mru once "
+        "inside T_guard), touched (the same for dirty lines not hit since "
+        "their last full charge)",
+    )
+
     active_invalidate = Param.Bool(
         False,
         "The daemon invalidates every clean line it does not keep once "

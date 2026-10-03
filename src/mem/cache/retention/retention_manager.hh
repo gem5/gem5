@@ -154,7 +154,12 @@ class RetentionManager
      * valid clean line of set inside T_guard that was not kept. A Shared
      * line is refreshed instead (a pending upgrade expects it).
      */
-    void invalidateUnkept(unsigned set);
+    void invalidateUnkept(unsigned set,
+                          const std::vector<CacheBlk *> &mru);
+
+    /** Dirty line the daemon writes back instead of refreshing. */
+    bool isColdDirty(const CacheBlk *blk,
+                     const std::vector<CacheBlk *> &mru) const;
 
     /** Daemon policy for one valid, unexpired block. */
     void maybeRefresh(CacheBlk *blk);
@@ -165,8 +170,11 @@ class RetentionManager
     /** Data-array bank of a set. */
     unsigned bankOf(unsigned set) const { return set % banks; }
 
-    /** Occupy a bank with one full-line refresh. */
-    void occupyBank(unsigned bank);
+    /**
+     * Occupy a bank with one full-line operation: a refresh, or the
+     * line read of a writeback (refresh = false).
+     */
+    void occupyBank(unsigned bank, bool refresh = true);
 
     /** Whether an access of this kind triggers inline refreshes. */
     bool inlineApplies(PacketPtr pkt) const;
@@ -233,6 +241,10 @@ class RetentionManager
     /** The daemon invalidates unkept clean lines inside T_guard. */
     const bool activeInvalidate;
 
+    /** What the daemon does with dirty lines (cold_dirty). */
+    enum class ColdDirty { Refresh, MRU, Touched };
+    const ColdDirty coldDirty;
+
     /** Store hits near expiry recharge the line. */
     const bool inlineOnWrite;
 
@@ -270,7 +282,14 @@ class RetentionManager
      * Stats only: lines the daemon invalidated, until they miss or are
      * refilled, with the tick they would have expired at.
      */
-    std::unordered_map<Addr, Tick> invalidatedAddrs;
+    struct Invalidated
+    {
+        /** When the line would have expired. */
+        Tick expiry;
+        /** It was a dirty line written back. */
+        bool dirty;
+    };
+    std::unordered_map<Addr, Invalidated> invalidatedAddrs;
 
     EventFunctionWrapper refreshEvent;
 
@@ -389,6 +408,10 @@ class RetentionManager
         statistics::Scalar activeInvalidateMisses;
         /** Of those, misses before the line would have expired. */
         statistics::Scalar activeInvalidateEarlyMisses;
+        /** Cold dirty lines written back and invalidated inside T_guard. */
+        statistics::Scalar coldDirtyWritebacks;
+        /** Misses to a written-back cold line before it would expire. */
+        statistics::Scalar coldDirtyEarlyMisses;
     } stats;
 };
 

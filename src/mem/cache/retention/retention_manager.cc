@@ -29,6 +29,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       margin(p.retention_margin),
       guardSweeps(p.retention_guard_sweeps),
       activeInvalidate(p.active_invalidate),
+      coldDirty(p.cold_dirty == "mru" ? ColdDirty::MRU :
+                p.cold_dirty == "touched" ? ColdDirty::Touched :
+                ColdDirty::Refresh),
       inlineOnWrite(p.inline_refresh),
       inlineOnRead(p.inline_refresh_on_read),
       inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
@@ -65,6 +68,12 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              cache.name());
     // The next visit within T_sweep needs the daemon to be the only user
     // of the banks
+    fatal_if(p.cold_dirty != "refresh" && p.cold_dirty != "mru" &&
+             p.cold_dirty != "touched",
+             "%s: cold_dirty must be refresh, mru or touched",
+             cache.name());
+    fatal_if(coldDirty != ColdDirty::Refresh && !activeInvalidate,
+             "%s: cold_dirty needs active_invalidate", cache.name());
     fatal_if(activeInvalidate && (inlineOnWrite || inlineOnRead),
              "%s: active_invalidate needs inline refresh off",
              cache.name());
@@ -159,8 +168,11 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
             auto it = invalidatedAddrs.find(blk_addr);
             if (it != invalidatedAddrs.end()) {
                 stats.activeInvalidateMisses++;
-                if (curTick() < it->second) {
+                if (curTick() < it->second.expiry) {
                     stats.activeInvalidateEarlyMisses++;
+                    if (it->second.dirty) {
+                        stats.coldDirtyEarlyMisses++;
+                    }
                 }
                 invalidatedAddrs.erase(it);
             }
@@ -292,12 +304,14 @@ RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
 }
 
 void
-RetentionManager::occupyBank(unsigned bank)
+RetentionManager::occupyBank(unsigned bank, bool refresh)
 {
     // Full-line read + write; refreshes are serialized within a bank
     Tick start = std::max(curTick(), bankBusyUntil[bank]);
     bankBusyUntil[bank] = start + cache.cyclesToTicks(lineCycles);
-    stats.bankRefreshes[bank]++;
+    if (refresh) {
+        stats.bankRefreshes[bank]++;
+    }
 }
 
 void
@@ -516,16 +530,33 @@ RetentionManager::recordVisit(unsigned set)
     }
 }
 
+bool
+RetentionManager::isColdDirty(const CacheBlk *blk,
+                              const std::vector<CacheBlk *> &mru) const
+{
+    switch (coldDirty) {
+      case ColdDirty::MRU:
+        return std::find(mru.begin(), mru.end(), blk) == mru.end();
+      case ColdDirty::Touched:
+        // Not hit since its last fill or refresh (a fill sets both)
+        return blk->getLastTouchTick() <= blk->getFullChargeTick();
+      default:
+        return false;
+    }
+}
+
 void
-RetentionManager::invalidateUnkept(unsigned set)
+RetentionManager::invalidateUnkept(unsigned set,
+                                   const std::vector<CacheBlk *> &mru)
 {
     const Tick drt = cache.tags->getDRT();
     PacketList writebacks;
 
     for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
-        // The loops above refreshed every kept (dirty, top-MRU) line
-        // inside T_guard, so a line left inside it is clean and unkept
-        if (!blk->isValid() || blk->isSet(CacheBlk::DirtyBit) ||
+        // The loops above refreshed every kept line inside T_guard, so a
+        // line left inside it is clean and unkept, or cold and dirty
+        const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+        if (!blk->isValid() || (dirty && !isColdDirty(blk, mru)) ||
             age(blk) + tGuard <= drt) {
             continue;
         }
@@ -547,18 +578,28 @@ RetentionManager::invalidateUnkept(unsigned set)
             continue;
         }
 
-        DPRINTF(Cache, "RefreshDaemon: INVALIDATE block %#lx age %lu\n",
-                blk->getTag(), age(blk));
+        DPRINTF(Cache, "RefreshDaemon: %s block %#lx age %lu\n",
+                dirty ? "WRITEBACK" : "INVALIDATE", blk->getTag(),
+                age(blk));
 
-        stats.activeInvalidations++;
+        if (dirty) {
+            // The writeback reads the line from its bank
+            stats.coldDirtyWritebacks++;
+            occupyBank(bankOf(set), false);
+        } else {
+            stats.activeInvalidations++;
+        }
         if (cache.tags->isExpired(blk)) {
             stats.activeInvalidateExpired++;
+            if (dirty) {
+                violation(blk, "cold writeback");
+            }
         }
         stats.ageAtActiveInvalidate.sample(double(age(blk)) / double(drt));
         invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
-            blk->getFullChargeTick() + drt;
+            {blk->getFullChargeTick() + drt, dirty};
 
-        // Same message as any clean eviction (CleanEvict)
+        // Same message as any eviction (CleanEvict or WritebackDirty)
         cache.evictBlock(blk, writebacks);
     }
 
@@ -576,6 +617,10 @@ RetentionManager::processRefreshEvent()
 
     recordVisit(refreshSetIdx);
 
+    // Recency order of the set (unchanged by refreshes in this step)
+    const std::vector<CacheBlk *> mru = topMRU > 0 ?
+        topMRUBlks(refreshSetIdx, topMRU) : std::vector<CacheBlk *>();
+
     if (refreshDirtyDaemon) {
         for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
             if (!blk->isValid() || !blk->isSet(CacheBlk::DirtyBit)) {
@@ -590,14 +635,23 @@ RetentionManager::processRefreshEvent()
                 continue;
             }
 
+            // A cold line is written back at T_guard, never refreshed
+            if (isColdDirty(blk, mru)) {
+                continue;
+            }
+
             maybeRefresh(blk);
         }
     }
 
     if (topMRU > 0) {
-        for (CacheBlk *blk : topMRUBlks(refreshSetIdx, topMRU)) {
+        for (CacheBlk *blk : mru) {
             // Refreshed by the dirty loop above in this same step
             if (blk->getFullChargeTick() == curTick()) {
+                continue;
+            }
+            // Left by the dirty loop for the writeback
+            if (blk->isSet(CacheBlk::DirtyBit) && isColdDirty(blk, mru)) {
                 continue;
             }
             // A clean block that already expired has nothing to save
@@ -609,7 +663,7 @@ RetentionManager::processRefreshEvent()
     }
 
     if (activeInvalidate) {
-        invalidateUnkept(refreshSetIdx);
+        invalidateUnkept(refreshSetIdx, mru);
     }
 
     refreshSetIdx = (refreshSetIdx + 1) % tags->getNumSets();
@@ -744,6 +798,12 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "misses to a line the daemon invalidated"),
       ADD_STAT(activeInvalidateEarlyMisses, statistics::units::Count::get(),
                "misses to an invalidated line before it would have "
+               "expired"),
+      ADD_STAT(coldDirtyWritebacks, statistics::units::Count::get(),
+               "cold dirty lines written back and invalidated inside "
+               "T_guard"),
+      ADD_STAT(coldDirtyEarlyMisses, statistics::units::Count::get(),
+               "misses to a written-back cold line before it would have "
                "expired")
 {
 }
