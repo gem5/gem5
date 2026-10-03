@@ -42,11 +42,27 @@
  * line back), costing inline_refresh_cycles of extra latency. A store
  * that finds less life left than that read needs is too late and is
  * handled like an expired block.
+ *
+ * Active invalidation (active_invalidate) replaces the inline refresh.
+ * A daemon step refreshes every kept line (dirty, top-MRU) inside
+ * T_guard as above, and invalidates every other valid line inside it,
+ * which is clean. A Shared line is refreshed instead: a pending upgrade
+ * expects it to stay, and only a non-writable line can have one. With
+ * T_guard >= T_sweep + line (retention_guard_sweeps = 2 gives a full
+ * sweep of slack), every valid line has more than T_sweep of life left
+ * after each visit of its set, so a store that dirties a clean line is
+ * seen by the next visit before the line expires, and no valid line is
+ * ever expired. This needs the daemon to be the only user of the banks
+ * (inline refresh off); each interval between two visits of a set is
+ * checked against T_sweep (a panic under drt_strict). The daemon runs
+ * before the CPU tick, so an access in the cycle of an invalidation
+ * misses.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
 #define __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
 
+#include <unordered_map>
 #include <vector>
 
 #include "base/statistics.hh"
@@ -130,6 +146,16 @@ class RetentionManager
     /** One daemon step: visit set refreshSetIdx, then the next set. */
     void processRefreshEvent();
 
+    /** Stats and check: the interval since the last visit of set. */
+    void recordVisit(unsigned set);
+
+    /**
+     * Active invalidation: after the refresh loops, invalidate every
+     * valid clean line of set inside T_guard that was not kept. A Shared
+     * line is refreshed instead (a pending upgrade expects it).
+     */
+    void invalidateUnkept(unsigned set);
+
     /** Daemon policy for one valid, unexpired block. */
     void maybeRefresh(CacheBlk *blk);
 
@@ -201,6 +227,12 @@ class RetentionManager
     /** Safety margin of the guarantee, as a fraction of DRT. */
     const double margin;
 
+    /** Worst-case daemon sweeps counted in T_guard. */
+    const double guardSweeps;
+
+    /** The daemon invalidates unkept clean lines inside T_guard. */
+    const bool activeInvalidate;
+
     /** Store hits near expiry recharge the line. */
     const bool inlineOnWrite;
 
@@ -227,6 +259,18 @@ class RetentionManager
 
     /** Set the daemon visits next. */
     unsigned refreshSetIdx;
+
+    /** Stats only: tick of each set's last daemon visit (MaxTick: none). */
+    std::vector<Tick> lastVisit;
+
+    /** Stats only: longest interval between two visits of a set. */
+    Tick maxVisitInterval;
+
+    /**
+     * Stats only: lines the daemon invalidated, until they miss or are
+     * refilled, with the tick they would have expired at.
+     */
+    std::unordered_map<Addr, Tick> invalidatedAddrs;
 
     EventFunctionWrapper refreshEvent;
 
@@ -325,6 +369,26 @@ class RetentionManager
         statistics::Vector bankStalledHits;
         /** Cycles hits waited for refreshes, per bank. */
         statistics::Vector bankStallCycles;
+        /** Interval between two daemon visits of a set, in cycles. */
+        statistics::Histogram setVisitInterval;
+        /** Longest such interval, in cycles. */
+        statistics::Value maxSetVisitCycles;
+        /** Visit intervals longer than T_sweep (should be 0). */
+        statistics::Scalar visitIntervalOverruns;
+        /** Unkept clean lines the daemon invalidated inside T_guard. */
+        statistics::Scalar activeInvalidations;
+        /** Of those, lines already expired (should be 0). */
+        statistics::Scalar activeInvalidateExpired;
+        /** Block age at an active invalidation, as a fraction of DRT. */
+        statistics::Distribution ageAtActiveInvalidate;
+        /** Shared lines refreshed instead of invalidated. */
+        statistics::Scalar activeKeptShared;
+        /** Writable lines with a request in flight (should be 0). */
+        statistics::Scalar activeInvalidateInflight;
+        /** Misses to a line the daemon invalidated (stats only). */
+        statistics::Scalar activeInvalidateMisses;
+        /** Of those, misses before the line would have expired. */
+        statistics::Scalar activeInvalidateEarlyMisses;
     } stats;
 };
 

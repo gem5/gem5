@@ -27,6 +27,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       banks(std::max(p.refresh_banks, 1u)),
       oppAge(p.refresh_opp_age),
       margin(p.retention_margin),
+      guardSweeps(p.retention_guard_sweeps),
+      activeInvalidate(p.active_invalidate),
       inlineOnWrite(p.inline_refresh),
       inlineOnRead(p.inline_refresh_on_read),
       inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
@@ -37,6 +39,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       bankLastAccess(banks, 0),
       sweepStart(0),
       refreshSetIdx(0),
+      lastVisit(_cache.tags->getNumSets(), MaxTick),
+      maxVisitInterval(0),
       refreshEvent([this] { processRefreshEvent(); },
                    _cache.name() + ".refreshDaemon"),
       stats(*this, _cache)
@@ -52,6 +56,18 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              p.refresh_banks > cache.tags->getNumSets(),
              "%s: refresh_banks (%u) must be in [1, numSets = %u]",
              cache.name(), p.refresh_banks, cache.tags->getNumSets());
+    fatal_if(guardSweeps < 1.0, "%s: retention_guard_sweeps (%f) < 1",
+             cache.name(), guardSweeps);
+    // Only kept lines are refreshed, and an unkept dirty line would need
+    // a writeback
+    fatal_if(activeInvalidate && !refreshDirtyDaemon,
+             "%s: active_invalidate needs refresh_dirty_daemon",
+             cache.name());
+    // The next visit within T_sweep needs the daemon to be the only user
+    // of the banks
+    fatal_if(activeInvalidate && (inlineOnWrite || inlineOnRead),
+             "%s: active_invalidate needs inline refresh off",
+             cache.name());
 }
 
 void
@@ -76,8 +92,15 @@ RetentionManager::startup()
 
     tSweep = rounds * cache.cyclesToTicks(
         Cycles(banks * scanCycles + k_max * lineCycles));
-    tGuard = tSweep + cache.cyclesToTicks(lineCycles) +
-        Tick(margin * double(drt));
+    tGuard = Tick(guardSweeps * double(tSweep)) +
+        cache.cyclesToTicks(lineCycles) + Tick(margin * double(drt));
+
+    // A demand access in the same cycle as a daemon step must see the
+    // step's invalidations (it misses), so the daemon runs first
+    fatal_if(activeInvalidate &&
+             refreshEvent.priority() >= Event::CPU_Tick_Pri,
+             "%s: the refresh daemon must run before the CPU tick",
+             cache.name());
 
     fatal_if(tGuard >= drt,
              "%s: retention cannot be guaranteed: T_guard = %lu ticks >= "
@@ -87,8 +110,9 @@ RetentionManager::startup()
              (unsigned)scanCycles, k_max, (unsigned)lineCycles);
 
     inform("%s: retention DRT %lu ticks, %u bank(s), T_sweep %lu, "
-           "T_guard %lu (force-refresh from %.1f%% of DRT)", cache.name(),
+           "T_guard %lu (%s from %.1f%% of DRT)", cache.name(),
            drt, banks, tSweep, tGuard,
+           activeInvalidate ? "refresh or invalidate" : "force-refresh",
            100.0 * double(drt - tGuard) / double(drt));
 
     sweepStart = curTick();
@@ -129,6 +153,18 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
     CacheBlk *blk = cache.tags->findBlock({blk_addr, pkt->isSecure()});
 
     if (!blk) {
+        // Stats only: a miss to a line the daemon invalidated; before
+        // its expiry, the invalidation caused it
+        if (activeInvalidate) {
+            auto it = invalidatedAddrs.find(blk_addr);
+            if (it != invalidatedAddrs.end()) {
+                stats.activeInvalidateMisses++;
+                if (curTick() < it->second) {
+                    stats.activeInvalidateEarlyMisses++;
+                }
+                invalidatedAddrs.erase(it);
+            }
+        }
         return;
     }
 
@@ -269,6 +305,11 @@ RetentionManager::onFullLineWrite(CacheBlk *blk)
 {
     blk->setFullChargeTick(curTick());
     blk->setLastTouchTick(curTick());
+
+    // Refilled without a demand miss (e.g. a prefetch): not a miss later
+    if (activeInvalidate) {
+        invalidatedAddrs.erase(cache.regenerateBlkAddr(blk));
+    }
 }
 
 void
@@ -455,11 +496,85 @@ RetentionManager::maybeRefresh(CacheBlk *blk)
 }
 
 void
+RetentionManager::recordVisit(unsigned set)
+{
+    const Tick last = lastVisit[set];
+    lastVisit[set] = curTick();
+    if (last == MaxTick) {
+        return;
+    }
+
+    // The guarantee assumes the daemon comes back within T_sweep
+    const Tick interval = curTick() - last;
+    stats.setVisitInterval.sample(cache.ticksToCycles(interval));
+    maxVisitInterval = std::max(maxVisitInterval, interval);
+    if (interval > tSweep) {
+        stats.visitIntervalOverruns++;
+        panic_if(strict && activeInvalidate, "%s: set %u revisited after "
+                 "%lu ticks > T_sweep = %lu", cache.name(), set, interval,
+                 tSweep);
+    }
+}
+
+void
+RetentionManager::invalidateUnkept(unsigned set)
+{
+    const Tick drt = cache.tags->getDRT();
+    PacketList writebacks;
+
+    for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
+        // The loops above refreshed every kept (dirty, top-MRU) line
+        // inside T_guard, so a line left inside it is clean and unkept
+        if (!blk->isValid() || blk->isSet(CacheBlk::DirtyBit) ||
+            age(blk) + tGuard <= drt) {
+            continue;
+        }
+
+        // A pending upgrade expects a Shared line to stay: keep it.
+        // The coherence state is read with the other tag bits.
+        if (!blk->isSet(CacheBlk::WritableBit)) {
+            stats.activeKeptShared++;
+            refresh(blk, true);
+            continue;
+        }
+
+        // Simulator check: a writable line has no request in flight
+        if (inFlight(cache.regenerateBlkAddr(blk), blk->isSecure())) {
+            stats.activeInvalidateInflight++;
+            panic_if(strict, "%s: writable block %#lx has a request in "
+                     "flight", cache.name(), blk->getTag());
+            refresh(blk, true);
+            continue;
+        }
+
+        DPRINTF(Cache, "RefreshDaemon: INVALIDATE block %#lx age %lu\n",
+                blk->getTag(), age(blk));
+
+        stats.activeInvalidations++;
+        if (cache.tags->isExpired(blk)) {
+            stats.activeInvalidateExpired++;
+        }
+        stats.ageAtActiveInvalidate.sample(double(age(blk)) / double(drt));
+        invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
+            blk->getFullChargeTick() + drt;
+
+        // Same message as any clean eviction (CleanEvict)
+        cache.evictBlock(blk, writebacks);
+    }
+
+    if (!writebacks.empty()) {
+        cache.doWritebacks(writebacks, cache.clockEdge(cache.forwardLatency));
+    }
+}
+
+void
 RetentionManager::processRefreshEvent()
 {
     BaseTags *tags = cache.tags;
 
     DPRINTF(Cache, "RefreshDaemon: set %d\n", refreshSetIdx);
+
+    recordVisit(refreshSetIdx);
 
     if (refreshDirtyDaemon) {
         for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
@@ -491,6 +606,10 @@ RetentionManager::processRefreshEvent()
             }
             maybeRefresh(blk);
         }
+    }
+
+    if (activeInvalidate) {
+        invalidateUnkept(refreshSetIdx);
     }
 
     refreshSetIdx = (refreshSetIdx + 1) % tags->getNumSets();
@@ -604,7 +723,28 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(bankStalledHits, statistics::units::Count::get(),
                "hits delayed by a refresh, per bank"),
       ADD_STAT(bankStallCycles, statistics::units::Cycle::get(),
-               "cycles hits waited for refreshes, per bank")
+               "cycles hits waited for refreshes, per bank"),
+      ADD_STAT(setVisitInterval, statistics::units::Cycle::get(),
+               "interval between two daemon visits of a set"),
+      ADD_STAT(maxSetVisitCycles, statistics::units::Cycle::get(),
+               "longest interval between two daemon visits of a set"),
+      ADD_STAT(visitIntervalOverruns, statistics::units::Count::get(),
+               "set visit intervals longer than T_sweep"),
+      ADD_STAT(activeInvalidations, statistics::units::Count::get(),
+               "unkept clean lines the daemon invalidated inside T_guard"),
+      ADD_STAT(activeInvalidateExpired, statistics::units::Count::get(),
+               "active invalidations of lines already expired"),
+      ADD_STAT(ageAtActiveInvalidate, statistics::units::Ratio::get(),
+               "block age at an active invalidation, as a fraction of DRT"),
+      ADD_STAT(activeKeptShared, statistics::units::Count::get(),
+               "Shared lines refreshed instead of invalidated"),
+      ADD_STAT(activeInvalidateInflight, statistics::units::Count::get(),
+               "writable lines inside T_guard with a request in flight"),
+      ADD_STAT(activeInvalidateMisses, statistics::units::Count::get(),
+               "misses to a line the daemon invalidated"),
+      ADD_STAT(activeInvalidateEarlyMisses, statistics::units::Count::get(),
+               "misses to an invalidated line before it would have "
+               "expired")
 {
 }
 
@@ -617,6 +757,12 @@ RetentionManager::RetentionStats::regStats()
     ageAtForceRefresh.init(0.0, 1.0, 0.02);
     ageAtInlineRefresh.init(0.0, 1.0, 0.02);
     daemonSweepCycles.init(20);
+    setVisitInterval.init(20);
+    ageAtActiveInvalidate.init(0.0, 1.0, 0.02);
+    maxSetVisitCycles.functor([this] {
+        return double(mgr.maxVisitInterval) /
+            double(mgr.cache.clockPeriod());
+    });
     bankRefreshes.init(mgr.banks);
     bankStalledHits.init(mgr.banks);
     bankStallCycles.init(mgr.banks);
@@ -638,6 +784,8 @@ void
 RetentionManager::RetentionStats::resetStats()
 {
     statistics::Group::resetStats();
+
+    mgr.maxVisitInterval = 0;
 
     // Chains opened before the reset would be counted without their
     // refreshes: restart them all

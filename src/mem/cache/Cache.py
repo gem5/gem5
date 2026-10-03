@@ -121,6 +121,19 @@ class BaseCache(ClockedObject):
         0.02, "Safety margin of the retention guarantee, fraction of DRT"
     )
 
+    retention_guard_sweeps = Param.Float(
+        1.0,
+        "Worst-case daemon sweeps in T_guard: T_guard = guard_sweeps x "
+        "T_sweep + line + margin x DRT",
+    )
+
+    active_invalidate = Param.Bool(
+        False,
+        "The daemon invalidates every clean line it does not keep once "
+        "its remaining retention is below T_guard, so no valid line can "
+        "expire; needs refresh_dirty_daemon and no inline refresh",
+    )
+
     inline_refresh = Param.Bool(
         True,
         "A store hit to a block with less than T_guard of retention left "
