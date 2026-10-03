@@ -427,5 +427,9 @@ divLoopTop:
 """
 
 microcode += divcode % {"suffix": "R", "readOp1": "", "op1": "reg"}
-microcode += divcode % {"suffix": "M", "readOp1": sibRel % "t2", "op1": "t2"}
-microcode += divcode % {"suffix": "P", "readOp1": pcRel % "t2", "op1": "t2"}
+# The memory divisor goes to t7, not t2: IDIV and IDIV_B build the negated
+# high half of the dividend in t2 before reading the operand, so loading the
+# divisor into t2 clobbered it and every IDIV m with a negative dividend
+# raised a false #DE.
+microcode += divcode % {"suffix": "M", "readOp1": sibRel % "t7", "op1": "t7"}
+microcode += divcode % {"suffix": "P", "readOp1": pcRel % "t7", "op1": "t7"}
