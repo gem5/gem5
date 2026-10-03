@@ -157,6 +157,9 @@ class RetentionManager
     void invalidateUnkept(unsigned set,
                           const std::vector<CacheBlk *> &mru);
 
+    /** Hit since its last full charge (the reference bit). */
+    bool touched(const CacheBlk *blk) const;
+
     /** Dirty line the daemon writes back instead of refreshing. */
     bool isColdDirty(const CacheBlk *blk,
                      const std::vector<CacheBlk *> &mru) const;
@@ -244,6 +247,9 @@ class RetentionManager
     /** What the daemon does with dirty lines (cold_dirty). */
     enum class ColdDirty { Refresh, MRU, Touched };
     const ColdDirty coldDirty;
+
+    /** Lines hit since their last full charge are kept (keep_touched). */
+    const bool keepTouched;
 
     /** Store hits near expiry recharge the line. */
     const bool inlineOnWrite;
@@ -408,6 +414,8 @@ class RetentionManager
         statistics::Scalar activeInvalidateMisses;
         /** Of those, misses before the line would have expired. */
         statistics::Scalar activeInvalidateEarlyMisses;
+        /** Daemon refreshes of lines kept only by their reference bit. */
+        statistics::Scalar refreshTouched;
         /** Cold dirty lines written back and invalidated inside T_guard. */
         statistics::Scalar coldDirtyWritebacks;
         /** Misses to a written-back cold line before it would expire. */

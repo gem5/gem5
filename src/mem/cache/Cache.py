@@ -135,6 +135,14 @@ class BaseCache(ClockedObject):
         "their last full charge)",
     )
 
+    keep_touched = Param.Bool(
+        False,
+        "With active_invalidate: a line hit since its last full charge "
+        "(a per-line reference bit, set by a hit, cleared by a fill or "
+        "refresh) is kept like a top_mru line, clean or dirty; with "
+        "cold_dirty, a dirty line is cold if neither top_mru nor touched",
+    )
+
     active_invalidate = Param.Bool(
         False,
         "The daemon invalidates every clean line it does not keep once "

@@ -32,6 +32,7 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       coldDirty(p.cold_dirty == "mru" ? ColdDirty::MRU :
                 p.cold_dirty == "touched" ? ColdDirty::Touched :
                 ColdDirty::Refresh),
+      keepTouched(p.keep_touched),
       inlineOnWrite(p.inline_refresh),
       inlineOnRead(p.inline_refresh_on_read),
       inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
@@ -74,6 +75,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              cache.name());
     fatal_if(coldDirty != ColdDirty::Refresh && !activeInvalidate,
              "%s: cold_dirty needs active_invalidate", cache.name());
+    fatal_if(keepTouched && !activeInvalidate,
+             "%s: keep_touched needs active_invalidate", cache.name());
     fatal_if(activeInvalidate && (inlineOnWrite || inlineOnRead),
              "%s: active_invalidate needs inline refresh off",
              cache.name());
@@ -531,9 +534,22 @@ RetentionManager::recordVisit(unsigned set)
 }
 
 bool
+RetentionManager::touched(const CacheBlk *blk) const
+{
+    // A fill sets both ticks, a refresh only the charge, a hit only the
+    // touch
+    return blk->getLastTouchTick() > blk->getFullChargeTick();
+}
+
+bool
 RetentionManager::isColdDirty(const CacheBlk *blk,
                               const std::vector<CacheBlk *> &mru) const
 {
+    if (coldDirty != ColdDirty::Refresh && keepTouched) {
+        return !touched(blk) &&
+            std::find(mru.begin(), mru.end(), blk) == mru.end();
+    }
+
     switch (coldDirty) {
       case ColdDirty::MRU:
         return std::find(mru.begin(), mru.end(), blk) == mru.end();
@@ -659,6 +675,23 @@ RetentionManager::processRefreshEvent()
                 continue;
             }
             maybeRefresh(blk);
+        }
+    }
+
+    // Clean lines kept only by their reference bit (dirty touched lines
+    // are kept by the dirty loop)
+    if (keepTouched) {
+        for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
+            if (!blk->isValid() || blk->isSet(CacheBlk::DirtyBit) ||
+                !touched(blk) || tags->isExpired(blk) ||
+                std::find(mru.begin(), mru.end(), blk) != mru.end()) {
+                continue;
+            }
+            const Tick before = blk->getFullChargeTick();
+            maybeRefresh(blk);
+            if (blk->getFullChargeTick() != before) {
+                stats.refreshTouched++;
+            }
         }
     }
 
@@ -799,6 +832,9 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(activeInvalidateEarlyMisses, statistics::units::Count::get(),
                "misses to an invalidated line before it would have "
                "expired"),
+      ADD_STAT(refreshTouched, statistics::units::Count::get(),
+               "daemon refreshes of clean lines kept by their reference "
+               "bit"),
       ADD_STAT(coldDirtyWritebacks, statistics::units::Count::get(),
                "cold dirty lines written back and invalidated inside "
                "T_guard"),
