@@ -166,6 +166,25 @@ class CacheBlk : public TaggedEntry
     bool wasOppRefreshed;
 
   public:
+    /**
+     * Stats only: the daemon refreshes of this block since its last hit
+     * or fill (a refresh chain), closed by the next hit or invalidation.
+     */
+    struct RefreshChain
+    {
+        /** When the block would have expired without the chain. */
+        Tick expiry = MaxTick;
+        /** Refreshes in the chain of a clean / dirty block. */
+        unsigned clean = 0;
+        unsigned dirty = 0;
+
+        bool open() const { return expiry != MaxTick; }
+    };
+
+  protected:
+    RefreshChain refreshChain;
+
+  public:
     CacheBlk() : TaggedEntry()
     {
         invalidate();
@@ -206,6 +225,7 @@ class CacheBlk : public TaggedEntry
         setFullChargeTick(other.getFullChargeTick());
         setLastTouchTick(other.getLastTouchTick());
         setWasOppRefreshed(other.getWasOppRefreshed());
+        refreshChain = other.refreshChain;
 
         other.invalidate();
 
@@ -249,6 +269,8 @@ class CacheBlk : public TaggedEntry
         return wasOppRefreshed;
     }
 
+    RefreshChain &getRefreshChain() { return refreshChain; }
+
     /**
      * Invalidate the block and clear all state.
      */
@@ -268,6 +290,7 @@ class CacheBlk : public TaggedEntry
         setFullChargeTick(MaxTick);
         setLastTouchTick(0);
         setWasOppRefreshed(false);
+        refreshChain = RefreshChain();
     }
 
     /**

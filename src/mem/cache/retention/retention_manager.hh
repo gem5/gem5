@@ -113,6 +113,19 @@ class RetentionManager
     /** A snoop found blk. Expired data is used; counted. */
     void onSnoop(CacheBlk *blk);
 
+    /**
+     * A hardware prefetch targets blk, which is in the tags. An expired
+     * clean block holds no data: it is invalidated so the prefetch can
+     * refill it. An expired dirty block (a violation) or one with a
+     * request in flight is left for the demand path.
+     *
+     * @return Whether blk was invalidated.
+     */
+    bool expireForPrefetch(CacheBlk *blk);
+
+    /** blk is being invalidated (evicted, expired, snooped away). */
+    void onInvalidate(CacheBlk *blk);
+
   private:
     /** One daemon step: visit set refreshSetIdx, then the next set. */
     void processRefreshEvent();
@@ -140,6 +153,18 @@ class RetentionManager
 
     /** Ticks since blk was last fully written. */
     Tick age(const CacheBlk *blk) const;
+
+    /** A request for the block is in the MSHRs or the write buffer. */
+    bool inFlight(Addr blk_addr, bool is_secure) const;
+
+    /**
+     * Close blk's refresh chain (stats only): hit says whether a hit
+     * closes it (else the block is invalidated).
+     */
+    void closeRefreshChain(CacheBlk *blk, bool hit);
+
+    /** Refreshes in the open chains of clean or dirty refreshes. */
+    double openChainRefreshes(bool dirty) const;
 
     /**
      * Record a retention invariant violation: a dirty block was found
@@ -211,6 +236,9 @@ class RetentionManager
 
         void regStats() override;
 
+        /** Also restarts every refresh chain (stats only). */
+        void resetStats() override;
+
         RetentionManager &mgr;
 
         /** Accesses that found their block expired and missed. */
@@ -269,6 +297,28 @@ class RetentionManager
         statistics::Scalar expiredHitPot;
         /** Hits on blocks the daemon refreshed. */
         statistics::Scalar refreshedBlockUtility;
+        /** Daemon refreshes of clean / dirty blocks. */
+        statistics::Scalar refreshClean;
+        statistics::Scalar refreshDirty;
+        /**
+         * Daemon refreshes by outcome, for clean / dirty blocks: the
+         * next hit came after the block would have expired (needed),
+         * before it (early), the block was invalidated first (dead), or
+         * the chain is still open at the stats dump (open). The four add
+         * up to refreshClean / refreshDirty.
+         */
+        statistics::Scalar refreshNeededClean;
+        statistics::Scalar refreshNeededDirty;
+        statistics::Scalar refreshEarlyClean;
+        statistics::Scalar refreshEarlyDirty;
+        statistics::Scalar refreshDeadClean;
+        statistics::Scalar refreshDeadDirty;
+        statistics::Value refreshOpenClean;
+        statistics::Value refreshOpenDirty;
+        /** Expired clean blocks invalidated so a prefetch refills them. */
+        statistics::Scalar expiredPrefetchRefills;
+        /** Prefetches that found an expired dirty block. */
+        statistics::Scalar expiredPrefetchDirty;
         /** Line refreshes (daemon and inline) per bank. */
         statistics::Vector bankRefreshes;
         /** Hits delayed by a refresh, per bank. */

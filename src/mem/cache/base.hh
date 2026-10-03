@@ -1260,7 +1260,9 @@ class BaseCache : public ClockedObject
     }
 
     bool inCache(Addr addr, bool is_secure) const {
-        return tags->findBlock({addr, is_secure});
+        CacheBlk *blk = tags->findBlock({addr, is_secure});
+        // An expired SRC block holds no data: prefetching it is useful
+        return blk && !(retention && tags->isExpired(blk));
     }
 
     bool hasBeenPrefetched(Addr addr, bool is_secure) const {

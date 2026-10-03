@@ -150,8 +150,7 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
 
     // The block has a request in flight (O3): invalidating it would break
     // the MSHR, so it is served as usual (backdoor, counted)
-    if (cache.mshrQueue.findMatch(blk_addr, pkt->isSecure()) ||
-        cache.writeBuffer.findMatch(blk_addr, pkt->isSecure())) {
+    if (inFlight(blk_addr, pkt->isSecure())) {
         stats.expiredInflightHits++;
         if (dirty) {
             violation(blk, "in-flight access");
@@ -184,10 +183,18 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
     cache.invalidateBlock(blk);
 }
 
+bool
+RetentionManager::inFlight(Addr blk_addr, bool is_secure) const
+{
+    return cache.mshrQueue.findMatch(blk_addr, is_secure) ||
+        cache.writeBuffer.findMatch(blk_addr, is_secure);
+}
+
 void
 RetentionManager::onAccessHit(CacheBlk *blk)
 {
     blk->setLastTouchTick(curTick());
+    closeRefreshChain(blk, true);
 
     if (blk->getWasOppRefreshed()) {
         stats.refreshedBlockUtility++;
@@ -294,6 +301,68 @@ RetentionManager::onFunctional(CacheBlk *blk)
     }
 }
 
+bool
+RetentionManager::expireForPrefetch(CacheBlk *blk)
+{
+    if (!blk->isValid() || !cache.tags->isExpired(blk) ||
+        inFlight(cache.regenerateBlkAddr(blk), blk->isSecure())) {
+        return false;
+    }
+
+    if (blk->isSet(CacheBlk::DirtyBit)) {
+        // Lost dirty data: the demand access does the lazy writeback
+        stats.expiredPrefetchDirty++;
+        violation(blk, "prefetch");
+        return false;
+    }
+
+    stats.expiredPrefetchRefills++;
+    cache.invalidateBlock(blk);
+    return true;
+}
+
+void
+RetentionManager::onInvalidate(CacheBlk *blk)
+{
+    if (blk != cache.tempBlock && blk->isValid()) {
+        closeRefreshChain(blk, false);
+    }
+}
+
+void
+RetentionManager::closeRefreshChain(CacheBlk *blk, bool hit)
+{
+    CacheBlk::RefreshChain &chain = blk->getRefreshChain();
+    if (!chain.open()) {
+        return;
+    }
+
+    if (!hit) {
+        stats.refreshDeadClean += chain.clean;
+        stats.refreshDeadDirty += chain.dirty;
+    } else if (curTick() >= chain.expiry) {
+        stats.refreshNeededClean += chain.clean;
+        stats.refreshNeededDirty += chain.dirty;
+    } else {
+        stats.refreshEarlyClean += chain.clean;
+        stats.refreshEarlyDirty += chain.dirty;
+    }
+    chain = CacheBlk::RefreshChain();
+}
+
+double
+RetentionManager::openChainRefreshes(bool dirty) const
+{
+    double n = 0;
+    cache.tags->forEachBlk([&n, dirty](CacheBlk &blk) {
+        if (blk.isValid() && blk.getRefreshChain().open()) {
+            n += dirty ? blk.getRefreshChain().dirty :
+                blk.getRefreshChain().clean;
+        }
+    });
+    return n;
+}
+
 void
 RetentionManager::onSnoop(CacheBlk *blk)
 {
@@ -350,6 +419,19 @@ RetentionManager::refresh(CacheBlk *blk, bool force)
         stats.oppRefresh++;
     }
     stats.totalRefreshes++;
+
+    // Stats only: the chain of refreshes until the next hit
+    CacheBlk::RefreshChain &chain = blk->getRefreshChain();
+    if (!chain.open()) {
+        chain.expiry = blk->getFullChargeTick() + drt;
+    }
+    if (blk->isSet(CacheBlk::DirtyBit)) {
+        stats.refreshDirty++;
+        chain.dirty++;
+    } else {
+        stats.refreshClean++;
+        chain.clean++;
+    }
 
     occupyBank(bankOf(blk->getSet()));
 
@@ -488,6 +570,35 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "expired blocks accessed within 1.2 DRT of their charge"),
       ADD_STAT(refreshedBlockUtility, statistics::units::Count::get(),
                "hits on blocks the daemon refreshed"),
+      ADD_STAT(refreshClean, statistics::units::Count::get(),
+               "daemon refreshes of clean blocks"),
+      ADD_STAT(refreshDirty, statistics::units::Count::get(),
+               "daemon refreshes of dirty blocks"),
+      ADD_STAT(refreshNeededClean, statistics::units::Count::get(),
+               "clean refreshes whose next hit came after the would-be "
+               "expiry"),
+      ADD_STAT(refreshNeededDirty, statistics::units::Count::get(),
+               "dirty refreshes whose next hit came after the would-be "
+               "expiry"),
+      ADD_STAT(refreshEarlyClean, statistics::units::Count::get(),
+               "clean refreshes whose next hit came before the would-be "
+               "expiry"),
+      ADD_STAT(refreshEarlyDirty, statistics::units::Count::get(),
+               "dirty refreshes whose next hit came before the would-be "
+               "expiry"),
+      ADD_STAT(refreshDeadClean, statistics::units::Count::get(),
+               "clean refreshes of blocks invalidated before a hit"),
+      ADD_STAT(refreshDeadDirty, statistics::units::Count::get(),
+               "dirty refreshes of blocks invalidated before a hit"),
+      ADD_STAT(refreshOpenClean, statistics::units::Count::get(),
+               "clean refreshes of blocks with no hit yet (at dump)"),
+      ADD_STAT(refreshOpenDirty, statistics::units::Count::get(),
+               "dirty refreshes of blocks with no hit yet (at dump)"),
+      ADD_STAT(expiredPrefetchRefills, statistics::units::Count::get(),
+               "expired clean blocks invalidated so a prefetch refills "
+               "them"),
+      ADD_STAT(expiredPrefetchDirty, statistics::units::Count::get(),
+               "prefetches that found an expired dirty block"),
       ADD_STAT(bankRefreshes, statistics::units::Count::get(),
                "line refreshes (daemon and inline) per bank"),
       ADD_STAT(bankStalledHits, statistics::units::Count::get(),
@@ -514,6 +625,24 @@ RetentionManager::RetentionStats::regStats()
     });
     tGuardCycles.functor([this] {
         return double(mgr.tGuard) / double(mgr.cache.clockPeriod());
+    });
+    refreshOpenClean.functor([this] {
+        return mgr.openChainRefreshes(false);
+    });
+    refreshOpenDirty.functor([this] {
+        return mgr.openChainRefreshes(true);
+    });
+}
+
+void
+RetentionManager::RetentionStats::resetStats()
+{
+    statistics::Group::resetStats();
+
+    // Chains opened before the reset would be counted without their
+    // refreshes: restart them all
+    mgr.cache.tags->forEachBlk([](CacheBlk &blk) {
+        blk.getRefreshChain() = CacheBlk::RefreshChain();
     });
 }
 

@@ -973,7 +973,11 @@ BaseCache::getNextQueueEntry()
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = pkt->getBlockAddr(blkSize);
-            if (tags->findBlock({pf_addr, pkt->isSecure()})) {
+            CacheBlk *pf_blk = tags->findBlock({pf_addr, pkt->isSecure()});
+            // An expired block is dropped, so the prefetch refills it
+            if (pf_blk && retention && retention->expireForPrefetch(pf_blk))
+                pf_blk = nullptr;
+            if (pf_blk) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in cache, "
                         "dropped.\n", pf_addr);
                 prefetcher->pfHitInCache();
@@ -1758,6 +1762,9 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 void
 BaseCache::invalidateBlock(CacheBlk *blk)
 {
+    if (retention)
+        retention->onInvalidate(blk);
+
     // If block is still marked as prefetched, then it hasn't been used
     if (blk->wasPrefetched()) {
         prefetcher->prefetchUnused();
