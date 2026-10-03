@@ -33,6 +33,7 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                 p.cold_dirty == "touched" ? ColdDirty::Touched :
                 ColdDirty::Refresh),
       keepTouched(p.keep_touched),
+      touchedClearAge(p.touched_clear_age),
       inlineOnWrite(p.inline_refresh),
       inlineOnRead(p.inline_refresh_on_read),
       inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
@@ -77,6 +78,10 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              "%s: cold_dirty needs active_invalidate", cache.name());
     fatal_if(keepTouched && !activeInvalidate,
              "%s: keep_touched needs active_invalidate", cache.name());
+    fatal_if(touchedClearAge < 0.0 || touchedClearAge >= 1.0 ||
+             (touchedClearAge > 0.0 && !keepTouched),
+             "%s: touched_clear_age must be in [0, 1) and needs "
+             "keep_touched", cache.name());
     fatal_if(activeInvalidate && (inlineOnWrite || inlineOnRead),
              "%s: active_invalidate needs inline refresh off",
              cache.name());
@@ -537,8 +542,9 @@ bool
 RetentionManager::touched(const CacheBlk *blk) const
 {
     // A fill sets both ticks, a refresh only the charge, a hit only the
-    // touch
-    return blk->getLastTouchTick() > blk->getFullChargeTick();
+    // touch; the daemon may clear the bit in between
+    return blk->getLastTouchTick() >
+        std::max(blk->getFullChargeTick(), blk->getRefClearTick());
 }
 
 bool
@@ -632,6 +638,20 @@ RetentionManager::processRefreshEvent()
     DPRINTF(Cache, "RefreshDaemon: set %d\n", refreshSetIdx);
 
     recordVisit(refreshSetIdx);
+
+    // Clear the reference bit of lines past touched_clear_age, once per
+    // charge: from then on the bit means "hit since this point"
+    if (touchedClearAge > 0.0) {
+        const Tick clear_age = Tick(touchedClearAge *
+                                    double(tags->getDRT()));
+        for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
+            if (blk->isValid() && age(blk) >= clear_age &&
+                blk->getRefClearTick() < blk->getFullChargeTick()) {
+                blk->setRefClearTick(curTick());
+                stats.refBitClears++;
+            }
+        }
+    }
 
     // Recency order of the set (unchanged by refreshes in this step)
     const std::vector<CacheBlk *> mru = topMRU > 0 ?
@@ -832,6 +852,8 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(activeInvalidateEarlyMisses, statistics::units::Count::get(),
                "misses to an invalidated line before it would have "
                "expired"),
+      ADD_STAT(refBitClears, statistics::units::Count::get(),
+               "reference bits cleared at touched_clear_age"),
       ADD_STAT(refreshTouched, statistics::units::Count::get(),
                "daemon refreshes of clean lines kept by their reference "
                "bit"),

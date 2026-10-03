@@ -143,6 +143,13 @@ class BaseCache(ClockedObject):
         "cold_dirty, a dirty line is cold if neither top_mru nor touched",
     )
 
+    touched_clear_age = Param.Float(
+        0.0,
+        "With keep_touched: the daemon also clears a line's reference bit "
+        "once its age reaches this fraction of DRT, so the bit means 'hit "
+        "since then' (0: cleared only by a fill or refresh)",
+    )
+
     active_invalidate = Param.Bool(
         False,
         "The daemon invalidates every clean line it does not keep once "

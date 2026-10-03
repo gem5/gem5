@@ -251,6 +251,9 @@ class RetentionManager
     /** Lines hit since their last full charge are kept (keep_touched). */
     const bool keepTouched;
 
+    /** Age (fraction of DRT) at which the daemon clears the bit. */
+    const double touchedClearAge;
+
     /** Store hits near expiry recharge the line. */
     const bool inlineOnWrite;
 
@@ -414,6 +417,8 @@ class RetentionManager
         statistics::Scalar activeInvalidateMisses;
         /** Of those, misses before the line would have expired. */
         statistics::Scalar activeInvalidateEarlyMisses;
+        /** Reference bits the daemon cleared at touched_clear_age. */
+        statistics::Scalar refBitClears;
         /** Daemon refreshes of lines kept only by their reference bit. */
         statistics::Scalar refreshTouched;
         /** Cold dirty lines written back and invalidated inside T_guard. */

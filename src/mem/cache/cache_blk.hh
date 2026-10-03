@@ -165,6 +165,12 @@ class CacheBlk : public TaggedEntry
     /** The retention daemon refreshed this block since its last hit. */
     bool wasOppRefreshed;
 
+    /**
+     * When the daemon last cleared the block's reference bit (models the
+     * bit together with fullChargeTick and lastTouchTick).
+     */
+    Tick refClearTick;
+
   public:
     /**
      * Stats only: the daemon refreshes of this block since its last hit
@@ -225,6 +231,7 @@ class CacheBlk : public TaggedEntry
         setFullChargeTick(other.getFullChargeTick());
         setLastTouchTick(other.getLastTouchTick());
         setWasOppRefreshed(other.getWasOppRefreshed());
+        setRefClearTick(other.getRefClearTick());
         refreshChain = other.refreshChain;
 
         other.invalidate();
@@ -269,6 +276,10 @@ class CacheBlk : public TaggedEntry
         return wasOppRefreshed;
     }
 
+    void setRefClearTick(Tick const tick) { refClearTick = tick; }
+
+    Tick getRefClearTick() const { return refClearTick; }
+
     RefreshChain &getRefreshChain() { return refreshChain; }
 
     /**
@@ -290,6 +301,7 @@ class CacheBlk : public TaggedEntry
         setFullChargeTick(MaxTick);
         setLastTouchTick(0);
         setWasOppRefreshed(false);
+        setRefClearTick(0);
         refreshChain = RefreshChain();
     }
 
