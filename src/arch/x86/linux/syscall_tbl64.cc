@@ -404,7 +404,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     {436, "close_range"},
     {437, "openat2"},
     {438, "pidfd_getfd"},
-    {439, "faccessat2"},
+    {439, "faccessat2", faccessatFunc<X86Linux64>},
     {440, "process_madvise"},
     {441, "epoll_pwait2"},
     {442, "mount_setattr"},
