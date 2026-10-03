@@ -572,7 +572,6 @@ RetentionManager::invalidateUnkept(unsigned set,
                                    const std::vector<CacheBlk *> &mru)
 {
     const Tick drt = cache.tags->getDRT();
-    PacketList writebacks;
 
     for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
         // The loops above refreshed every kept line inside T_guard, so a
@@ -600,6 +599,15 @@ RetentionManager::invalidateUnkept(unsigned set,
             continue;
         }
 
+        // No write-buffer entry for the eviction (the rest is reserved
+        // for the writebacks of fills in flight): keep the line until
+        // the next visit
+        if (cache.writeBuffer.isFull()) {
+            stats.activeWbFullKept++;
+            refresh(blk, true);
+            continue;
+        }
+
         DPRINTF(Cache, "RefreshDaemon: %s block %#lx age %lu\n",
                 dirty ? "WRITEBACK" : "INVALIDATE", blk->getTag(),
                 age(blk));
@@ -621,11 +629,10 @@ RetentionManager::invalidateUnkept(unsigned set,
         invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
             {blk->getFullChargeTick() + drt, dirty};
 
-        // Same message as any eviction (CleanEvict or WritebackDirty)
+        // Same message as any eviction (CleanEvict or WritebackDirty),
+        // queued now so the next check sees the entry taken
+        PacketList writebacks;
         cache.evictBlock(blk, writebacks);
-    }
-
-    if (!writebacks.empty()) {
         cache.doWritebacks(writebacks, cache.clockEdge(cache.forwardLatency));
     }
 }
@@ -852,6 +859,8 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(activeInvalidateEarlyMisses, statistics::units::Count::get(),
                "misses to an invalidated line before it would have "
                "expired"),
+      ADD_STAT(activeWbFullKept, statistics::units::Count::get(),
+               "lines refreshed instead of evicted: write buffer full"),
       ADD_STAT(refBitClears, statistics::units::Count::get(),
                "reference bits cleared at touched_clear_age"),
       ADD_STAT(refreshTouched, statistics::units::Count::get(),

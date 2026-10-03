@@ -417,6 +417,8 @@ class RetentionManager
         statistics::Scalar activeInvalidateMisses;
         /** Of those, misses before the line would have expired. */
         statistics::Scalar activeInvalidateEarlyMisses;
+        /** Lines refreshed instead of evicted: write buffer full. */
+        statistics::Scalar activeWbFullKept;
         /** Reference bits the daemon cleared at touched_clear_age. */
         statistics::Scalar refBitClears;
         /** Daemon refreshes of lines kept only by their reference bit. */
