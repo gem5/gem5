@@ -39,7 +39,7 @@ from .memory import ChanneledMemory
 
 
 def DualChannelDDR3_1600(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A dual channel memory system using DDR3_1600_8x8 based DIMM.
@@ -48,7 +48,7 @@ def DualChannelDDR3_1600(
 
 
 def DualChannelDDR3_2133(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A dual channel memory system using DDR3_2133_8x8 based DIMM.
@@ -57,7 +57,7 @@ def DualChannelDDR3_2133(
 
 
 def DualChannelDDR4_2400(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A dual channel memory system using DDR4_2400_8x8 based DIMM.
@@ -66,7 +66,7 @@ def DualChannelDDR4_2400(
 
 
 def DualChannelLPDDR3_1600(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A dual channel memory system using LPDDR3_1600_1x32 based DIMM.
@@ -75,7 +75,7 @@ def DualChannelLPDDR3_1600(
 
 
 def DualChannelLPDDR5_5500(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A dual channel memory system using LPDDR5_5500_1x16_BG_BL32 based DIMM.

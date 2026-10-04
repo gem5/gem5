@@ -77,7 +77,7 @@ class KernelDiskWorkload:
     """
 
     @abstractmethod
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         """
         Returns a default list of arguments for the workload kernel. We assume
         the following strings may be used as placeholders, to be replaced when
@@ -114,7 +114,7 @@ class KernelDiskWorkload:
 
     def get_disk_root_partition(
         cls, disk_image: DiskImageResource
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Obtains the root partition of a disk image by inspecting the resource's
         metadata.
@@ -144,13 +144,13 @@ class KernelDiskWorkload:
         self,
         kernel: KernelResource,
         disk_image: DiskImageResource,
-        bootloader: Optional[BootloaderResource] = None,
-        disk_device: Optional[str] = None,
-        readfile: Optional[str] = None,
-        readfile_contents: Optional[str] = None,
-        kernel_args: Optional[List[str]] = None,
+        bootloader: BootloaderResource | None = None,
+        disk_device: str | None = None,
+        readfile: str | None = None,
+        readfile_contents: str | None = None,
+        kernel_args: list[str] | None = None,
         exit_on_work_items: bool = True,
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
         """
         This function allows the setting of a full-system run with a Kernel
@@ -260,7 +260,7 @@ class KernelDiskWorkload:
         file.write(readfile_contents)
         file.close()
 
-    def set_binary_to_run(self, application: BinaryResource, args: List[str]):
+    def set_binary_to_run(self, application: BinaryResource, args: list[str]):
         """
         Set the binary to run on the board.
 

@@ -33,16 +33,7 @@ ENV PATH=$PATH:$SST_CORE_HOME/bin
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/
 ENV SST_CORE_HOME="/sst/"
 
-# Use GCC 10
-RUN apt -y update && apt -y install gcc-10 g++-10 &&\
-   update-alternatives --install \
-    /usr/bin/g++ g++ /usr/bin/g++-10 100 && \
-   update-alternatives --install \
-    /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
-   update-alternatives --install \
-    /usr/bin/c++ c++ /usr/bin/g++-10 100 && \
-   update-alternatives --install \
-    /usr/bin/cc cc /usr/bin/gcc-10 100
+# Use the base image's compiler, which supports gem5's C++20 headers.
 
 # SST Stuff
 RUN mkdir /sst

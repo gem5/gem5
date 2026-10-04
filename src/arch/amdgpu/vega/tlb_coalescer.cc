@@ -165,26 +165,34 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 
     potentialPagesize.insert(page_size);
 
-    Addr virt_page_addr;
+    auto issued_translation = issuedTranslationsTable.end();
 
     // Find coalesced translation request.
     for (auto pgsize_seen : potentialPagesize) {
-        virt_page_addr = roundDown(pkt->req->getVaddr(), pgsize_seen);
-        if (issuedTranslationsTable.count(virt_page_addr) != 0) {
+        const Addr virt_page_addr =
+            roundDown(pkt->req->getVaddr(), pgsize_seen);
+        issued_translation = issuedTranslationsTable.find(virt_page_addr);
+        if (issued_translation != issuedTranslationsTable.end()) {
             break;
         }
     }
 
+    panic_if(issued_translation == issuedTranslationsTable.end(),
+             "Unable to find coalesced translation for %#x",
+             pkt->req->getVaddr());
+    const Addr virt_page_addr = issued_translation->first;
+    auto &coalesced_reqs = issued_translation->second;
+
     DPRINTF(GPUTLB, "Update phys. addr. for %d \
             coalesced reqs for page %#x\n",
-            issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
+            coalesced_reqs.size(), virt_page_addr);
 
     bool uncacheable = tlb_entry.uncacheable();
     int first_hit_level = sender_state->hitLevel;
     bool is_system = pkt->req->systemReq();
 
-    for (int i = 0; i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
-        PacketPtr local_pkt = issuedTranslationsTable[virt_page_addr][i];
+    for (size_t i = 0; i < coalesced_reqs.size(); ++i) {
+        PacketPtr local_pkt = coalesced_reqs[i];
 
         Addr local_pkt_vaddr = local_pkt->req->getVaddr();
 

@@ -49,14 +49,14 @@ class SpatterGenerator(AbstractGenerator):
     def __init__(
         self,
         num_cores: int = 1,
-        processing_mode: Union[SpatterProcessingMode, str] = "synchronous",
+        processing_mode: SpatterProcessingMode | str = "synchronous",
         int_regfile_size: int = 384,
         fp_regfile_size: int = 224,
         request_gen_latency: int = 2,
         request_gen_rate: int = 4,
         request_buffer_entries: int = 32,
         send_rate: int = 2,
-        clk_freq: Optional[str] = None,
+        clk_freq: str | None = None,
     ) -> None:
         super().__init__(
             cores=self._create_cores(
@@ -85,14 +85,14 @@ class SpatterGenerator(AbstractGenerator):
     def _create_cores(
         self,
         num_cores: int,
-        processing_mode: Union[SpatterProcessingMode, str],
+        processing_mode: SpatterProcessingMode | str,
         int_regfile_size: int,
         fp_regfile_size: int,
         request_gen_latency: int,
         request_gen_rate: int,
         request_buffer_entries: int,
         send_rate: int,
-    ) -> List[SpatterGeneratorCore]:
+    ) -> list[SpatterGeneratorCore]:
         return [
             SpatterGeneratorCore(
                 processing_mode,
@@ -106,7 +106,7 @@ class SpatterGenerator(AbstractGenerator):
             for _ in range(num_cores)
         ]
 
-    def add_kernel(self, kernels: List[SpatterKernel]) -> None:
+    def add_kernel(self, kernels: list[SpatterKernel]) -> None:
         assert len(kernels) == len(self.cores)
         for core, kernel in zip(self.cores, kernels):
             if kernel.empty():
