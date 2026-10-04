@@ -1,9 +1,9 @@
 # Version 26.0
 
 gem5 Version 26.0 is the first major release of 2026. This release consists
-of 774 commits contributed through 379 merged GitHub pull requests from 84
-unique contributors.
-<!-- Refresh these statistics after #3281, #3287, and #3401 merge. -->
+of 943 commits contributed through 437 merged GitHub pull requests from 89
+unique human pull-request authors.
+<!-- Inventory: 7f06b2fdbe..8c517dbaa7, including merge commits. -->
 
 ## Major Highlights
 
@@ -133,6 +133,29 @@ unique contributors.
   than failing the entire build
   ([#3287](https://github.com/gem5/gem5/pull/3287)).
 
+* **PyStats snapshots require a single root.**
+  `get_simstat` accepts one `SimObject` and its descendants. Lists and
+  `SimObjectVector` roots now raise `TypeError`; collect separate snapshots
+  with `[get_simstat(obj) for obj in roots]`. JSON and CSV visitors still
+  accept flat root lists or vectors, preserving their order and duplicate
+  selections. JSON collection output is a list, while CSV prefixes columns
+  with selection indices and rejects changes to collection columns within
+  one output file
+  ([#3533](https://github.com/gem5/gem5/pull/3533)).
+
+* **CHI-TLM generator rates are separate.**
+  `arrival_rate` and `departure_rate` replace `tran_per_cycle`. Positive
+  arrival rates admit that many transactions per cycle; `-N` admits one
+  every N cycles, and zero pauses admission. Explicitly timed transactions
+  bypass arrival-rate control. `departure_rate` limits scheduling of
+  admitted transactions per cycle
+  ([#3411](https://github.com/gem5/gem5/pull/3411)).
+
+* **Translation flags retain their full type.**
+  `WholeTranslationState::getFlags()` now returns `Request::Flags` rather
+  than `unsigned`, avoiding narrowing of request flags in callers
+  ([#3483](https://github.com/gem5/gem5/pull/3483)).
+
 * **Older GPU disk images are being retired.**
   The standard-library GPU setup now provides the ACPI tables and direct
   `amdgpu` loading needed by ROCm 7.2. ROCm 6.4 and older disk images are no
@@ -150,6 +173,16 @@ unique contributors.
   ([#2998](https://github.com/gem5/gem5/pull/2998),
   [#2960](https://github.com/gem5/gem5/pull/2960),
   [#3343](https://github.com/gem5/gem5/pull/3343)).
+
+* **SPARC pthreads and safer SE memory deallocation.**
+  SPARC SE mode gains corrected clone, TLS, thread-ID, and futex handling,
+  with pthread atomic regressions restored for O3 and TimingSimpleCPU.
+  Shared syscall helpers also preserve guest byte order, required widths,
+  and signed error returns. Deallocating memory now zeroes the owning
+  process's physical pages rather than translating through thread context
+  zero, preventing corruption of another process in multi-process SE runs
+  ([#3515](https://github.com/gem5/gem5/pull/3515),
+  [#3545](https://github.com/gem5/gem5/pull/3545)).
 
 * **CSV and MultiSim statistics.**
   A new statistics visitor writes CSV output, and the Python statistics code
@@ -195,11 +228,13 @@ unique contributors.
   Panic output includes the current simulation tick, execution traces can
   annotate faulting instructions, statistics code can look up an individual
   value in a vector statistic at run time, and workloads expose GDB listener
-  output to Python
+  output to Python. VNC servers also expose listener output and availability
+  through `getListenerOutput` and `hasListener`
   ([#3074](https://github.com/gem5/gem5/pull/3074),
   [#2941](https://github.com/gem5/gem5/pull/2941),
   [#3241](https://github.com/gem5/gem5/pull/3241),
-  [#3331](https://github.com/gem5/gem5/pull/3331)).
+  [#3331](https://github.com/gem5/gem5/pull/3331),
+  [#3451](https://github.com/gem5/gem5/pull/3451)).
 
 ## CPU Models and Branch Prediction
 
@@ -236,6 +271,14 @@ unique contributors.
   [#3266](https://github.com/gem5/gem5/pull/3266),
   [#3377](https://github.com/gem5/gem5/pull/3377)).
 
+* **O3 prefetch retirement and squash fixes.**
+  Non-HTM software prefetches can retire once their memory request is sent,
+  without waiting for load writeback. HTM prefetches retain response-based
+  completion to report transaction aborts. Squashing also handles
+  commit-released non-speculative instructions without the former assertion
+  ([#3148](https://github.com/gem5/gem5/pull/3148),
+  [#3487](https://github.com/gem5/gem5/pull/3487)).
+
 ## Arm ISA Changes and Improvements
 
 * **FEAT_SME2 and FEAT_SME2p1.**
@@ -270,6 +313,22 @@ unique contributors.
   [#3381](https://github.com/gem5/gem5/pull/3381),
   [#3425](https://github.com/gem5/gem5/pull/3425)).
 
+* **SE release generation and Armv8.9 boot support.**
+  Arm release definitions can derive SE variants by pruning full-system-only
+  extensions. The AArch64 bootloader enables access to `TCR2_EL1`,
+  `SCTLR2_EL1`, and permission-indirection registers, preventing early boot
+  traps when guests use advertised Armv8.9 features
+  ([#3531](https://github.com/gem5/gem5/pull/3531),
+  [#3493](https://github.com/gem5/gem5/pull/3493)).
+
+* **Neoverse V2 cache and power corrections.**
+  The supplied Neoverse V2 L1 instruction and data caches now use 16 MSHRs
+  after removal of duplicate assignments that reduced them to 12. The Arm
+  full-system power example divides L2 access counts by simulated time so
+  dynamic power reflects an access rate
+  ([#3544](https://github.com/gem5/gem5/pull/3544),
+  [#3457](https://github.com/gem5/gem5/pull/3457)).
+
 ## RISC-V ISA Changes and Improvements
 
 * **KVM acceleration.**
@@ -296,7 +355,9 @@ unique contributors.
 * **RVV correctness fixes.**
   Numerous fixes address vector slide, reduction, gather, compress, masked
   strided load, fractional-LMUL segment, destination-index, and
-  register-array bounds behavior
+  register-array bounds behavior. Reduction micro-ops preserve overlapping
+  source registers on non-reordering CPUs, and vector segment loads/stores
+  use the correct `EMUL * NFIELDS <= 8` legality check
   ([#3048](https://github.com/gem5/gem5/pull/3048),
   [#3223](https://github.com/gem5/gem5/pull/3223),
   [#3275](https://github.com/gem5/gem5/pull/3275),
@@ -305,7 +366,9 @@ unique contributors.
   [#3308](https://github.com/gem5/gem5/pull/3308),
   [#3109](https://github.com/gem5/gem5/pull/3109),
   [#3112](https://github.com/gem5/gem5/pull/3112),
-  [#3163](https://github.com/gem5/gem5/pull/3163)).
+  [#3163](https://github.com/gem5/gem5/pull/3163),
+  [#3532](https://github.com/gem5/gem5/pull/3532),
+  [#3512](https://github.com/gem5/gem5/pull/3512)).
 
 * **Scalar and system fixes.**
   RV64I and RV64M word operations now sign-extend correctly, PMP state is
@@ -339,6 +402,12 @@ unique contributors.
   [#2748](https://github.com/gem5/gem5/pull/2748),
   [#3389](https://github.com/gem5/gem5/pull/3389)).
 
+* **Correct register self-exchange.**
+  Register-to-register `XCHG` preserves the value when both operands name
+  the same register, including the markers used by Valgrind client requests.
+  A 32-bit self-exchange still zero-extends the result as required
+  ([#3541](https://github.com/gem5/gem5/pull/3541)).
+
 ## GPU Model Enhancements
 
 * **ROCm 7.2 and 7.14 full-system support.**
@@ -366,12 +435,27 @@ unique contributors.
 
 * **MI200 and MI355X GPUFS examples and regression coverage.**
   Public standard-library examples share the board, resource, and checkpoint
-  configuration used by the tests. Daily coverage cold-boots MI200-family
-  (`gfx90a`) and MI355X (`gfx950`) systems, while pull-request CI restores a
-  warmed MI355X checkpoint and verifies a second real GPU kernel. The
+  configuration used by the tests. Weekly coverage cold-boots MI200-family
+  (`gfx90a`) and MI355X (`gfx950`) systems, while Daily coverage restores a
+  warmed MI355X checkpoint to verify a second real GPU kernel. GPUFS tests
+  have moved out of pull-request CI to the scheduled workflows. The
   deprecated `gcn-gpu` image and active tests that depended on it have been
   removed
   ([#3401](https://github.com/gem5/gem5/pull/3401)).
+
+* **MI300X partitioning and device-backed queue descriptors.**
+  The AMDGPU NBIO model handles PSP commands for compute and memory
+  partitioning. PM4 and SDMA queues can read and write VRAM-backed memory
+  queue descriptors used by ROCm 7.14
+  ([#2959](https://github.com/gem5/gem5/pull/2959),
+  [#3332](https://github.com/gem5/gem5/pull/3332)).
+
+* **Shared GPU resource downloads.**
+  GPUFS fixtures coordinate concurrent cold downloads with resource locks
+  and reuse completed resources from a shared cache. Resource-lock wait
+  messages go to stderr so stdout remains usable for
+  machine-readable resource-tool output
+  ([#3510](https://github.com/gem5/gem5/pull/3510)).
 
 ## Memory System and AMBA CHI
 
@@ -395,6 +479,7 @@ unique contributors.
   [#3153](https://github.com/gem5/gem5/pull/3153),
   [#3175](https://github.com/gem5/gem5/pull/3175),
   [#3228](https://github.com/gem5/gem5/pull/3228),
+  [#3411](https://github.com/gem5/gem5/pull/3411),
   [#3134](https://github.com/gem5/gem5/pull/3134)).
 
 * **CHI stash flows.**
@@ -409,8 +494,12 @@ unique contributors.
   `PrivateL1PrivateL2SharedL3MeshCacheHierarchy` allow standard-library
   systems to describe CHI node placement and mesh links through a topology
   module. Dot output and SimpleNetwork options help inspect and tune the
-  resulting topology
-  ([#3215](https://github.com/gem5/gem5/pull/3215),
+  resulting topology. CustomMesh imports and CHI controller lookup now work
+  with multi-protocol builds, and Arm full-system regressions exercise CHI
+  using the `ALL` build
+  ([#3474](https://github.com/gem5/gem5/pull/3474),
+  [#3535](https://github.com/gem5/gem5/pull/3535),
+  [#3215](https://github.com/gem5/gem5/pull/3215),
   [#3327](https://github.com/gem5/gem5/pull/3327),
   [#3244](https://github.com/gem5/gem5/pull/3244)).
 
@@ -445,6 +534,14 @@ unique contributors.
   [#3334](https://github.com/gem5/gem5/pull/3334),
   [#3401](https://github.com/gem5/gem5/pull/3401)).
 
+* **Cache block moves and serial-link timing.**
+  Sector and compressed cache block moves preserve tags without extracting
+  them twice, preventing erroneous sector-overwrite panics. `SerialLink`
+  converts serialization and deserialization time to clock cycles rather
+  than treating nanoseconds as cycles
+  ([#3546](https://github.com/gem5/gem5/pull/3546),
+  [#3253](https://github.com/gem5/gem5/pull/3253)).
+
 ## Build, Tooling, and Testing
 
 * **Updated compiler and host support.**
@@ -456,6 +553,30 @@ unique contributors.
   [#3125](https://github.com/gem5/gem5/pull/3125),
   [#3287](https://github.com/gem5/gem5/pull/3287),
   [#3309](https://github.com/gem5/gem5/pull/3309)).
+
+* **C++20 integration and compiler fixes.**
+  SST and SystemC adapters now compile in C++20 mode, and the external
+  SystemC library uses the matching language standard. Build fixes cover
+  GCC 16, global-barrier initialization with Clang 14/15, C23 attributes
+  exposed by system headers to older Clang versions, and generated parameter
+  setters under `--with-cxx-config`
+  ([#3526](https://github.com/gem5/gem5/pull/3526),
+  [#3509](https://github.com/gem5/gem5/pull/3509),
+  [#3528](https://github.com/gem5/gem5/pull/3528),
+  [#3488](https://github.com/gem5/gem5/pull/3488),
+  [#3552](https://github.com/gem5/gem5/pull/3552)).
+
+* **Standard C++ barriers.**
+  Parallel event-queue synchronization uses C++20 `std::barrier` in place of
+  the custom barrier implementation, preserving event-queue locking during
+  barrier completion
+  ([#3341](https://github.com/gem5/gem5/pull/3341)).
+
+* **Python tooling configuration.**
+  Python dependency configuration moves from `requirements.txt` to
+  `pyproject.toml`, and local hooks and CI use a pinned clang-format version
+  ([#3518](https://github.com/gem5/gem5/pull/3518),
+  [#3516](https://github.com/gem5/gem5/pull/3516)).
 
 * **Current Ubuntu LTS dependency images.**
   The all-dependencies images cover Ubuntu 22.04, 24.04, and 26.04 and prefer
@@ -485,12 +606,46 @@ unique contributors.
   TestLib can collect gcovr coverage, CI uploads broader Codecov data,
   timed-out tests preserve artifacts, and Daily/Weekly jobs no longer mask
   failures with `continue-on-error`. GPUFS suites now run through the standard
-  `ALL` CI and Daily matrices with the standard Ubuntu dependencies image
+  `ALL` Daily and Weekly matrices with the standard Ubuntu dependencies image
   ([#2860](https://github.com/gem5/gem5/pull/2860),
   [#3007](https://github.com/gem5/gem5/pull/3007),
   [#2877](https://github.com/gem5/gem5/pull/2877),
   [#2940](https://github.com/gem5/gem5/pull/2940),
   [#3401](https://github.com/gem5/gem5/pull/3401)).
+
+* **Scheduled test build reuse and recovery.**
+  Daily TestLib jobs consume binary artifacts built for their selected
+  suites and download only the required targets. Pull-request CI reuses
+  cached Clang fast builds; macOS Daily builds retry from a clean build
+  after a cached build fails. SystemC jobs avoid restoring incompatible
+  build caches, and expensive resource-requirement checks run Weekly
+  ([#3507](https://github.com/gem5/gem5/pull/3507),
+  [#3508](https://github.com/gem5/gem5/pull/3508),
+  [#3549](https://github.com/gem5/gem5/pull/3549),
+  [#3496](https://github.com/gem5/gem5/pull/3496),
+  [#3539](https://github.com/gem5/gem5/pull/3539),
+  [#3534](https://github.com/gem5/gem5/pull/3534)).
+
+* **More reliable statistics verification.**
+  JSON comparisons recursively check selected dictionary entries and
+  scalar values while allowing extra output statistics. Lists must match
+  in length and order. TestLib preserves failure diagnostics,
+  including unmatched regular expressions, and traffic-generator references
+  match the single-root PyStats output
+  ([#3521](https://github.com/gem5/gem5/pull/3521)).
+
+* **Repository automation and contribution guidance.**
+  File-based PR labels and issue-labeling workflows help route contributions.
+  Agentic workflows support discussion responses, weekly activity summaries,
+  CI failure diagnosis, and repository maintenance; `AGENTS.md` provides
+  repository guidance for coding agents
+  ([#3330](https://github.com/gem5/gem5/pull/3330),
+  [#3373](https://github.com/gem5/gem5/pull/3373),
+  [#3394](https://github.com/gem5/gem5/pull/3394),
+  [#3391](https://github.com/gem5/gem5/pull/3391),
+  [#3460](https://github.com/gem5/gem5/pull/3460),
+  [#3459](https://github.com/gem5/gem5/pull/3459),
+  [#3306](https://github.com/gem5/gem5/pull/3306)).
 
 # Version 25.1.0.1
 
