@@ -265,6 +265,9 @@ BaseProtocol::discoverAgent(Message &msg)
             agent_name = "platform";
         }
 
+        fatal_if(agent_name.length() > MAX_STRING_SIZE,
+                 "Invalid BASE_PROTOCOL AGENT size\n");
+
         agent_size = agent_name.length();
 
         strncpy((char *)&payload.name, agent_name.c_str(), agent_size + 1);
