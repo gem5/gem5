@@ -275,7 +275,7 @@ class NoMatchRegex(MatchRegex):
 
         for fname in self.filenames:
             if self.parse_file(joinpath(tempdir, fname)):
-                raise AssertionError("Could not match regex.")
+                raise AssertionError("Regex matched unexpectedly.")
 
 
 class MatchJSONStats(Verifier):
