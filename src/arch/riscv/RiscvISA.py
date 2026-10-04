@@ -523,10 +523,10 @@ class RiscvISA(BaseISA):
 
     riscv_profile = Param.RiscvProfile(
         "RVA23S64",
-        "RISC-V application profile used for extension reporting. Profile "
-        "selection does not gate instruction decoding or execution; it only "
-        "selects which supported mandatory profile extensions gem5 reports "
-        "to software.",
+        "RISC-V application profile used to select reported extensions and "
+        "ISA width. The selected extensions also drive existing feature "
+        "checks, including vector availability. This does not provide "
+        "comprehensive enforcement of the profile's instruction set.",
     )
     extra_extensions = VectorParam.String(
         [
