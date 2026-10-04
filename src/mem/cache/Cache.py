@@ -164,6 +164,39 @@ class BaseCache(ClockedObject):
         "(as the RTL controller does)",
     )
 
+    quantized_age = Param.Bool(
+        False,
+        "The daemon compares line ages in epochs of 2^age_epoch_log2 "
+        "cycles, read from an age_bits-bit stamp written at each full "
+        "charge (as the RTL controller does), instead of exact ticks",
+    )
+
+    age_epoch_log2 = Param.Unsigned(
+        10, "With quantized_age: log2 of the epoch length in cycles"
+    )
+
+    age_bits = Param.Unsigned(
+        5, "With quantized_age: bits of the per-line epoch stamp"
+    )
+
+    deadline_epochs = Param.Int(
+        -1,
+        "With quantized_age: deadline age F in epochs; -1 derives "
+        "F = floor((DRT - T_guard) / epoch)",
+    )
+
+    opp_age_epochs = Param.Int(
+        -1,
+        "With quantized_age: age in epochs from which idle-time refreshes "
+        "start; -1 derives floor(refresh_opp_age x DRT / epoch)",
+    )
+
+    touched_clear_epochs = Param.Int(
+        -1,
+        "With quantized_age: age in epochs at which the reference bit is "
+        "cleared; -1 derives round(touched_clear_age x DRT / epoch)",
+    )
+
     inline_refresh = Param.Bool(
         True,
         "A store hit to a block with less than T_guard of retention left "

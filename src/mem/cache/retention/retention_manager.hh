@@ -58,9 +58,15 @@
  * before the CPU tick, so an access in the cycle of an invalidation
  * misses.
  *
- * RTL alignment (off by default). silent_clean_drop: a clean line
+ * RTL alignment (both off by default). silent_clean_drop: a clean line
  * dropped at its deadline is invalidated without a CleanEvict and takes
- * no write-buffer slot.
+ * no write-buffer slot. quantized_age: the daemon reads a line's age as
+ * an age_bits-bit epoch stamp, epochs of 2^age_epoch_log2 cycles, and
+ * acts at age >= F = floor((DRT - T_guard) / epoch): a visit that sees
+ * age < F knows the exact age is below F epochs, so the line has more
+ * than T_guard left. The opp and reference-bit clear ages are in epochs
+ * too. The stamp is the epoch of the last full charge, so it needs no
+ * state beyond the charge tick.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
@@ -195,6 +201,28 @@ class RetentionManager
     /** Ticks since blk was last fully written. */
     Tick age(const CacheBlk *blk) const;
 
+    /**
+     * quantized_age: set the deadline, opp and clear ages in epochs
+     * (unless given) and check that they keep every line alive.
+     */
+    void deriveEpochThresholds(Tick drt, unsigned k_max);
+
+    /** quantized_age: epoch of tick t (epochs since tick 0). */
+    uint64_t epochOf(Tick t) const;
+
+    /** quantized_age: epochs since blk's last full charge, unwrapped. */
+    uint64_t epochAgeExact(const CacheBlk *blk) const;
+
+    /** quantized_age: the age the RTL reads, the stamp difference mod
+     *  2^age_bits. */
+    unsigned epochAge(const CacheBlk *blk) const;
+
+    /**
+     * quantized_age checks at a daemon visit: no valid line of set has
+     * reached DRT or the stamp's wrap age (panic under drt_strict).
+     */
+    void checkQuantizedAges(unsigned set);
+
     /** A request for the block is in the MSHRs or the write buffer. */
     bool inFlight(Addr blk_addr, bool is_secure) const;
 
@@ -260,6 +288,26 @@ class RetentionManager
 
     /** Clean deadline drops send no CleanEvict (silent_clean_drop). */
     const bool silentCleanDrop;
+
+    /** Ages in epochs from a stamp (quantized_age). */
+    const bool quantizedAge;
+
+    /** log2 of the epoch length in cycles. */
+    const unsigned epochLog2;
+
+    /** Bits of the epoch stamp. */
+    const unsigned ageBits;
+
+    /** Epoch thresholds as given (-1: derive at startup). */
+    const int deadlineEpochsParam;
+    const int oppAgeEpochsParam;
+    const int clearEpochsParam;
+
+    /** Epoch thresholds in use: deadline F, opp age, reference-bit clear
+     *  age (0: no clear). */
+    unsigned deadlineEpochs;
+    unsigned oppAgeEpochs;
+    unsigned clearEpochs;
 
     /** Store hits near expiry recharge the line. */
     const bool inlineOnWrite;
@@ -436,6 +484,22 @@ class RetentionManager
         statistics::Scalar coldDirtyEarlyMisses;
         /** Clean deadline drops without a CleanEvict (silent_clean_drop). */
         statistics::Scalar silentCleanDrops;
+        /** Block age at an opportunistic refresh, as a fraction of DRT. */
+        statistics::Distribution ageAtOppRefresh;
+        /** quantized_age: epoch length in cycles. */
+        statistics::Value epochCycles;
+        /** quantized_age: thresholds in use, in epochs. */
+        statistics::Value deadlineEpochs;
+        statistics::Value oppAgeEpochs;
+        statistics::Value touchedClearEpochs;
+        /** quantized_age: epoch age at each deadline action (all F). */
+        statistics::Distribution epochAgeAtDeadline;
+        /** quantized_age: valid lines found at or past DRT at a visit
+         *  (should be 0). */
+        statistics::Scalar quantExpiredAtVisit;
+        /** quantized_age: valid lines whose epoch age reached the stamp's
+         *  wrap (2^age_bits - 1) at a visit (should be 0). */
+        statistics::Scalar epochWrapRisk;
     } stats;
 };
 

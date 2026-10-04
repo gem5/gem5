@@ -1,8 +1,10 @@
 #include "mem/cache/retention/retention_manager.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
+#include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Cache.hh"
@@ -35,6 +37,15 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       keepTouched(p.keep_touched),
       touchedClearAge(p.touched_clear_age),
       silentCleanDrop(p.silent_clean_drop),
+      quantizedAge(p.quantized_age),
+      epochLog2(p.age_epoch_log2),
+      ageBits(p.age_bits),
+      deadlineEpochsParam(p.deadline_epochs),
+      oppAgeEpochsParam(p.opp_age_epochs),
+      clearEpochsParam(p.touched_clear_epochs),
+      deadlineEpochs(0),
+      oppAgeEpochs(0),
+      clearEpochs(0),
       inlineOnWrite(p.inline_refresh),
       inlineOnRead(p.inline_refresh_on_read),
       inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
@@ -88,6 +99,12 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              cache.name());
     fatal_if(silentCleanDrop && !activeInvalidate,
              "%s: silent_clean_drop needs active_invalidate", cache.name());
+    fatal_if(quantizedAge && (ageBits < 2 || ageBits > 16 ||
+                              epochLog2 > 20),
+             "%s: quantized_age needs age_bits in [2, 16] and "
+             "age_epoch_log2 <= 20", cache.name());
+    fatal_if(quantizedAge && inlineOnWrite,
+             "%s: quantized_age needs inline refresh off", cache.name());
 }
 
 void
@@ -95,6 +112,9 @@ RetentionManager::startup()
 {
     const Tick drt = cache.tags->getDRT();
     const bool daemon = topMRU > 0 || refreshDirtyDaemon;
+
+    fatal_if(quantizedAge && !daemon,
+             "%s: quantized_age needs the refresh daemon", cache.name());
 
     if (!daemon) {
         // No daemon to wait for: inline refreshes just before expiry
@@ -129,6 +149,10 @@ RetentionManager::startup()
              cache.name(), tGuard, drt, rounds, banks,
              (unsigned)scanCycles, k_max, (unsigned)lineCycles);
 
+    if (quantizedAge) {
+        deriveEpochThresholds(drt, k_max);
+    }
+
     inform("%s: retention DRT %lu ticks, %u bank(s), T_sweep %lu, "
            "T_guard %lu (%s from %.1f%% of DRT)", cache.name(),
            drt, banks, tSweep, tGuard,
@@ -143,6 +167,99 @@ Tick
 RetentionManager::age(const CacheBlk *blk) const
 {
     return curTick() - blk->getFullChargeTick();
+}
+
+void
+RetentionManager::deriveEpochThresholds(Tick drt, unsigned k_max)
+{
+    const Tick period = cache.clockPeriod();
+    const uint64_t epoch = uint64_t(1) << epochLog2;
+    const uint64_t drt_cyc = drt / period;
+    const uint64_t guard_cyc = divCeil(tGuard, period);
+    const uint64_t sweep_cyc = divCeil(tSweep, period);
+
+    // Every threshold rounds the safe way: act early. A visit that sees
+    // age < F knows the exact age is below F epochs.
+    deadlineEpochs = deadlineEpochsParam >= 0 ? deadlineEpochsParam :
+        (drt_cyc - guard_cyc) / epoch;
+    oppAgeEpochs = oppAgeEpochsParam >= 0 ? oppAgeEpochsParam :
+        uint64_t(oppAge * double(drt_cyc)) / epoch;
+    if (clearEpochsParam >= 0) {
+        clearEpochs = clearEpochsParam;
+    } else if (touchedClearAge > 0.0) {
+        clearEpochs = std::max<uint64_t>(1, std::llround(
+            touchedClearAge * double(drt_cyc) / double(epoch)));
+    }
+
+    // Not at the deadline at a visit: exact age < F epochs. The next
+    // visit comes within T_sweep and its refreshes take k_max lines.
+    const uint64_t worst = deadlineEpochs * epoch + sweep_cyc +
+        k_max * uint64_t(lineCycles);
+    fatal_if(deadlineEpochs == 0 || worst >= drt_cyc,
+             "%s: quantized ages cannot guarantee retention: F = %u "
+             "epochs x %lu + T_sweep %lu + %u x %u cycles >= DRT %lu "
+             "cycles", cache.name(), deadlineEpochs, epoch, sweep_cyc,
+             k_max, (unsigned)lineCycles, drt_cyc);
+    // A valid line reaches at most F + 1 between two visits
+    fatal_if(deadlineEpochs + 1 >= (1u << ageBits) - 1,
+             "%s: a %u-bit stamp wraps before the deadline F = %u",
+             cache.name(), ageBits, deadlineEpochs);
+    fatal_if(clearEpochs > 0 && !keepTouched,
+             "%s: touched_clear_epochs needs keep_touched", cache.name());
+
+    inform("%s: quantized ages: epoch %lu cycles, %u-bit stamp, "
+           "deadline F %u (acts at true age %.1f-%.1f%% of DRT), opp age "
+           "%u, reference-bit clear %u epoch(s)", cache.name(), epoch,
+           ageBits, deadlineEpochs,
+           100.0 * double((deadlineEpochs - 1) * epoch) / double(drt_cyc),
+           100.0 * double(deadlineEpochs * epoch + sweep_cyc) /
+           double(drt_cyc), oppAgeEpochs, clearEpochs);
+}
+
+uint64_t
+RetentionManager::epochOf(Tick t) const
+{
+    return (t / cache.clockPeriod()) >> epochLog2;
+}
+
+uint64_t
+RetentionManager::epochAgeExact(const CacheBlk *blk) const
+{
+    return epochOf(curTick()) - epochOf(blk->getFullChargeTick());
+}
+
+unsigned
+RetentionManager::epochAge(const CacheBlk *blk) const
+{
+    // The stamp holds the charge epoch mod 2^age_bits
+    const uint64_t mask = (uint64_t(1) << ageBits) - 1;
+    return ((epochOf(curTick()) & mask) -
+            (epochOf(blk->getFullChargeTick()) & mask)) & mask;
+}
+
+void
+RetentionManager::checkQuantizedAges(unsigned set)
+{
+    const Tick drt = cache.tags->getDRT();
+    const uint64_t wrap = (uint64_t(1) << ageBits) - 1;
+
+    for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
+        if (!blk->isValid()) {
+            continue;
+        }
+        if (age(blk) >= drt) {
+            stats.quantExpiredAtVisit++;
+            panic_if(strict, "%s: valid block %#lx reached DRT (age %lu "
+                     ">= %lu) with quantized ages", cache.name(),
+                     blk->getTag(), age(blk), drt);
+        }
+        if (epochAgeExact(blk) >= wrap) {
+            stats.epochWrapRisk++;
+            panic_if(strict, "%s: valid block %#lx epoch age %lu reached "
+                     "the %u-bit stamp wrap", cache.name(), blk->getTag(),
+                     epochAgeExact(blk), ageBits);
+        }
+    }
 }
 
 void
@@ -483,6 +600,7 @@ RetentionManager::refresh(CacheBlk *blk, bool force)
         stats.ageAtForceRefresh.sample(double(age(blk)) / double(drt));
     } else {
         stats.oppRefresh++;
+        stats.ageAtOppRefresh.sample(double(age(blk)) / double(drt));
     }
     stats.totalRefreshes++;
 
@@ -511,11 +629,24 @@ RetentionManager::maybeRefresh(CacheBlk *blk)
     const Tick drt = cache.tags->getDRT();
     const Tick a = age(blk);
 
-    // Would expire before the daemon comes back: must refresh now
-    if (drt - a < tGuard) {
+    // Would expire before the daemon comes back: must refresh now. With
+    // quantized ages, the deadline and opp ages are in epochs.
+    bool deadline, opp;
+    if (quantizedAge) {
+        const unsigned e = epochAge(blk);
+        deadline = e >= deadlineEpochs;
+        opp = e >= oppAgeEpochs;
+    } else {
+        deadline = drt - a < tGuard;
+        opp = a >= oppAge * double(drt);
+    }
+
+    if (deadline) {
+        if (quantizedAge) {
+            stats.epochAgeAtDeadline.sample(epochAge(blk));
+        }
         refresh(blk, true);
-    } else if (a >= oppAge * double(drt) &&
-               bankIdle(bankOf(blk->getSet()))) {
+    } else if (opp && bankIdle(bankOf(blk->getSet()))) {
         refresh(blk, false);
     }
 }
@@ -580,8 +711,15 @@ RetentionManager::invalidateUnkept(unsigned set,
         // The loops above refreshed every kept line inside T_guard, so a
         // line left inside it is clean and unkept, or cold and dirty
         const bool dirty = blk->isSet(CacheBlk::DirtyBit);
-        if (!blk->isValid() || (dirty && !isColdDirty(blk, mru)) ||
-            age(blk) + tGuard <= drt) {
+        if (!blk->isValid() || (dirty && !isColdDirty(blk, mru))) {
+            continue;
+        }
+        if (quantizedAge) {
+            if (epochAge(blk) < deadlineEpochs) {
+                continue;
+            }
+            stats.epochAgeAtDeadline.sample(epochAge(blk));
+        } else if (age(blk) + tGuard <= drt) {
             continue;
         }
 
@@ -661,9 +799,23 @@ RetentionManager::processRefreshEvent()
 
     recordVisit(refreshSetIdx);
 
+    if (quantizedAge) {
+        checkQuantizedAges(refreshSetIdx);
+    }
+
     // Clear the reference bit of lines past touched_clear_age, once per
-    // charge: from then on the bit means "hit since this point"
-    if (touchedClearAge > 0.0) {
+    // charge: from then on the bit means "hit since this point". With
+    // quantized ages the clear age is in epochs.
+    if (quantizedAge) {
+        for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
+            if (clearEpochs > 0 && blk->isValid() &&
+                epochAge(blk) >= clearEpochs &&
+                blk->getRefClearTick() < blk->getFullChargeTick()) {
+                blk->setRefClearTick(curTick());
+                stats.refBitClears++;
+            }
+        }
+    } else if (touchedClearAge > 0.0) {
         const Tick clear_age = Tick(touchedClearAge *
                                     double(tags->getDRT()));
         for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
@@ -889,7 +1041,23 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "expired"),
       ADD_STAT(silentCleanDrops, statistics::units::Count::get(),
                "clean lines dropped at their deadline without a "
-               "CleanEvict")
+               "CleanEvict"),
+      ADD_STAT(ageAtOppRefresh, statistics::units::Ratio::get(),
+               "block age at an opportunistic refresh, fraction of DRT"),
+      ADD_STAT(epochCycles, statistics::units::Cycle::get(),
+               "quantized ages: epoch length"),
+      ADD_STAT(deadlineEpochs, statistics::units::Count::get(),
+               "quantized ages: deadline age F in epochs"),
+      ADD_STAT(oppAgeEpochs, statistics::units::Count::get(),
+               "quantized ages: opportunistic refresh age in epochs"),
+      ADD_STAT(touchedClearEpochs, statistics::units::Count::get(),
+               "quantized ages: reference-bit clear age in epochs (0: off)"),
+      ADD_STAT(epochAgeAtDeadline, statistics::units::Count::get(),
+               "quantized ages: epoch age at each deadline action"),
+      ADD_STAT(quantExpiredAtVisit, statistics::units::Count::get(),
+               "quantized ages: valid lines at or past DRT at a visit"),
+      ADD_STAT(epochWrapRisk, statistics::units::Count::get(),
+               "quantized ages: valid lines at the stamp wrap at a visit")
 {
 }
 
@@ -904,6 +1072,18 @@ RetentionManager::RetentionStats::regStats()
     daemonSweepCycles.init(20);
     setVisitInterval.init(20);
     ageAtActiveInvalidate.init(0.0, 1.0, 0.02);
+    ageAtOppRefresh.init(0.0, 1.0, 0.02);
+    epochAgeAtDeadline.init(0, 31, 1);
+    epochCycles.functor([this] {
+        return mgr.quantizedAge ? double(1u << mgr.epochLog2) : 0.0;
+    });
+    deadlineEpochs.functor([this] {
+        return double(mgr.deadlineEpochs);
+    });
+    oppAgeEpochs.functor([this] { return double(mgr.oppAgeEpochs); });
+    touchedClearEpochs.functor([this] {
+        return double(mgr.clearEpochs);
+    });
     maxSetVisitCycles.functor([this] {
         return double(mgr.maxVisitInterval) /
             double(mgr.cache.clockPeriod());
