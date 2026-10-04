@@ -157,6 +157,13 @@ class BaseCache(ClockedObject):
         "expire; needs refresh_dirty_daemon and no inline refresh",
     )
 
+    silent_clean_drop = Param.Bool(
+        False,
+        "With active_invalidate: a clean line dropped at its deadline is "
+        "invalidated without a CleanEvict and takes no write-buffer slot "
+        "(as the RTL controller does)",
+    )
+
     inline_refresh = Param.Bool(
         True,
         "A store hit to a block with less than T_guard of retention left "

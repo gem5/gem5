@@ -57,6 +57,10 @@
  * checked against T_sweep (a panic under drt_strict). The daemon runs
  * before the CPU tick, so an access in the cycle of an invalidation
  * misses.
+ *
+ * RTL alignment (off by default). silent_clean_drop: a clean line
+ * dropped at its deadline is invalidated without a CleanEvict and takes
+ * no write-buffer slot.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
@@ -254,6 +258,9 @@ class RetentionManager
     /** Age (fraction of DRT) at which the daemon clears the bit. */
     const double touchedClearAge;
 
+    /** Clean deadline drops send no CleanEvict (silent_clean_drop). */
+    const bool silentCleanDrop;
+
     /** Store hits near expiry recharge the line. */
     const bool inlineOnWrite;
 
@@ -427,6 +434,8 @@ class RetentionManager
         statistics::Scalar coldDirtyWritebacks;
         /** Misses to a written-back cold line before it would expire. */
         statistics::Scalar coldDirtyEarlyMisses;
+        /** Clean deadline drops without a CleanEvict (silent_clean_drop). */
+        statistics::Scalar silentCleanDrops;
     } stats;
 };
 

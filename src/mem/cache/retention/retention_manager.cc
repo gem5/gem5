@@ -34,6 +34,7 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                 ColdDirty::Refresh),
       keepTouched(p.keep_touched),
       touchedClearAge(p.touched_clear_age),
+      silentCleanDrop(p.silent_clean_drop),
       inlineOnWrite(p.inline_refresh),
       inlineOnRead(p.inline_refresh_on_read),
       inlineCycles(p.inline_refresh_cycles > 0 ? p.inline_refresh_cycles :
@@ -85,6 +86,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
     fatal_if(activeInvalidate && (inlineOnWrite || inlineOnRead),
              "%s: active_invalidate needs inline refresh off",
              cache.name());
+    fatal_if(silentCleanDrop && !activeInvalidate,
+             "%s: silent_clean_drop needs active_invalidate", cache.name());
 }
 
 void
@@ -582,6 +585,9 @@ RetentionManager::invalidateUnkept(unsigned set,
             continue;
         }
 
+        // A clean line dropped silently needs no write-buffer entry
+        const bool silent = silentCleanDrop && !dirty;
+
         // A pending upgrade expects a Shared line to stay: keep it.
         // The coherence state is read with the other tag bits.
         if (!blk->isSet(CacheBlk::WritableBit)) {
@@ -602,7 +608,7 @@ RetentionManager::invalidateUnkept(unsigned set,
         // No write-buffer entry for the eviction (the rest is reserved
         // for the writebacks of fills in flight): keep the line until
         // the next visit
-        if (cache.writeBuffer.isFull()) {
+        if (!silent && cache.writeBuffer.isFull()) {
             stats.activeWbFullKept++;
             refresh(blk, true);
             continue;
@@ -628,6 +634,15 @@ RetentionManager::invalidateUnkept(unsigned set,
         stats.ageAtActiveInvalidate.sample(double(age(blk)) / double(drt));
         invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
             {blk->getFullChargeTick() + drt, dirty};
+
+        // Silent drop: invalidate without telling the level below (no
+        // CleanEvict); it keeps a stale holder bit and answers later
+        // snoops for the line with a miss
+        if (silent) {
+            stats.silentCleanDrops++;
+            cache.invalidateBlock(blk);
+            continue;
+        }
 
         // Same message as any eviction (CleanEvict or WritebackDirty),
         // queued now so the next check sees the entry taken
@@ -871,7 +886,10 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "T_guard"),
       ADD_STAT(coldDirtyEarlyMisses, statistics::units::Count::get(),
                "misses to a written-back cold line before it would have "
-               "expired")
+               "expired"),
+      ADD_STAT(silentCleanDrops, statistics::units::Count::get(),
+               "clean lines dropped at their deadline without a "
+               "CleanEvict")
 {
 }
 
