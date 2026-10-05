@@ -49,7 +49,7 @@ interface.
 Note that HMC is configured differently than some other DRAM interfaces.
 """
 
-from .dram_interfaces.ddr3 import DDR3_1600_8x8
+from .ddr3 import DDR3_1600_8x8
 
 
 class HMC_2500_1x32(DDR3_1600_8x8):
