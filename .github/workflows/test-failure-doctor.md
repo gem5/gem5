@@ -28,6 +28,7 @@ safe-outputs:
     target: "*"
   update-issue:
   noop:
+  report-failure-as-issue: false
   jobs:
     rerun-failed-jobs:
       permissions:
