@@ -67,11 +67,30 @@
  * than T_guard left. The opp and reference-bit clear ages are in epochs
  * too. The stamp is the epoch of the last full charge, so it needs no
  * state beyond the charge tick.
+ *
+ * Line scanner (refresh_scan = line), as the RTL controller has it: one
+ * scanner per bank walks the bank's rows (ways inner, sets outer), one
+ * line per step, and decides that line alone. Each bank has a single
+ * pending-operation slot. A row whose decision needs the bank (a
+ * refresh or a writeback read) retires only when the slot holds no
+ * unissued forced refresh or writeback read; otherwise the scanner
+ * waits and decides the row again. A row needing nothing, or only a
+ * CleanEvict, retires at once. A forced refresh or writeback read starts
+ * as soon as the bank is free; an opportunistic refresh waits in the
+ * slot for a step with the bank idle, and the next operation for the
+ * bank replaces it. So a row is revisited within
+ *
+ *   T_sweep = (numSets / B) * assoc * (scan + line_budget) cycles,
+ *
+ * and the RTL's T_guard = T_sweep + line_budget needs guard_sweeps 1 and
+ * margin 0. line_budget (refresh_line_budget_cycles) can exceed the
+ * bank occupancy (refresh_line_cycles).
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
 #define __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -156,8 +175,11 @@ class RetentionManager
     /** One daemon step: visit set refreshSetIdx, then the next set. */
     void processRefreshEvent();
 
-    /** Stats and check: the interval since the last visit of set. */
-    void recordVisit(unsigned set);
+    /**
+     * Stats and check: the interval since the last visit of a set (set
+     * scanner) or a row, set * assoc + way (line scanner).
+     */
+    void recordVisit(unsigned idx);
 
     /**
      * Active invalidation: after the refresh loops, invalidate every
@@ -177,17 +199,83 @@ class RetentionManager
     /** Daemon policy for one valid, unexpired block. */
     void maybeRefresh(CacheBlk *blk);
 
-    /** Recharge blk with a full-line read and write. */
-    void refresh(CacheBlk *blk, bool force);
+    /** What the daemon does with one line. */
+    enum class LineOp
+    {
+        None,
+        /** Opportunistic refresh (line scanner: into the slot). */
+        Opp,
+        /** Forced refresh. */
+        Force,
+        /** Dirty drop: writeback read of the line, then invalidate. */
+        Wb,
+        /** Clean drop: CleanEvict, no bank time. */
+        Ce
+    };
+
+    /** Why a line at its deadline is refreshed instead of dropped. */
+    enum class DropKeep { None, Shared, Inflight, WbFull };
+
+    /** Line scanner: the decision for one line. */
+    struct LineDecision
+    {
+        LineOp op = LineOp::None;
+        /** Not kept and at its deadline: carried out by applyDrop. */
+        bool drop = false;
+        /** With drop and op Force: why the line is refreshed. */
+        DropKeep keep = DropKeep::None;
+        /** An expired dirty line, refreshed (backdoor, counted). */
+        bool revived = false;
+    };
+
+    /**
+     * Drop decision for a line at its deadline that is not kept: Force
+     * (with the reason in keep), Wb or Ce. No side effects.
+     */
+    LineOp planDrop(CacheBlk *blk, DropKeep &keep) const;
+
+    /**
+     * Carry out planDrop's decision, with its stats.
+     *
+     * @return The tick the bank operation starts at (curTick() for a
+     *         CleanEvict, which takes no bank time).
+     */
+    Tick applyDrop(CacheBlk *blk, LineOp op, DropKeep keep);
+
+    /** Line scanner: one step of the scanner of bank. */
+    void processLineStep(unsigned bank);
+
+    /** Line scanner: the decision for one line, no side effects. */
+    LineDecision decideLine(CacheBlk *blk) const;
+
+    /** Clear blk's reference bit at the clear age (once per charge). */
+    void clearRefBit(CacheBlk *blk);
+
+    /** quantized_age checks for one block (see checkQuantizedAges). */
+    void checkQuantizedAge(const CacheBlk *blk);
+
+    /** blk is at its deadline (remaining life below T_guard). */
+    bool atDeadline(const CacheBlk *blk) const;
+
+    /** blk is at the opportunistic refresh age. */
+    bool atOppAge(const CacheBlk *blk) const;
+
+    /**
+     * Recharge blk with a full-line read and write.
+     *
+     * @return The tick the bank operation starts at.
+     */
+    Tick refresh(CacheBlk *blk, bool force);
 
     /** Data-array bank of a set. */
     unsigned bankOf(unsigned set) const { return set % banks; }
 
     /**
      * Occupy a bank with one full-line operation: a refresh, or the
-     * line read of a writeback (refresh = false).
+     * line read of a writeback (refresh = false). Returns the tick the
+     * operation starts at.
      */
-    void occupyBank(unsigned bank, bool refresh = true);
+    Tick occupyBank(unsigned bank, bool refresh = true);
 
     /** Whether an access of this kind triggers inline refreshes. */
     bool inlineApplies(PacketPtr pkt) const;
@@ -264,6 +352,12 @@ class RetentionManager
     /** Number of data-array banks. */
     const unsigned banks;
 
+    /** Cycles one bank operation is budgeted for in T_sweep / T_guard. */
+    const Cycles lineBudget;
+
+    /** One scanner per bank, one line per step (refresh_scan = line). */
+    const bool lineScan;
+
     /** Age (fraction of DRT) from which idle-time refreshes start. */
     const double oppAge;
 
@@ -336,7 +430,10 @@ class RetentionManager
     /** Set the daemon visits next. */
     unsigned refreshSetIdx;
 
-    /** Stats only: tick of each set's last daemon visit (MaxTick: none). */
+    /**
+     * Stats only: tick of each set's (line scanner: each row's) last
+     * daemon visit (MaxTick: none).
+     */
     std::vector<Tick> lastVisit;
 
     /** Stats only: longest interval between two visits of a set. */
@@ -356,6 +453,29 @@ class RetentionManager
     std::unordered_map<Addr, Invalidated> invalidatedAddrs;
 
     EventFunctionWrapper refreshEvent;
+
+    /** Line scanner, per bank: next row (set_hi * assoc + way). */
+    std::vector<unsigned> scanRow;
+
+    /**
+     * Line scanner, per bank: the slot holds an unissued forced refresh
+     * or writeback read until this tick.
+     */
+    std::vector<Tick> slotFreeAt;
+
+    /** Line scanner, per bank: an opportunistic refresh in the slot. */
+    struct PendingOpp
+    {
+        CacheBlk *blk = nullptr;
+        Addr addr = 0;
+    };
+    std::vector<PendingOpp> pendingOpp;
+
+    /** Line scanner, per bank: tick the current sweep started at. */
+    std::vector<Tick> bankSweepStart;
+
+    /** Line scanner: one event per bank. */
+    std::vector<std::unique_ptr<EventFunctionWrapper>> lineEvents;
 
     struct RetentionStats : public statistics::Group
     {
@@ -500,6 +620,17 @@ class RetentionManager
         /** quantized_age: valid lines whose epoch age reached the stamp's
          *  wrap (2^age_bits - 1) at a visit (should be 0). */
         statistics::Scalar epochWrapRisk;
+        /** Line scanner: slot opportunistic refreshes replaced by the
+         *  next operation for the bank before they issued. */
+        statistics::Scalar oppReplaced;
+        /** Line scanner: slot opportunistic refreshes dropped because
+         *  their row changed before they issued. */
+        statistics::Scalar oppStale;
+        /** Line scanner: steps in which a row needing the bank waited
+         *  for the slot. */
+        statistics::Scalar scanSlotWaits;
+        /** Line scanner: cycles the scanners waited for the slot. */
+        statistics::Scalar scanSlotWaitCycles;
     } stats;
 };
 

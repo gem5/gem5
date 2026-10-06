@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 #include <vector>
 
 #include "base/intmath.hh"
@@ -27,6 +28,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       lineCycles(p.refresh_line_cycles > 0 ? p.refresh_line_cycles :
                  Cycles(2 * p.data_latency)),
       banks(std::max(p.refresh_banks, 1u)),
+      lineBudget(p.refresh_line_budget_cycles > 0 ?
+                 p.refresh_line_budget_cycles : lineCycles),
+      lineScan(p.refresh_scan == "line"),
       oppAge(p.refresh_opp_age),
       margin(p.retention_margin),
       guardSweeps(p.retention_guard_sweeps),
@@ -105,6 +109,33 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              "age_epoch_log2 <= 20", cache.name());
     fatal_if(quantizedAge && inlineOnWrite,
              "%s: quantized_age needs inline refresh off", cache.name());
+    fatal_if(p.refresh_scan != "set" && p.refresh_scan != "line",
+             "%s: refresh_scan must be set or line", cache.name());
+
+    if (lineScan) {
+        const unsigned num_sets = cache.tags->getNumSets();
+        // The RTL's per-line rules: dirty, used, Shared; no MRU ranking
+        fatal_if(!activeInvalidate,
+                 "%s: refresh_scan=line needs active_invalidate",
+                 cache.name());
+        fatal_if(topMRU > 0, "%s: refresh_scan=line needs top_mru = 0",
+                 cache.name());
+        fatal_if(num_sets % banks != 0,
+                 "%s: refresh_scan=line needs numSets (%u) to be a "
+                 "multiple of refresh_banks (%u)", cache.name(), num_sets,
+                 banks);
+
+        lastVisit.assign(num_sets * assoc, MaxTick);
+        scanRow.assign(banks, 0);
+        slotFreeAt.assign(banks, 0);
+        pendingOpp.assign(banks, PendingOpp());
+        bankSweepStart.assign(banks, 0);
+        for (unsigned b = 0; b < banks; b++) {
+            lineEvents.push_back(std::make_unique<EventFunctionWrapper>(
+                [this, b] { processLineStep(b); },
+                cache.name() + ".refreshScanner" + std::to_string(b)));
+        }
+    }
 }
 
 void
@@ -118,7 +149,7 @@ RetentionManager::startup()
 
     if (!daemon) {
         // No daemon to wait for: inline refreshes just before expiry
-        tGuard = cache.cyclesToTicks(lineCycles) +
+        tGuard = cache.cyclesToTicks(lineBudget) +
             Tick(margin * double(drt));
         inform("%s: retention DRT %lu ticks, no refresh daemon, "
                "T_guard %lu", cache.name(), drt, tGuard);
@@ -126,14 +157,27 @@ RetentionManager::startup()
     }
 
     const unsigned num_sets = cache.tags->getNumSets();
-    const unsigned k_max = refreshDirtyDaemon ? assoc : topMRU;
+    // Most bank operations one visit can start: a set, or one line
+    const unsigned k_max = lineScan ? 1 :
+        refreshDirtyDaemon ? assoc : topMRU;
     // Rounds of B sets: B scans + the previous round's refreshes
     const unsigned rounds = (num_sets + banks - 1) / banks;
 
-    tSweep = rounds * cache.cyclesToTicks(
-        Cycles(banks * scanCycles + k_max * lineCycles));
+    if (lineScan) {
+        // Each bank's scanner: every row of the bank, each scanned and
+        // at worst waiting for one operation
+        tSweep = Tick(num_sets / banks) * assoc *
+            cache.cyclesToTicks(Cycles(scanCycles + lineBudget));
+        warn_if(guardSweeps != 1.0 || margin != 0.0,
+                "%s: refresh_scan=line with guard_sweeps %f and margin %f: "
+                "T_guard differs from the RTL's T_sweep + line",
+                cache.name(), guardSweeps, margin);
+    } else {
+        tSweep = rounds * cache.cyclesToTicks(
+            Cycles(banks * scanCycles + k_max * lineBudget));
+    }
     tGuard = Tick(guardSweeps * double(tSweep)) +
-        cache.cyclesToTicks(lineCycles) + Tick(margin * double(drt));
+        cache.cyclesToTicks(lineBudget) + Tick(margin * double(drt));
 
     // A demand access in the same cycle as a daemon step must see the
     // step's invalidations (it misses), so the daemon runs first
@@ -147,20 +191,27 @@ RetentionManager::startup()
              "DRT = %lu ticks (T_sweep = %u rounds x (%u banks x %u + "
              "%u x %u) cycles). Use a larger DRT or a faster refresh.",
              cache.name(), tGuard, drt, rounds, banks,
-             (unsigned)scanCycles, k_max, (unsigned)lineCycles);
+             (unsigned)scanCycles, k_max, (unsigned)lineBudget);
 
     if (quantizedAge) {
         deriveEpochThresholds(drt, k_max);
     }
 
-    inform("%s: retention DRT %lu ticks, %u bank(s), T_sweep %lu, "
-           "T_guard %lu (%s from %.1f%% of DRT)", cache.name(),
-           drt, banks, tSweep, tGuard,
+    inform("%s: retention DRT %lu ticks, %u bank(s), %s scanner, T_sweep "
+           "%lu, T_guard %lu (%s from %.1f%% of DRT)", cache.name(),
+           drt, banks, lineScan ? "line" : "set", tSweep, tGuard,
            activeInvalidate ? "refresh or invalidate" : "force-refresh",
            100.0 * double(drt - tGuard) / double(drt));
 
     sweepStart = curTick();
-    cache.schedule(refreshEvent, cache.clockEdge(Cycles(1)));
+    if (lineScan) {
+        for (unsigned b = 0; b < banks; b++) {
+            bankSweepStart[b] = curTick();
+            cache.schedule(*lineEvents[b], cache.clockEdge(Cycles(1)));
+        }
+    } else {
+        cache.schedule(refreshEvent, cache.clockEdge(Cycles(1)));
+    }
 }
 
 Tick
@@ -194,16 +245,21 @@ RetentionManager::deriveEpochThresholds(Tick drt, unsigned k_max)
     // Not at the deadline at a visit: exact age < F epochs. The next
     // visit comes within T_sweep and its refreshes take k_max lines.
     const uint64_t worst = deadlineEpochs * epoch + sweep_cyc +
-        k_max * uint64_t(lineCycles);
+        k_max * uint64_t(lineBudget);
     fatal_if(deadlineEpochs == 0 || worst >= drt_cyc,
              "%s: quantized ages cannot guarantee retention: F = %u "
              "epochs x %lu + T_sweep %lu + %u x %u cycles >= DRT %lu "
              "cycles", cache.name(), deadlineEpochs, epoch, sweep_cyc,
-             k_max, (unsigned)lineCycles, drt_cyc);
-    // A valid line reaches at most F + 1 between two visits
-    fatal_if(deadlineEpochs + 1 >= (1u << ageBits) - 1,
-             "%s: a %u-bit stamp wraps before the deadline F = %u",
-             cache.name(), ageBits, deadlineEpochs);
+             k_max, (unsigned)lineBudget, drt_cyc);
+    // The RTL's stamp checks: F below the largest age, and a valid line
+    // seen below F reaches at most F - 1 + ceil(T_sweep / epoch) at the
+    // next visit, which must not wrap
+    const uint64_t span = uint64_t(1) << ageBits;
+    fatal_if(deadlineEpochs >= span - 1 ||
+             sweep_cyc >= (span - deadlineEpochs) * epoch,
+             "%s: a %u-bit stamp wraps before the deadline F = %u "
+             "(T_sweep %lu cycles, epoch %lu)", cache.name(), ageBits,
+             deadlineEpochs, sweep_cyc, epoch);
     fatal_if(clearEpochs > 0 && !keepTouched,
              "%s: touched_clear_epochs needs keep_touched", cache.name());
 
@@ -240,25 +296,31 @@ RetentionManager::epochAge(const CacheBlk *blk) const
 void
 RetentionManager::checkQuantizedAges(unsigned set)
 {
+    for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
+        checkQuantizedAge(blk);
+    }
+}
+
+void
+RetentionManager::checkQuantizedAge(const CacheBlk *blk)
+{
     const Tick drt = cache.tags->getDRT();
     const uint64_t wrap = (uint64_t(1) << ageBits) - 1;
 
-    for (CacheBlk *blk : cache.tags->getSetBlks(set)) {
-        if (!blk->isValid()) {
-            continue;
-        }
-        if (age(blk) >= drt) {
-            stats.quantExpiredAtVisit++;
-            panic_if(strict, "%s: valid block %#lx reached DRT (age %lu "
-                     ">= %lu) with quantized ages", cache.name(),
-                     blk->getTag(), age(blk), drt);
-        }
-        if (epochAgeExact(blk) >= wrap) {
-            stats.epochWrapRisk++;
-            panic_if(strict, "%s: valid block %#lx epoch age %lu reached "
-                     "the %u-bit stamp wrap", cache.name(), blk->getTag(),
-                     epochAgeExact(blk), ageBits);
-        }
+    if (!blk->isValid()) {
+        return;
+    }
+    if (age(blk) >= drt) {
+        stats.quantExpiredAtVisit++;
+        panic_if(strict, "%s: valid block %#lx reached DRT (age %lu "
+                 ">= %lu) with quantized ages", cache.name(),
+                 blk->getTag(), age(blk), drt);
+    }
+    if (epochAgeExact(blk) >= wrap) {
+        stats.epochWrapRisk++;
+        panic_if(strict, "%s: valid block %#lx epoch age %lu reached "
+                 "the %u-bit stamp wrap", cache.name(), blk->getTag(),
+                 epochAgeExact(blk), ageBits);
     }
 }
 
@@ -431,7 +493,7 @@ RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
     return delay + inlineCycles;
 }
 
-void
+Tick
 RetentionManager::occupyBank(unsigned bank, bool refresh)
 {
     // Full-line read + write; refreshes are serialized within a bank
@@ -440,6 +502,7 @@ RetentionManager::occupyBank(unsigned bank, bool refresh)
     if (refresh) {
         stats.bankRefreshes[bank]++;
     }
+    return start;
 }
 
 void
@@ -587,7 +650,7 @@ RetentionManager::topMRUBlks(unsigned set, unsigned n) const
     return blks;
 }
 
-void
+Tick
 RetentionManager::refresh(CacheBlk *blk, bool force)
 {
     const Tick drt = cache.tags->getDRT();
@@ -617,10 +680,11 @@ RetentionManager::refresh(CacheBlk *blk, bool force)
         chain.clean++;
     }
 
-    occupyBank(bankOf(blk->getSet()));
+    const Tick start = occupyBank(bankOf(blk->getSet()));
 
     blk->setFullChargeTick(curTick());
     blk->setWasOppRefreshed(true);
+    return start;
 }
 
 void
@@ -652,10 +716,10 @@ RetentionManager::maybeRefresh(CacheBlk *blk)
 }
 
 void
-RetentionManager::recordVisit(unsigned set)
+RetentionManager::recordVisit(unsigned idx)
 {
-    const Tick last = lastVisit[set];
-    lastVisit[set] = curTick();
+    const Tick last = lastVisit[idx];
+    lastVisit[idx] = curTick();
     if (last == MaxTick) {
         return;
     }
@@ -666,9 +730,9 @@ RetentionManager::recordVisit(unsigned set)
     maxVisitInterval = std::max(maxVisitInterval, interval);
     if (interval > tSweep) {
         stats.visitIntervalOverruns++;
-        panic_if(strict && activeInvalidate, "%s: set %u revisited after "
-                 "%lu ticks > T_sweep = %lu", cache.name(), set, interval,
-                 tSweep);
+        panic_if(strict && activeInvalidate, "%s: %s %u revisited after "
+                 "%lu ticks > T_sweep = %lu", cache.name(),
+                 lineScan ? "row" : "set", idx, interval, tSweep);
     }
 }
 
@@ -723,71 +787,112 @@ RetentionManager::invalidateUnkept(unsigned set,
             continue;
         }
 
-        // A clean line dropped silently needs no write-buffer entry
-        const bool silent = silentCleanDrop && !dirty;
+        DropKeep keep;
+        const LineOp op = planDrop(blk, keep);
+        applyDrop(blk, op, keep);
+    }
+}
 
-        // A pending upgrade expects a Shared line to stay: keep it.
-        // The coherence state is read with the other tag bits.
-        if (!blk->isSet(CacheBlk::WritableBit)) {
-            stats.activeKeptShared++;
-            refresh(blk, true);
-            continue;
-        }
+RetentionManager::LineOp
+RetentionManager::planDrop(CacheBlk *blk, DropKeep &keep) const
+{
+    const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+    // A clean line dropped silently needs no write-buffer entry
+    const bool silent = silentCleanDrop && !dirty;
 
+    // A pending upgrade expects a Shared line to stay: keep it. The
+    // coherence state is read with the other tag bits.
+    if (!blk->isSet(CacheBlk::WritableBit)) {
+        keep = DropKeep::Shared;
+    } else if (inFlight(cache.regenerateBlkAddr(blk), blk->isSecure())) {
         // Simulator check: a writable line has no request in flight
-        if (inFlight(cache.regenerateBlkAddr(blk), blk->isSecure())) {
-            stats.activeInvalidateInflight++;
-            panic_if(strict, "%s: writable block %#lx has a request in "
-                     "flight", cache.name(), blk->getTag());
-            refresh(blk, true);
-            continue;
-        }
-
+        keep = DropKeep::Inflight;
+    } else if (!silent && cache.writeBuffer.isFull()) {
         // No write-buffer entry for the eviction (the rest is reserved
         // for the writebacks of fills in flight): keep the line until
         // the next visit
-        if (!silent && cache.writeBuffer.isFull()) {
+        keep = DropKeep::WbFull;
+    } else {
+        keep = DropKeep::None;
+    }
+
+    if (keep != DropKeep::None) {
+        return LineOp::Force;
+    }
+    return dirty ? LineOp::Wb : LineOp::Ce;
+}
+
+Tick
+RetentionManager::applyDrop(CacheBlk *blk, LineOp op, DropKeep keep)
+{
+    const Tick drt = cache.tags->getDRT();
+    const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+    const unsigned bank = bankOf(blk->getSet());
+
+    if (op == LineOp::Force) {
+        switch (keep) {
+          case DropKeep::Shared:
+            stats.activeKeptShared++;
+            break;
+          case DropKeep::Inflight:
+            stats.activeInvalidateInflight++;
+            panic_if(strict, "%s: writable block %#lx has a request in "
+                     "flight", cache.name(), blk->getTag());
+            break;
+          case DropKeep::WbFull:
             stats.activeWbFullKept++;
-            refresh(blk, true);
-            continue;
+            break;
+          default:
+            panic("%s: forced drop without a reason", cache.name());
         }
+        return refresh(blk, true);
+    }
 
-        DPRINTF(Cache, "RefreshDaemon: %s block %#lx age %lu\n",
-                dirty ? "WRITEBACK" : "INVALIDATE", blk->getTag(),
-                age(blk));
+    panic_if(op != LineOp::Wb && op != LineOp::Ce,
+             "%s: applyDrop with no drop", cache.name());
 
+    DPRINTF(Cache, "RefreshDaemon: %s block %#lx age %lu\n",
+            dirty ? "WRITEBACK" : "INVALIDATE", blk->getTag(),
+            age(blk));
+
+    // A dirty drop reads the line from its bank for the writeback; a
+    // clean drop (CleanEvict) asks nothing of the data array
+    const Tick busy = bankBusyUntil[bank];
+    Tick start = curTick();
+    if (dirty) {
+        stats.coldDirtyWritebacks++;
+        start = occupyBank(bank, false);
+    } else {
+        stats.activeInvalidations++;
+    }
+    if (cache.tags->isExpired(blk)) {
+        stats.activeInvalidateExpired++;
         if (dirty) {
-            // The writeback reads the line from its bank
-            stats.coldDirtyWritebacks++;
-            occupyBank(bankOf(set), false);
-        } else {
-            stats.activeInvalidations++;
+            violation(blk, "cold writeback");
         }
-        if (cache.tags->isExpired(blk)) {
-            stats.activeInvalidateExpired++;
-            if (dirty) {
-                violation(blk, "cold writeback");
-            }
-        }
-        stats.ageAtActiveInvalidate.sample(double(age(blk)) / double(drt));
-        invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
-            {blk->getFullChargeTick() + drt, dirty};
+    }
+    stats.ageAtActiveInvalidate.sample(double(age(blk)) / double(drt));
+    invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
+        {blk->getFullChargeTick() + drt, dirty};
 
-        // Silent drop: invalidate without telling the level below (no
-        // CleanEvict); it keeps a stale holder bit and answers later
-        // snoops for the line with a miss
-        if (silent) {
-            stats.silentCleanDrops++;
-            cache.invalidateBlock(blk);
-            continue;
-        }
-
+    // Silent drop: invalidate without telling the level below (no
+    // CleanEvict); it keeps a stale holder bit and answers later
+    // snoops for the line with a miss
+    if (silentCleanDrop && !dirty) {
+        stats.silentCleanDrops++;
+        cache.invalidateBlock(blk);
+    } else {
         // Same message as any eviction (CleanEvict or WritebackDirty),
         // queued now so the next check sees the entry taken
         PacketList writebacks;
         cache.evictBlock(blk, writebacks);
-        cache.doWritebacks(writebacks, cache.clockEdge(cache.forwardLatency));
+        cache.doWritebacks(writebacks,
+                           cache.clockEdge(cache.forwardLatency));
     }
+
+    panic_if(!dirty && bankBusyUntil[bank] != busy,
+             "%s: a clean drop occupied bank %u", cache.name(), bank);
+    return start;
 }
 
 void
@@ -806,25 +911,8 @@ RetentionManager::processRefreshEvent()
     // Clear the reference bit of lines past touched_clear_age, once per
     // charge: from then on the bit means "hit since this point". With
     // quantized ages the clear age is in epochs.
-    if (quantizedAge) {
-        for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
-            if (clearEpochs > 0 && blk->isValid() &&
-                epochAge(blk) >= clearEpochs &&
-                blk->getRefClearTick() < blk->getFullChargeTick()) {
-                blk->setRefClearTick(curTick());
-                stats.refBitClears++;
-            }
-        }
-    } else if (touchedClearAge > 0.0) {
-        const Tick clear_age = Tick(touchedClearAge *
-                                    double(tags->getDRT()));
-        for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
-            if (blk->isValid() && age(blk) >= clear_age &&
-                blk->getRefClearTick() < blk->getFullChargeTick()) {
-                blk->setRefClearTick(curTick());
-                stats.refBitClears++;
-            }
-        }
+    for (CacheBlk *blk : tags->getSetBlks(refreshSetIdx)) {
+        clearRefBit(blk);
     }
 
     // Recency order of the set (unchanged by refreshes in this step)
@@ -908,6 +996,182 @@ RetentionManager::processRefreshEvent()
         wait = std::max(wait, cache.ticksToCycles(busy - curTick()));
     }
     cache.schedule(refreshEvent, cache.clockEdge(wait));
+}
+
+void
+RetentionManager::clearRefBit(CacheBlk *blk)
+{
+    // Once per charge: from then on the bit means "hit since this point"
+    if (!blk->isValid() ||
+        blk->getRefClearTick() >= blk->getFullChargeTick()) {
+        return;
+    }
+
+    bool at_clear_age;
+    if (quantizedAge) {
+        at_clear_age = clearEpochs > 0 && epochAge(blk) >= clearEpochs;
+    } else {
+        at_clear_age = touchedClearAge > 0.0 &&
+            age(blk) >= Tick(touchedClearAge *
+                             double(cache.tags->getDRT()));
+    }
+    if (at_clear_age) {
+        blk->setRefClearTick(curTick());
+        stats.refBitClears++;
+    }
+}
+
+bool
+RetentionManager::atDeadline(const CacheBlk *blk) const
+{
+    if (quantizedAge) {
+        return epochAge(blk) >= deadlineEpochs;
+    }
+    // Also true for an expired line
+    return age(blk) + tGuard > cache.tags->getDRT();
+}
+
+bool
+RetentionManager::atOppAge(const CacheBlk *blk) const
+{
+    if (quantizedAge) {
+        return epochAge(blk) >= oppAgeEpochs;
+    }
+    return age(blk) >= oppAge * double(cache.tags->getDRT());
+}
+
+RetentionManager::LineDecision
+RetentionManager::decideLine(CacheBlk *blk) const
+{
+    LineDecision d;
+    if (!blk->isValid()) {
+        return d;
+    }
+
+    const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+    const bool expired = cache.tags->isExpired(blk);
+
+    // Refreshing revives lost data (backdoor, counted)
+    if (dirty && expired) {
+        d.op = LineOp::Force;
+        d.revived = true;
+        return d;
+    }
+
+    // The same keep rules as the set scanner, for one line: dirty lines
+    // unless cold, clean lines hit since their last charge (an expired
+    // clean line has nothing to save)
+    const bool kept = dirty ? !isColdDirty(blk, {}) :
+        keepTouched && touched(blk) && !expired;
+    const bool deadline = atDeadline(blk);
+
+    if (kept) {
+        d.op = deadline ? LineOp::Force :
+            atOppAge(blk) ? LineOp::Opp : LineOp::None;
+        return d;
+    }
+    if (!deadline) {
+        return d;
+    }
+
+    d.drop = true;
+    d.op = planDrop(blk, d.keep);
+    return d;
+}
+
+void
+RetentionManager::processLineStep(unsigned bank)
+{
+    const Tick now = curTick();
+    const unsigned rows = cache.tags->getNumSets() / banks * assoc;
+
+    // The slot's opportunistic refresh issues in a step with the bank
+    // idle. The RTL restores whatever line the row holds; a row that
+    // changed is not refreshed here.
+    PendingOpp &opp = pendingOpp[bank];
+    if (opp.blk && bankIdle(bank)) {
+        if (opp.blk->isValid() &&
+            cache.regenerateBlkAddr(opp.blk) == opp.addr) {
+            if (keepTouched && !opp.blk->isSet(CacheBlk::DirtyBit)) {
+                stats.refreshTouched++;
+            }
+            refresh(opp.blk, false);
+        } else {
+            stats.oppStale++;
+        }
+        opp = PendingOpp();
+    }
+
+    // Row: set_hi outer, way inner
+    const unsigned row = scanRow[bank];
+    const unsigned set = bank + banks * (row / assoc);
+    const unsigned way = row % assoc;
+    CacheBlk *blk = cache.tags->getSetBlks(set)[way];
+
+    DPRINTF(Cache, "RefreshDaemon: bank %u set %u way %u\n", bank, set,
+            way);
+
+    clearRefBit(blk);
+    const LineDecision d = decideLine(blk);
+
+    // retire = !needs_bank || bank_ready: a row needing the bank waits
+    // while the slot holds an unissued forced refresh or writeback read
+    // (a slot opp is replaced); a CleanEvict needs no bank
+    const bool needs_bank = d.op == LineOp::Opp ||
+        d.op == LineOp::Force || d.op == LineOp::Wb;
+    if (needs_bank && slotFreeAt[bank] > now) {
+        stats.scanSlotWaits++;
+        stats.scanSlotWaitCycles +=
+            cache.ticksToCycles(slotFreeAt[bank] - now);
+        cache.schedule(*lineEvents[bank], slotFreeAt[bank]);
+        return;
+    }
+
+    recordVisit(set * assoc + way);
+    if (quantizedAge) {
+        checkQuantizedAge(blk);
+    }
+
+    if (needs_bank && opp.blk) {
+        stats.oppReplaced++;
+        opp = PendingOpp();
+    }
+
+    Tick start = now;
+    if (d.revived) {
+        stats.daemonRevivedDirty++;
+        violation(blk, "daemon visit");
+        start = refresh(blk, true);
+    } else if (d.drop) {
+        if (quantizedAge) {
+            stats.epochAgeAtDeadline.sample(epochAge(blk));
+        }
+        start = applyDrop(blk, d.op, d.keep);
+    } else if (d.op == LineOp::Force) {
+        if (quantizedAge) {
+            stats.epochAgeAtDeadline.sample(epochAge(blk));
+        }
+        if (keepTouched && !blk->isSet(CacheBlk::DirtyBit)) {
+            stats.refreshTouched++;
+        }
+        start = refresh(blk, true);
+    } else if (d.op == LineOp::Opp) {
+        opp.blk = blk;
+        opp.addr = cache.regenerateBlkAddr(blk);
+    }
+
+    // A forced refresh or writeback read holds the slot until it starts
+    if (d.op == LineOp::Force || d.op == LineOp::Wb) {
+        slotFreeAt[bank] = start;
+    }
+
+    scanRow[bank] = (row + 1) % rows;
+    if (scanRow[bank] == 0) {
+        stats.daemonSweepCycles.sample(
+            cache.ticksToCycles(now - bankSweepStart[bank]));
+        bankSweepStart[bank] = now;
+    }
+    cache.schedule(*lineEvents[bank], cache.clockEdge(scanCycles));
 }
 
 RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
@@ -1057,7 +1321,15 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(quantExpiredAtVisit, statistics::units::Count::get(),
                "quantized ages: valid lines at or past DRT at a visit"),
       ADD_STAT(epochWrapRisk, statistics::units::Count::get(),
-               "quantized ages: valid lines at the stamp wrap at a visit")
+               "quantized ages: valid lines at the stamp wrap at a visit"),
+      ADD_STAT(oppReplaced, statistics::units::Count::get(),
+               "line scanner: slot opp refreshes replaced before issuing"),
+      ADD_STAT(oppStale, statistics::units::Count::get(),
+               "line scanner: slot opp refreshes whose row changed"),
+      ADD_STAT(scanSlotWaits, statistics::units::Count::get(),
+               "line scanner: rows that waited for the bank's slot"),
+      ADD_STAT(scanSlotWaitCycles, statistics::units::Cycle::get(),
+               "line scanner: cycles the scanners waited for the slot")
 {
 }
 

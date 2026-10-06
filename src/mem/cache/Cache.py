@@ -111,6 +111,21 @@ class BaseCache(ClockedObject):
         "0 means 2 x data_latency",
     )
 
+    refresh_line_budget_cycles = Param.Cycles(
+        0,
+        "Cycles one refresh or writeback read is budgeted for in T_sweep "
+        "and T_guard (the bank is occupied for refresh_line_cycles); 0 "
+        "means refresh_line_cycles",
+    )
+
+    refresh_scan = Param.String(
+        "set",
+        "Refresh scanner: set (one scanner visits a whole set per step) "
+        "or line (one scanner per bank, one line per step, a single "
+        "pending operation per bank, as the RTL controller does); line "
+        "needs active_invalidate and top_mru = 0",
+    )
+
     refresh_opp_age = Param.Float(
         0.8,
         "Age, as a fraction of DRT, from which the daemon refreshes a "
