@@ -12,7 +12,7 @@ they do not require new host packages, host sysctls, or host administrator acces
 
 ## Configuration and operation
 
-Set `NUM_RUNNERS`, `PERSONAL_ACCESS_TOKEN`, `GITHUB_ORG`, and `HOSTNAME` in
+Set `RUNNER_IDS`, `PERSONAL_ACCESS_TOKEN`, `GITHUB_ORG`, and `HOSTNAME` in
 `Vagrantfile`. Keep the real configuration private. On Loupe the authoritative
 copy is `/runners/Vagrantfile`. The credential design is unchanged in scope:
 registration uses the existing PAT. The guest service reads it from the
@@ -31,7 +31,7 @@ Optional `runner-settings.json` overrides individual machines. For example:
 {
   "loupe-1": {
     "box": "gem5/runner-ubuntu2204",
-    "box_version": "2026.9.8.1",
+    "box_version": "2026.9.8.2",
     "prebuilt": true,
     "storage_pool": "loupe-ssd",
     "disk_cache": "none",
@@ -44,6 +44,47 @@ Optional `runner-settings.json` overrides individual machines. For example:
 A prebuilt box skips package provisioning; scripts and service configuration are
 still installed. Changes to a VM's box require a replacement VM. Changing a
 JSON field does not migrate an existing disk or update its guest kernel.
+
+### Current Loupe deployment
+
+As of October 6, 2026, Loupe has 13 runners: `loupe-1` through `loupe-12`
+and `loupe-14`. Set `HOSTNAME = "loupe"` and
+`RUNNER_IDS = (1..12).to_a + [14]` in the private deployment configuration.
+The explicit list preserves retired `loupe-13` and its stored recovery state;
+adding a runner does not require reusing that ID. The public template starts
+with an empty list so it does not create VMs until configured.
+
+[`runner-settings.loupe.json`](runner-settings.loupe.json) records the deployed
+settings without credentials. Use it as `runner-settings.json` when setting up
+an equivalent deployment. All runners have four vCPUs, 32 GiB of RAM and
+128 GiB root disks. Runners 6, 8, 9 and 10 use the `loupe-ssd` pool with
+`disk_cache: "none"`; the other nine use the HDD-backed `default` pool. The
+settings select the prebuilt `gem5/runner-ubuntu2204` box version `2026.9.8.2`
+for new VMs. Existing guests retain their original disks and kernels; changing
+the selected box does not rebuild them. No extra runner labels are configured.
+
+### Free-page reporting
+
+The common libvirt provider block enables
+`virtio-balloon-pci.free-page-reporting=on` for every runner, including future
+IDs. This lets the host reclaim pages that the guest has already freed while
+the guest retains its full RAM allocation. Vagrant-libvirt 0.12.2 uses QEMU
+arguments for this option; existing Loupe domains also have the native libvirt
+`freePageReporting="on"` attribute on their virtio balloon.
+
+All 13 Loupe guests negotiated reporting after activation and passed Docker,
+cache mount and runner-service checks. Existing VMs need activation at a job
+boundary: save the setting, drain the runner, confirm there are no remaining
+workers, listeners, simulations or containers, gracefully shut down the VM,
+and start the same domain. Verify the negotiated virtio feature, Docker and
+cache mount before clearing the drain and starting the runner service. Never
+force-stop a VM or use provisioning to activate this on a busy runner.
+
+The canary returned approximately 1.98 GiB after freeing a 2 GiB allocation.
+The fleet rollout confirms feature activation and runner health, but does not
+establish a CI throughput gain or justify increasing the fleet: guest restarts
+and changing job workloads limit before/after memory comparisons, and HDD
+contention still needs separate measurement.
 
 Run Vagrant from the deployment directory with the correct `VAGRANT_HOME`.
 Provisioning refuses to overwrite an active controller. For a new VM:

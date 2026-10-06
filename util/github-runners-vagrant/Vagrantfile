@@ -30,7 +30,7 @@
 require "json"
 require "shellwords"
 
-NUM_RUNNERS = 0 # Set this to the desired number of runners.
+RUNNER_IDS = [] # Set explicit VM IDs, e.g., (1..12).to_a + [14] on Loupe.
 PERSONAL_ACCESS_TOKEN = "<PERSONAL ACCESS TOKEN>"
 GITHUB_ORG = "<GITHUB_ORG>"
 HOSTNAME = "<VM NAME>"
@@ -47,7 +47,7 @@ Vagrant.configure("2") do |config|
       mount_opts: "cache=none,msize=1048576"
   end
 
-  (1..NUM_RUNNERS).each do |i|
+  RUNNER_IDS.each do |i|
     name = "#{HOSTNAME}-#{i}"
     options = settings.fetch(name, {})
     config.vm.define name do |runner|
@@ -58,6 +58,9 @@ Vagrant.configure("2") do |config|
       runner.vm.provider "libvirt" do |lv|
         lv.cpus = options.fetch("cpus", 4)
         lv.memory = options.fetch("memory", 32768)
+        # Return unused guest RAM to the host on every current/future runner.
+        lv.qemuargs :value => "-global"
+        lv.qemuargs :value => "virtio-balloon-pci.free-page-reporting=on"
         lv.machine_virtual_size = 128
         lv.storage_pool_name = options.fetch("storage_pool", "default")
         if options.key?("disk_cache")
