@@ -51,6 +51,14 @@ from pathlib import Path
 
 import yaml
 
+_configurator = Path(__file__).resolve().parents[1] / "SALAM-Configurator"
+if str(_configurator) not in sys.path:
+    sys.path.insert(0, str(_configurator))
+from workload_config import (  # noqa: E402
+    WorkloadConfigError,
+    load_documents,
+)
+
 # Configuration variables
 M5_PATH_ENV = os.environ.get("M5_PATH")
 ACC_BENCH_PATH_ENV = os.environ.get("ACC_BENCH_PATH")
@@ -122,11 +130,6 @@ def main():
     )
     args = parser.parse_args()
 
-    if not CACTI_EXE.is_file():
-        sys.exit(
-            f"ERROR: CACTI executable not found at {CACTI_EXE}."
-            "Run setup script."
-        )
     if not args.bench_list.is_file():
         sys.exit(f"ERROR: Benchmark list file not found: {args.bench_list}")
     if not CACTI_DEFAULT_FILE.is_file():
@@ -170,33 +173,22 @@ def main():
 
         memobjects = []
         try:
-            with open(config_path) as yf:
-                yaml_data = yaml.safe_load(yf)
-            if isinstance(yaml_data, dict):
-                memobjects = find_mem_objects(yaml_data.get("acc_cluster", []))
-            else:
-                print(
-                    f"Warning: Invalid YAML format in {config_path},"
-                    " expected a dictionary.",
-                    file=sys.stderr,
+            documents = load_documents(config_path)
+            for document in documents:
+                memobjects.extend(
+                    find_mem_objects(document.get("acc_cluster", []))
                 )
         except FileNotFoundError:
             print(
                 f"ERROR: YAML file not found: {config_path}", file=sys.stderr
             )
             continue  # Skip this config
-        except yaml.YAMLError as e:
+        except (yaml.YAMLError, WorkloadConfigError) as exc:
             print(
-                f"ERROR: Failed to parse YAML {config_path}: {e}",
+                f"ERROR: Failed to parse YAML {config_path}: {exc}",
                 file=sys.stderr,
             )
-            continue  # Skip this config
-        except Exception as e:
-            print(
-                f"ERROR: Unexpected error processing YAML {config_path}: {e}",
-                file=sys.stderr,
-            )
-            continue  # Skip this config
+            sys.exit(1)
 
         if not memobjects:
             print("INFO: No SPMs found in config. Skipping CACTI run.")
@@ -220,6 +212,13 @@ def main():
                 file=sys.stderr,
             )
             continue
+
+        # The no-SPM path does not need the CACTI binary.
+        if not CACTI_EXE.is_file():
+            sys.exit(
+                f"ERROR: CACTI executable not found at {CACTI_EXE}."
+                "Run setup script."
+            )
 
         # Run CACTI for each SPM
         spm_names_processed = []

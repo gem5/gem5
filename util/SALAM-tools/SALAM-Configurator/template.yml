@@ -26,7 +26,7 @@ acc_cluster:
           - Name: # Acc name here (Required)
             IrPath: # Path for the IR file relative to ACC_BENCH_PATH (Required)
       # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ll
-            ConfigPath: # Path for the Config file relative to ACC_BENCH_PATH (Required)
+            # ConfigPath is unsupported and rejected by the workload reader.
       # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ini
             Debug: # True or False, prints acc debug messages (Optional)
             PIOSize: # Sets the PIO register size in bytes (Required)

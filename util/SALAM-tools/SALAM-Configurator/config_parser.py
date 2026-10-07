@@ -37,13 +37,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import yaml
+import workload_config
 
 
 def open_yaml(yml_path: str):
-    stream = open(yml_path)
-    config = yaml.safe_load_all(stream)
-    return config
+    return workload_config.load_documents(yml_path)
 
 
 def parse_yaml(
@@ -121,6 +119,7 @@ def parse_yaml(
                 working_dir=working_dir,
                 config_path=parent_path,
                 hw_config_path=hw_path,
+                document_hw_config=cluster_dict.get("hw_config"),
             )
         )
         base_address = clusters[-1].top_address + (
@@ -157,6 +156,7 @@ class AccCluster:
         working_dir: str,
         config_path: str,
         hw_config_path: str = None,
+        document_hw_config=None,
     ):
         self.name = name
         self.dmas = dmas
@@ -167,6 +167,9 @@ class AccCluster:
         # Do this to point the hardware configuration to the
         # sys config YAML file when HWPath isn't defined
         self.hw_config_path = hw_config_path
+        # hw_config mapping from the YAML document that defined this
+        # cluster. AccConfig still opens hw_config_path itself.
+        self.document_hw_config = document_hw_config
         self.process_config(working_dir=working_dir)
 
     def process_config(self, working_dir):
