@@ -173,7 +173,9 @@ class LSQRequest : public BaseMMU::Translation, public Packet::SenderState
         WritebackScheduled = 0x00001000,
         WritebackDone = 0x00002000,
         /** True if this is an atomic request */
-        IsAtomic = 0x00004000
+        IsAtomic = 0x00004000,
+        /** True if the request accesses fragments with holes in between */
+        IsNonContiguous = 0x00008000
     };
     FlagsType flags;
 
@@ -373,6 +375,12 @@ class LSQRequest : public BaseMMU::Translation, public Packet::SenderState
     bool
     isSplit() const
     { return flags.isSet(Flag::IsSplit); }
+
+    bool
+    isNonContiguous() const
+    {
+        return flags.isSet(Flag::IsNonContiguous);
+    }
 
     bool
     needWBToRegister() const
@@ -600,6 +608,108 @@ class SplitDataRequest : public LSQRequest
     virtual std::string
     name() const
     { return "SplitDataRequest"; }
+};
+
+/**
+ * A memory access to several fragments with holes in between. Fragment i
+ * covers [addrs[i], addrs[i] + sizes[i]). Fragments need not be sorted and
+ * may overlap.
+ *
+ * The data is packed: the bytes of the fragments are laid out back to back
+ * in fragment order. Hence _size is the sum of the fragment sizes and _addr
+ * is the lowest address accessed. _mainReq and _mainPacket follow the
+ * packed layout, so their virtual address is only nominal.
+ *
+ * Every fragment is cut at cache-line boundaries into sub-requests, which
+ * are kept, and sent to memory, in fragment order. Where store fragments
+ * overlap, the last one wins. Do not reorder _reqs or _packets, and apply
+ * the same rule when forwarding store data.
+ *
+ * Translation, partial faults, sending, response assembly and snoop
+ * matching are inherited from SplitDataRequest.
+ */
+class NonContiguousDataRequest : public SplitDataRequest
+{
+  protected:
+    /** A fragment [addr, addr + size) at offset in the packed data. */
+    struct Fragment
+    {
+        Addr addr;
+        Addr size;
+        Addr offset;
+    };
+
+    const std::vector<Addr> _fragAddrs;
+    const std::vector<unsigned int> _fragSizes;
+    /** Offset in the packed data of each fragment. */
+    std::vector<uint32_t> _fragOffsets;
+    /** Offset in the packed data of each sub-request in _reqs. */
+    std::vector<uint32_t> _reqOffsets;
+    /** One past the highest address accessed. */
+    Addr _spanEnd;
+
+    /**
+     * The fragments accessed by inst through req: those of req if it is a
+     * NonContiguousDataRequest, otherwise the single fragment
+     * [inst->effAddr, inst->effAddr + inst->effSize).
+     */
+    static std::vector<Fragment> fragments(const DynInstPtr &inst,
+                                           const LSQRequest *req);
+
+  public:
+    NonContiguousDataRequest(LSQUnit *port, const DynInstPtr &inst,
+                             bool isLoad, const std::vector<Addr> &addrs,
+                             const std::vector<unsigned int> &sizes,
+                             const Request::Flags &flags_,
+                             PacketDataPtr data = nullptr,
+                             uint64_t *res = nullptr);
+    virtual ~NonContiguousDataRequest() {}
+    virtual void initiateTranslation();
+    virtual void buildPackets();
+
+    /** Lowest address accessed. */
+    Addr
+    spanStart() const
+    {
+        return _addr;
+    }
+
+    /** One past the highest address accessed. */
+    Addr
+    spanEnd() const
+    {
+        return _spanEnd;
+    }
+
+    /**
+     * Whether the memory accesses of instructions a and b overlap when
+     * compared at 2^shift-byte granularity. An instruction whose
+     * savedRequest is a NonContiguousDataRequest accesses the fragments of
+     * that request, any other one accesses
+     * [effAddr, effAddr + effSize).
+     */
+    static bool overlaps(const DynInstPtr &a, const DynInstPtr &b,
+                         unsigned shift);
+
+    /**
+     * Collect the bytes that an older store provides to a load, where
+     * either access may be non-contiguous. The bytes are placed in data,
+     * which is resized to the packed size of the load and follows its
+     * packed layout. Within the store, the last fragment that writes a
+     * byte provides it. A null store_data stands for a store of zeros.
+     *
+     * @return The number of bytes of data that the store provides.
+     */
+    static size_t
+    forwardedBytes(const DynInstPtr &load_inst, const LSQRequest *load_req,
+                   const DynInstPtr &store_inst, const LSQRequest *store_req,
+                   const uint8_t *store_data, std::vector<uint8_t> &data);
+
+    virtual std::string
+    name() const
+    {
+        return "NonContiguousDataRequest";
+    }
 };
 
 class LSQ
@@ -884,10 +994,22 @@ class LSQ
 
     void recvTimingSnoopReq(PacketPtr pkt);
 
-    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
-                      unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctorPtr amo_op,
-                      const std::vector<bool>& byte_enable);
+    /** Build a request for a contiguous memory access and push it. */
+    Fault buildRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                       unsigned int size, Addr addr, Request::Flags flags,
+                       uint64_t *res, AtomicOpFunctorPtr amo_op,
+                       const std::vector<bool> &byte_enable);
+
+    /**
+     * Build a request for a memory access to fragments
+     * [addrs[i], addrs[i] + sizes[i]) and push it. See
+     * NonContiguousDataRequest.
+     */
+    Fault buildRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                       const std::vector<Addr> &addrs,
+                       const std::vector<unsigned int> &sizes,
+                       Request::Flags flags, uint64_t *res,
+                       const std::vector<bool> &byte_enable);
 
     /** The CPU pointer. */
     CPU *cpu;
@@ -909,6 +1031,14 @@ class LSQ
     void sendRetryResp();
 
   protected:
+    /**
+     * Start the translation of a request just built by buildRequest(), or
+     * continue with the saved request of inst if its translation already
+     * started, and then perform the access if it is ready.
+     */
+    Fault pushRequest(const DynInstPtr &inst, LSQRequest *request, bool isLoad,
+                      uint8_t *data);
+
     /** D-cache is blocked */
     bool _cacheBlocked;
     /** The number of cache ports available each cycle (stores only). */
