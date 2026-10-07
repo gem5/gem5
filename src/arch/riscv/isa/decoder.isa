@@ -3918,21 +3918,21 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] <= Vs1_vi[i]));
                     }}, OPIVV, SimdCmpOp);
                 }
-                format VectorIntNarrowingFormat {
+                format VectorNarrowingFormat {
                     0x2c: vnsrl_wv({{
-                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
-                            ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
+                        vd[i] = (vu)(vs2_elem >>
+                            ((vwu)vs1[i] & (sew * 2 - 1)));
                     }}, OPIVV, SimdShiftOp);
                     0x2d: vnsra_wv({{
-                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
-                            ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
+                        vd[i] = (vu)(vi)((vwi)vs2_elem >>
+                            ((vwu)vs1[i] & (sew * 2 - 1)));
                     }}, OPIVV, SimdShiftOp);
                     0x2e: vnclipu_wv({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
                             std::numeric_limits<uint64_t>::max() << sew;
-                        __uint128_t res = Vs2_vwu[i];
-                        unsigned shift = Vs1_vu[i + offset] & ((sew * 2) - 1);
+                        __uint128_t res = vs2_elem;
+                        unsigned shift = vs1[i] & ((sew * 2) - 1);
 
                         res = int_rounding<__uint128_t>(
                             res,
@@ -3946,13 +3946,13 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vu[i + offset] = (vu)res;
+                        vd[i] = (vu)res;
                     }}, OPIVV, SimdCvtOp);
                     0x2f: vnclip_wv({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
-                        __int128_t res = Vs2_vwi[i];
-                        unsigned shift = Vs1_vi[i + offset] & ((sew * 2) - 1);
+                        __int128_t res = (vwi)vs2_elem;
+                        unsigned shift = (vi)vs1[i] & ((sew * 2) - 1);
 
                         res = int_rounding<__int128_t>(
                             res,
@@ -3969,7 +3969,7 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vi[i + offset] = (vi)res;
+                        vd[i] = (vu)(vi)res;
                     }}, OPIVV, SimdCvtOp);
                 }
                 format VectorIntWideningFormat {
@@ -4114,47 +4114,46 @@ decode QUADRANT default Unknown::unknown() {
                                 softfloat_round_minMag);
                         }}, OPFVV, SimdFloatCvtOp);
                     }
-                    format VectorFloatNarrowingCvtFormat {
+                    format VectorNarrowingFormat {
                         0x10: vfncvt_xu_f_w({{
-                            Vd_vu[i + offset] = f_to_nui<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_nui<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_roundingMode);
                         }}, OPFVV, SimdFloatCvtOp);
                         0x11: vfncvt_x_f_w({{
-                            Vd_vu[i + offset] = f_to_ni<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_ni<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_roundingMode);
                         }}, OPFVV, SimdFloatCvtOp);
                         0x12: vfncvt_f_xu_w({{
-                            auto fd = ui_to_nf<et>(Vs2_vwu[i]);
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = ui_to_nf<et>(vs2_elem);
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x13: vfncvt_f_x_w({{
-                            auto fd = i_to_nf<et>(Vs2_vwu[i]);
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = i_to_nf<et>(vs2_elem);
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x14: vfncvt_f_f_w({{
-                            auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = f_to_nf<et>(ftype<ewt>(vs2_elem));
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x1d: vfncvtbf16_f_f_w({{
-                            auto fd = f_to_nf<et>(
-                                ftype<ewt>(Vs2_vwu[i]));
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = f_to_nf<et>(ftype<ewt>(vs2_elem));
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x15: vfncvt_rod_f_f_w({{
                             softfloat_roundingMode = softfloat_round_odd;
-                            auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = f_to_nf<et>(ftype<ewt>(vs2_elem));
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x16: vfncvt_rtz_xu_f_w({{
-                            Vd_vu[i + offset] = f_to_nui<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_nui<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_round_minMag);
                         }}, OPFVV, SimdFloatCvtOp);
                         0x17: vfncvt_rtz_x_f_w({{
-                            Vd_vu[i + offset] = f_to_ni<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_ni<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_round_minMag);
                         }}, OPFVV, SimdFloatCvtOp);
                     }
@@ -4897,20 +4896,20 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] > (vi)sext<5>(SIMM5)));
                     }}, OPIVI, SimdCmpOp);
                 }
-                format VectorIntNarrowingFormat {
+                format VectorNarrowingFormat {
                     0x2c: vnsrl_wi({{
-                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
+                        vd[i] = (vu)(vs2_elem >>
                                             ((vwu)SIMM5 & (sew * 2 - 1)));
                     }}, OPIVI, SimdShiftOp);
                     0x2d: vnsra_wi({{
-                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
+                        vd[i] = (vu)(vi)((vwi)vs2_elem >>
                                             ((vwu)SIMM5 & (sew * 2 - 1)));
                     }}, OPIVI, SimdShiftOp);
                     0x2e: vnclipu_wi({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
                             std::numeric_limits<uint64_t>::max() << sew;
-                        __uint128_t res = Vs2_vwu[i];
+                        __uint128_t res = vs2_elem;
                         unsigned shift = VS1 & ((sew * 2) - 1);
 
                         res = int_rounding<__uint128_t>(
@@ -4925,12 +4924,12 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vu[i + offset] = (vu)res;
+                        vd[i] = (vu)res;
                     }}, OPIVI, SimdCvtOp);
                     0x2f: vnclip_wi({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
-                        __int128_t res = Vs2_vwi[i];
+                        __int128_t res = (vwi)vs2_elem;
                         unsigned shift = VS1 & ((sew * 2) - 1);
 
                         res = int_rounding<__int128_t>(
@@ -4948,7 +4947,7 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vi[i + offset] = (vi)res;
+                        vd[i] = (vu)(vi)res;
                     }}, OPIVI, SimdCvtOp);
                 }
                 format VectorIntWideningFormat {
@@ -5099,21 +5098,21 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i] = val >> sh;
                     }}, OPIVX, SimdShiftOp);
                 }
-                format VectorIntNarrowingFormat {
+                format VectorNarrowingFormat {
                     0x2c: vnsrl_wx({{
-                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
-                                            ((vwu)Rs1_vu & (sew * 2 - 1)));
+                        vd[i] = (vu)(vs2_elem >>
+                                            ((vwu)rs1 & (sew * 2 - 1)));
                     }}, OPIVX, SimdShiftOp);
                     0x2d: vnsra_wx({{
-                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
-                                            ((vwu)Rs1_vu & (sew * 2 - 1)));
+                        vd[i] = (vu)(vi)((vwi)vs2_elem >>
+                                            ((vwu)rs1 & (sew * 2 - 1)));
                     }}, OPIVX, SimdShiftOp);
                     0x2e: vnclipu_wx({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
                             std::numeric_limits<uint64_t>::max() << sew;
-                        __uint128_t res = Vs2_vwu[i];
-                        unsigned shift = Rs1_vu & ((sew * 2) - 1);
+                        __uint128_t res = vs2_elem;
+                        unsigned shift = rs1 & ((sew * 2) - 1);
 
                         res = int_rounding<__uint128_t>(
                             res,
@@ -5127,13 +5126,13 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vu[i + offset] = (vu)res;
+                        vd[i] = (vu)res;
                     }}, OPIVX, SimdCvtOp);
                     0x2f: vnclip_wx({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
-                        __int128_t res = Vs2_vwi[i];
-                        unsigned shift = Rs1_vi & ((sew * 2) - 1);
+                        __int128_t res = (vwi)vs2_elem;
+                        unsigned shift = (vi)rs1 & ((sew * 2) - 1);
 
                         res = int_rounding<__int128_t>(
                             res,
@@ -5150,7 +5149,7 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vi[i + offset] = (vi)res;
+                        vd[i] = (vu)(vi)res;
                     }}, OPIVX, SimdCvtOp);
                 }
 
