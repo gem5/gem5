@@ -58,7 +58,7 @@ def write_cc_file(sim_object: type, use_python: bool, param_cc: str):
     """
 
     # Need to import after the importer is installed
-    from m5.objects.SimObject import PyBindProperty
+    from m5.SimObject import PyBindProperty
 
     code = code_formatter()
 

@@ -67,8 +67,8 @@ def write_header_file(sim_object: type, param_hh: str):
     """
 
     # Need to import after the importer is installed
-    from m5.objects.SimObject import SimObject
     from m5.params import Enum
+    from m5.SimObject import SimObject
 
     code = code_formatter()
 
