@@ -11,6 +11,7 @@ acc_cluster:
     - Accelerator:
           - Name: Top
             IrPath: hw/top.ll
+            Profile: top
             PIOSize: 37
             InterruptNum: 68
             PIOMaster: LocalBus
@@ -19,6 +20,7 @@ acc_cluster:
     - Accelerator:
           - Name: bfs
             IrPath: hw/bfs.ll
+            Profile: bfs
             Debug: false
             PIOSize: 5
             PIOMaster: LocalBus

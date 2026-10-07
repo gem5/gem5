@@ -37,46 +37,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-from configparser import ConfigParser
-
-import yaml
-
 import m5
 from m5.objects import *
 from m5.util import *
 
 
-def AccConfig(acc, bench_file, config_file):
+def AccConfig(acc, bench_file, cycle_counts):
     # Initialize LLVMInterface Objects
     acc.llvm_interface = LLVMInterface()
 
-    # Benchmark path
+    # The IR path is only the resource location. Profile identity is
+    # resolved before this function runs.
     acc.llvm_interface.in_file = bench_file
-    # Hardware profile identity is the IR basename, independent of the
-    # directory that contains the IR file.
-    benchname = os.path.splitext(os.path.basename(bench_file))[0]
 
     # Initialize HWInterface Objects
     acc.hw_interface = HWInterface()
     # Define HW Counts
     acc.hw_interface.cycle_counts = CycleCounts()
 
-    fu_yaml = open(config_file)
-    yaml_inst_list = yaml.safe_load(fu_yaml)
-    if yaml_inst_list["hw_config"][benchname] is not None:
-        inst_list = yaml_inst_list["hw_config"][benchname][
-            "instructions"
-        ].keys()
-        for instruction in inst_list:
-            setattr(
-                acc.hw_interface.cycle_counts,
-                instruction,
-                yaml_inst_list["hw_config"][benchname]["instructions"][
-                    instruction
-                ]["runtime_cycles"],
-            )
-    fu_yaml.close()
+    if cycle_counts is not None:
+        for instruction, cycles in cycle_counts.items():
+            setattr(acc.hw_interface.cycle_counts, instruction, cycles)
 
     #  Functional Units
     acc.hw_interface.functional_units = FunctionalUnits()

@@ -52,6 +52,7 @@ _ACCEL_KEYS = {
     "StreamIn",
     "StreamOut",
     "HWPath",
+    "Profile",
     "TopName",
     "ClockPeriod_ns",
 }
@@ -230,6 +231,17 @@ def _validate_accelerator(accelerator, config_path):
                 )
         for variable in entry.get("Var", []) or []:
             _validate_variable(variable, config_path, name)
+    if not any(
+        isinstance(entry, dict) and entry.get("Profile")
+        for entry in accelerator
+    ):
+        raise WorkloadConfigError(
+            config_path,
+            f"accelerator {name}",
+            "Profile",
+            None,
+            "missing Profile",
+        )
 
 
 def _validate_variable(variable, config_path, acc_name):

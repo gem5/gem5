@@ -183,12 +183,14 @@ acc_cluster:
     - Accelerator:
           - Name: Top
             IrPath: hw/top.ll
+            Profile: top
             PIOSize: 37
             PIOMaster: LocalBus
             LocalSlaves: LocalBus
     - Accelerator:
           - Name: bfs
             IrPath: hw/bfs.ll
+            Profile: bfs
             PIOSize: 5
             PIOMaster: LocalBus
           - Var:
@@ -203,7 +205,7 @@ The full file also declares the `EDGES`, `LEVELS`, and `LEVELCOUNTS` RegisterBan
 
 ### Describe instruction timing
 
-The `hw_config` section provides per-kernel instruction timing. The keys under `hw_config` correspond to the LLVM IR file base names. For example, `hw/bfs.ll` maps to the `bfs:` section.
+The `hw_config` section provides per-kernel instruction timing. Each accelerator's `Profile` field names the key to use. For example, `Profile: bfs` selects the `bfs:` section. The IR path is only the location of the bitcode.
 
 Each listed instruction includes opcode and functional-unit metadata along with its execution latency. In the current flow, `AccConfig()` uses the `runtime_cycles` values from this section to configure per-kernel instruction timing. For example:
 
@@ -224,7 +226,7 @@ hw_config:
                 runtime_cycles: 1
 ```
 
-The name under `hw_config` must match the LLVM IR file name. Therefore, `hw/bfs.ll` uses the `bfs:` timing section.
+`Profile` selects the `hw_config` key. It does not have to equal the IR file name. The BFS example uses `bfs` for `hw/bfs.ll`.
 
 ### Generated address header
 

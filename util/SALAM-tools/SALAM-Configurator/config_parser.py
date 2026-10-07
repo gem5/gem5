@@ -38,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import workload_config
+import yaml
 
 
 def open_yaml(yml_path: str):
@@ -168,7 +169,8 @@ class AccCluster:
         # sys config YAML file when HWPath isn't defined
         self.hw_config_path = hw_config_path
         # hw_config mapping from the YAML document that defined this
-        # cluster. AccConfig still opens hw_config_path itself.
+        # cluster. Cycle-count selection loads that mapping, or HWPath,
+        # before AccConfig receives cycle_counts.
         self.document_hw_config = document_hw_config
         self.process_config(working_dir=working_dir)
 
@@ -301,6 +303,7 @@ class AccCluster:
             int_num = None
             ir_path = None
             hw_config_path = self.hw_config_path
+            profile_name = None
             debug = False
 
             # Find the name first...
@@ -320,6 +323,8 @@ class AccCluster:
                         print("Acc Error: " + hex(pio_address))
                 if "IrPath" in device_dict:
                     ir_path = device_dict["IrPath"]
+                if "Profile" in device_dict:
+                    profile_name = device_dict["Profile"]
                 if "HWPath" in device_dict:
                     hw_config_path = device_dict["HWPath"]
                 if "PIOMaster" in device_dict:
@@ -400,6 +405,7 @@ class AccCluster:
                     int_num=int_num,
                     working_dir=working_dir,
                     ir_path=ir_path,
+                    profile_name=profile_name,
                     config_path=self.config_path,
                     hw_config_path=hw_config_path,
                     variables=variables,
@@ -426,6 +432,7 @@ class Accelerator:
         int_num: int,
         working_dir: str,
         ir_path: str,
+        profile_name: str,
         config_path: str,
         hw_config_path: str,
         variables=None,
@@ -443,6 +450,7 @@ class Accelerator:
 
         self.working_dir = working_dir
         self.ir_path = ir_path
+        self.profile_name = profile_name
         self.config_path = config_path
         self.hw_config_path = hw_config_path
         self.variables = variables
@@ -578,3 +586,63 @@ class Variable:
                 + self.type
             )
             raise Exception(exceptionString)
+
+
+# Raised when the selected Profile is missing or is not a cycle map.
+class CycleCountError(Exception):
+
+    def __init__(self, path, profile_name, reason):
+        self.path = path
+        self.profile_name = profile_name
+        self.reason = reason
+        super().__init__(
+            f"SALAM config: {path}: profile {profile_name!r}: {reason}"
+        )
+
+
+def resolve_cycle_counts(
+    document_hw_config, hw_config_path, config_path, profile_name
+):
+    if hw_config_path != config_path:
+        hw_config = _load_external_hw_config(hw_config_path)
+        source = hw_config_path
+    else:
+        hw_config = document_hw_config
+        source = config_path
+    return _cycle_counts(hw_config, profile_name, source)
+
+
+def _cycle_counts(hw_config, profile_name, source):
+    if not isinstance(hw_config, dict) or profile_name not in hw_config:
+        raise CycleCountError(source, profile_name, "profile key is missing")
+    node = hw_config[profile_name]
+    if node is None:
+        return None
+    if not isinstance(node, dict) or not isinstance(
+        node.get("instructions"), dict
+    ):
+        raise CycleCountError(
+            source, profile_name, "profile is not a null or instruction map"
+        )
+    cycles = {}
+    for name, spec in node["instructions"].items():
+        if isinstance(spec, dict) and "runtime_cycles" in spec:
+            cycles[name] = spec["runtime_cycles"]
+    return cycles
+
+
+def _load_external_hw_config(path):
+    with open(path, encoding="utf-8") as stream:
+        documents = [
+            document
+            for document in yaml.safe_load_all(stream)
+            if document is not None
+        ]
+    if len(documents) != 1 or not isinstance(documents[0], dict):
+        raise CycleCountError(
+            path, None, "HWPath file must contain one YAML document"
+        )
+    hw_config = documents[0].get("hw_config")
+    if not isinstance(hw_config, dict):
+        raise CycleCountError(path, None, "HWPath file has no hw_config")
+    return hw_config

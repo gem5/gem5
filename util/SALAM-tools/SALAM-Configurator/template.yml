@@ -25,6 +25,7 @@ acc_cluster:
     - Accelerator:
           - Name: # Acc name here (Required)
             IrPath: # Path for the IR file relative to ACC_BENCH_PATH (Required)
+            Profile: # hw_config key for this accelerator (Required)
       # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ll
             # ConfigPath is unsupported and rejected by the workload reader.
       # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ini

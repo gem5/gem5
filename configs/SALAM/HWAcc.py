@@ -78,7 +78,7 @@ def _attach_cluster(options, system, clstr, spec):
 
     # Create every CommInterface before wiring.
     for acc in spec.accs:
-        _attach_accelerator(clstr, acc, gic)
+        _attach_accelerator(clstr, acc, gic, spec.document_hw_config)
     for acc in spec.accs:
         _connect_accelerator(clstr, acc)
 
@@ -128,9 +128,14 @@ def _attach_stream_dma(clstr, dma, gic):
             getattr(clstr, master.lower()).mem_side_ports = obj.pio
 
 
-def _attach_accelerator(clstr, acc, gic):
+def _attach_accelerator(clstr, acc, gic, document_hw_config):
     ir = acc.working_dir + "/" + acc.ir_path
-    hw_config = acc.hw_config_path
+    cycle_counts = config_parser.resolve_cycle_counts(
+        document_hw_config,
+        acc.hw_config_path,
+        acc.config_path,
+        acc.profile_name,
+    )
     if acc.int_num is not None:
         setattr(
             clstr,
@@ -154,7 +159,7 @@ def _attach_accelerator(clstr, acc, gic):
                 pio_size=acc.size,
             ),
         )
-    AccConfig(getattr(clstr, acc.name), ir, hw_config)
+    AccConfig(getattr(clstr, acc.name), ir, cycle_counts)
 
 
 def _connect_accelerator(clstr, acc):
