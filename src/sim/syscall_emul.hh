@@ -2401,6 +2401,9 @@ clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
             break;
         case OS::TGT_CLOCK_PROCESS_CPUTIME:
         case OS::TGT_CLOCK_THREAD_CPUTIME:
+            // In SE mode, simulated processes run without OS preemption,
+            // so CPU execution time is approximated by elapsed simulated time.
+            break;
         default:
             return -EINVAL;
     }
