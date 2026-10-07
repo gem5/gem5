@@ -294,6 +294,11 @@ class Linux : public OperatingSystem
     static const unsigned TGT_FUTEX_OP_CMP_GT = 4;
     static const unsigned TGT_FUTEX_OP_CMP_GE = 5;
 
+    // for prctl syscall
+    static const unsigned TGT_PR_SET_MM = 35;
+    static const unsigned TGT_PR_SET_MM_START_BRK = 6;
+    static const unsigned TGT_PR_SET_MM_BRK = 7;
+
     // for *at syscalls
     static const int TGT_AT_FDCWD     = -100;
     static const int TGT_AT_REMOVEDIR = 0x200;
