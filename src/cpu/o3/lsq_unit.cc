@@ -558,7 +558,10 @@ LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
         Addr ld_eff_addr2 =
             (ld_inst->effAddr + ld_inst->effSize - 1) >> depCheckShift;
 
-        if (inst_eff_addr2 >= ld_eff_addr1 && inst_eff_addr1 <= ld_eff_addr2) {
+        // The effAddr range of a non-contiguous access spans its holes, so
+        // its fragments are also checked
+        if (inst_eff_addr2 >= ld_eff_addr1 && inst_eff_addr1 <= ld_eff_addr2 &&
+            NonContiguousDataRequest::overlaps(inst, ld_inst, depCheckShift)) {
             if (inst->isLoad()) {
                 // If this load is to the same block as an external snoop
                 // invalidate that we've observed then the load needs to be
@@ -1463,11 +1466,37 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 
             auto coverage = AddrRangeCoverage::NoAddrRangeCoverage;
 
-            // If the store entry is not atomic (atomic does not have valid
-            // data), the store has all of the data needed, and
-            // the load is not LLSC, then
-            // we can forward data from the store to the load
-            if (!store_it->instruction()->isAtomic() &&
+            // If either access is non-contiguous, collect the load bytes
+            // that the store fragments provide (the last one wins)
+            const bool non_contig = request->isNonContiguous() ||
+                                    store_it->request()->isNonContiguous();
+            std::vector<uint8_t> fwd_data;
+
+            if (non_contig) {
+                size_t fwd_bytes = NonContiguousDataRequest::forwardedBytes(
+                    load_inst, request, store_it->instruction(),
+                    store_it->request(),
+                    store_it->isAllZeros()
+                        ? nullptr
+                        : reinterpret_cast<const uint8_t *>(store_it->data()),
+                    fwd_data);
+
+                // Forward if the store provides every byte of the load,
+                // under the same conditions as below
+                if (fwd_bytes == fwd_data.size() &&
+                    !store_it->instruction()->isAtomic() &&
+                    !request->mainReq()->isLLSC() &&
+                    !store_it->request()->mainReq()->isMasked()) {
+                    coverage = AddrRangeCoverage::FullAddrRangeCoverage;
+                } else if (fwd_bytes > 0) {
+                    coverage = AddrRangeCoverage::PartialAddrRangeCoverage;
+                }
+            } else if (
+                // If the store entry is not atomic (atomic does not have
+                // valid data), the store has all of the data needed, and
+                // the load is not LLSC, then
+                // we can forward data from the store to the load
+                !store_it->instruction()->isAtomic() &&
                 store_has_lower_limit && store_has_upper_limit &&
                 !request->mainReq()->isLLSC()) {
 
@@ -1506,13 +1535,16 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                     load_inst->memData =
                         new uint8_t[request->mainReq()->getSize()];
                 }
-                if (store_it->isAllZeros())
+                if (non_contig) {
+                    memcpy(load_inst->memData, fwd_data.data(),
+                           request->mainReq()->getSize());
+                } else if (store_it->isAllZeros()) {
                     memset(load_inst->memData, 0,
-                            request->mainReq()->getSize());
-                else
-                    memcpy(load_inst->memData,
-                        store_it->data() + shift_amt,
-                        request->mainReq()->getSize());
+                           request->mainReq()->getSize());
+                } else {
+                    memcpy(load_inst->memData, store_it->data() + shift_amt,
+                           request->mainReq()->getSize());
+                }
 
                 DPRINTF(LSQUnit, "Forwarding from store idx %i to load to "
                         "addr %#x\n", store_it._idx,
