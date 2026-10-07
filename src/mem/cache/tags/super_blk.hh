@@ -238,6 +238,12 @@ class SuperBlk : public SectorBlk
      */
     void setCompressionFactor(const uint8_t compression_factor);
 
+    /**
+     * Recalculate and update the superblock's compression factor based on the
+     * valid sub-blocks currently present.
+     */
+    void updateCompressionFactor();
+
     void invalidate() override;
 
     std::string print() const override;

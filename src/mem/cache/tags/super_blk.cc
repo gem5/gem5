@@ -101,27 +101,15 @@ CompressionBlk::setSizeBits(const std::size_t size)
     _size = size;
 
     SuperBlk* superblock = static_cast<SuperBlk*>(getSectorBlock());
+    assert(superblock);
+    superblock->updateCompressionFactor();
+
     const uint8_t compression_factor =
         superblock->calculateCompressionFactor(size);
-    superblock->setCompressionFactor(compression_factor);
-
-    // Either this function is called after an insertion, or an update.
-    // If somebody else is present in the block, keep the superblock's
-    // compressibility. Otherwise, check if it can co-allocate
-    const uint8_t num_valid = superblock->getNumValid();
-    assert(num_valid >= 1);
-    if (num_valid == 1) {
-        if (compression_factor != 1) {
-            setCompressed();
-        } else {
-            setUncompressed();
-        }
+    if (compression_factor != 1) {
+        setCompressed();
     } else {
-        if (superblock->isCompressed(this)) {
-            setCompressed();
-        } else {
-            setUncompressed();
-        }
+        setUncompressed();
     }
 }
 
@@ -142,6 +130,11 @@ CompressionBlk::invalidate()
 {
     SectorSubBlk::invalidate();
     setUncompressed();
+    _size = 0;
+    SuperBlk *superblock = static_cast<SuperBlk *>(getSectorBlock());
+    if (superblock) {
+        superblock->updateCompressionFactor();
+    }
 }
 
 CompressionBlk::OverwriteType
@@ -185,7 +178,9 @@ SuperBlk::isCompressed(const CompressionBlk* ignored_blk) const
 {
     for (const auto& blk : blks) {
         if (blk->isValid() && (blk != ignored_blk)) {
-            return static_cast<CompressionBlk*>(blk)->isCompressed();
+            if (!static_cast<const CompressionBlk *>(blk)->isCompressed()) {
+                return false;
+            }
         }
     }
 
@@ -196,11 +191,25 @@ SuperBlk::isCompressed(const CompressionBlk* ignored_blk) const
 bool
 SuperBlk::canCoAllocate(const std::size_t compressed_size) const
 {
-    // A YACC-like (Sardashti et al., 2016) co-allocation function: at most
-    // numBlocksPerSector blocks that compress at least to fit in the space
-    // allocated by its compression factor can share a superblock
-    return (getNumValid() < getCompressionFactor()) &&
-        (compressed_size <= (blkSize * CHAR_BIT) / getCompressionFactor());
+    if (!isCompressed()) {
+        return false;
+    }
+
+    const uint8_t new_blk_cf = calculateCompressionFactor(compressed_size);
+    if (new_blk_cf <= 1) {
+        return false;
+    }
+
+    std::size_t bit_sum = 0;
+    for (const auto &blk : blks) {
+        if (blk->isValid()) {
+            const CompressionBlk *cblk =
+                static_cast<const CompressionBlk *>(blk);
+            bit_sum += cblk->getSizeBits();
+        }
+    }
+
+    return (bit_sum + compressed_size) <= (blkSize * CHAR_BIT);
 }
 
 void
@@ -220,7 +229,7 @@ SuperBlk::calculateCompressionFactor(const std::size_t size) const
     const std::size_t compression_factor = (size > blk_size_bits) ? 1 :
         ((size == 0) ? blk_size_bits :
         alignToPowerOfTwo(std::floor(double(blk_size_bits) / size)));
-    return std::min(compression_factor, blks.size());
+    return std::min<std::size_t>(compression_factor, blks.size());
 }
 
 uint8_t
@@ -232,12 +241,26 @@ SuperBlk::getCompressionFactor() const
 void
 SuperBlk::setCompressionFactor(const uint8_t compression_factor)
 {
-    // Either the block is alone, in which case the compression factor
-    // must be set, or it co-allocates with someone with a worse or
-    // equal compression factor, in which case it should not be updated
-    if (getNumValid() <= 1) {
-        compressionFactor = compression_factor;
+    compressionFactor = compression_factor;
+}
+
+void
+SuperBlk::updateCompressionFactor()
+{
+    uint8_t min_cf = blks.size();
+    bool has_valid = false;
+    for (const auto &blk : blks) {
+        if (blk->isValid()) {
+            has_valid = true;
+            const CompressionBlk *cblk =
+                static_cast<const CompressionBlk *>(blk);
+            uint8_t cf = calculateCompressionFactor(cblk->getSizeBits());
+            if (cf < min_cf) {
+                min_cf = cf;
+            }
+        }
     }
+    setCompressionFactor(has_valid ? min_cf : 1);
 }
 
 std::string
