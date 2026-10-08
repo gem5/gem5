@@ -190,11 +190,11 @@ _EXTENSION_REGISTRY = {
     "V": {"implemented": True},
     "Za128rs": {"implemented": False},
     "Za64rs": {"implemented": False},
-    "Zaamo": {"implemented": False},
+    "Zaamo": {"implemented": True},
     "Zabha": {"implemented": False},
     "Zacas": {"implemented": False},
     "Zalasr": {"implemented": False},
-    "Zalrsc": {"implemented": False},
+    "Zalrsc": {"implemented": True},
     "Zama16b": {"implemented": False},
     "Zawrs": {"implemented": False},
     "Zba": {"implemented": True},
@@ -698,7 +698,8 @@ class RiscvISA(BaseISA):
             for extension in effective
             if self._is_supported(extension)
         }
-
+        if {"Zaamo", "Zalrsc"}.issubset(reportable):
+            reportable.add("A")
         if {"Zba", "Zbb", "Zbs"}.issubset(reportable):
             reportable.add("B")
         if "C" in reportable:
@@ -742,6 +743,8 @@ class RiscvISA(BaseISA):
 
         reported_extensions = self.get_reported_extensions()
         suppressed_extensions = set()
+        if "A" in reported_extensions:
+            suppressed_extensions.update(("Zaamo", "Zalrsc"))
         if "B" in reported_extensions:
             suppressed_extensions.update(("Zba", "Zbb", "Zbs"))
         if "C" in reported_extensions:
