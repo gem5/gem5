@@ -649,6 +649,85 @@ VlFFTrimVlMicroOp::generateDisassembly(Addr pc,
     return ss.str();
 }
 
+namespace
+{
+
+/**
+ * Shared fault-only-first handling for the RISC-V unit-stride (vle*ff) and
+ * segmented (vlseg*ff) fault-only-first loads.
+ *
+ * Per the RVV spec such an access only traps when element 0 faults.  If a
+ * later element faults the trap is suppressed and vl is trimmed down to the
+ * leading elements that loaded cleanly.  The trailing VlFFTrimVlMicroOp later
+ * reads back trimVl/faultIdx from every load microop to compute the new vl.
+ *
+ * This runs from StaticInst::handleMemFault() so that it is applied both when
+ * the fault is returned synchronously (atomic CPU) and when it is delivered
+ * asynchronously after translation (timing CPU).
+ *
+ * @param fault     Fault raised by the memory access.
+ * @param vaddr     Virtual address the access was initiated at, i.e. the EA
+ *                  of element 0 of this microop.
+ * @param micro_idx Index of this microop within the macro-op.
+ * @param micro_vl  Number of elements this microop covers.
+ * @param eew_bytes Size of a single element in bytes.
+ * @param trim_vl   Set when the fault is suppressed.
+ * @param fault_idx Receives the index of the first faulting element within
+ *                  this microop (== number of cleanly loaded elements).
+ * @return NoFault if the fault was suppressed, otherwise the original fault.
+ */
+Fault
+faultOnlyFirstTrim(const Fault &fault, Addr vaddr, uint32_t micro_idx,
+                   uint32_t micro_vl, uint64_t eew_bytes, bool &trim_vl,
+                   uint32_t &fault_idx)
+{
+    Addr fault_addr;
+    if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
+        assert(fault_addr >= vaddr);
+        // The first faulting element must lie within this micro-op's access:
+        // for an unsplit access the fault address is vaddr, and for a split
+        // access it is the start of the faulting fragment, always inside
+        // [vaddr, vaddr + micro_vl * eew_bytes).  An address past the end
+        // would signal a bogus fault address (e.g. from the MMU), so surface
+        // it rather than silently clamping it into a plausible-looking vl.
+        panic_if((fault_addr - vaddr) / eew_bytes > micro_vl,
+                 "FoF fault address %#x outside micro-op access at %#x",
+                 fault_addr, vaddr);
+        fault_idx = (fault_addr - vaddr) / eew_bytes;
+        if (micro_idx != 0 || fault_idx != 0) {
+            trim_vl = true;
+            return NoFault;
+        }
+    }
+    return fault;
+}
+
+} // anonymous namespace
+
+Fault
+VleMicroInst::handleMemFault(const Fault &fault, Addr vaddr) const
+{
+    // Only fault-only-first loads may suppress a fault; every other
+    // unit-stride load must take the fault normally.
+    if (opClass() != SimdUnitStrideFaultOnlyFirstLoadOp) {
+        return fault;
+    }
+
+    return faultOnlyFirstTrim(fault, vaddr, microIdx, microVl,
+                              width_EEW(machInst.width) / 8, trimVl, faultIdx);
+}
+
+Fault
+VlSegMicroInst::handleMemFault(const Fault &fault, Addr vaddr) const
+{
+    if (opClass() != SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+        return fault;
+    }
+
+    return faultOnlyFirstTrim(fault, vaddr, microIdx, microVl,
+                              width_EEW(machInst.width) / 8, trimVl, faultIdx);
+}
+
 std::string VlSegMacroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
