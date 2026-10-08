@@ -19,8 +19,7 @@ functional_unit:
                 sign: none
                 APMode: false
         instructions: # LLVM OpCode: Runtime Cycles
-            - fmul
-            - fmuladd
+            - fmuladd # fmul is owned by float_multiplier
         limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)
     power_model:
         units:

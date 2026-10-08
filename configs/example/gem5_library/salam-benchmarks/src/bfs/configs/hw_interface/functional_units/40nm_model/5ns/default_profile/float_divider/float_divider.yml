@@ -18,8 +18,7 @@ functional_unit:
                 size: none
                 sign: none
                 APMode: false
-        instructions: # LLVM OpCode: Runtime Cycles
-            - fdiv
+        instructions: [] # fdiv is owned by double_divider
         limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)
     power_model:
         units:
