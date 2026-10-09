@@ -93,7 +93,7 @@ def dot_create_nodes(simNode, callgraph):
         label = simNode._name
     full_path = re.sub(r"\.", "_", simNode.path())
     # add class name under the label
-    label = '"' + label + " \\n: " + simNode.__class__.__name__ + '"'
+    label = '"' + label + " \\nclass: " + simNode.__class__.__name__ + " \\neventq: " + str(simNode.eventq_index) + '"'
 
     # each component is a sub-graph (cluster)
     cluster = dot_create_cluster(simNode, full_path, label)
