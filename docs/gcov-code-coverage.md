@@ -22,6 +22,25 @@ provides various options for combining and outputting code coverage.
 generated while running CI or other GitHub Actions workflows, then to be
 uploaded to, analyzed, and displayed on the Codecov website.
 
+### How `gcov` records code coverage
+
+The tool `gcovr` manages calls to `gcov`, so it can be helpful to understand how
+`gcov` records code coverage information.
+
+Code coverage for `gcov` is stored in `.gcda` and `.gcno` files. The `.gcno`
+files are generated during compilation, and `.gcda` files are generated
+and updated when a program is run. See [here](https://gcc.gnu.org/onlinedocs/gcc/Gcov-Data-Files.html)
+for more information.
+
+Some `.gcda` files are generated during gem5's build process. However, because
+we typically don't want to include the coverage of the build process, we remove
+the `.gcda` files in the instructions below.
+
+Similarly, you can clear the `.gcda` files to restore the directory to a blank
+slate, to get separate code coverage for another test/program. Instructions for
+this are also included below.
+
+
 ## 1. Getting code coverage using gcovr
 
 - 0. Set up the Python environment needed for `gcovr`. When running it on
@@ -49,31 +68,59 @@ be used.
 scons build/ALL/gem5.debug --gcov
 ```
 
-- 2. Next, remove all files ending with `.py.gcno` and `.gcda` from the gem5
-directory. Code coverage files ending with `.py.gcno` or `.py.gcda` will cause
-errors upon running `gcovr`. Furthermore, `.gcda` files record code coverage
-from running code, so if they aren't removed after building, the code coverage
-metrics will include the code coverage from both the build process and the
-tests, which may be undesirable.
+- 2. Next, remove all files ending with `.py.gcno` and `.gcda` from the
+`build/{ISA}` directory.
+  - Code coverage files ending with `.py.gcno` or `.py.gcda` will cause
+errors upon running `gcovr`.
+  - Files ending with `.gcda` record the code coverage obtained from running
+  tests or programs. If these files aren't removed after building, the code
+  coverage from the build process will be combined into the code coverage of
+  the tests, which may be undesirable.
 
 ```bash
+# If the `build` directory is inside the `gem5` directory, the `cd` isn't
+# necessary
+cd build/ALL
 find . -name "*.py.gcno" -delete
 find . -name "*.gcda" -delete
 ```
 
-- 3. Next, run the test(s) that you would like to get code coverage for using
+- 3. Next, run the test(s) that you would like to get code coverage for, using
 the gem5 binary compiled with `--gcov`. The TestLib tests may be used, as well
 as any gem5 simulation.
 
 ```bash
+# Running from a configuration script
 path/to/build/gem5.debug path/to/gem5/config.py
+
+# Example; run this from the `gem5` directory:
+build/ALL/gem5.debug configs/example/gem5_library/arm-hello.py
 ```
 
+```bash
+# for running from TestLib
+cd tests
+./main.py run gem5/{test suite to run} --build-dir=path/to/build --skip-build \
+--length {quick, long, very-long} -t {threads to use for running tests}
 
-- 4. Remove code coverage files ending with `.py.gcda` from the gem5 directory;
-these files will cause errors upon running `gcovr`.
+# Example:
+cd tests
+./main.py run gem5/gem5_resources --build-dir=../build --skip-build \
+--length=very-long -t 10 -vvv
+```
+
+  - Note that the TestLib tests use the `gem5.opt` binary, so they will fail if
+  only `gem5.debug` is built.
+  - `-v`, `-vv`, and `-vvv` can be passed to see more verbose output from
+  TestLib.
+
+- 4. Remove code coverage files ending with `.py.gcda` from the `build/{ISA}`
+directory; these files will cause errors upon running `gcovr`.
 
 ```bash
+# If the `build` directory is inside the `gem5` directory, the `cd` isn't
+# necessary.
+cd build/ALL
 find . -name "*.py.gcda" -delete
 ```
 
@@ -102,12 +149,41 @@ gcovr \
 --json-summary /path/to/summary.json \
 # This formats the code coverage report so the whitespace is more human readable
 --json-summary-pretty \
+# Number of threads to use
 -j 10
 ```
 
-- 6. Assuming you used the options above, the code coverage summary can be found
-at `/path/to/summary.json`.
+```bash
+# Example; run this from the `gem5` directory
+gcovr \
+--verbose \
+--merge-mode-functions separate \
+--gcov-ignore-parse-errors=suspicious_hits.warn \
+--gcov-ignore-parse-errors=negative_hits.warn \
+--root . \
+--object-directory ./build/ALL \
+--json gcovr-coverage/coverage.json \
+--json-summary gcovr-coverage/summary.json \
+--json-summary-pretty \
+-j 20
 
+```
+
+- 6. Assuming you used the options above, the code coverage and code coverage
+summary can be found at `/path/to/json/coverage.json` and `/path/to/summary.json`.
+
+For the specific example above, the coverage can be found in the
+`gcovr-coverage` directory.
+
+- 7. To get separate code coverage for another test using the same gem5 build,
+remove the `.gcda` files in the `build/{ISA}` directory of that build:
+
+```bash
+# If the `build` directory is inside the `gem5` directory, the `cd` isn't
+# necessary.
+cd build/ALL
+find . -name "*.gcda" -delete
+```
 
 ### 1.1. Merging gcovr code coverage files
 
@@ -160,8 +236,9 @@ consuming.
 
 If you want to get the code coverage of a TestLib test suite, it is recommended
 to use the `all-test-and-gcov` option. It is possible to use the `ind-test-and-gcov`
-option and combine the results afterward, but it is very time-consuming to
-obtain code coverage for each individual test and to combine the results.
+option and combine the results afterward (see section 1.1), but it is *very*
+time-consuming to obtain code coverage for each individual test and to combine
+the results.
 
 ## 3. Getting code coverage using Codecov in GitHub Actions
 
@@ -181,8 +258,6 @@ coverage from the build process itself, and we don't want to include it as code
 coverage for tests.
 3. Adding a step to uploade code coverage files to Codecov at the end of each
 relevant job.
-
-The Weekly tests were modified to perform these steps, and the
 
 The code coverage results for the main `gem5/gem5` repository can be seen
 [on the Codecov page](https://app.codecov.io/gh/gem5/gem5/tree/develop).
