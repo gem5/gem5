@@ -1,0 +1,98 @@
+# Copyright (c) 2026, University of Wisconsin
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+
+from m5.objects import (
+    Root,
+    SimObject,
+)
+from m5.util import panic
+
+
+class AbstractPowerModel:
+    __metaclass__ = ABCMeta
+
+    def __init__(self, simobj: SimObject):
+        self._simobj = simobj
+        self.name = "AbstractPowerModel"
+
+    """
+    A Power Model takes a given SimObject, and describes power consumption of
+    the given SimObject. Power Models which inherit from AbstractPowerModel
+    need to explicitly describe how dynamic and static power are modeled.
+
+    Dynamic and static power should NOT be described in this base class
+    as this should be done by the inherited classes.
+    """
+
+    def get_stat(self, stat):
+        """
+        Obtains a stat from the SimObject passed in this class and
+        checks that a given stat actually exists.
+
+        :param stat: the stat to obtain from the SimObject passed
+
+        :returns: The stat, regardless of type.
+        """
+        try:
+            stat = self._simobj.resolveStat(stat)
+            return stat
+        except KeyError:
+            panic(f"{stat} not found in stats!")
+            return 0.0
+
+    @abstractmethod
+    def dynamic_power(self) -> float:
+        """Gets the dynamic power in watts
+
+        :returns: dynamic power in watts
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def static_power(self) -> float:
+        """Gets the static power in watts
+
+        :returns: dynamic power in watts
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def convert_to_watts(self, value: float) -> float:
+        """Converts energy in nanojoules to watts
+
+        :returns: power in watts from energy
+        """
+        # Don't implement this in the abstract class, each power model
+        # has a different way of calculating power
+        raise NotImplementedError

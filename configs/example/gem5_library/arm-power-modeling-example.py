@@ -41,13 +41,6 @@ scons build/ALL/gem5.opt
 
 import argparse
 
-# m5 includes for power model utilities
-from m5.objects import (
-    PowerModel,
-    PowerModelPyFunc,
-    Root,
-)
-
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.memory import SingleChannelDDR3_1600
@@ -55,77 +48,11 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
+from gem5.simulate.power_models.example_power_model.example_cpu_power_model import (
+    ExampleCpuPowerModel,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
-
-# Below is the definition for a Power Model State
-# (i.e., if a device is on, off or clock gated, this defines
-# what dynamic/static power should look like for each of these states).
-
-# With PowerModelPyFunc, you can do arithmetic operations very easily,
-# or for a more interesting use might be using parameters of a component
-# to scale certain energy values for your model.
-# In this example, we try to grab the all of the IntegerALU functional units for Minor and scale some static power by the number of number of IntegerALUs.
-
-
-class CpuPowerOn(PowerModelPyFunc):
-    def __init__(
-        self, cpu_obj, pwr_interval, alu_energy=1.5e-9, base_static_power=3
-    ):
-        super().__init__()
-        self._cpu = cpu_obj
-        self._alu_ae = alu_energy
-        self._base_st_power = base_static_power
-        self._prev_alu = 0
-        self.pwr_interval = pwr_interval
-        self.auto_start = pwr_interval > 0
-        self.dyn = self.dynamic_power
-        self.st = self.static_power
-
-    def dynamic_power(self):
-        alu = self._cpu.resolveStat("executeStats0.numIntAluAccesses").total
-        if self.inPowerAtInterval():
-            energy = (alu - self._prev_alu) * self._alu_ae
-            self._prev_alu = alu
-            return energy / self.getSampleDurationSeconds()
-        time = Root.getInstance().resolveStat("simSeconds").total
-        return alu * self._alu_ae / time
-
-    def static_power(self):
-        return self._base_st_power * self.count_fus()
-
-    def count_fus(self):
-        return sum(
-            1
-            for fu in self._cpu.executeFuncUnits.funcUnits
-            for oc in fu.opClasses.opClasses
-            if str(oc.opClass) == "IntAlu"
-        )
-
-
-class CpuPowerOff(PowerModelPyFunc):
-    def __init__(self):
-        super().__init__()
-        self.dyn = lambda: 0.0
-        self.st = lambda: 0.0
-
-
-# CpuPowerModel takes on the actual definition of our PowerModel, where
-# we need to be explicit what power model to use per state. In this case,
-# becuase we only care about the ON state, we have explicitly defined a
-# different, non-zero, power model.
-
-
-class CpuPowerModel(PowerModel):
-    def __init__(self, cpu, pwr_interval):
-        super().__init__()
-        self.pm = [
-            CpuPowerOn(cpu, pwr_interval),
-            CpuPowerOff(),
-            CpuPowerOff(),
-            CpuPowerOff(),
-        ]
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -157,11 +84,11 @@ board = SimpleBoard(
 # In order to apply a power model onto a SimObject, the object you
 # want to attach to must be an instance of `ClockedObject`. We directly
 # get the object we want to model and attach a power model onto it.
-# We also ensure that we use the CpuPowerModelOn by enforcing the
+# We also ensure that we use the ExampleCpuPowerOn by enforcing the
 # defaults state to be "ON"
 core0 = processor.get_cores()[0].core
 core0.power_state.default_state = "ON"
-power_model = CpuPowerModel(core0, args.pwr_interval)
+power_model = ExampleCpuPowerModel(core0, args.pwr_interval)
 core0.power_model = power_model
 
 board.set_se_binary_workload(
