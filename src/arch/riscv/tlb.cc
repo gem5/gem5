@@ -430,15 +430,20 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
         fault = NoFault;
     }
     else {
-        if (memaccess.virt) {
+        // With hgatp.mode == Bare, virtual accesses are walked in a single
+        // stage, so the VS-stage PTE is in pte and gpte is unused, as for
+        // non-virtual accesses.
+        SATP hgatp = (misa.rvh && memaccess.virt)
+                         ? tc->readMiscReg(MISCREG_HGATP)
+                         : (RegVal)0;
+        if (memaccess.virt && hgatp.mode != AddrXlateMode::BARE) {
             if (e->gpte != 0) {
                 fault = checkPermissions(
                     tc, memaccess, vaddr, mode, e->gpte);
             } else {
                 fault = NoFault;
             }
-        }
-        else {
+        } else {
             fault = checkPermissions(
                 tc, memaccess, vaddr, mode, e->pte);
         }
