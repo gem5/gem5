@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
 
@@ -72,21 +71,52 @@ class GarnetNetwork : public Network
     // Configuration (set externally)
 
     // for 2D topology
-    int getNumRows() const { return m_num_rows; }
-    int getNumCols() { return m_num_cols; }
+    int
+    getNumRows() const
+    {
+        return m_num_rows;
+    }
+    int
+    getNumCols()
+    {
+        return m_num_cols;
+    }
 
     // for network
-    uint32_t getNiFlitSize() const { return m_ni_flit_size; }
-    uint32_t getBuffersPerDataVC() { return m_buffers_per_data_vc; }
-    uint32_t getBuffersPerCtrlVC() { return m_buffers_per_ctrl_vc; }
-    int getRoutingAlgorithm() const { return m_routing_algorithm; }
+    uint32_t
+    getNiFlitSize() const
+    {
+        return m_ni_flit_size;
+    }
+    uint32_t
+    getBuffersPerDataVC()
+    {
+        return m_buffers_per_data_vc;
+    }
+    uint32_t
+    getBuffersPerCtrlVC()
+    {
+        return m_buffers_per_ctrl_vc;
+    }
+    int
+    getRoutingAlgorithm() const
+    {
+        return m_routing_algorithm;
+    }
 
-    bool isFaultModelEnabled() const { return m_enable_fault_model; }
-    FaultModel* fault_model;
-
+    bool
+    isFaultModelEnabled() const
+    {
+        return m_enable_fault_model;
+    }
+    FaultModel *fault_model;
 
     // Internal configuration
-    bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
+    bool
+    isVNetOrdered(int vnet) const
+    {
+        return m_ordered[vnet];
+    }
     VNET_type
     get_vnet_type(int vnet)
     {
@@ -95,14 +125,13 @@ class GarnetNetwork : public Network
     int getNumRouters();
     int get_router_id(int ni, int vnet);
 
-
     // Methods used by Topology to setup the network
-    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                     std::vector<NetDest>& routing_table_entry);
-    void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
-                    std::vector<NetDest>& routing_table_entry);
-    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          std::vector<NetDest>& routing_table_entry,
+    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
+                        std::vector<NetDest> &routing_table_entry);
+    void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
+                       std::vector<NetDest> &routing_table_entry);
+    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
+                          std::vector<NetDest> &routing_table_entry,
                           PortDirection src_outport_dirn,
                           PortDirection dest_inport_dirn);
 
@@ -115,47 +144,69 @@ class GarnetNetwork : public Network
     void collateStats();
     void regStats();
     void resetStats();
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     // increment counters
-    void increment_injected_packets(int vnet) { m_packets_injected[vnet]++; }
-    void increment_received_packets(int vnet) { m_packets_received[vnet]++; }
+    void
+    increment_injected_packets(int vnet)
+    {
+        m_stats.m_packets_injected[vnet]++;
+    }
+
+    void
+    increment_received_packets(int vnet)
+    {
+        m_stats.m_packets_received[vnet]++;
+    }
 
     void
     increment_packet_network_latency(Tick latency, int vnet)
     {
-        m_packet_network_latency[vnet] += latency;
+        m_stats.m_packet_network_latency[vnet] += latency;
     }
 
     void
     increment_packet_queueing_latency(Tick latency, int vnet)
     {
-        m_packet_queueing_latency[vnet] += latency;
+        m_stats.m_packet_queueing_latency[vnet] += latency;
     }
 
-    void increment_injected_flits(int vnet) { m_flits_injected[vnet]++; }
-    void increment_received_flits(int vnet) { m_flits_received[vnet]++; }
+    void
+    increment_injected_flits(int vnet)
+    {
+        m_stats.m_flits_injected[vnet]++;
+    }
+
+    void
+    increment_received_flits(int vnet)
+    {
+        m_stats.m_flits_received[vnet]++;
+    }
 
     void
     increment_flit_network_latency(Tick latency, int vnet)
     {
-        m_flit_network_latency[vnet] += latency;
+        m_stats.m_flit_network_latency[vnet] += latency;
     }
 
     void
     increment_flit_queueing_latency(Tick latency, int vnet)
     {
-        m_flit_queueing_latency[vnet] += latency;
+        m_stats.m_flit_queueing_latency[vnet] += latency;
     }
 
     void
     increment_total_hops(int hops)
     {
-        m_total_hops += hops;
+        m_stats.m_total_hops += hops;
     }
 
     void update_traffic_distribution(RouteInfo route);
-    int getNextPacketID() { return m_next_packet_id++; }
+    int
+    getNextPacketID()
+    {
+        return m_next_packet_id++;
+    }
 
   protected:
     // Configuration
@@ -169,46 +220,66 @@ class GarnetNetwork : public Network
     bool m_enable_fault_model;
 
     // Statistical variables
-    statistics::Vector m_packets_received;
-    statistics::Vector m_packets_injected;
-    statistics::Vector m_packet_network_latency;
-    statistics::Vector m_packet_queueing_latency;
+    //
+    // Grouped so these are resolvable via resolveStat(), not just
+    // dumped to stats.txt. Merged with no name of its own, so paths
+    // stay "network.<stat>" instead of "network.m_stats.<stat>".
+    struct GarnetNetworkStats : public statistics::Group
+    {
+        GarnetNetworkStats(GarnetNetwork *parent);
+        void regStats() override; // Deferred: several stats depend on
+                                  // state (e.g. m_max_vcs_per_vnet) that
+                                  // isn't finalized until after
+                                  // construction.
 
-    statistics::Formula m_avg_packet_vnet_latency;
-    statistics::Formula m_avg_packet_vqueue_latency;
-    statistics::Formula m_avg_packet_network_latency;
-    statistics::Formula m_avg_packet_queueing_latency;
-    statistics::Formula m_avg_packet_latency;
+      private:
+        GarnetNetwork *parent;
 
-    statistics::Vector m_flits_received;
-    statistics::Vector m_flits_injected;
-    statistics::Vector m_flit_network_latency;
-    statistics::Vector m_flit_queueing_latency;
+      public:
+        statistics::Vector m_packets_received;
+        statistics::Vector m_packets_injected;
+        statistics::Vector m_packet_network_latency;
+        statistics::Vector m_packet_queueing_latency;
 
-    statistics::Formula m_avg_flit_vnet_latency;
-    statistics::Formula m_avg_flit_vqueue_latency;
-    statistics::Formula m_avg_flit_network_latency;
-    statistics::Formula m_avg_flit_queueing_latency;
-    statistics::Formula m_avg_flit_latency;
+        statistics::Formula m_avg_packet_vnet_latency;
+        statistics::Formula m_avg_packet_vqueue_latency;
+        statistics::Formula m_avg_packet_network_latency;
+        statistics::Formula m_avg_packet_queueing_latency;
+        statistics::Formula m_avg_packet_latency;
 
-    statistics::Scalar m_total_ext_in_link_utilization;
-    statistics::Scalar m_total_ext_out_link_utilization;
-    statistics::Scalar m_total_int_link_utilization;
-    statistics::Scalar m_average_link_utilization;
-    statistics::Vector m_average_vc_load;
+        statistics::Vector m_flits_received;
+        statistics::Vector m_flits_injected;
+        statistics::Vector m_flit_network_latency;
+        statistics::Vector m_flit_queueing_latency;
 
-    statistics::Scalar  m_total_hops;
-    statistics::Formula m_avg_hops;
+        statistics::Formula m_avg_flit_vnet_latency;
+        statistics::Formula m_avg_flit_vqueue_latency;
+        statistics::Formula m_avg_flit_network_latency;
+        statistics::Formula m_avg_flit_queueing_latency;
+        statistics::Formula m_avg_flit_latency;
 
+        statistics::Scalar m_total_ext_in_link_utilization;
+        statistics::Scalar m_total_ext_out_link_utilization;
+        statistics::Scalar m_total_int_link_utilization;
+        statistics::Scalar m_average_link_utilization;
+        statistics::Vector m_average_vc_load;
+
+        statistics::Scalar m_total_hops;
+        statistics::Formula m_avg_hops;
+    } m_stats;
+
+    // Still not resolvable -- their names have a literal '.' in them,
+    // and resolveStat() treats any dot as a subgroup separator. Left as
+    // legacy stats for now.
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
 
   private:
-    GarnetNetwork(const GarnetNetwork& obj);
-    GarnetNetwork& operator=(const GarnetNetwork& obj);
+    GarnetNetwork(const GarnetNetwork &obj);
+    GarnetNetwork &operator=(const GarnetNetwork &obj);
 
-    std::vector<VNET_type > m_vnet_type;
-    std::vector<Router *> m_routers;   // All Routers in Network
+    std::vector<VNET_type> m_vnet_type;
+    std::vector<Router *> m_routers;           // All Routers in Network
     std::vector<NetworkLink *> m_networklinks; // All flit links in the network
     std::vector<NetworkBridge *> m_networkbridges; // All network bridges
     std::vector<CreditLink *> m_creditlinks; // All credit links in the network
@@ -216,8 +287,8 @@ class GarnetNetwork : public Network
     int m_next_packet_id; // static vairable for packet id allocation
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const GarnetNetwork& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const GarnetNetwork &obj)
 {
     obj.print(out);
     out << std::flush;

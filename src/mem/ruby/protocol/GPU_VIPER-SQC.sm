@@ -320,10 +320,12 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
 
   // added for profiling
   action(uu_profileDataMiss, "\udm", desc="Profile SQC demand miss"){
+    L1cache.profileReadMiss();
     L1cache.profileDemandMiss();
   }
 
   action(uu_profileDataHit, "\udh", desc="Profile SQC demand hit"){
+    L1cache.profileReadHit();
     L1cache.profileDemandHit();
   }
 
