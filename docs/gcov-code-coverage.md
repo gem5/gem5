@@ -32,13 +32,13 @@ files are generated during compilation, and `.gcda` files are generated
 and updated when a program is run. See [here](https://gcc.gnu.org/onlinedocs/gcc/Gcov-Data-Files.html)
 for more information.
 
-Some `.gcda` files are generated during gem5's build process. However, because
-we typically don't want to include the coverage of the build process, we remove
-the `.gcda` files in the instructions below.
+Some `.gcda` files are also generated during gem5's build process. However,
+because we typically don't want to include the coverage of the build process,
+we remove the `.gcda` files in the instructions below.
 
 Similarly, you can clear the `.gcda` files to restore the directory to a blank
-slate, to get separate code coverage for another test/program. Instructions for
-this are also included below.
+slate, in order to get separate code coverage for another test/program.
+Instructions for this are also included below.
 
 
 ## 1. Getting code coverage using gcovr
@@ -73,9 +73,11 @@ scons build/ALL/gem5.debug --gcov
   - Code coverage files ending with `.py.gcno` or `.py.gcda` will cause
 errors upon running `gcovr`.
   - Files ending with `.gcda` record the code coverage obtained from running
-  tests or programs. If these files aren't removed after building, the code
-  coverage from the build process will be combined into the code coverage of
-  the tests, which may be undesirable.
+  tests or programs, and are generated when programs are run on the binary
+  built with `--gcov`.
+  For gem5, `.gcda` files are also generated during the build process. If they
+  aren't removed after building, the code coverage from the build process will
+  be combined into the code coverage of the tests, which may be undesirable.
 
 ```bash
 # If the `build` directory is inside the `gem5` directory, the `cd` isn't
@@ -145,7 +147,7 @@ gcovr \
 # consists of line, function, and branch coverage totals and percentages.
 #
 # More options can be seen [here](https://gcovr.com/en/stable/output/txt.html)
---json /path/to/json/coverage.json
+--json /path/to/json/coverage.json \
 --json-summary /path/to/summary.json \
 # This formats the code coverage report so the whitespace is more human readable
 --json-summary-pretty \
@@ -225,7 +227,7 @@ coverage files as they wish (e.g. using a tool other than `gcovr`, or with
 `--gcov` option, runs **all** of the specified TestLib tests, then runs `gcovr`
 after all of the tests have finished. This option is useful for getting the
 overall test coverage of a test suite or entire set of tests. This option runs
-`gcovr` once.
+`gcovr` once for each ISA in the `build` directory.
 
 - `--gcov=ind-test-and-gcov`: This command builds the gem5 binary with the
 `--gcov` option, runs `gcovr` after **each** test, and clears the code coverage
@@ -244,9 +246,9 @@ the results.
 
 This method has been implemented for gem5's test workflows, located in
 `.github/workflows`. Specifically, the workflow for the Weekly tests
-(`.github/workflows/weekly-tests.yaml`) was modified, and a new workflow that
-runs the Daily and CI tests on a weekly basis was introduced
-(`.github/workflows/ci-daily-codecov.yaml`).
+(`.github/workflows/weekly-tests.yaml`) was modified, and a new workflow
+(`.github/workflows/ci-daily-codecov.yaml`) that runs the tests in the Daily
+and CI test workflows on a weekly basis was introduced.
 
 The changes that were made to get code coverage using Codecov were as follows:
 
@@ -256,7 +258,7 @@ has already been built, including this option is still required, as it removes
 the `gcda` files that are generated when building. These files represent the code
 coverage from the build process itself, and we don't want to include it as code
 coverage for tests.
-3. Adding a step to uploade code coverage files to Codecov at the end of each
+3. Adding a step to upload code coverage files to Codecov at the end of each
 relevant job.
 
 The code coverage results for the main `gem5/gem5` repository can be seen
