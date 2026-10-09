@@ -354,6 +354,29 @@ def write_content_files(root, outputs):
         _write_if_changed(_output_path(root, rel), text)
 
 
+def generate_sources_action(target, source, env):
+    spec = load_source_config(env["SALAM_HW_CONFIG"])
+    model = load_generated_sources(spec)
+    require_compatible_functional_units(model)
+    outputs = generate_sources(model)
+    marker = os.sep + "generated" + os.sep + "salam" + os.sep
+    written = {}
+    for node in target:
+        abspath = os.path.abspath(str(node))
+        idx = abspath.rfind(marker)
+        if idx < 0:
+            raise SourceConfigError(
+                "generated target is outside generated/salam: " + abspath
+            )
+        written[abspath[idx + len(marker) :]] = abspath
+    if set(written) != set(outputs):
+        raise SourceConfigError(
+            "generated targets do not match generated outputs"
+        )
+    for rel, text in outputs.items():
+        _write_if_changed(written[rel], text)
+
+
 def require_compatible_functional_units(model):
     present = set(model.fu_aliases)
     missing = [name for name in REQUIRED_FU_ALIASES if name not in present]

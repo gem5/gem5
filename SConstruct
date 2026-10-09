@@ -154,6 +154,14 @@ AddOption('--no-duplicate-sources', action='store_false',
           help='Do not create symlinks to sources in the build directory')
 AddOption('--with-salam', action='store_true',
           help='Build with SALAM accelerator-model support (requires LLVM)')
+AddOption('--salam-hw-config',
+          action='store',
+          type='string',
+          dest='salam_hw_config',
+          default=None,
+          metavar='CONFIG',
+          help='Use CONFIG as the SALAM hardware profile; '
+               'requires --with-salam.')
 AddOption('--gcov', action='store_true', default=False,
           help="Build gem5 with symbols used by gcov to enable obtaining code "
           "coverage metrics. This option does not work on Arm hosts.")
@@ -1137,7 +1145,17 @@ for variant_path in variant_paths:
 
     env['CONF']['WITH_SALAM'] = GetOption('with_salam')
 
+    hw_config = GetOption('salam_hw_config')
+    if hw_config and not GetOption('with_salam'):
+        error('--salam-hw-config requires --with-salam: ' + hw_config)
     if env['CONF']['WITH_SALAM']:
+        if not hw_config:
+            hw_config = File(
+                '#src/salam/hw_profiles/default/salam-hw-config.yml'
+            ).abspath
+        else:
+            hw_config = os.path.abspath(hw_config)
+        env['SALAM_HW_CONFIG'] = hw_config
         if not env['CONF']['USE_ARM_ISA']:
             error("--with-salam currently requires an ARM build target.")
         configure_llvm_for_salam(env)

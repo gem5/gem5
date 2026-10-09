@@ -39,7 +39,14 @@
 
 Import("*")
 
+# --with-salam generates sources from the selected hardware profile.
+# The profile YAML is env['SALAM_HW_CONFIG']. Products are written
+# under generated/salam and registered from there.
 if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
+
+    import sys
+
+    from gem5_scons import Transform, error
 
     SimObject("CommInterface.py", sim_objects=["CommInterface"])
     SimObject("ScratchpadMemory.py", sim_objects=["ScratchpadMemory"])
@@ -53,82 +60,61 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     SimObject("LLVMInterface.py", sim_objects=["LLVMInterface"])
 
     SimObject("CycleCounts.py", sim_objects=["CycleCounts"])
-    SimObject(
-        "FunctionalUnits.py",
-        sim_objects=[
-            "FunctionalUnits",
-            "BitRegister",
-            "DoubleMultiplier",
-            "BitwiseOperations",
-            "DoubleAdder",
-            "FloatDivider",
-            "BitShifter",
-            "IntegerMultiplier",
-            "IntegerAdder",
-            "DoubleDivider",
-            "FloatAdder",
-            "FloatMultiplier",
-        ],
+
+    if not env.get("SALAM_HW_CONFIG"):
+        error("SALAM build is missing its hardware profile")
+    generator = Dir("#util/SALAM-tools/hw_generator").abspath
+    if generator not in sys.path:
+        sys.path.insert(0, generator)
+    try:
+        import SALAMGeneratedSources
+    except ImportError:
+        error(
+            "PyYAML is required for SALAM builds; on Ubuntu it is "
+            "provided by python3-yaml."
+        )
+    try:
+        inputs = SALAMGeneratedSources.load_source_config(
+            env["SALAM_HW_CONFIG"]
+        )
+        generated = SALAMGeneratedSources.load_generated_sources(inputs)
+        SALAMGeneratedSources.require_compatible_functional_units(
+            generated
+        )
+    except SALAMGeneratedSources.SourceConfigError as exc:
+        error(str(exc))
+    generated_dir = Dir("generated")
+    salam_out = generated_dir.Dir("salam")
+    env.Prepend(CPPPATH=[generated_dir])
+    content = [salam_out.File(rel) for rel in generated.generated_paths()]
+    sources = [
+        File(inputs.config_path),
+        File(inputs.instructions),
+        File("#util/SALAM-tools/hw_generator/SALAMGeneratedSources.py"),
+        File("#util/SALAM-tools/hw_generator/SALAMClassGenerator.py"),
+        Value("\n".join(generated.generated_paths())),
+    ]
+    sources.extend(File(path) for path in generated.fu_input_paths)
+    env.Command(
+        content,
+        sources,
+        MakeAction(
+            SALAMGeneratedSources.generate_sources_action,
+            Transform("SALAM GEN", 0),
+        ),
     )
+    SimObject(
+        salam_out.File("FunctionalUnits.py"),
+        sim_objects=list(generated.fu_class_names),
+    )
+    SimObject(
+        salam_out.File("InstConfig.py"),
+        sim_objects=list(generated.instruction_class_names),
+    )
+    generated_cc = [node for node in content if str(node).endswith(".cc")]
+
     SimObject("HWInterface.py", sim_objects=["HWInterface"])
     SimObject("HWStatistics.py", sim_objects=["HWStatistics"])
-    SimObject(
-        "InstConfig.py",
-        sim_objects=[
-            "InstConfig",
-            "Add",
-            "Addrspacecast",
-            "Alloca",
-            "AndInst",
-            "Ashr",
-            "Bitcast",
-            "Br",
-            "Call",
-            "Fadd",
-            "Fcmp",
-            "Fdiv",
-            "Fence",
-            "Fmul",
-            "Fmuladd",
-            "Fneg",
-            "Fpext",
-            "Fptosi",
-            "Fptoui",
-            "Fptrunc",
-            "Frem",
-            "Fsub",
-            "Gep",
-            "Icmp",
-            "Indirectbr",
-            "Inttoptr",
-            "Invoke",
-            "Landingpad",
-            "Load",
-            "Lshr",
-            "Mul",
-            "OrInst",
-            "Phi",
-            "Ptrtoint",
-            "Resume",
-            "Ret",
-            "Sdiv",
-            "Select",
-            "Sext",
-            "Shl",
-            "Srem",
-            "Store",
-            "Sub",
-            "SwitchInst",
-            "Trunc",
-            "Udiv",
-            "Uitofp",
-            "Unreachable",
-            "Urem",
-            "Vaarg",
-            "XorInst",
-            "Zext",
-        ],
-    )
     SimObject("InstOpCodes.py", sim_objects=["InstOpCodes"])
     SimObject("SALAMPowerModel.py", sim_objects=["SALAMPowerModel"])
     SimObject("SimulatorConfig.py", sim_objects=["SimulatorConfig"])
@@ -156,10 +142,10 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     Source("LLVMRead/operand.cc")
 
     Source("HWModeling/cycle_counts.cc")
-    Source("HWModeling/functional_units.cc")
+    for node in generated_cc:
+        Source(node)
     Source("HWModeling/hw_interface.cc")
     Source("HWModeling/hw_statistics.cc")
-    Source("HWModeling/instruction_config.cc")
     Source("HWModeling/opcodes.cc")
     Source("HWModeling/salam_power_model.cc")
     Source("HWModeling/simulator_config.cc")

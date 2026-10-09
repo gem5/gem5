@@ -48,11 +48,11 @@
 
 #include "../common/macros.hh"
 #include "cycle_counts.hh"
-#include "functional_units.hh"
 #include "hw_statistics.hh"
-#include "instruction_config.hh"
 #include "opcodes.hh"
 #include "params/HWInterface.hh"
+#include "salam/HWModeling/functional_units.hh"
+#include "salam/HWModeling/instruction_config.hh"
 #include "salam_power_model.hh"
 #include "sim/sim_object.hh"
 #include "simulator_config.hh"
