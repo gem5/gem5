@@ -415,91 +415,30 @@ The simulated terminal output can also be used to confirm that the host generate
 
 ## Optional: Customize the Hardware Profile
 
-The checked-in **default hardware model** under **src/salam/HWModeling/** (generated code for a 40nm technology node, 5ns cycle-time target, `default_profile` functional units) is sufficient to run the in-tree BFS example. Regenerating the model is optional and is needed only when you want to change the hardware description. YAML sources used to regenerate that model live under the workload’s **configs/hw_interface/**. See **util/SALAM-docs/README_SALAM.md** (Hardware Profiles) for how profile YAML fields map to device-level and microarchitectural parameters.
+Plain `--with-salam` uses the default hardware profile
+`src/salam/hw_profiles/default/salam-hw-config.yml`. It generates
+sources under the variant build directory. `--salam-hw-config=CONFIG`
+selects a complete replacement profile. Paths in `CONFIG` are relative
+to that file. The build does not modify the profile YAML. It does not
+merge with the default hardware profile, scan `examples/`, or infer a
+technology node or cycle time. See **util/SALAM-docs/README_SALAM.md**
+for the eleven required aliases and for how to append a unit to
+`functional_unit_order`.
 
-The BFS example additionally includes YAML inputs under **configs/example/gem5_library/salam-benchmarks/src/bfs/configs/hw_interface/** used when you want to regenerate timing models from a workload-specific copy of that profile:
+A linked SimObject class is not an instance. `configs/SALAM/HWAccConfig.py`
+must construct every unit the profile contains. Remapping a supported
+opcode is allowed. A new YAML instruction name does not add `compute()`
+support.
 
-* `instructions/inst_list.yml` — master instruction list (the generator updates its `functional_unit` fields from the FU YAML `instructions` lists)
-* `functional_units/40nm_model/5ns/default_profile/*/*.yml` — functional units read by **HWProfileGenerator** (each file combines `parameters` and a per-device `power_model` at the 40nm tech node)
-* `functional_units/40nm_model/5ns/additional_units/float_trig_sine/` — example optional functional unit (see below)
-
-You only need to rerun the generator if you edit the profile YAMLs under `default_profile/` (or after promoting a unit from `additional_units/`). The workload **config.yml** `hw_config` section supplies per-kernel `runtime_cycles` at simulation time via `AccConfig()`; update that separately if you change instruction timing after regenerating.
-
-The **workloads/** tree is a ready-to-run artifact snapshot (precompiled `hw/*.ll`, `sw/main.elf`, and minimal config). It does not include source or hardware profile YAMLs.
-
-### Functional-unit configuration
-
-SALAM maps LLVM instructions to hardware functional-unit (FU) models. The
-instruction configuration specifies properties such as the LLVM opcode and
-runtime latency, while each FU YAML file lists the LLVM instructions mapped
-to that unit.
-
-During regeneration, `HWProfileGenerator` uses the FU YAML `instructions`
-lists to update the corresponding `functional_unit` fields in
-`inst_list.yml`. Therefore, change an instruction's FU assignment in the FU
-YAML rather than editing `functional_unit` in `inst_list.yml` directly.
-
-The `additional_units/` directory contains example FU definitions that are
-not part of the default profile. For example, `float_trig_sine` demonstrates
-the YAML fields used to describe an additional FU.
-
-To add an FU to a regenerated profile:
-
-1. Copy its YAML directory from `additional_units/` into `default_profile/`.
-2. Add the LLVM instruction names modeled by that FU to its `instructions`
-   list, removing them from any previous FU's list.
-3. Run `HWProfileGenerator`. This regenerates `FunctionalUnits.py` and the
-   matching C++ under `src/salam/HWModeling/functional_units/`, including a
-   new SimObject class such as `FloatTrigSine` for `float_trig_sine`.
-4. If this introduces a new SimObject class, add that class name to the
-   `sim_objects` list for `SimObject("FunctionalUnits.py", ...)` in
-   `src/salam/SConscript`. Without that registration, the build does not emit
-   `build/.../params/<ClassName>.hh` (for example `params/FloatTrigSine.hh`),
-   which the generated FU header includes.
-5. Instantiate the new unit in `configs/SALAM/HWAccConfig.py` next to the
-   other functional units, for example:
-
-   ```python
-   acc.hw_interface.functional_units.float_trig_sine = FloatTrigSine()
-   ```
-
-   `FunctionalUnits` declares each child with `Param.<Class>(Parent.any, ...)`.
-   Explicit instantiation is required so that proxy resolves during
-   configuration; omitting it fails at instantiate time even if the binary
-   built successfully.
-6. Rebuild gem5 with `--with-salam` and rerun the workload.
-
-`HWProfileGenerator` does not update `src/salam/SConscript` or
-`HWAccConfig.py`. Those two manual steps remain required for any FU that
-is not already part of the checked-in profile.
-
-Existing `opcode_num` values are part of SALAM's checked-in instruction
-configuration; they are not user-assigned IDs for defining new LLVM
-instructions. When adding or remapping a functional unit, list an
-existing supported instruction in the FU YAML `instructions` field and
-let the generator retain that instruction's existing configuration.
-Supporting a new LLVM instruction requires extending the instruction
-model rather than inventing a new `opcode_num`.
-
-### Functional-unit scheduling limitation
-
-The current SALAM scheduler does not enforce functional-unit occupancy when
-launching instructions. FU assignments are retained as part of the hardware
-model, but ready instructions are not stalled based on FU availability.
-Therefore, `functional_unit_limit` should not be used as a
-resource-constrained performance-modeling parameter on this branch.
-
-### Regenerating the hardware model
-
-`--bench-path` is the workload directory under `ACC_BENCH_PATH` (for `HWProfileGenerator`, it defaults to the same name as `-b` / `--bench`). For in-tree BFS with `ACC_BENCH_PATH=.../salam-benchmarks/src`, that is `bfs`.
+The workload `Profile` field selects the **config.yml**
+`hw_config` mapping. That mapping supplies per-kernel execution latency
+through `CycleCounts`. It is not the build-time hardware profile. The
+**workloads/** tree is a ready-to-run artifact snapshot. It does not
+include the hardware profile.
 
 ```bash
-export M5_PATH=/path/to/gem5
-export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
-
-python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs
-scons build/ARM/gem5.opt --with-salam -j$(nproc)
-util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
+scons build/ARM/gem5.opt --with-salam \
+    --salam-hw-config=/path/to/salam-hw-config.yml -j$(nproc)
 ```
 
 The same workload structure used for BFS—kernel source under `hw/`, a host program under `sw/`, and a `config.yml` that describes the cluster and timing—applies to other kernels as well (for example GEMM or stencil). Once that pattern is familiar, adding a new accelerator is largely a matter of writing a new kernel and updating the YAML, rather than rebuilding the system from scratch. Multiple kernels can also be placed in one AccCluster and connected through shared local memories and DMA, which makes it practical to assemble end-to-end workloads such as MobileNet from a set of cooperating accelerators.
