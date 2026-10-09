@@ -4,7 +4,7 @@ instructions:
         functional_unit: 1
         functional_unit_limit: 0
         opcode_num: 13
-        runtime_cycles: 0
+        runtime_cycles: 1
     addrspacecast:
         functional_unit: 0
         functional_unit_limit: 0
@@ -29,7 +29,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 49
-        runtime_cycles: 0
+        runtime_cycles: 1
     br:
         functional_unit: 0
         functional_unit_limit: 0
@@ -59,7 +59,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 35
-        runtime_cycles: 0
+        runtime_cycles: 1
     fmul:
         functional_unit: 7
         functional_unit_limit: 0
@@ -79,22 +79,22 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 46
-        runtime_cycles: 0
+        runtime_cycles: 1
     fptosi:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 42
-        runtime_cycles: 0
+        runtime_cycles: 1
     fptoui:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 41
-        runtime_cycles: 0
+        runtime_cycles: 1
     fptrunc:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 45
-        runtime_cycles: 0
+        runtime_cycles: 1
     frem:
         functional_unit: 0
         functional_unit_limit: 0
@@ -109,12 +109,12 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 34
-        runtime_cycles: 0
+        runtime_cycles: 1
     icmp:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 53
-        runtime_cycles: 0
+        runtime_cycles: 1
     indirectbr:
         functional_unit: 0
         functional_unit_limit: 0
@@ -124,7 +124,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 48
-        runtime_cycles: 0
+        runtime_cycles: 1
     invoke:
         functional_unit: 0
         functional_unit_limit: 0
@@ -164,7 +164,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 47
-        runtime_cycles: 0
+        runtime_cycles: 1
     resume:
         functional_unit: 0
         functional_unit_limit: 0
@@ -189,7 +189,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 40
-        runtime_cycles: 0
+        runtime_cycles: 1
     shl:
         functional_unit: 3
         functional_unit_limit: 0
@@ -219,7 +219,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 38
-        runtime_cycles: 0
+        runtime_cycles: 1
     udiv:
         functional_unit: 2
         functional_unit_limit: 0
@@ -229,7 +229,7 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 43
-        runtime_cycles: 0
+        runtime_cycles: 1
     unreachable:
         functional_unit: 0
         functional_unit_limit: 0
@@ -254,4 +254,4 @@ instructions:
         functional_unit: 0
         functional_unit_limit: 0
         opcode_num: 39
-        runtime_cycles: 0
+        runtime_cycles: 1
