@@ -31,10 +31,11 @@
 
 #include "base/trace.hh"
 
+#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <syncstream>
 
 #include "base/atomicio.hh"
 #include "base/logging.hh"
@@ -103,44 +104,70 @@ disable()
 
 ObjectMatch ignore;
 
+std::string
+Logger::getDumpRow(const void *d, int idx, int len)
+{
+    const char *data = static_cast<const char *>(d);
+    const int c = std::min(len - idx, 16);
+
+    std::string row = csprintf("%08x  ", idx);
+
+    for (int j = 0; j < c; j++) {
+        row += csprintf("%02x ", data[j] & 0xff);
+        if (j == 7) {
+            row += ' ';
+        }
+    }
+
+    row.append(3 * (16 - c), ' ');
+    row += "  ";
+
+    for (int j = 0; j < c; j++) {
+        const int ch = data[j] & 0x7f;
+        row += isprint(ch) ? static_cast<char>(ch) : ' ';
+    }
+
+    row += '\n';
+
+    return row;
+}
 
 void
 Logger::dump(Tick when, const std::string &name,
          const void *d, int len, const std::string &flag)
 {
-    if (!isEnabled(name))
+    if (!isEnabled(name)) {
         return;
+    }
 
     const char *data = static_cast<const char *>(d);
-    int c, i, j;
 
-    for (i = 0; i < len; i += 16) {
-        std::ostringstream line;
+    for (int i = 0; i < len; i += 16) {
+        logMessage(when, name, flag, getDumpRow(data + i, i, len));
+    }
+}
 
-        ccprintf(line, "%08x  ", i);
-        c = len - i;
-        if (c > 16) c = 16;
+void
+OstreamLogger::dump(Tick when, const std::string &name, const void *d, int len,
+                    const std::string &flag)
+{
+    if (!isEnabled(name)) {
+        return;
+    }
 
-        for (j = 0; j < c; j++) {
-            ccprintf(line, "%02x ", data[i + j] & 0xff);
-            if ((j & 0xf) == 7 && j > 0)
-                ccprintf(line, " ");
-        }
+    const char *data = static_cast<const char *>(d);
+    std::string dump;
 
-        for (; j < 16; j++)
-            ccprintf(line, "   ");
-        ccprintf(line, "  ");
+    for (int i = 0; i < len; i += 16) {
+        dump +=
+            getMessagePrefix(when, name, flag) + getDumpRow(data + i, i, len);
+    }
 
-        for (j = 0; j < c; j++) {
-            int ch = data[i + j] & 0x7f;
-            ccprintf(line, "%c", (char)(isprint(ch) ? ch : ' '));
-        }
+    saveMessage(dump);
 
-        ccprintf(line, "\n");
-        logMessage(when, name, flag, line.str());
-
-        if (c < 16)
-            break;
+    if (debug::FmtStackTrace) {
+        print_backtrace();
+        STATIC_ERR("\n");
     }
 }
 
@@ -148,25 +175,46 @@ void
 OstreamLogger::logMessage(Tick when, const std::string &name,
         const std::string &flag, const std::string &message)
 {
-    if (!isEnabled(name))
+    if (!isEnabled(name)) {
         return;
+    }
 
-    if (!debug::FmtTicksOff && (when != MaxTick))
-        ccprintf(stream, "%7d: ", when);
-
-    if (debug::FmtFlag && !flag.empty())
-        stream << flag << ": ";
-
-    if (!name.empty())
-        stream << name << ": ";
-
-    stream << message;
-    stream.flush();
+    saveMessage(getMessagePrefix(when, name, flag) + message);
 
     if (debug::FmtStackTrace) {
         print_backtrace();
         STATIC_ERR("\n");
     }
+}
+
+void
+OstreamLogger::saveMessage(const std::string &message)
+{
+    // Emit the whole message atomically so that concurrent event queue
+    // threads cannot interleave output or race on stream state.
+    std::osyncstream syncstream(stream);
+    syncstream << message << std::flush_emit;
+}
+
+std::string
+OstreamLogger::getMessagePrefix(Tick when, const std::string &name,
+                                const std::string &flag)
+{
+    std::string prefix;
+
+    if (!debug::FmtTicksOff && (when != MaxTick)) {
+        prefix += csprintf("%7d: ", when);
+    }
+
+    if (debug::FmtFlag && !flag.empty()) {
+        prefix += flag + ": ";
+    }
+
+    if (!name.empty()) {
+        prefix += name + ": ";
+    }
+
+    return prefix;
 }
 
 } // namespace trace

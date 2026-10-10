@@ -28,8 +28,10 @@
 
 #include <gtest/gtest.h>
 
+#include <functional>
 #include <sstream>
 #include <string>
+#include <thread>
 
 #include "base/gtest/cur_tick_fake.hh"
 #include "base/gtest/logging.hh"
@@ -373,6 +375,35 @@ TEST(TraceTest, DumpMultiLine)
         "6c 6c 20 73 70 61 6e 20  6f 76 65 72 20 6d 75 6c   ll span over mul\n"
         "    100: Foo: 00000030  "
         "74 69 70 6c 65 20 6c 69  6e 65 73                  tiple lines\n");
+}
+
+/**
+ * Test that messages logged concurrently from two threads are never
+ * interleaved with each other. Both threads log the same message, so the
+ * expected output does not depend on the order in which they run.
+ */
+TEST(TraceTest, LogMessageConcurrent)
+{
+    constexpr int num_messages = 100;
+
+    std::stringstream ss;
+    trace::OstreamLogger logger(ss);
+
+    std::function<void()> log_messages = [&logger]() {
+        for (int m = 0; m < num_messages; m++) {
+            logger.logMessage(Tick(100), "Foo", "", "Test message\n");
+        }
+    };
+    std::thread thread_0(log_messages);
+    std::thread thread_1(log_messages);
+    thread_0.join();
+    thread_1.join();
+
+    std::string expected;
+    for (int m = 0; m < 2 * num_messages; m++) {
+        expected += "    100: Foo: Test message\n";
+    }
+    ASSERT_EQ(getString(&logger), expected);
 }
 
 /**
