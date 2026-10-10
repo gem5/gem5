@@ -1,0 +1,248 @@
+---
+# All coverage scheduling lives here; ordinary workflows share only commands.
+name: Code Coverage
+on:
+    workflow_run:
+        workflows: [Daily Tests, Weekly Tests]
+        types: [completed]
+        branches: [develop]
+permissions:
+    contents: read
+    actions: read
+concurrency:
+    group: codecov-${{ github.repository }}
+    cancel-in-progress: false
+    queue: max
+jobs:
+    gate:
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        runs-on: ubuntu-24.04
+        outputs:
+            revision: ${{ steps.admit.outputs.revision }}
+        steps:
+            - uses: actions/checkout@v7
+            - name: Admit passing Daily and Weekly tests once per week
+              id: admit
+              uses: actions/github-script@v9
+              env:
+                  COVERAGE_DISABLED: ${{ vars.GEM5_COVERAGE_DISABLED }}
+              with:
+                  script: |
+                      await require('./util/coverage/admit.cjs')({github, context, core});
+            - uses: actions/upload-artifact@v7
+              if: steps.admit.outputs.allowed == 'true'
+              with:
+                  name: ${{ steps.admit.outputs.marker }}
+                  path: ${{ runner.temp }}/coverage-source.json
+                  retention-days: 30
+                  overwrite: true
+
+    images:
+        needs: gate
+        if: needs.gate.outputs.revision != ''
+        runs-on: ubuntu-24.04
+        outputs:
+            image: ${{ steps.pin.outputs.image }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.gate.outputs.revision }}
+            - name: Resolve this campaign's container images
+              id: pin
+              run: |
+                  python3 util/coverage/images.py coverage-images.json
+                  echo "image=$(jq -r '.["ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest"]' coverage-images.json)" >> "$GITHUB_OUTPUT"
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-images
+                  path: coverage-images.json
+                  retention-days: 30
+                  overwrite: true
+
+    plan:
+        needs: [gate, images]
+        runs-on: ubuntu-24.04
+        container: ${{ needs.images.outputs.image }}
+        outputs:
+            revision: ${{ needs.gate.outputs.revision }}
+            image: ${{ needs.images.outputs.image }}
+            targets: ${{ steps.plan.outputs.targets }}
+            native: ${{ steps.plan.outputs.native }}
+            tests: ${{ steps.plan.outputs.tests }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.gate.outputs.revision }}
+            - uses: actions/download-artifact@v8
+              with:
+                  name: coverage-images
+            - name: Freeze expected builds and test workloads
+              id: plan
+              run: |
+                  python3 util/coverage/plan.py --images coverage-images.json --output coverage-plan/plan.json
+                  echo "targets=$(jq -c .targets coverage-plan/plan.json)" >> "$GITHUB_OUTPUT"
+                  echo "native=$(jq -c .native coverage-plan/plan.json)" >> "$GITHUB_OUTPUT"
+                  # Suite names remain in the retained plan, not matrix outputs.
+                  echo "tests=$(jq -c '[.tests[] | del(.suites)]' coverage-plan/plan.json)" >> "$GITHUB_OUTPUT"
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan
+                  path: coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
+    # Only one self-hosted matrix is active at a time. Each is capped at four.
+    builds:
+        needs: plan
+        runs-on: [self-hosted, linux, x64]
+        container: ${{ needs.plan.outputs.image }}
+        timeout-minutes: 180
+        strategy:
+            fail-fast: false
+            max-parallel: 4
+            matrix:
+                target: ${{ fromJSON(needs.plan.outputs.targets) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.plan.outputs.revision }}
+            - name: Build and package each TestLib binary once
+              id: build
+              env:
+                  BUILD_TARGET: ${{ matrix.target }}
+                  BUILD_IMAGE: ${{ needs.plan.outputs.image }}
+              run: |
+                  python3 util/coverage/build.py build "$BUILD_TARGET" --image "$BUILD_IMAGE" --output coverage-binary --jobs "$(nproc)"
+                  name=${BUILD_TARGET#build/}
+                  echo "name=${name//\//-}" >> "$GITHUB_OUTPUT"
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-build-${{ steps.build.outputs.name }}
+                  path: coverage-binary
+                  retention-days: 30
+                  compression-level: 0
+                  overwrite: true
+                  if-no-files-found: error
+
+    native:
+        needs: [plan, builds]
+        if: ${{ !cancelled() && needs.plan.result == 'success' }}
+        runs-on: [self-hosted, linux, x64]
+        container:
+            image: ${{ matrix.image }}
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
+        timeout-minutes: ${{ matrix.timeout }}
+        strategy:
+            fail-fast: false
+            max-parallel: 4
+            matrix:
+                include: ${{ fromJSON(needs.plan.outputs.native) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.plan.outputs.revision }}
+            - name: Run the shared unit or integration workload
+              run: python3 util/ci/native.py "${{ matrix.group }}" --coverage --jobs "$(nproc)" --status native-status.json
+            - name: Export native coverage and retain raw counters
+              if: ${{ !cancelled() }}
+              env:
+                  COVERAGE_GROUP: ${{ matrix.group }}
+              run: |
+                  python3 util/coverage/package.py build --native --status native-status.json --output coverage-data --raw-output coverage-raw.tar.gz
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-tools" gcovr==8.3
+                  export PYTHONPATH="$RUNNER_TEMP/coverage-tools${PYTHONPATH:+:$PYTHONPATH}"
+                  python3 util/coverage/report.py native --group "$COVERAGE_GROUP" --status native-status.json --output coverage-data
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: coverage-data-native-${{ matrix.group }}
+                  path: coverage-data
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: coverage-raw-native-${{ matrix.group }}
+                  path: coverage-raw.tar.gz
+                  retention-days: 30
+                  compression-level: 0
+                  overwrite: true
+
+    tests:
+        needs: [plan, native]
+        if: ${{ !cancelled() && needs.plan.result == 'success' }}
+        runs-on: [self-hosted, linux, x64]
+        container:
+            image: ${{ needs.plan.outputs.image }}
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
+        timeout-minutes: 4320
+        strategy:
+            fail-fast: false
+            max-parallel: 4
+            matrix:
+                include: ${{ fromJSON(needs.plan.outputs.tests) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.plan.outputs.revision }}
+            - uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test_dir }}
+                  length: ${{ matrix.length }}
+                  revision: ${{ needs.plan.outputs.revision }}
+                  image: ${{ needs.plan.outputs.image }}
+            - name: Install the Python tracer
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+            - name: Run the shared TestLib workload
+              env:
+                  TEST_DIR: ${{ matrix.test_dir }}
+                  TEST_LENGTH: ${{ matrix.length }}
+                  TASK_ID: ${{ matrix.id }}
+              run: |
+                  python3 util/ci/testlib.py run --directory "$TEST_DIR" --length "$TEST_LENGTH" --coverage --skip-build --jobs "$(nproc)" --task-id "$TASK_ID" --status test-status.json
+            - name: Package invocation records and raw profiles
+              if: ${{ !cancelled() }}
+              run: python3 util/coverage/package.py tests/testing-results/coverage --status test-status.json --output coverage-data --raw-output coverage-raw.tar.gz
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: coverage-data-test-${{ matrix.id }}
+                  path: coverage-data
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: coverage-raw-test-${{ matrix.id }}
+                  path: coverage-raw.tar.gz
+                  retention-days: 30
+                  compression-level: 0
+                  overwrite: true
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: coverage-results-${{ matrix.id }}
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
+                  retention-days: 30
+
+    report:
+        needs: [plan, native, tests]
+        if: ${{ !cancelled() && needs.plan.result == 'success' }}
+        uses: ./.github/workflows/coverage-report.yaml
+        with:
+            source-run-id: ${{ github.run_id }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
