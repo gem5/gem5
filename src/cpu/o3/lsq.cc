@@ -41,11 +41,15 @@
 
 #include "cpu/o3/lsq.hh"
 
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <list>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "arch/generic/mmu.hh"
 #include "base/amo.hh"
@@ -760,9 +764,10 @@ LSQ::dumpInsts(ThreadID tid) const
 { thread.at(tid)->dumpInsts(); }
 
 Fault
-LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, Request::Flags flags, uint64_t *res,
-        AtomicOpFunctorPtr amo_op, const std::vector<bool>& byte_enable)
+LSQ::buildRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                  unsigned int size, Addr addr, Request::Flags flags,
+                  uint64_t *res, AtomicOpFunctorPtr amo_op,
+                  const std::vector<bool> &byte_enable)
 {
     // This comming request can be either load, store or atomic.
     // Atomic request has a corresponding pointer to its atomic memory
@@ -804,6 +809,49 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
         }
         assert(request);
         request->_byteEnable = byte_enable;
+    }
+
+    return pushRequest(inst, request, isLoad, data);
+}
+
+Fault
+LSQ::buildRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                  const std::vector<Addr> &addrs,
+                  const std::vector<unsigned int> &sizes, Request::Flags flags,
+                  uint64_t *res, const std::vector<bool> &byte_enable)
+{
+    ThreadID tid = cpu->contextToThread(inst->contextId());
+    LSQRequest *request = nullptr;
+
+    // The checker only verifies the first request of an access
+    fatal_if(cpu->checker,
+             "Non-contiguous memory accesses do not support the checker\n");
+
+    if (inst->translationStarted()) {
+        request = inst->savedRequest;
+        assert(request && request->isNonContiguous());
+    } else {
+        request = new NonContiguousDataRequest(thread[tid].get(), inst, isLoad,
+                                               addrs, sizes, flags, data, res);
+        request->_byteEnable = byte_enable;
+    }
+
+    return pushRequest(inst, request, isLoad, data);
+}
+
+Fault
+LSQ::pushRequest(const DynInstPtr &inst, LSQRequest *request, bool isLoad,
+                 uint8_t *data)
+{
+    assert(request);
+    ThreadID tid = cpu->contextToThread(inst->contextId());
+
+    // Kept for tracing, as the request may be freed by then
+    const Addr addr = request->_addr;
+    const unsigned int size = request->_size;
+    const Request::Flags flags = request->_flags;
+
+    if (!inst->translationStarted()) {
         inst->setRequest();
         request->taskId(cpu->taskId());
 
@@ -817,8 +865,16 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
     /* This is the place were instructions get the effAddr. */
     if (request->isTranslationComplete()) {
         if (request->isMemAccessRequired()) {
-            inst->effAddr = request->getVaddr();
-            inst->effSize = size;
+            if (request->isNonContiguous()) {
+                auto nc_request =
+                    static_cast<NonContiguousDataRequest *>(request);
+                inst->effAddr = nc_request->spanStart();
+                inst->effSize =
+                    nc_request->spanEnd() - nc_request->spanStart();
+            } else {
+                inst->effAddr = request->getVaddr();
+                inst->effSize = size;
+            }
             inst->effAddrValid(true);
 
             if (cpu->checker) {
@@ -1417,6 +1473,226 @@ SplitDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
         }
     }
     return is_hit;
+}
+
+NonContiguousDataRequest::NonContiguousDataRequest(
+    LSQUnit *port, const DynInstPtr &inst, bool isLoad,
+    const std::vector<Addr> &addrs, const std::vector<unsigned int> &sizes,
+    const Request::Flags &flags_, PacketDataPtr data, uint64_t *res)
+    : SplitDataRequest(
+          port, inst, isLoad, *std::min_element(addrs.begin(), addrs.end()),
+          std::accumulate(sizes.begin(), sizes.end(), 0u), flags_, data, res),
+      _fragAddrs(addrs),
+      _fragSizes(sizes),
+      _spanEnd(0)
+{
+    assert(!_fragAddrs.empty() && _fragAddrs.size() == _fragSizes.size());
+    panic_if(_inst->isAtomic() ||
+                 flags_.isSet(Request::LLSC | Request::NO_ACCESS |
+                              Request::STORE_NO_DATA | Request::HTM_CMD |
+                              Request::TLBI_CMD),
+             "Unsupported non-contiguous memory access by [sn:%lli] PC %s\n",
+             _inst->seqNum, _inst->pcState());
+    flags.set(Flag::IsNonContiguous);
+
+    uint32_t offset = 0;
+    for (size_t i = 0; i < _fragAddrs.size(); i++) {
+        assert(_fragSizes[i] > 0);
+        _fragOffsets.push_back(offset);
+        offset += _fragSizes[i];
+        _spanEnd = std::max(_spanEnd, _fragAddrs[i] + _fragSizes[i]);
+    }
+}
+
+void
+NonContiguousDataRequest::initiateTranslation()
+{
+    assert(_reqs.size() == 0);
+    assert(_byteEnable.size() == _size);
+
+    auto cacheLineSize = _port.cacheLineSize();
+
+    // _mainReq follows the packed layout, so its vaddr is only nominal.
+    // See SplitDataRequest::initiateTranslation() for why paddr is set.
+    _mainReq = std::make_shared<Request>(
+        _addr, _size, _flags, _inst->requestorId(),
+        _inst->pcState().instAddr(), _inst->contextId());
+    _mainReq->setByteEnable(_byteEnable);
+    _mainReq->setPaddr(0);
+
+    /* Cut every fragment at cache-line boundaries, in fragment order. */
+    for (size_t i = 0; i < _fragAddrs.size(); i++) {
+        for (uint32_t done = 0; done < _fragSizes[i];) {
+            Addr addr = _fragAddrs[i] + done;
+            uint32_t size = std::min<Addr>(
+                addrBlockAlign(addr + cacheLineSize, cacheLineSize) - addr,
+                _fragSizes[i] - done);
+            uint32_t offset = _fragOffsets[i] + done;
+            auto it_start = _byteEnable.begin() + offset;
+            auto num_reqs = _reqs.size();
+            addReq(addr, size, std::vector<bool>(it_start, it_start + size));
+            /* addReq() skips chunks without any enabled byte. */
+            if (_reqs.size() > num_reqs) {
+                _reqOffsets.push_back(offset);
+            }
+            done += size;
+        }
+    }
+
+    /* From here on, as in SplitDataRequest::initiateTranslation(). */
+    if (_reqs.size() > 0) {
+        /* Setup the requests and send them to translation. */
+        for (auto &r : _reqs) {
+            r->setReqInstSeqNum(_inst->seqNum);
+            r->taskId(_taskId);
+        }
+
+        _inst->translationStarted(true);
+        setState(State::Translation);
+        flags.set(Flag::TranslationStarted);
+        _inst->savedRequest = this;
+        numInTranslationFragments = 0;
+        numTranslatedFragments = 0;
+        _fault.resize(_reqs.size());
+
+        for (uint32_t i = 0; i < _reqs.size(); i++) {
+            sendFragmentToTranslation(i);
+        }
+    } else {
+        _inst->setMemAccPredicate(false);
+    }
+}
+
+void
+NonContiguousDataRequest::buildPackets()
+{
+    /* As SplitDataRequest::buildPackets(), but the data of every packet is
+     * at the packed offset of its request rather than at its vaddr offset.
+     */
+    if (_packets.size() == 0) {
+        if (isLoad()) {
+            _mainPacket = Packet::createRead(_mainReq);
+            _mainPacket->dataStatic(_inst->memData);
+
+            // hardware transactional memory
+            // If request originates in a transaction,
+            // packet should be marked as such
+            if (_inst->inHtmTransactionalState()) {
+                _mainPacket->setHtmTransactional(
+                    _inst->getHtmTransactionUid());
+            }
+        }
+        for (size_t i = 0; i < _reqs.size() && _fault[i] == NoFault; i++) {
+            RequestPtr req = _reqs[i];
+            PacketPtr pkt =
+                isLoad() ? Packet::createRead(req) : Packet::createWrite(req);
+            if (isLoad()) {
+                pkt->dataStatic(_inst->memData + _reqOffsets[i]);
+            } else {
+                uint8_t *req_data = new uint8_t[req->getSize()];
+                std::memcpy(req_data, _inst->memData + _reqOffsets[i],
+                            req->getSize());
+                pkt->dataDynamic(req_data);
+            }
+            pkt->senderState = this;
+            _packets.push_back(pkt);
+
+            // hardware transactional memory
+            // If request originates in a transaction,
+            // packet should be marked as such
+            if (_inst->inHtmTransactionalState()) {
+                _packets.back()->setHtmTransactional(
+                    _inst->getHtmTransactionUid());
+            }
+        }
+    }
+    assert(_packets.size() > 0);
+}
+
+std::vector<NonContiguousDataRequest::Fragment>
+NonContiguousDataRequest::fragments(const DynInstPtr &inst,
+                                    const LSQRequest *req)
+{
+    if (!req || !req->isNonContiguous()) {
+        return {Fragment{inst->effAddr, inst->effSize, 0}};
+    }
+
+    auto nc_req = static_cast<const NonContiguousDataRequest *>(req);
+    std::vector<Fragment> frags;
+    for (size_t i = 0; i < nc_req->_fragAddrs.size(); i++) {
+        frags.push_back(Fragment{nc_req->_fragAddrs[i], nc_req->_fragSizes[i],
+                                 nc_req->_fragOffsets[i]});
+    }
+    return frags;
+}
+
+bool
+NonContiguousDataRequest::overlaps(const DynInstPtr &a, const DynInstPtr &b,
+                                   unsigned shift)
+{
+    auto blocks_overlap = [shift](Addr a_addr, Addr a_size, Addr b_addr,
+                                  Addr b_size) {
+        return (a_addr >> shift) <= ((b_addr + b_size - 1) >> shift) &&
+               (b_addr >> shift) <= ((a_addr + a_size - 1) >> shift);
+    };
+
+    const LSQRequest *a_req = a->savedRequest;
+    const LSQRequest *b_req = b->savedRequest;
+    if (!(a_req && a_req->isNonContiguous()) &&
+        !(b_req && b_req->isNonContiguous())) {
+        return blocks_overlap(a->effAddr, a->effSize, b->effAddr, b->effSize);
+    }
+
+    const auto a_frags = fragments(a, a_req);
+    const auto b_frags = fragments(b, b_req);
+    for (const auto &fa : a_frags) {
+        for (const auto &fb : b_frags) {
+            if (blocks_overlap(fa.addr, fa.size, fb.addr, fb.size)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+size_t
+NonContiguousDataRequest::forwardedBytes(const DynInstPtr &load_inst,
+                                         const LSQRequest *load_req,
+                                         const DynInstPtr &store_inst,
+                                         const LSQRequest *store_req,
+                                         const uint8_t *store_data,
+                                         std::vector<uint8_t> &data)
+{
+    const auto load_frags = fragments(load_inst, load_req);
+    const auto store_frags = fragments(store_inst, store_req);
+
+    Addr load_size = 0;
+    for (const auto &l : load_frags) {
+        load_size = std::max(load_size, l.offset + l.size);
+    }
+    data.assign(load_size, 0);
+    std::vector<bool> provided(load_size, false);
+
+    // Visit the store fragments in order, so that the bytes of later
+    // fragments overwrite those of earlier ones.
+    for (const auto &s : store_frags) {
+        for (const auto &l : load_frags) {
+            Addr start = std::max(s.addr, l.addr);
+            Addr end = std::min(s.addr + s.size, l.addr + l.size);
+            if (start >= end) {
+                continue;
+            }
+            Addr dst = l.offset + (start - l.addr);
+            if (store_data) {
+                std::memcpy(data.data() + dst,
+                            store_data + s.offset + (start - s.addr),
+                            end - start);
+            }
+            std::fill(provided.begin() + dst,
+                      provided.begin() + dst + (end - start), true);
+        }
+    }
+    return std::count(provided.begin(), provided.end(), true);
 }
 
 bool

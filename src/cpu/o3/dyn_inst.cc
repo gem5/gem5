@@ -432,20 +432,18 @@ DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
                                const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
-    return cpu->pushRequest(
-        dynamic_cast<DynInstPtr::PtrType>(this),
-        /* ld */ true, nullptr, size, addr, flags, nullptr, nullptr,
-        byte_enable);
+    return cpu->buildRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+                             /* ld */ true, nullptr, size, addr, flags,
+                             nullptr, nullptr, byte_enable);
 }
 
 Fault
 DynInst::initiateMemMgmtCmd(Request::Flags flags)
 {
     const unsigned int size = 8;
-    return cpu->pushRequest(
-            dynamic_cast<DynInstPtr::PtrType>(this),
-            /* ld */ true, nullptr, size, 0x0ul, flags, nullptr, nullptr,
-            std::vector<bool>(size, true));
+    return cpu->buildRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+                             /* ld */ true, nullptr, size, 0x0ul, flags,
+                             nullptr, nullptr, std::vector<bool>(size, true));
 }
 
 Fault
@@ -454,10 +452,9 @@ DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
                         const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
-    return cpu->pushRequest(
-        dynamic_cast<DynInstPtr::PtrType>(this),
-        /* st */ false, data, size, addr, flags, res, nullptr,
-        byte_enable);
+    return cpu->buildRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+                             /* st */ false, data, size, addr, flags, res,
+                             nullptr, byte_enable);
 }
 
 Fault
@@ -469,10 +466,42 @@ DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
     // Therefore, its `data` field is nullptr.
     // Atomic memory requests need to carry their `amo_op` fields to cache/
     // memory
-    return cpu->pushRequest(
-            dynamic_cast<DynInstPtr::PtrType>(this),
-            /* atomic */ false, nullptr, size, addr, flags, nullptr,
-            std::move(amo_op), std::vector<bool>(size, true));
+    return cpu->buildRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+                             /* atomic */ false, nullptr, size, addr, flags,
+                             nullptr, std::move(amo_op),
+                             std::vector<bool>(size, true));
+}
+
+Fault
+DynInst::initiateMemReadNonContiguous(const std::vector<Addr> &addrs,
+                                      const std::vector<unsigned int> &sizes,
+                                      Request::Flags flags,
+                                      const std::vector<bool> &byte_enable)
+{
+    assert(!addrs.empty() && addrs.size() == sizes.size());
+    // A single fragment is an ordinary contiguous access
+    if (addrs.size() == 1) {
+        return initiateMemRead(addrs[0], sizes[0], flags, byte_enable);
+    }
+    return cpu->buildRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+                             /* ld */ true, nullptr, addrs, sizes, flags,
+                             nullptr, byte_enable);
+}
+
+Fault
+DynInst::writeMemNonContiguous(uint8_t *data, const std::vector<Addr> &addrs,
+                               const std::vector<unsigned int> &sizes,
+                               Request::Flags flags, uint64_t *res,
+                               const std::vector<bool> &byte_enable)
+{
+    assert(!addrs.empty() && addrs.size() == sizes.size());
+    // A single fragment is an ordinary contiguous access
+    if (addrs.size() == 1) {
+        return writeMem(data, sizes[0], addrs[0], flags, res, byte_enable);
+    }
+    return cpu->buildRequest(dynamic_cast<DynInstPtr::PtrType>(this),
+                             /* st */ false, data, addrs, sizes, flags, res,
+                             byte_enable);
 }
 
 void

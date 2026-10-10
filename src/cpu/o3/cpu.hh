@@ -572,16 +572,28 @@ class CPU : public BaseCPU
     /** Available thread ids in the cpu*/
     std::vector<ThreadID> tids;
 
-    /** CPU pushRequest function, forwards request to LSQ. */
+    /** CPU buildRequest function, forwards request to LSQ. */
     Fault
-    pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
-                unsigned int size, Addr addr, Request::Flags flags,
-                uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
-                const std::vector<bool>& byte_enable=std::vector<bool>())
+    buildRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                 unsigned int size, Addr addr, Request::Flags flags,
+                 uint64_t *res, AtomicOpFunctorPtr amo_op = nullptr,
+                 const std::vector<bool> &byte_enable = std::vector<bool>())
 
     {
-        return iew.ldstQueue.pushRequest(inst, isLoad, data, size, addr,
-                flags, res, std::move(amo_op), byte_enable);
+        return iew.ldstQueue.buildRequest(inst, isLoad, data, size, addr,
+                                          flags, res, std::move(amo_op),
+                                          byte_enable);
+    }
+
+    /** CPU buildRequest function, forwards non-contiguous request to LSQ. */
+    Fault
+    buildRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                 const std::vector<Addr> &addrs,
+                 const std::vector<unsigned int> &sizes, Request::Flags flags,
+                 uint64_t *res, const std::vector<bool> &byte_enable)
+    {
+        return iew.ldstQueue.buildRequest(inst, isLoad, data, addrs, sizes,
+                                          flags, res, byte_enable);
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */
