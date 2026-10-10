@@ -1,0 +1,167 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2026 The Board of Trustees of the Leland Stanford
+# Junior University
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import os
+
+Import('*')
+
+src_dir = Dir('.').srcnode().abspath
+pin_dir = env['CONF']['PIN_DIR']
+
+########################################################################
+#
+# The guest program: a freestanding program that Pin runs as its
+# application, and which gem5 steers via the message protocol in
+# arch/x86/pin/message.h.
+#
+
+guest_linker_script = os.path.join(src_dir, 'guest', 'guest.ld')
+
+# FIXME: Should just create a new environment from scratch, instead.
+guest_env = env.Clone()
+# FIXME: Re-enable -O3 optimizations.
+guest_env['CFLAGS'] = [
+    '-ffreestanding', '-fPIC', '-Wall', '-pedantic', '-O1',
+    '-fcf-protection=none',
+]
+guest_env.Append(CPPPATH=[src_dir])
+guest_env['LINKFLAGS'] = [
+    '-nostdlib', '-Wl,-e,main', '-static', '-T', guest_linker_script,
+    '-Wl,--no-relax',
+]
+guest_env['LIBS'] = []
+
+guest_exe = guest_env.Program(
+    target='guest.elf',
+    source=[
+        'guest/guest.c',
+        'guest/printf.c',
+        'guest/syscall.c',
+        'guest/ops.c',
+    ],
+    tags='pin',
+)
+guest_env.Depends(guest_exe, guest_linker_script)
+
+########################################################################
+#
+# The pintool that gem5 forks Pin with.
+#
+
+pintool_system_include_dirs = [
+    'extras/cxx/include',
+    'extras/crt/include',
+    'extras/crt/include/arch-x86_64',
+    'extras/crt/include/kernel/uapi',
+    'extras/crt/include/kernel/uapi/asm-x86',
+]
+pintool_include_dirs = [
+    'source/include/pin',
+    'source/include/pin/gen',
+    'extras/components/include',
+    'extras/xed-intel64/include/xed',
+]
+pintool_cxxflags = [
+    # FIXME: Re-enable both of these.
+    # -Wall
+    '-Wno-cast-function-type',
+    '-Wno-unknown-pragmas',
+    '-fno-stack-protector',
+    '-fno-exceptions',
+    '-funwind-tables',
+    '-fasynchronous-unwind-tables',
+    '-fno-rtti',
+    '-fPIC',
+    '-fabi-version=2',
+    '-faligned-new',
+    '-O3',
+    '-fomit-frame-pointer',
+    '-fno-strict-aliasing',
+    '-Wno-dangling-pointer',
+    '-g',
+]
+for sysinc in pintool_system_include_dirs:
+    pintool_cxxflags.extend(['-isystem', os.path.join(pin_dir, sysinc)])
+
+pintool_env = env.Clone()
+# TODO: Try extending?
+pintool_env.Append(CXXFLAGS=pintool_cxxflags)
+pintool_env.Append(CPPPATH=[src_dir])
+pintool_env.Append(CPPPATH=[os.path.join(pin_dir, inc)
+                           for inc in pintool_include_dirs])
+pintool_env.Append(CPPDEFINES={
+    'PIN_CRT': 1,
+    'TARGET_IA32E': None,
+    'HOST_IA32E': None,
+    'TARGET_LINUX': None,
+})
+pintool_env['LINKFLAGS'] = [
+    '-Wl,--hash-style=sysv',
+    '-Wl,-Bsymbolic',
+    f'-Wl,--version-script={pin_dir}/source/include/pin/pintool.ver',
+    '-fabi-version=2',
+    '-nostdlib',
+    '-fPIC',
+    os.path.join(pin_dir, 'intel64/runtime/pincrt/crtbeginS.o'),
+    os.path.join(pin_dir, 'intel64/runtime/pincrt/crtendS.o'),
+]
+pintool_libpaths = [
+    'intel64/runtime/pincrt',
+    'intel64/lib',
+    'intel64/lib-ext',
+    'extras/xed-intel64/lib',
+]
+pintool_env['LIBPATH'] = [os.path.join(pin_dir, libdir)
+                         for libdir in pintool_libpaths]
+pintool_env['LIBS'] = [
+    'pin',
+    'xed',
+    'pindwarf',
+    'dl-dynamic',
+    'c++',
+    'c++abi',
+    'm-dynamic',
+    'c-dynamic',
+    'unwind-dynamic',
+]
+
+pintool_pintool = pintool_env.SharedLibrary(
+    target='pintool',
+    source=[
+        'pintool.cc',
+        'plugin.cc',
+        'plugins/instcount.cc',
+        'plugins/breakpoint.cc',
+        'plugins/bbhist.cc',
+        'plugins/sysbreak.cc',
+    ],
+    tags='pin',
+)
+
+Return('guest_exe', 'pintool_pintool')
