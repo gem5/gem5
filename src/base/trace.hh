@@ -79,6 +79,10 @@ class Logger
         return true;
     }
 
+    /** Format one hex dump row: up to 16 bytes starting at d, labelled
+     *  with offset idx into a block of data of length len */
+    std::string getDumpRow(const void *d, int idx, int len);
+
   public:
     /** Log a single message */
     template <typename ...Args>
@@ -102,10 +106,10 @@ class Logger
     }
 
     /** Dump a block of data of length len */
-    void dump(Tick when, const std::string &name,
-            const void *d, int len, const std::string &flag);
+    virtual void dump(Tick when, const std::string &name, const void *d,
+                      int len, const std::string &flag);
 
-    /** Log formatted message */
+    /** Log a message with the logger's prefix */
     virtual void logMessage(Tick when, const std::string &name,
             const std::string &flag, const std::string &message) = 0;
 
@@ -138,9 +142,22 @@ class OstreamLogger : public Logger
   protected:
     std::ostream &stream;
 
+    /** Write already formatted output to the stream in a single atomic
+     *  write, so that concurrent threads cannot interleave their output */
+    void saveMessage(const std::string &message);
+
+    /** Return the message prefix: tick, flag and name, each optional */
+    std::string getMessagePrefix(Tick when, const std::string &name,
+                                 const std::string &flag);
+
   public:
     OstreamLogger(std::ostream &stream_) : stream(stream_)
     { }
+
+    /** Dump a block of data of length len, saving all of its rows to the
+     *  stream in a single write */
+    void dump(Tick when, const std::string &name, const void *d, int len,
+              const std::string &flag) override;
 
     void logMessage(Tick when, const std::string &name,
             const std::string &flag, const std::string &message) override;
