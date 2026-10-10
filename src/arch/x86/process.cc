@@ -378,6 +378,7 @@ X86_64Process::initState()
 
             CR4 cr4 = 0;
             //Turn on pae.
+            cr4.pke = 0;     // Disable MPK
             cr4.osxsave = 0; // Disable XSAVE and Proc Extended States
             cr4.osxmmexcpt = 0; // Operating System Unmasked Exception
             cr4.osfxsr = 1; // Operating System FXSave/FSRSTOR Support
@@ -408,6 +409,18 @@ X86_64Process::initState()
 
             tc->setMiscReg(misc_reg::IdtrBase, IDTVirtAddr);
             tc->setMiscReg(misc_reg::IdtrLimit, 0xffff);
+
+            XCR0 xcr0 = 0;
+            xcr0.x87 = 1; // Must always be 1
+            xcr0.sse = 0;
+            xcr0.avx = 0;
+            xcr0.bndreg = 0;
+            xcr0.bndsrc = 0;
+            xcr0.opmask = 0;
+            xcr0.zmm_hi256 = 0;
+            xcr0.hi16_zmm = 0;
+            xcr0.pkru = 0;
+            tc->setMiscReg(misc_reg::Xcr0, xcr0);
 
             /* enabling syscall and sysret */
             RegVal star = ((RegVal)sret << 48) | ((RegVal)scall << 32);
@@ -632,6 +645,18 @@ X86_64Process::initState()
             cr4.pcide = 1;
             cr4.fsgsbase = 1; // Enable FSGSBASE instructions
             tc->setMiscReg(misc_reg::Cr4, cr4);
+
+            XCR0 xcr0 = 0;
+            xcr0.x87 = 1; // Must always be 1
+            xcr0.sse = 0;
+            xcr0.avx = 0;
+            xcr0.bndreg = 0;
+            xcr0.bndsrc = 0;
+            xcr0.opmask = 0;
+            xcr0.zmm_hi256 = 0;
+            xcr0.hi16_zmm = 0;
+            xcr0.pkru = 0;
+            tc->setMiscReg(misc_reg::Xcr0, xcr0);
         }
     }
 }
