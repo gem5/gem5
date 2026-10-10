@@ -41,14 +41,22 @@ def declareVMemTemplate(class_name):
 
 def getFaultCode():
     return '''
-    Addr fault_addr;
-    if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
-        assert(fault_addr >= EA);
-        faultIdx = (fault_addr - EA) / (width_EEW(machInst.width) / 8);
-        if (microIdx != 0 || faultIdx != 0) {
-            fault = NoFault;
-            trimVl = true;
+    {
+        // Publish FoF trim state on RiscvISA (not StaticInst / ExecContext):
+        // O3 reuses StaticInst across DynInsts (#3325 / #3362).
+        uint32_t fof_fault_idx = this->microVl;
+        bool fof_trim_vl = false;
+        Addr fault_addr;
+        if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
+            assert(fault_addr >= EA);
+            fof_fault_idx = (fault_addr - EA) /
+                (width_EEW(machInst.width) / 8);
+            if (microIdx != 0 || fof_fault_idx != 0) {
+                fault = NoFault;
+                fof_trim_vl = true;
+            }
         }
+        RiscvISA::setFoFState(xc, this, fof_fault_idx, fof_trim_vl);
     }
     '''
 

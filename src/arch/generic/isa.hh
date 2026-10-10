@@ -44,6 +44,7 @@
 
 #include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/reg_class.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -74,6 +75,12 @@ class BaseISA : public SimObject
   public:
     virtual PCStateBase *newPCState(Addr new_inst_addr=0) const = 0;
     virtual void clear() {}
+
+    /**
+     * Drop any ISA-side transient state tied to a dynamic instruction
+     * (e.g. after an O3 squash). Default: no-op.
+     */
+    virtual void clearTransientInstState(InstSeqNum /*sn*/) {}
 
     virtual RegVal readMiscRegNoEffect(RegIndex idx) const = 0;
     virtual RegVal readMiscReg(RegIndex idx) = 0;
