@@ -75,6 +75,10 @@ class AbstractCore(SubSystem):
         """
         raise NotImplementedError
 
+    def is_apple_virt_core(self) -> bool:
+        """Return whether this core uses Apple's Hypervisor framework."""
+        return False
+
     @abstractmethod
     def connect_icache(self, port: Port) -> None:
         """
