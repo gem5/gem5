@@ -178,11 +178,16 @@ jobs:
                   brew update
                   brew install \
                     scons \
-                    python \
+                    python@3.14 \
                     pkg-config \
                     protobuf \
                     grpc \
                     boost
+                  # Python 3.15 headers fail gem5's -Wundef check.
+                  # Select the embedding library independently of SCons.
+                  python_prefix="$(brew --prefix python@3.14)"
+                  echo "PYTHON_CONFIG=$python_prefix/bin/python3.14-config" \
+                    >> "$GITHUB_ENV"
 
 
             - name: Restore macOS build/ALL cache
