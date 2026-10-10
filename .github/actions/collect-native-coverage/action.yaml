@@ -1,0 +1,44 @@
+---
+name: Collect aggregate native coverage
+description: Retain native gcov inputs and an explicit report for upload recovery
+inputs:
+    group:
+        description: Aggregate test group name
+        required: true
+    outcomes:
+        description: JSON map of planned build and test stage outcomes
+        required: true
+runs:
+    using: composite
+    steps:
+        - name: Retain raw inputs and export native coverage
+          shell: bash
+          env:
+              PYTHONPATH: ${{ runner.temp }}/coverage-tools
+              COVERAGE_GROUP: ${{ inputs.group }}
+              COVERAGE_OUTCOMES: ${{ inputs.outcomes }}
+          run: |
+              python3 util/coverage/report.py aggregate --record-only --output coverage-aggregate --revision "$(git rev-parse HEAD)" --group "$COVERAGE_GROUP" --outcomes "$COVERAGE_OUTCOMES"
+              python3 util/coverage/report.py native-package --output coverage-aggregate --raw-output coverage-raw --revision "$(git rev-parse HEAD)"
+              python3 -m pip install --target "$PYTHONPATH" gcovr==8.3
+              python3 util/coverage/report.py aggregate --output coverage-aggregate --revision "$(git rev-parse HEAD)" --group "$COVERAGE_GROUP"
+        - name: Retain aggregate native coverage
+          if: always()
+          uses: actions/upload-artifact@v7
+          with:
+              name: coverage-data-${{ inputs.group }}
+              path: coverage-aggregate
+              compression-level: 0
+              retention-days: 30
+              overwrite: true
+              if-no-files-found: error
+        - name: Retain native counters for extraction retries
+          if: always()
+          uses: actions/upload-artifact@v7
+          with:
+              name: coverage-raw-${{ inputs.group }}
+              path: coverage-raw
+              compression-level: 0
+              retention-days: 30
+              overwrite: true
+              if-no-files-found: error
