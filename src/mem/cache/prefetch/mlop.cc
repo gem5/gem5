@@ -103,9 +103,9 @@ MLOP::resetScores()
 }
 
 MLOP::AMTEntry &
-MLOP::findOrAllocAmtEntry(Addr regionIndex)
+MLOP::findOrAllocAmtEntry(Addr region_index)
 {
-    const AMTEntry::KeyType key{regionIndex, false};
+    const AMTEntry::KeyType key{region_index, false};
 
     AMTEntry *entry = amt.findEntry(key);
     if (entry != nullptr) {

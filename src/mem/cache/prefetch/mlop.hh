@@ -123,7 +123,7 @@ class MLOP : public Queued
     void resetScores();
     std::vector<std::pair<LookaheadLevel, Offset>> selectBestOffsets();
 
-    AMTEntry &findOrAllocAmtEntry(Addr regionIndex);
+    AMTEntry &findOrAllocAmtEntry(Addr region_index);
     void updateScoresWithAccess(Addr block);
 };
 
