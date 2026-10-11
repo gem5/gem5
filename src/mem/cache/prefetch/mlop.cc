@@ -63,6 +63,7 @@ MLOP::MLOP(const MLOPPrefetcherParams &p)
       bitVectorSize(p.bit_vector_size),
       recentDepth(lookaheadLevels > 0 ? lookaheadLevels - 1 : 0),
       regionMask(Addr(bitVectorSize - 1)),
+      regionShift(floorLog2(bitVectorSize)),
       amt("AMT", p.amt_entries, p.amt_assoc, p.amt_replacement_policy,
           p.amt_indexing_policy,
           AMTEntry(genTagExtractor(p.amt_indexing_policy))),
@@ -102,9 +103,9 @@ MLOP::resetScores()
 }
 
 MLOP::AMTEntry &
-MLOP::findOrAllocAmtEntry(Addr base_block)
+MLOP::findOrAllocAmtEntry(Addr regionIndex)
 {
-    const AMTEntry::KeyType key{base_block, false};
+    const AMTEntry::KeyType key{regionIndex, false};
 
     AMTEntry *entry = amt.findEntry(key);
     if (entry != nullptr) {
@@ -119,15 +120,12 @@ MLOP::findOrAllocAmtEntry(Addr base_block)
 void
 MLOP::updateScoresWithAccess(Addr block)
 {
-    const Addr base_block = block & ~regionMask;
     const unsigned idx = unsigned(block & regionMask);
 
-    AMTEntry &entry = findOrAllocAmtEntry(base_block);
+    AMTEntry &entry = findOrAllocAmtEntry(block >> regionShift);
 
     // For each level L, credit every offset that would have predicted
-    // this access after excluding the last (L-1) accesses. excludeMask
-    // gains one more excluded position per level instead of being
-    // rebuilt from scratch every iteration.
+    // this access after excluding the last (L-1) accesses.
     uint64_t excludeMask = 0;
     for (unsigned exclude = 0; exclude < lookaheadLevels; exclude++) {
         uint64_t bits = entry.bitVector & ~excludeMask;
