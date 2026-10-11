@@ -97,7 +97,7 @@ dev-virtio:
 
 doc:
     - changed-files:
-          - any-glob-to-any-file: [CODE-OF-CONDUCT.md, CONTRIBUTING.md, COPYING, KCONFIG.md, LICENSE, MAINTAINERS.yaml, RELEASE-NOTES.md, TESTING.md]
+          - any-glob-to-any-file: [CODE-OF-CONDUCT.md, CONTRIBUTING.md, COPYING, KCONFIG.md, LICENSE, MAINTAINERS.yaml, RELEASE-NOTES.md, TESTING.md, docs/**]
           - all-globs-to-any-file: ['**/README.md', '!tests/gem5/**/README.md'] # Don't apply the `doc` label for changes to README files for tests
 
 mem-dram:
@@ -152,6 +152,10 @@ mem-ruby:
     - changed-files:
           - all-globs-to-any-file: [src/mem/ruby/**, '!src/mem/ruby/network/garnet/**']
 
+misc:
+    - changed-files:
+          - any-glob-to-any-file: .agents/**
+
 python:
     - changed-files:
           - all-globs-to-any-file: [src/python/**, '!src/python/gem5/resources/**', '!src/python/gem5/**']
@@ -162,7 +166,7 @@ resources:
 
 scons:
     - changed-files:
-          - any-glob-to-any-file: SConstruct
+          - any-glob-to-any-file: [SConstruct, build_opts/**, build_tools/**]
 
 sim:
     - changed-files:
