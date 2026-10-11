@@ -256,6 +256,12 @@ def parse_options():
         help="Create DOT & pdf outputs of the configuration [Default: %default]",
     )
     option(
+        "--citations-bib",
+        metavar="FILE",
+        default=None,
+        help="Create BibTeX citations output file [Default: %default]",
+    )
+    option(
         "--dot-dvfs-config",
         metavar="FILE",
         default=None,

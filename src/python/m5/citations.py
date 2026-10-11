@@ -48,7 +48,9 @@ def add_citation(sim_obj_cls: _CitableSimObjectClass, citation: str) -> None:
     sim_obj_cls._citations += citation
 
 
-def gather_citations(root: "SimObject", output_dir: str):
+def gather_citations(
+    root: "SimObject", output_dir: str, citations_file: str = "citations.bib"
+):
     """Based on the root SimObject, walk the object hierarchy and gather all
     of the citations together and then print them to citations.bib in the
     output directory.
@@ -64,7 +66,7 @@ def gather_citations(root: "SimObject", output_dir: str):
             # If a key repeats, then just overwrite it
             citations[key] = cite
 
-    with open(Path(output_dir) / "citations.bib", "w") as output:
+    with open(Path(output_dir) / citations_file, "w") as output:
         output.writelines(citations.values())
 
 
