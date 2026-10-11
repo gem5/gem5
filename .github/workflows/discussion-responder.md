@@ -8,9 +8,14 @@ on:
         description: 'Discussion number'
         required: true
         type: string
+      discussion_category:
+        description: 'Discussion category'
+        required: true
+        type: string
 
 concurrency:
-  group: "test-failure-doctor-${{ github.event.inputs.discussion_number }}"
+  group: "discussion-responder"
+  job-discriminator: ${{ github.event.inputs.discussion_number }}
 
 permissions:
   discussions: read
@@ -40,7 +45,22 @@ model: gpt-5.6-terra
 
 # Discussion responder
 
-If discussion ${{ github.event.inputs.discussion_number }} is a question about using gem5, look through existing gem5 documentation at the links provided below and leave a comment on the discussion that answers the author's question.
+If discussion ${{ github.event.inputs.discussion_number }} contains question(s)
+about using gem5 or how something is implemented in gem5, look through existing
+gem5 documentation at the links provided below and leave a comment on the
+discussion that answers the author's question(s).
+
+Check if the discussion category, ${{ github.event.inputs.discussion_category }},
+is `gem5-dev`.
+
+If the discussion category is `gem5-dev`, the discussion might not contain a
+question about using gem5 or how a pre-existing feature is implemented in gem5.
+In that case, call `noop` and exit without leaving a comment. Furthermore,
+discussions with the category `gem5-dev` may contain questions that ask the
+community or gem5 developers for their opinion, such as asking if adding a
+certain feature would be useful or not. Do not leave comments answering these
+questions. Only answer technical questions about gem5, such as how to use gem5,
+or how an existing feature is implemented in gem5.
 
 The existing gem5 documentation can be found at the following links:
 

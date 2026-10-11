@@ -13,7 +13,7 @@ env:
 
 jobs:
     run_workflows:
-        if: github.event.discussion.category.name == 'Q&A'
+        if: github.event.discussion.category.name == 'Q&A' || github.event.discussion.category.name == 'gem5-dev'
         permissions:
             actions: write
             contents: read
@@ -31,5 +31,5 @@ jobs:
 
             - name: Run Discussion Responder
               run: |
-                  gh aw run discussion-responder --ref develop --raw-field discussion_number=${{ github.event.discussion.number }}
+                  gh aw run discussion-responder --ref develop --raw-field discussion_number=${{ github.event.discussion.number }} --raw-field discussion_category=${{ github.event.discussion.category.name }}
                   echo "Discussion responder scheduled to run on develop branch"
