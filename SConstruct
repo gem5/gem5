@@ -512,7 +512,13 @@ def config_embedded_python(env):
         prefixes = ('-l', '-L', '-I')
         is_useful = lambda x: any(x.startswith(prefix) for prefix in prefixes)
         useful_flags = list(filter(is_useful, flags))
-        env.MergeFlags(' '.join(useful_flags))
+        parsed_flags = env.ParseFlags(' '.join(useful_flags))
+        env.MergeFlags(parsed_flags)
+        # Keep CPPPATH for dependency scanning, but classify Python's
+        # external headers as system headers for compiler diagnostics.
+        env.AppendUnique(CCFLAGS=[
+            ('-isystem', path) for path in parsed_flags['CPPPATH']
+        ])
 
     env.ParseConfig(cmd, flag_filter)
 
