@@ -10,7 +10,7 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
-# Copyright (c) 2021 The Regents of The University of California
+# Copyright (c) 2021, 2026 The Regents of The University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,13 @@ This serves as the bridge between the gem5 statistics exposed via PyBind11 and
 the Python Stats model.
 """
 
+import csv
+import json
+import re
+from abc import (
+    ABC,
+    abstractmethod,
+)
 from datetime import datetime
 from typing import (
     IO,
@@ -58,7 +65,275 @@ from m5.params import SimObjectVector
 from _m5 import stats as _m5_stats
 
 
-class JsonOutputVistor:
+class Visitor(ABC):
+    """
+    Generic Visitor
+    """
+
+    @abstractmethod
+    def visit_scalar(self, element: Scalar) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_distribution(self, element: Distribution) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_vector(self, element: Vector) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_vector2d(self, element: Vector2d) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_sparse_hist(self, element: SparseHist) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_simobject_group(self, element: SimObjectGroup) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_simstat(self, element: SimStat) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def visit_group(self, element: Group) -> Dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def dump(self, roots: SimObject | list[SimObject], **kwargs) -> None:
+        raise NotImplementedError
+
+    def visit_multiple_roots(
+        self, roots: SimObject | list[SimObject]
+    ) -> dict | list[dict]:
+        """Visit each selected root independently with prepared statistics.
+
+        Lists, including SimObjectVectors, retain their order and shape.
+        Validate the entire selection before converting any statistics.
+        """
+        if isinstance(roots, SimObject):
+            return self.visit_simstat(get_simstat(roots, prepare_stats=False))
+        if not isinstance(roots, list) or not all(
+            isinstance(root, SimObject) for root in roots
+        ):
+            raise TypeError("Dump roots must be a SimObject or a flat list.")
+
+        values = []
+        for root in roots:
+            snapshot = get_simstat(root, prepare_stats=False)
+            entry = self.visit_simstat(snapshot)
+            entry["name"] = snapshot.name
+            values.append(entry)
+        return values
+
+    def _acceptable_type(self, element):
+        if type(element) in [
+            Scalar,
+            Distribution,
+            Vector,
+            Vector2d,
+            SparseHist,
+            SimObjectGroup,
+            SimObjectVectorGroup,
+            SimStat,
+            Group,
+        ]:
+            return True
+        return False
+
+
+class CsvOutputVisitor(Visitor):
+    """
+    This is a helper vistor class used to include a CSV output via the stats
+    API (``src/python/m5/stats/__init__.py``).
+
+    It outputs a CSV file with a single header row followed by data rows.
+
+    Format:
+         key1,key2,key3
+         val1_dump1,val2_dump1,val3_dump1
+         val1_dump2,val2_dump2,val3_dump2
+
+    The first row defines column names with each subsequent row
+    representing the values of one stats dump.
+    """
+
+    file: str
+
+    file_created = False
+
+    def __init__(self, file: str):
+        """
+        :param file: The output file location in which the CSV file will be dumped.
+
+        """
+
+        self.file = file
+        self._collection_output = False
+
+    def visit_scalar(self, element: Scalar):
+        return {
+            "value": element.value,
+        }
+
+    def visit_distribution(self, element: Distribution):
+        return {
+            "value": {
+                key: self.visit_scalar(value)
+                for key, value in element.value.items()
+            },
+            "min": element.min,
+            "max": element.max,
+            "num_bins": element.num_bins,
+            "bin_size": element.bin_size,
+            "sum": element.sum,
+            "underflow": element.underflow,
+            "overflow": element.overflow,
+            "logs": element.logs,
+            "sum_squared": element.sum_squared,
+        }
+
+    def visit_vector(self, element: Vector):
+        return {
+            "value": {
+                key: self.visit_scalar(value)
+                for key, value in element.value.items()
+            },
+        }
+
+    def visit_vector2d(self, element: Vector2d):
+        return {
+            "value": {
+                key: self.visit_vector(value)
+                for key, value in element.value.items()
+            },
+        }
+
+    def visit_sparse_hist(self, element: SparseHist):
+        return {
+            "value": {
+                key: self.visit_scalar(value)
+                for key, value in element.value.items()
+            },
+        }
+
+    def visit_group(self, element: Group):
+        values = {}
+        for key, value in element.values.items():
+            assert self._acceptable_type(value), "Unexpected value type"
+            values[key] = value.accept(self)
+        return values
+
+    def visit_simobject_group(self, element: SimObjectGroup):
+        values = {}
+        for key, value in element.values.items():
+            assert self._acceptable_type(value), "Unexpected value type"
+            values[key] = value.accept(self)
+        return values
+
+    def visit_simobject_vector_group(self, element: SimObjectVectorGroup):
+        values = {}
+        for key, value in element.values.items():
+            vlist = []
+            for v in value:
+                assert self._acceptable_type(v), "Unexpected value type"
+                vlist.append(v.accept(self))
+            values[key] = vlist
+        return values
+
+    def visit_simstat(self, element: SimStat):
+        values = {
+            "time_conversion": element.time_conversion,
+            "creation_time": element.creation_time.isoformat(
+                timespec="seconds"
+            ),
+            "simulated_begin_time": element.simulated_begin_time,
+            "simulated_end_time": element.simulated_end_time,
+        }
+
+        for key, value in element.values.items():
+            assert self._acceptable_type(value), "Unexpected value type"
+            values[key] = value.accept(self)
+
+        return values
+
+    def flatten_dict(self, d, parent_key="", sep="."):
+        items = {}
+
+        def add(key, value):
+            if key in items:
+                raise ValueError(f"Duplicate CSV column {key!r}.")
+            items[key] = value
+
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+
+            if isinstance(v, dict):
+                # Recursively flatten nested dicts
+                for key, value in self.flatten_dict(v, new_key, sep).items():
+                    add(key, value)
+            elif isinstance(v, (list, tuple)):
+                # Flatten arrays by indexing elements
+                for i, item in enumerate(v):
+                    if isinstance(item, dict):
+                        # Recurse if element is a dict
+                        for key, value in self.flatten_dict(
+                            item, f"{new_key}{i}", sep
+                        ).items():
+                            add(key, value)
+                    else:
+                        add(f"{new_key}{i}", item)
+            else:
+                # Primitive value
+                add(new_key, v)
+
+        return items
+
+    def dump(self, roots: SimObject | list[SimObject], **kwargs) -> None:
+        """
+        Dumps the stats of a simulation root (or list of roots) to the output
+        CSV file specified in the constructor.
+
+
+        :param roots: A SimObject or flat list/vector of SimObjects to export.
+        """
+
+        vals = self.visit_multiple_roots(roots)
+        collection_output = isinstance(vals, list)
+        if collection_output:
+            vals = {str(index): entry for index, entry in enumerate(vals)}
+        flat_dict = self.flatten_dict(vals)
+
+        if not self.file_created:
+            with open(self.file, "w") as fp:
+                writer = csv.writer(fp)
+                writer.writerow(flat_dict.keys())
+                writer.writerow(flat_dict.values())
+            self.file_created = True
+            self._collection_output = collection_output
+        else:
+            with open(self.file, newline="") as fp:
+                reader = csv.reader(fp)
+                header = next(reader)
+
+            if (self._collection_output or collection_output) and set(
+                flat_dict
+            ) != set(header):
+                raise ValueError(
+                    "CSV columns changed; use a separate file for a "
+                    "different statistics selection."
+                )
+            row = [flat_dict.get(key, "") for key in header]
+
+            with open(self.file, "a", newline="") as fp:
+                writer = csv.writer(fp)
+                writer.writerow(row)
+
+
+class JsonOutputVistor(Visitor):
     """
     This is a helper vistor class used to include a JSON output via the stats
     API (``src/python/m5/stats/__init__.py``).
@@ -77,7 +352,117 @@ class JsonOutputVistor:
         self.file = file
         self.json_args = kwargs
 
-    def dump(self, roots: Union[List[SimObject], Root]) -> None:
+    def visit_scalar(self, element: Scalar):
+        return {
+            "value": element.value,
+            "type": element.type,
+            "description": element.description,
+            "unit": element.unit,
+            "datatype": element.datatype.name,
+        }
+
+    def visit_distribution(self, element: Distribution):
+        return {
+            "value": {
+                key: self.visit_scalar(value)
+                for key, value in element.value.items()
+            },
+            "type": element.type,
+            "description": element.description,
+            "min": element.min,
+            "max": element.max,
+            "num_bins": element.num_bins,
+            "bin_size": element.bin_size,
+            "sum": element.sum,
+            "underflow": element.underflow,
+            "overflow": element.overflow,
+            "logs": element.logs,
+            "sum_squared": element.sum_squared,
+        }
+
+    def visit_vector(self, element: Vector):
+        return {
+            "value": {
+                key: self.visit_scalar(value)
+                for key, value in element.value.items()
+            },
+            "type": element.type,
+            "description": element.description,
+        }
+
+    def visit_vector2d(self, element: Vector2d):
+        return {
+            "value": {
+                key: self.visit_vector(value)
+                for key, value in element.value.items()
+            },
+            "type": element.type,
+            "description": element.description,
+        }
+
+    def visit_sparse_hist(self, element: SparseHist):
+        return {
+            "value": {
+                key: self.visit_scalar(value)
+                for key, value in element.value.items()
+            },
+            "type": element.type,
+            "description": element.description,
+        }
+
+    def visit_group(self, element: Group):
+        values = {
+            "type": element.type,
+            "time_conversion": element.time_conversion,
+        }
+        for key, value in element.values.items():
+            assert self._acceptable_type(value), "Unexpected value type"
+            values[key] = value.accept(self)
+        return values
+
+    def visit_simobject_group(self, element: SimObjectGroup):
+        values = {
+            "type": element.type,
+            "time_conversion": element.time_conversion,
+            "name": element.name,
+        }
+        for key, value in element.values.items():
+            assert self._acceptable_type(value), "Unexpected value type"
+            values[key] = value.accept(self)
+        return values
+
+    def visit_simobject_vector_group(self, element: SimObjectVectorGroup):
+        values = {
+            "type": element.type,
+            "time_conversion": element.time_conversion,
+        }
+        for key, value in element.values.items():
+            vlist = []
+            for v in value:
+                assert self._acceptable_type(v), "Unexpected value type"
+                vlist.append(v.accept(self))
+            values[key] = vlist
+        return values
+
+    def visit_simstat(self, element: SimStat):
+        values = {
+            "type": element.type,
+            "time_conversion": element.time_conversion,
+            "creation_time": element.creation_time.isoformat(
+                timespec="seconds"
+            ),
+            "simulated_begin_time": element.simulated_begin_time,
+            "simulated_end_time": element.simulated_end_time,
+        }
+
+        for key, value in element.values.items():
+            assert self._acceptable_type(value), "Unexpected value type"
+            values[key] = value.accept(self)
+
+        values["name"] = element.name
+        return values
+
+    def dump(self, roots: SimObject | list[SimObject], **kwargs) -> None:
         """
         Dumps the stats of a simulation root (or list of roots) to the output
         JSON file specified in the JsonOutput constructor.
@@ -88,12 +473,15 @@ class JsonOutputVistor:
             for the target root.
 
 
-        :param roots: The Root, or List of roots, whose stats are are to be dumped JSON.
+        :param roots: A SimObject or flat list/vector of SimObjects to export.
         """
 
+        if "indent" not in kwargs:
+            kwargs["indent"] = 4
+
+        values = self.visit_multiple_roots(roots)
         with open(self.file, "w") as fp:
-            simstat = get_simstat(root=roots, prepare_stats=False)
-            simstat.dump(fp=fp, **self.json_args)
+            json.dump(obj=values, fp=fp, **kwargs)
 
 
 def __get_statistic(statistic: _m5_stats.Info) -> Optional[Statistic]:
@@ -119,8 +507,7 @@ def __get_statistic(statistic: _m5_stats.Info) -> Optional[Statistic]:
     elif isinstance(statistic, _m5_stats.DistInfo):
         return __get_distribution(statistic)
     elif isinstance(statistic, _m5_stats.FormulaInfo):
-        # We don't do anything with Formula's right now.
-        # We may never do so, see https://gem5.atlassian.net/browse/GEM5-868.
+        # We don't do anything with Formula's right now and may never do so.
         pass
     elif isinstance(statistic, _m5_stats.VectorInfo):
         return __get_vector(statistic)
@@ -181,7 +568,7 @@ def __get_distribution(statistic: _m5_stats.DistInfo) -> Distribution:
 
 
 def __get_vector(statistic: _m5_stats.VectorInfo) -> Vector:
-    vec: Dict[Union[str, int, float], Scalar] = {}
+    vec: Dict[str | int | float, Scalar] = {}
 
     for index in range(statistic.size):
         # All the values in a Vector are Scalar values
@@ -226,7 +613,7 @@ def __get_vector2d(statistic: _m5_stats.Vector2dInfo) -> Vector2d:
     x_size = statistic.x_size
     y_size = statistic.y_size
 
-    vector_rep: Dict[Union[str, int, float], Vector] = {}
+    vector_rep: Dict[str | int | float, Vector] = {}
     for x_index in range(x_size):
         x_index_string = x_index
         if x_index in statistic.subnames:
@@ -302,13 +689,7 @@ def _process_simobject_object(simobject: SimObject) -> SimObjectGroup:
         simobject, SimObject
     ), "simobject param must be a SimObject."
 
-    stats = (
-        {
-            "name": simobject.get_name(),
-        }
-        if simobject.get_name()
-        else {}
-    )
+    stats = {}
 
     for stat in simobject.getStats():
         val = __get_statistic(stat)
@@ -333,7 +714,7 @@ def _process_simobject_object(simobject: SimObject) -> SimObjectGroup:
                 type="Group", **_process_simobject_stats(child)
             )
 
-    return SimObjectGroup(**stats)
+    return SimObjectGroup(name=simobject.get_name(), **stats)
 
 
 def _process_group(group: _m5_stats.Group) -> dict:
@@ -348,13 +729,13 @@ def _process_group(group: _m5_stats.Group) -> dict:
 
 
 def _process_simobject_stats(
-    simobject: Union[
-        _m5_stats.Group,
-        SimObject,
-        SimObjectVector,
-        List[Union[SimObject, SimObjectVector]],
-    ],
-) -> Union[List[Dict], Dict]:
+    simobject: (
+        _m5_stats.Group
+        | SimObject
+        | SimObjectVector
+        | list[SimObject | SimObjectVector]
+    ),
+) -> list[Dict] | Dict:
     """
     Processes the stats of a SimObject, SimObjectVector, or List of either, and
     returns a dictionary of the PySqtats for the SimObject.
@@ -371,7 +752,7 @@ def _process_simobject_stats(
         stats_list = []
         for obj in simobject:
             stats_list.append(_process_simobject_stats(obj))
-        return SimObjectVectorGroup(value=stats_list)
+        return SimObjectVectorGroup(children=stats_list)
 
     if isinstance(simobject, _m5_stats.Group):
         return _process_group(simobject)
@@ -380,22 +761,18 @@ def _process_simobject_stats(
 
 
 def get_simstat(
-    root: Union[
-        Union[SimObject, SimObjectVector],
-        List[Union[SimObject, SimObjectVector]],
-    ],
+    root: SimObject,
     prepare_stats: bool = True,
 ) -> SimStat:
     """
-    This function will return the SimStat object for a simulation given a
-    SimObject (typically a Root SimObject), or list of SimObjects. The returned
-    SimStat object will contain all the stats for all the SimObjects contained
-    within the "root", inclusive of the "root" SimObject/SimObjects.
+    Return one SimStat for a single SimObject and all its descendants.
 
-    :param root: A SimObject, or list of SimObjects, of the simulation for
-                 translation into a SimStat object. Typically this is the
-                 simulation's Root SimObject as this will obtain the entirety
-                 of a run's statistics in a single SimStat object.
+    Lists and SimObjectVectors are not accepted as roots. Collect separate
+    snapshots with ``[get_simstat(obj) for obj in roots]`` instead. Vectors
+    contained within the selected object's hierarchy remain supported.
+
+    :param root: The SimObject to convert. Use the simulation's Root to
+                 obtain the entire hierarchy in one SimStat.
 
     :param prepare_stats: Dictates whether the stats are to be prepared prior
                           to creating the SimStat object. By default this is
@@ -405,27 +782,21 @@ def get_simstat(
 
     """
 
+    if not isinstance(root, SimObject):
+        raise TypeError(
+            "get_simstat expects a single SimObject; use "
+            "[get_simstat(obj) for obj in roots] for a list or vector."
+        )
+
     if prepare_stats:
         _m5_stats.processDumpQueue()
+        _prepare_stats(root)
 
-    stats_map = {}
-    for r in root:
-        if prepare_stats:
-            if isinstance(r, list):
-                for obj in r:
-                    _prepare_stats(obj)
-            else:
-                _prepare_stats(r)
-
-        stats = _process_simobject_stats(r).__dict__
-        stats["name"] = r.get_name() if r.get_name() else "root"
-        stats_map[stats["name"]] = stats
-
-    if len(stats_map) == 1:
-        stats_map = stats_map[next(iter(stats_map))]
+    stats = _process_simobject_stats(root).values
+    stats["name"] = root.get_name() or "root"
 
     creation_time = datetime.now()
-    time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
+    # TODO: https://github.com/gem5/gem5/issues/3447
     final_tick = Root.getInstance().resolveStat("finalTick").value
     sim_ticks = Root.getInstance().resolveStat("simTicks").value
     simulated_begin_time = int(final_tick - sim_ticks)
@@ -435,5 +806,5 @@ def get_simstat(
         creation_time=creation_time,
         simulated_begin_time=simulated_begin_time,
         simulated_end_time=simulated_end_time,
-        **stats_map,
+        **stats,
     )

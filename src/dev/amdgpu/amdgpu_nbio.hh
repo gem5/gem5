@@ -53,70 +53,164 @@ class AMDGPUDevice;
  * The addresses in the file are dword addresses. Here they are converted
  * to byte addresses so gem5 does not need to do any shifting.
  */
-#define AMDGPU_MM_INDEX                                   0x00000
-#define AMDGPU_MM_INDEX_HI                                0x00018
-#define AMDGPU_MM_DATA                                    0x00004
+#define AMDGPU_MM_INDEX 0x00000
+#define AMDGPU_MM_INDEX_HI 0x00018
+#define AMDGPU_MM_DATA 0x00004
 
-#define AMDGPU_PCIE_INDEX                                 0x00030
-#define AMDGPU_PCIE_INDEX2                                0x00038
-#define AMDGPU_PCIE_DATA                                  0x00034
-#define AMDGPU_PCIE_DATA2                                 0x0003c
+#define AMDGPU_PCIE_INDEX 0x00030
+#define AMDGPU_PCIE_INDEX2 0x00038
+#define AMDGPU_PCIE_DATA 0x00034
+#define AMDGPU_PCIE_DATA2 0x0003c
 
 #define MI200_BIOS_SCRATCH_7 0x014c
 
 // Message bus related to psp
-#define AMDGPU_MP0_SMN_C2PMSG_33                          0x58184
-#define AMDGPU_MP0_SMN_C2PMSG_35                          0x5818c
-#define AMDGPU_MP0_SMN_C2PMSG_64                          0x58200
-#define AMDGPU_MP0_SMN_C2PMSG_69                          0x58214
-#define AMDGPU_MP0_SMN_C2PMSG_70                          0x58218
-#define AMDGPU_MP0_SMN_C2PMSG_71                          0x5821c
-#define AMDGPU_MP0_SMN_C2PMSG_81                          0x58244
-#define AMDGPU_MP1_SMN_C2PMSG_90                          0x58a68
+#define AMDGPU_MP0_SMN_C2PMSG_33 0x58184
+#define AMDGPU_MP0_SMN_C2PMSG_35 0x5818c
+#define AMDGPU_MP0_SMN_C2PMSG_64 0x58200
+#define AMDGPU_MP0_SMN_C2PMSG_67 0x5820c
+#define AMDGPU_MP0_SMN_C2PMSG_69 0x58214
+#define AMDGPU_MP0_SMN_C2PMSG_70 0x58218
+#define AMDGPU_MP0_SMN_C2PMSG_71 0x5821c
+#define AMDGPU_MP0_SMN_C2PMSG_81 0x58244
+#define AMDGPU_MP1_SMN_C2PMSG_90 0x58a68
+
+#define NBIO_COMPUTE_PARTITION_CPX 8
+#define NBIO_COMPUTE_PARTITION_QPX 4
+#define NBIO_COMPUTE_PARTITION_DPX 2
+#define NBIO_COMPUTE_PARTITION_SPX 1
+#define COMPUTE_PARTITION_CPX 4
+#define COMPUTE_PARTITION_QPX 3
+#define COMPUTE_PARTITION_DPX 1
+#define COMPUTE_PARTITION_SPX 0
 
 // Device specific invalidation engines used during initialization
-#define VEGA10_INV_ENG17_ACK1                             0x0a318
-#define VEGA10_INV_ENG17_ACK2                             0x69c18
-#define VEGA10_INV_ENG17_SEM1                             0x0a288
-#define VEGA10_INV_ENG17_SEM2                             0x69b88
+#define VEGA10_INV_ENG17_ACK1 0x0a318
+#define VEGA10_INV_ENG17_ACK2 0x69c18
+#define VEGA10_INV_ENG17_SEM1 0x0a288
+#define VEGA10_INV_ENG17_SEM2 0x69b88
 
-#define MI100_INV_ENG17_ACK1                              0x0a318
-#define MI100_INV_ENG17_ACK2                              0x6a918
-#define MI100_INV_ENG17_ACK3                              0x76918
-#define MI100_INV_ENG17_SEM1                              0x0a288
-#define MI100_INV_ENG17_SEM2                              0x6a888
-#define MI100_INV_ENG17_SEM3                              0x76888
+#define MI100_INV_ENG17_ACK1 0x0a318
+#define MI100_INV_ENG17_ACK2 0x6a918
+#define MI100_INV_ENG17_ACK3 0x76918
+#define MI100_INV_ENG17_SEM1 0x0a288
+#define MI100_INV_ENG17_SEM2 0x6a888
+#define MI100_INV_ENG17_SEM3 0x76888
 
-#define MI200_INV_ENG17_ACK1                              0x0a318
-#define MI200_INV_ENG17_ACK2                              0x6b018
-#define MI200_INV_ENG17_SEM1                              0x0a288
-#define MI200_INV_ENG17_SEM2                              0x6af88
+#define MI200_INV_ENG17_ACK1 0x0a318
+#define MI200_INV_ENG17_ACK2 0x6b018
+#define MI200_INV_ENG17_SEM1 0x0a288
+#define MI200_INV_ENG17_SEM2 0x6af88
 
-#define MI300X_INV_ENG17_ACK1                             0x4a298
-#define MI300X_INV_ENG17_ACK2                             0x62f98
-#define MI300X_INV_ENG17_ACK3                             0x8a298
-#define MI300X_INV_ENG17_ACK4                             0xca298
-#define MI300X_INV_ENG17_ACK5                             0x10a298
-#define MI300X_INV_ENG17_ACK6                             0x14a298
-#define MI300X_INV_ENG17_ACK7                             0x18a298
-#define MI300X_INV_ENG17_ACK8                             0x1ca298
-#define MI300X_INV_ENG17_ACK9                             0xe2f98
-#define MI300X_INV_ENG17_ACK10                            0x162f98
-#define MI300X_INV_ENG17_ACK11                            0x1e2f98
-#define MI300X_EPF0_STRAP0                                0x34d8
+#define MI300X_INV_ENG17_ACK1 0x4a298
+#define MI300X_INV_ENG17_ACK2 0x62f98
+#define MI300X_INV_ENG17_ACK3 0x8a298
+#define MI300X_INV_ENG17_ACK4 0xca298
+#define MI300X_INV_ENG17_ACK5 0x10a298
+#define MI300X_INV_ENG17_ACK6 0x14a298
+#define MI300X_INV_ENG17_ACK7 0x18a298
+#define MI300X_INV_ENG17_ACK8 0x1ca298
+#define MI300X_INV_ENG17_ACK9 0xe2f98
+#define MI300X_INV_ENG17_ACK10 0x162f98
+#define MI300X_INV_ENG17_ACK11 0x1e2f98
+#define MI300X_EPF0_STRAP0 0x34d8
+#define NBIO_PARTITION_COMPUTE_STATUS 0x3a0c
+#define NBIO_PARTITION_MEM_STATUS 0x3a10
 
-//Range of register addresses to store the base addresses of
-//page tables for contexts 0-15
-#define MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START           0x6b0ac
-#define MI200_REG_BM_PAGE_TABLE_BASE_ADDR_END             0x6b128
-//Range of register addresses to store the starting addresses of
-//page tables for contexts 0-15
-#define MI200_REG_BM_PAGE_TABLE_START_ADDR_START          0x6b12c
-#define MI200_REG_BM_PAGE_TABLE_START_ADDR_END            0x6b1a8
-//Range of register addresses to store the ending addresses of
-//page tables for contexts 0-15
-#define MI200_REG_BM_PAGE_TABLE_END_ADDR_START            0x6b1ac
-#define MI200_REG_BM_PAGE_TABLE_END_ADDR_END              0x6b1c8
+// Range of register addresses to store the base addresses of
+// page tables for contexts 0-15
+#define MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START 0x6b0ac
+#define MI200_REG_BM_PAGE_TABLE_BASE_ADDR_END 0x6b128
+// Range of register addresses to store the starting addresses of
+// page tables for contexts 0-15
+#define MI200_REG_BM_PAGE_TABLE_START_ADDR_START 0x6b12c
+#define MI200_REG_BM_PAGE_TABLE_START_ADDR_END 0x6b1a8
+// Range of register addresses to store the ending addresses of
+// page tables for contexts 0-15
+#define MI200_REG_BM_PAGE_TABLE_END_ADDR_START 0x6b1ac
+#define MI200_REG_BM_PAGE_TABLE_END_ADDR_END 0x6b1c8
+
+// These structures must precisely match the driver's definitions
+//(e.g., alignment and size)
+
+// Define command IDs
+/* load TA */
+static constexpr uint32_t GFX_CMD_ID_LOAD_TA = 0x00000001;
+/* Configure spatial partitioning mode */
+static constexpr uint32_t GFX_CMD_ID_SRIOV_SPATIAL_PART = 0x00000027;
+/* setup TMR region */
+static constexpr uint32_t GFX_CMD_ID_SETUP_TMR = 0x00000005;
+/* load HW IP FW */
+static constexpr uint32_t GFX_CMD_ID_LOAD_IP_FW = 0x00000006;
+static constexpr uint32_t PSP_RB_FRAME_SIZE_BYTES = 64;
+static constexpr uint32_t PSP_RB_FRAME_SIZE_DWORDS = 16;
+static constexpr uint32_t PSP_CMD_BUFFER_MAX_SIZE = 1024;
+// PSP command payload begins after the 28-byte command frame header.
+static constexpr uint32_t PSP_CMD_PAYLOAD_OFFSET = 28;
+
+// Ring Buffer Frame - always 64 bytes
+typedef struct GEM5_PACKED
+{
+    uint32_t cmd_buf_addr_lo; // 0
+    uint32_t cmd_buf_addr_hi; // 4
+    uint32_t cmd_buf_size;    // 8
+    uint32_t fence_addr_lo;   // 12
+    uint32_t fence_addr_hi;   // 16
+    uint32_t fence_value;     // 20
+    uint32_t reserved[10];    // 24-63
+} PspGfxRbFrame;              // sizeof = 64 bytes
+static_assert(sizeof(PspGfxRbFrame) == 64);
+// Main Command Structure Header (psp_gfx_cmd_resp in driver)
+typedef struct GEM5_PACKED
+{
+    uint32_t buf_size; // Size of this header structure
+    uint32_t buf_version;
+    uint32_t cmd_id; // The command identifier
+    //(e.g., GFX_CMD_ID_LOAD_TA)
+    // ... other fields not modelled here
+    uint32_t reserved[253]; // Padding to make total size 1KB
+} PspGfxCmdResp;
+static_assert(sizeof(PspGfxCmdResp) == 1024);
+
+// GFX_CMD_ID_LOAD_TA command payload (part of the union)
+typedef struct GEM5_PACKED
+{
+    uint32_t reserved_pre[3];
+    uint32_t cmd_buf_phys_addr_lo; // Address of
+    // the TA Command Buffer
+    uint32_t cmd_buf_phys_addr_hi;
+    uint32_t cmd_buf_len;
+
+} PspGfxCmdLoadTa;
+
+// GFX_CMD_ID_SRIOV_SPATIAL_PART command payload
+struct PspGfxCmdSriovSpatialPart
+{
+    // ... fields up to mode
+    uint32_t mode; // The partition mode value
+                   // ... other fields
+};
+
+// In src/dev/amdgpu/amdgpu_nbio.hh (outside the AMDGPUNbio class)
+// Context structure to hold data between asynchronous stages
+struct PspCommandContext
+{
+    // PSP Ring Frame (64 bytes)
+    PspGfxRbFrame frame = {};
+
+    // Command Buffer (Max 1KB, dynamically read)
+    uint8_t cmd_buffer[PSP_CMD_BUFFER_MAX_SIZE] = {};
+
+    // Fence information extracted from the frame
+    Addr fence_addr = 0;
+    uint32_t fence_value = 0;
+
+    Addr cmd_buf_addr = 0;
+    uint32_t sriov_spatial_mode = 0;
+
+    // The component name is needed for event scheduling
+    std::string name;
+};
 
 class AMDGPUNbio
 {
@@ -131,22 +225,33 @@ class AMDGPUNbio
     bool readFrame(PacketPtr pkt, Addr offset);
     void writeFrame(PacketPtr pkt, Addr offset);
 
-    bool is_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset) {
+    void processPspCommand(uint32_t new_wptr);
+
+    bool
+    is_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset)
+    {
         return ((offset >= MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START &&
-                    offset <= MI200_REG_BM_PAGE_TABLE_BASE_ADDR_END) ?
-                true : false);
+                 offset <= MI200_REG_BM_PAGE_TABLE_BASE_ADDR_END)
+                    ? true
+                    : false);
     }
 
-    bool is_MI200_regBM_PAGE_TABLE_START_ADDR(Addr offset) {
-        return ((offset >= MI200_REG_BM_PAGE_TABLE_START_ADDR_START
-                    && offset <= MI200_REG_BM_PAGE_TABLE_START_ADDR_END) ?
-                true : false);
+    bool
+    is_MI200_regBM_PAGE_TABLE_START_ADDR(Addr offset)
+    {
+        return ((offset >= MI200_REG_BM_PAGE_TABLE_START_ADDR_START &&
+                 offset <= MI200_REG_BM_PAGE_TABLE_START_ADDR_END)
+                    ? true
+                    : false);
     }
 
-    bool is_MI200_regBM_PAGE_TABLE_END_ADDR(Addr offset) {
-        return ((offset >= MI200_REG_BM_PAGE_TABLE_END_ADDR_START
-                    && offset <= MI200_REG_BM_PAGE_TABLE_END_ADDR_END) ?
-                true : false);
+    bool
+    is_MI200_regBM_PAGE_TABLE_END_ADDR(Addr offset)
+    {
+        return ((offset >= MI200_REG_BM_PAGE_TABLE_END_ADDR_START &&
+                 offset <= MI200_REG_BM_PAGE_TABLE_END_ADDR_END)
+                    ? true
+                    : false);
     }
 
     // The MMIO offsets that correspond to the page table registers in MI200
@@ -154,16 +259,23 @@ class AMDGPUNbio
     // each subsequent offset corresponds to the register for the next context.
     // This function right shifts the MMIO offsets to get the register offset,
     // and extracts context number out of it
-    uint16_t get_context_from_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset) {
-        return (((offset - MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START) >> 2)/2);
+    uint16_t
+    get_context_from_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset)
+    {
+        return (((offset - MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START) >> 2) / 2);
     }
 
-    uint16_t get_context_from_MI200_regBM_PAGE_TABLE_START_ADDR(Addr offset) {
-        return (((offset - MI200_REG_BM_PAGE_TABLE_START_ADDR_START) >> 2)/2);
+    uint16_t
+    get_context_from_MI200_regBM_PAGE_TABLE_START_ADDR(Addr offset)
+    {
+        return (((offset - MI200_REG_BM_PAGE_TABLE_START_ADDR_START) >> 2) /
+                2);
     }
 
-    uint16_t get_context_from_MI200_regBM_PAGE_TABLE_END_ADDR(Addr offset) {
-        return (((offset - MI200_REG_BM_PAGE_TABLE_END_ADDR_START) >> 2)/2);
+    uint16_t
+    get_context_from_MI200_regBM_PAGE_TABLE_END_ADDR(Addr offset)
+    {
+        return (((offset - MI200_REG_BM_PAGE_TABLE_END_ADDR_START) >> 2) / 2);
     }
 
   private:
@@ -185,6 +297,16 @@ class AMDGPUNbio
     Addr psp_ring_listen_addr = 0;
     int psp_ring_size = 0;
     int psp_ring_value = 0;
+
+    // **REQUIRED PSP-specific MMIO state variables:**
+    uint32_t wptr = 0;        // (C2PMSG_67 update)
+    Addr ta_cmd_buf_addr = 0; // Holds the address from
+    // GFX_CMD_ID_LOAD_TA
+    // GFX_CMD_ID_SRIOV_SPATIAL_PART
+
+    void readCmdBufferAndProcess(PspCommandContext *ctx);
+    void CmdBufferAndProcessDone(PspCommandContext *ctx);
+    void fenceWriteDone(PspCommandContext *ctx);
 
     /*
      * Hold values of other registers not explicitly modelled by other blocks.

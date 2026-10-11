@@ -160,7 +160,7 @@ def template SveContigLoadExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -215,7 +215,7 @@ def template SveContigLoadUnpredExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -252,7 +252,7 @@ def template SveContigLoadInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
@@ -308,7 +308,7 @@ def template SveContigStoreExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -367,7 +367,7 @@ def template SveContigStoreUnpredExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -407,7 +407,7 @@ def template SveContigStoreInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -453,7 +453,7 @@ def template SveLoadAndReplExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -494,7 +494,7 @@ def template SveLoadAndReplInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
@@ -561,7 +561,7 @@ def template SveIndexedMemVIMicroopDeclare {{
         int numElems;
         bool firstFault;
 
-        unsigned memAccessFlags;
+        Request::Flags memAccessFlags;
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
@@ -647,7 +647,7 @@ def template SveIndexedMemSVMicroopDeclare {{
         int numElems;
         bool firstFault;
 
-        unsigned memAccessFlags;
+        Request::Flags memAccessFlags;
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
@@ -734,7 +734,7 @@ def template SveIndexedMemVSMicroopDeclare {{
         int numElems;
         bool firstFault;
 
-        unsigned memAccessFlags;
+        Request::Flags memAccessFlags;
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
@@ -806,7 +806,7 @@ def template SveGatherLoadMicroopExecute {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -857,7 +857,7 @@ def template SveGatherLoadMicroopInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
@@ -927,7 +927,7 @@ def template SveGatherLoadQuadMicroopExecute {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -982,7 +982,7 @@ def template SveGatherLoadQuadMicroopInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
@@ -1055,7 +1055,7 @@ def template SveScatterStoreMicroopExecute {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1088,7 +1088,7 @@ def template SveScatterStoreMicroopInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1129,7 +1129,7 @@ def template SveScatterStoreQuadMicroopExecute {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1166,7 +1166,7 @@ def template SveScatterStoreQuadMicroopInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1336,7 +1336,7 @@ def template SveStructMemSIMicroopDeclare {{
         uint8_t numRegs;
         int regIndex;
 
-        unsigned memAccessFlags;
+        Request::Flags memAccessFlags;
 
         bool baseIsSP;
 
@@ -1430,7 +1430,7 @@ def template SveStructLoadExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(Element), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1489,7 +1489,7 @@ def template SveStructLoadInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(Element), this->memAccessFlags);
 
         %(op_src_decl)s;
@@ -1555,7 +1555,7 @@ def template SveStructStoreExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(Element), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1619,7 +1619,7 @@ def template SveStructStoreInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
-        unsigned memAccessFlags = addrAlignmentFlags(
+        Request::Flags memAccessFlags = addrAlignmentFlags(
             sizeof(Element), this->memAccessFlags);
 
         %(op_decl)s;
@@ -1678,7 +1678,7 @@ def template SveStructMemSSMicroopDeclare {{
         uint8_t numRegs;
         int regIndex;
 
-        unsigned memAccessFlags;
+        Request::Flags memAccessFlags;
 
         bool baseIsSP;
 

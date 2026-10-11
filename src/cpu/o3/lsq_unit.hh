@@ -42,11 +42,7 @@
 #ifndef __CPU_O3_LSQ_UNIT_HH__
 #define __CPU_O3_LSQ_UNIT_HH__
 
-#include <algorithm>
 #include <cstring>
-#include <map>
-#include <memory>
-#include <queue>
 
 #include "arch/generic/debugfaults.hh"
 #include "arch/generic/vec_reg.hh"
@@ -54,7 +50,6 @@
 #include "cpu/base.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/comm.hh"
-#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/timebuf.hh"
@@ -71,7 +66,124 @@ struct BaseO3CPUParams;
 namespace o3
 {
 
+class CPU;
+class DynInst;
 class IEW;
+
+class LSQEntry
+{
+  public:
+    static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
+
+  private:
+    /** The instruction. */
+    DynInstPtr _inst;
+    /** The request. */
+    LSQRequest *_request = nullptr;
+    /** The size of the operation. */
+    uint32_t _size = 0;
+    /** Valid entry. */
+    bool _valid = false;
+
+  public:
+    ~LSQEntry();
+
+    void clear();
+
+    void set(const DynInstPtr &new_inst);
+
+    LSQRequest *
+    request()
+    { return _request; }
+    void
+    setRequest(LSQRequest *r)
+    { _request = r; }
+    bool
+    hasRequest()
+    { return _request != nullptr; }
+    /** Member accessors. */
+    /** @{ */
+    bool
+    valid() const
+    { return _valid; }
+    uint32_t &
+    size()
+    { return _size; }
+    const uint32_t &
+    size() const
+    { return _size; }
+    const DynInstPtr &
+    instruction() const
+    { return _inst; }
+    /** @} */
+};
+
+class SQEntry : public LSQEntry
+{
+  private:
+    /** The store data. */
+    char _data[MaxDataBytes];
+    /** Whether or not the store can writeback. */
+    bool _canWB = false;
+    /** Whether or not the store is committed. */
+    bool _committed = false;
+    /** Whether or not the store is completed. */
+    bool _completed = false;
+    /** Does this request write all zeros and thus doesn't
+     * have any data attached to it. Used for cache block zero
+     * style instructs (ARM DC ZVA; ALPHA WH64)
+     */
+    bool _isAllZeros = false;
+
+  public:
+    static constexpr size_t DataSize = sizeof(_data);
+    /** Constructs an empty store queue entry. */
+    SQEntry();
+
+    void set(const DynInstPtr &inst);
+
+    void clear();
+
+    /** Member accessors. */
+    /** @{ */
+    bool &
+    canWB()
+    { return _canWB; }
+    const bool &
+    canWB() const
+    { return _canWB; }
+    bool &
+    completed()
+    { return _completed; }
+    const bool &
+    completed() const
+    { return _completed; }
+    bool &
+    committed()
+    { return _committed; }
+    const bool &
+    committed() const
+    { return _committed; }
+    bool &
+    isAllZeros()
+    { return _isAllZeros; }
+    const bool &
+    isAllZeros() const
+    { return _isAllZeros; }
+    char *
+    data()
+    { return _data; }
+    const char *
+    data() const
+    { return _data; }
+    /** @} */
+};
+
+using LQEntry = LSQEntry;
+using LoadQueue = CircularQueue<LQEntry>;
+using StoreQueue = CircularQueue<SQEntry>;
+using LQIterator = typename LoadQueue::iterator;
+using SQIterator = typename StoreQueue::iterator;
 
 /**
  * Class that implements the actual LQ and SQ for each specific
@@ -90,112 +202,7 @@ class LSQUnit
   public:
     static constexpr auto MaxDataBytes = MaxVecRegLenInBytes;
 
-    using LSQRequest = LSQ::LSQRequest;
   private:
-    class LSQEntry
-    {
-      private:
-        /** The instruction. */
-        DynInstPtr _inst;
-        /** The request. */
-        LSQRequest* _request = nullptr;
-        /** The size of the operation. */
-        uint32_t _size = 0;
-        /** Valid entry. */
-        bool _valid = false;
-
-      public:
-        ~LSQEntry()
-        {
-            if (_request != nullptr) {
-                _request->freeLSQEntry();
-                _request = nullptr;
-            }
-        }
-
-        void
-        clear()
-        {
-            _inst = nullptr;
-            if (_request != nullptr) {
-                _request->freeLSQEntry();
-            }
-            _request = nullptr;
-            _valid = false;
-            _size = 0;
-        }
-
-        void
-        set(const DynInstPtr& new_inst)
-        {
-            assert(!_valid);
-            _inst = new_inst;
-            _valid = true;
-            _size = 0;
-        }
-
-        LSQRequest* request() { return _request; }
-        void setRequest(LSQRequest* r) { _request = r; }
-        bool hasRequest() { return _request != nullptr; }
-        /** Member accessors. */
-        /** @{ */
-        bool valid() const { return _valid; }
-        uint32_t& size() { return _size; }
-        const uint32_t& size() const { return _size; }
-        const DynInstPtr& instruction() const { return _inst; }
-        /** @} */
-    };
-
-    class SQEntry : public LSQEntry
-    {
-      private:
-        /** The store data. */
-        char _data[MaxDataBytes];
-        /** Whether or not the store can writeback. */
-        bool _canWB = false;
-        /** Whether or not the store is committed. */
-        bool _committed = false;
-        /** Whether or not the store is completed. */
-        bool _completed = false;
-        /** Does this request write all zeros and thus doesn't
-         * have any data attached to it. Used for cache block zero
-         * style instructs (ARM DC ZVA; ALPHA WH64)
-         */
-        bool _isAllZeros = false;
-
-      public:
-        static constexpr size_t DataSize = sizeof(_data);
-        /** Constructs an empty store queue entry. */
-        SQEntry()
-        {
-            std::memset(_data, 0, DataSize);
-        }
-
-        void set(const DynInstPtr& inst) { LSQEntry::set(inst); }
-
-        void
-        clear()
-        {
-            LSQEntry::clear();
-            _canWB = _completed = _committed = _isAllZeros = false;
-        }
-
-        /** Member accessors. */
-        /** @{ */
-        bool& canWB() { return _canWB; }
-        const bool& canWB() const { return _canWB; }
-        bool& completed() { return _completed; }
-        const bool& completed() const { return _completed; }
-        bool& committed() { return _committed; }
-        const bool& committed() const { return _committed; }
-        bool& isAllZeros() { return _isAllZeros; }
-        const bool& isAllZeros() const { return _isAllZeros; }
-        char* data() { return _data; }
-        const char* data() const { return _data; }
-        /** @} */
-    };
-    using LQEntry = LSQEntry;
-
     /** Coverage of one address range with another */
     enum class AddrRangeCoverage
     {
@@ -205,10 +212,6 @@ class LSQUnit
     };
 
   public:
-    using LoadQueue = CircularQueue<LQEntry>;
-    using StoreQueue = CircularQueue<SQEntry>;
-
-  public:
     /** Constructs an LSQ unit. init() must be called prior to use. */
     LSQUnit(uint32_t lqEntries, uint32_t sqEntries);
 
@@ -216,10 +219,7 @@ class LSQUnit
      * contructor is deleted explicitly. However, STL vector requires
      * a valid copy constructor for the base type at compile time.
      */
-    LSQUnit(const LSQUnit &l): stats(nullptr)
-    {
-        panic("LSQUnit is not copy-able");
-    }
+    LSQUnit(const LSQUnit &l);
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
@@ -581,10 +581,9 @@ class LSQUnit
     InstSeqNum getStoreHeadSeqNum();
 
     /** Returns whether or not the LSQ unit is stalled. */
-    bool isStalled()  { return stalled; }
-  public:
-    typedef typename CircularQueue<LQEntry>::iterator LQIterator;
-    typedef typename CircularQueue<SQEntry>::iterator SQIterator;
+    bool
+    isStalled()
+    { return stalled; }
 };
 
 } // namespace o3

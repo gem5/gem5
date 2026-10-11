@@ -395,6 +395,10 @@ class BaseXBar : public ClockedObject
        addresses not handled by another port to default device. */
     const bool useDefaultRange;
 
+    /** If true, allow receiving and forwarding of backdoor requests.
+        If false, the XBar will send packets without a backdoor. */
+    const bool enableBackdoor;
+
     BaseXBar(const BaseXBarParams &p);
 
     /**

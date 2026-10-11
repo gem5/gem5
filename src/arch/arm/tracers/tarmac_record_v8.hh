@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2019, 2025-2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 #ifndef __ARCH_ARM_TRACERS_TARMAC_RECORD_V8_HH__
 #define __ARCH_ARM_TRACERS_TARMAC_RECORD_V8_HH__
 
+#include "arch/arm/insts/static_inst.hh"
 #include "tarmac_record.hh"
 
 namespace gem5
@@ -107,15 +108,24 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
         void updateMisc(const TarmacContext& tarmCtx) override;
         void updateVec(const TarmacContext& tarmCtx) override;
         void updatePred(const TarmacContext& tarmCtx) override;
+        void updateMatrix(const TarmacContext &tarmCtx) override;
+
+        template <typename MatElem>
+        void updateMatValue(const TarmacContext &tarmCtx,
+                            ArmISA::ArmSmeStaticInst::TouchType type,
+                            uint8_t tile_idx,
+                            const std::vector<uint16_t> vec_idx);
 
         /**
          * Returning a string which contains the formatted
          * register value: transformed in hex, 0 padded or/and
          * split in chunks separated by underscores in case of
          * vector register.
+         * @param start start position for format.
+         * @param count Count of elements to format.
          * @return str formatted string
          */
-        std::string formatReg() const;
+        std::string formatReg(int start = 0, int count = -1) const;
 
         /** Size in bits of arch register */
         uint16_t regWidth;

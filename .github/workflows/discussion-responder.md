@@ -9,17 +9,21 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: "test-failure-doctor-${{ github.event.inputs.discussion_number }}"
+
 permissions:
   discussions: read
   contents: read
   copilot-requests: write
 
 tools:
+  bash: ["*"]
   web-fetch:
   web-search:
   github:
     toolsets: [discussions, repos]
-    lockdown: false
+    min-integrity: none
 
 safe-outputs:
   add-comment:

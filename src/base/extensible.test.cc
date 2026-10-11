@@ -109,3 +109,26 @@ TEST(ExtensibleTest, ReplaceExtension)
     target->setExtension(new_ext);
     EXPECT_EQ(new_data, target->getExtension<IntegerExtension>()->getData());
 }
+
+TEST(ExtensibleTest, GetExtensionsAndBasePtrSet)
+{
+    const uint32_t int_data = 0xbeef;
+    const bool bool_data = true;
+    std::shared_ptr<IntegerExtension> int_ext(new IntegerExtension(int_data));
+    std::shared_ptr<BoolExtension> bool_ext(new BoolExtension(bool_data));
+
+    std::unique_ptr<TestTarget> src_target(new TestTarget);
+    src_target->setExtension(int_ext);
+    src_target->setExtension(bool_ext);
+    EXPECT_EQ(2, src_target->getExtensions().size());
+
+    std::unique_ptr<TestTarget> dst_target(new TestTarget);
+    for (const auto &ext : src_target->getExtensions()) {
+        std::shared_ptr<ExtensionBase> cloned_ext(ext->clone());
+        dst_target->setExtension(cloned_ext);
+    }
+    EXPECT_EQ(2, dst_target->getExtensions().size());
+    EXPECT_EQ(int_data,
+              dst_target->getExtension<IntegerExtension>()->getData());
+    EXPECT_EQ(bool_data, dst_target->getExtension<BoolExtension>()->getData());
+}

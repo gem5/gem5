@@ -86,16 +86,9 @@ class ExeTracer : public InstTracer
     {}
 
     InstRecord *
-    getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, const PCStateBase &pc,
-            const StaticInstPtr macroStaticInst=nullptr) override
-    {
-        if (!debug::ExecEnable)
-            return NULL;
-
-        return new ExeTracerRecord(when, tc,
-                staticInst, pc, *this, macroStaticInst);
-    }
+    getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
+                  const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr) override;
 };
 
 } // namespace trace

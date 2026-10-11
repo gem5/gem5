@@ -45,30 +45,30 @@ TrafficGenerator::TrafficGenerator(sc_core::sc_module_name name)
 void
 TrafficGenerator::process()
 {
-    auto rnd = gem5::Random(time(NULL));
+    auto rnd = gem5::Random::genRandom();
 
     unsigned const memSize = (1 << 10); // 512 MB
 
     while (true) {
 
-        wait(sc_core::sc_time((double)rnd.random(1,100), sc_core::SC_NS));
+        wait(sc_core::sc_time((double)rnd->random(1, 100), sc_core::SC_NS));
 
         auto trans = mm.allocate();
         trans->acquire();
 
         std::string cmdStr;
-        if (rnd.random(0,1)) // Generate a write request?
+        if (rnd->random(0, 1)) // Generate a write request?
         {
             cmdStr = "write";
             trans->set_command(tlm::TLM_WRITE_COMMAND);
-            dataBuffer = rnd.random(0,0xffff);
+            dataBuffer = rnd->random(0, 0xffff);
         } else {
             cmdStr = "read";
             trans->set_command(tlm::TLM_READ_COMMAND);
         }
 
         trans->set_data_ptr(reinterpret_cast<unsigned char*>(&dataBuffer));
-        trans->set_address(rnd.random(0, (int)(memSize-1)));
+        trans->set_address(rnd->random(0, (int)(memSize - 1)));
         trans->set_data_length(4);
         trans->set_streaming_width(4);
         trans->set_byte_enable_ptr(0);

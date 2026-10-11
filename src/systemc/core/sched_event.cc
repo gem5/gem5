@@ -35,7 +35,7 @@ namespace sc_gem5
 ScEvent::~ScEvent()
 {
     if (scheduled())
-        scheduler.deschedule(this);
+        scheduler().deschedule(this);
 }
 
 } // namespace sc_gem5

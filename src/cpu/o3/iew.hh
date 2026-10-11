@@ -172,6 +172,9 @@ class IEW
     /** Wakes all dependents of a completed instruction. */
     void wakeDependents(const DynInstPtr &inst);
 
+    /** Wakes misc register dependents after their producer commits. */
+    void wakeCommittedMiscRegDependents(const DynInstPtr &inst);
+
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
      */

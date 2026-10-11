@@ -153,6 +153,11 @@ SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 /// Target exit_group() handler: terminate simulation. (exit all threads)
 SyscallReturn exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
+/// exit_group path used when a process is killed by a signal (e.g. via
+/// tgkill). `sig` is the terminating signal number used for wait4 status.
+SyscallReturn exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc,
+                                    int sig);
+
 /// Target set_tid_address() handler.
 SyscallReturn setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc,
                                 VPtr<> tidPtr);
@@ -188,10 +193,6 @@ SyscallReturn unlinkImpl(SyscallDesc *desc, ThreadContext *tc,
 /// Target link() handler
 SyscallReturn linkFunc(SyscallDesc *desc, ThreadContext *tc,
                        VPtr<> pathname, VPtr<> new_pathname);
-
-/// Target symlink() handler.
-SyscallReturn symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-                          VPtr<> pathname, VPtr<> new_pathname);
 
 /// Target mkdir() handler.
 SyscallReturn mkdirFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -388,6 +389,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         VPtr<> uaddr, int op, int val, int timeout, VPtr<> uaddr2, int val3)
 {
     auto process = tc->getProcessPtr();
+    const auto byte_order = process->objFile->getByteOrder();
 
     /*
      * Unsupported option that does not affect the correctness of the
@@ -402,7 +404,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
         buf.copyIn(SETranslatingPortProxy(tc));
-        int mem_val = *(int*)buf.bufferPtr();
+        int mem_val = gtoh(*(int *)buf.bufferPtr(), byte_order);
 
         /*
          * The value in memory at uaddr is not equal with the expected val
@@ -410,7 +412,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
          * invoked). In this case, we need to throw an error.
          */
         if (val != mem_val)
-            return -OS::TGT_EWOULDBLOCK;
+            return -static_cast<int>(OS::TGT_EWOULDBLOCK);
 
         if (OS::TGT_FUTEX_WAIT == op) {
             futex_map.suspend(uaddr, process->tgid(), tc);
@@ -429,13 +431,13 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
         buf.copyIn(SETranslatingPortProxy(tc));
-        int mem_val = *(int*)buf.bufferPtr();
+        int mem_val = gtoh(*(int *)buf.bufferPtr(), byte_order);
         /*
          * For CMP_REQUEUE, the whole operation is only started only if
          * val3 is still the value of the futex pointed to by uaddr.
          */
         if (OS::TGT_FUTEX_CMP_REQUEUE && val3 != mem_val)
-            return -OS::TGT_EWOULDBLOCK;
+            return -static_cast<int>(OS::TGT_EWOULDBLOCK);
         return futex_map.requeue(uaddr, process->tgid(), val, timeout, uaddr2);
     } else if (OS::TGT_FUTEX_WAKE_OP == op) {
         /*
@@ -462,7 +464,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         // get value from simulated-space
         BufferArg buf(uaddr2, sizeof(int));
         buf.copyIn(SETranslatingPortProxy(tc));
-        int oldval = *(int*)buf.bufferPtr();
+        int oldval = gtoh(*(int *)buf.bufferPtr(), byte_order);
         int newval = oldval;
         // extract op, oparg, cmp, cmparg from val3
         int wake_cmparg =  val3 & 0xfff;
@@ -484,7 +486,7 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
         else if (wake_op == OS::TGT_FUTEX_OP_XOR)
             newval ^= wake_oparg;
         // copy updated value back to simulated-space
-        *(int*)buf.bufferPtr() = newval;
+        *(int *)buf.bufferPtr() = htog(newval, byte_order);
         buf.copyOut(SETranslatingPortProxy(tc));
         // perform the first wake-up
         int woken1 = futex_map.wakeup(uaddr, process->tgid(), val);
@@ -516,12 +518,6 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register
 SyscallReturn pipePseudoFunc(SyscallDesc *desc, ThreadContext *tc);
-
-
-/// Approximate seconds since the epoch (1/1/1970).  About a billion,
-/// by my reckoning.  We want to keep this a constant (not use the
-/// real-world time) to keep simulations repeatable.
-const unsigned seconds_since_epoch = 1000 * 1000 * 1000;
 
 /// Helper function to convert current elapsed time to seconds and
 /// microseconds.
@@ -1145,6 +1141,55 @@ readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
         pathname, buf_ptr, bufsiz);
 }
 
+/// Target symlinkat() handler.
+template <class OS>
+SyscallReturn
+symlinkatFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> target_ptr,
+              int newdirfd, VPtr<> linkpath_ptr)
+{
+    std::string target;
+    if (!SETranslatingPortProxy(tc).tryReadString(target, target_ptr)) {
+        return -EFAULT;
+    }
+
+    std::string linkpath;
+    if (!SETranslatingPortProxy(tc).tryReadString(linkpath, linkpath_ptr)) {
+        return -EFAULT;
+    }
+
+    auto p = tc->getProcessPtr();
+
+    std::string processed_linkpath;
+    if (newdirfd == OS::TGT_AT_FDCWD) {
+        processed_linkpath = p->checkPathRedirect(linkpath);
+    } else if (!startswith(linkpath, "/")) {
+        std::shared_ptr<FDEntry> fdep = ((*p->fds)[newdirfd]);
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!ffdp) {
+            return -EBADF;
+        }
+        processed_linkpath =
+            p->checkPathRedirect(ffdp->getFileName() + "/" + linkpath);
+    } else {
+        // absolute path
+        processed_linkpath = p->checkPathRedirect(linkpath);
+    }
+
+    int result = symlink(p->checkPathRedirect(target).c_str(),
+                         processed_linkpath.c_str());
+    return (result == -1) ? -errno : result;
+}
+
+/// Target symlink() handler.
+template <class OS>
+SyscallReturn
+symlinkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+            VPtr<> new_pathname)
+{
+    return symlinkatFunc<OS>(desc, tc, pathname, OS::TGT_AT_FDCWD,
+                             new_pathname);
+}
+
 /// Target renameat() handler.
 template <class OS>
 SyscallReturn
@@ -1236,7 +1281,7 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     auto process = tc->getProcessPtr();
 
-    sysinfo->uptime = seconds_since_epoch;
+    sysinfo->uptime = tc->getProcessPtr()->secondsSinceEpoch();
     sysinfo->totalram = process->system->memSize();
     sysinfo->mem_unit = 1;
 
@@ -1283,10 +1328,11 @@ chmodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
     return fchmodatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, mode);
 }
 
+/// Common implementation for poll and ppoll.
 template <class OS>
 SyscallReturn
-pollFunc(SyscallDesc *desc, ThreadContext *tc,
-         VPtr<> fdsPtr, int nfds, int tmout)
+pollImpl(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+         int tmout)
 {
     auto p = tc->getProcessPtr();
 
@@ -1304,8 +1350,9 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
         temp_tgt_fds[index] = ((struct pollfd *)fdsBuf.bufferPtr())[index].fd;
         int tgt_fd = temp_tgt_fds[index];
         auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
-        if (!hbfdp)
+        if (!hbfdp) {
             return -EBADF;
+        }
         auto host_fd = hbfdp->getSimFD();
         ((struct pollfd *)fdsBuf.bufferPtr())[index].fd = host_fd;
     }
@@ -1327,16 +1374,21 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
              */
             System *sysh = tc->getSystemPtr();
             std::list<BasicSignal>::iterator it;
-            for (it=sysh->signalList.begin(); it!=sysh->signalList.end(); it++)
-                if (it->receiver == p)
+            for (it = sysh->signalList.begin(); it != sysh->signalList.end();
+                 it++) {
+                if (it->receiver == p) {
                     return -EINTR;
+                }
+            }
             return SyscallReturn::retry();
         }
-    } else
+    } else {
         status = poll((struct pollfd *)fdsBuf.bufferPtr(), nfds, 0);
+    }
 
-    if (status == -1)
+    if (status == -1) {
         return -errno;
+    }
 
     /**
      * Replace each host_fd in the returned poll_fd array with its original
@@ -1354,6 +1406,32 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
     fdsBuf.copyOut(SETranslatingPortProxy(tc));
 
     return status;
+}
+
+/// Target poll() handler.
+template <class OS>
+SyscallReturn
+pollFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+         int tmout)
+{
+    return pollImpl<OS>(desc, tc, fdsPtr, nfds, tmout);
+}
+
+/// Target ppoll() handler.
+/// Note: Signal mask handling is intentionally omitted as it is
+/// not currently required for gem5's SE mode.
+template <class OS>
+SyscallReturn
+ppollFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+          VPtr<typename OS::timespec> tsPtr, VPtr<> sigmaskPtr)
+{
+    int tmout = -1;
+    if (tsPtr) {
+        tmout = gtoh(tsPtr->tv_sec, OS::byteOrder) * 1000 +
+                gtoh(tsPtr->tv_nsec, OS::byteOrder) / 1000000;
+    }
+
+    return pollImpl<OS>(desc, tc, fdsPtr, nfds, tmout);
 }
 
 /// Target fchmod() handler.
@@ -1761,6 +1839,7 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
                             " flags: %#llx, stack: %#llx\n",
             ptidPtr.addr(), ctidPtr.addr(), tlsPtr.addr(), flags, newStack);
     auto p = tc->getProcessPtr();
+    const auto byte_order = p->objFile->getByteOrder();
 
     if (((flags & OS::TGT_CLONE_SIGHAND)&& !(flags & OS::TGT_CLONE_VM)) ||
         ((flags & OS::TGT_CLONE_THREAD) && !(flags & OS::TGT_CLONE_SIGHAND)) ||
@@ -1854,9 +1933,8 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     }
 
     if (flags & OS::TGT_CLONE_PARENT_SETTID) {
-        BufferArg ptidBuf(ptidPtr, sizeof(long));
-        long *ptid = (long *)ptidBuf.bufferPtr();
-        *ptid = cp->pid();
+        TypedBufferArg<uint32_t> ptidBuf(ptidPtr);
+        *ptidBuf = htog(static_cast<uint32_t>(cp->pid()), byte_order);
         ptidBuf.copyOut(SETranslatingPortProxy(tc));
     }
 
@@ -1878,9 +1956,8 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     }
 
     if (flags & OS::TGT_CLONE_CHILD_SETTID) {
-        BufferArg ctidBuf(ctidPtr, sizeof(long));
-        long *ctid = (long *)ctidBuf.bufferPtr();
-        *ctid = cp->pid();
+        TypedBufferArg<uint32_t> ctidBuf(ctidPtr);
+        *ctidBuf = htog(static_cast<uint32_t>(cp->pid()), byte_order);
         ctidBuf.copyOut(SETranslatingPortProxy(ctc));
     }
 
@@ -2303,13 +2380,33 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 /// Target clock_gettime() function.
-template <class OS>
+template <class OS, typename TS = typename OS::timespec>
 SyscallReturn
-clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
-                  int clk_id, VPtr<typename OS::timespec> tp)
+clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
+                  VPtr<TS> tp)
 {
     getElapsedTimeNano(tp->tv_sec, tp->tv_nsec);
-    tp->tv_sec += seconds_since_epoch;
+    switch (clk_id) {
+        case OS::TGT_CLOCK_REALTIME:
+        case OS::TGT_CLOCK_REALTIME_ALARM:
+        case OS::TGT_CLOCK_REALTIME_COARSE:
+        case OS::TGT_CLOCK_TAI:
+            tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
+            break;
+        case OS::TGT_CLOCK_MONOTONIC:
+        case OS::TGT_CLOCK_MONOTONIC_COARSE:
+        case OS::TGT_CLOCK_MONOTONIC_RAW:
+        case OS::TGT_CLOCK_BOOTTIME:
+        case OS::TGT_CLOCK_BOOTTIME_ALARM:
+            break;
+        case OS::TGT_CLOCK_PROCESS_CPUTIME:
+        case OS::TGT_CLOCK_THREAD_CPUTIME:
+            // In SE mode, simulated processes run without OS preemption,
+            // so CPU execution time is approximated by elapsed simulated time.
+            break;
+        default:
+            return -EINVAL;
+    }
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_nsec = htog(tp->tv_nsec, OS::byteOrder);
 
@@ -2336,7 +2433,7 @@ gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
                  VPtr<typename OS::timeval> tp, VPtr<> tz_ptr)
 {
     getElapsedTimeMicro(tp->tv_sec, tp->tv_usec);
-    tp->tv_sec += seconds_since_epoch;
+    tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_usec = htog(tp->tv_usec, OS::byteOrder);
 
@@ -2558,7 +2655,7 @@ timeFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> taddr)
 {
     typename OS::time_t sec, usec;
     getElapsedTimeMicro(sec, usec);
-    sec += seconds_since_epoch;
+    sec += tc->getProcessPtr()->secondsSinceEpoch();
 
     SETranslatingPortProxy p(tc);
     if (taddr != 0) {
@@ -2598,17 +2695,23 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         }
     }
 
-    if (sig != 0 && sig != OS::TGT_SIGABRT)
-        return -EINVAL;
-
     if (tgt_proc == nullptr)
         return -ESRCH;
 
     if (tgid != -1 && tgt_proc->tgid() != tgid)
         return -ESRCH;
 
-    if (sig == OS::TGT_SIGABRT)
-        exitGroupFunc(desc, tc, 0);
+    switch (sig) {
+        case 0:
+            break;
+        case OS::TGT_SIGABRT:
+        case OS::TGT_SIGINT:
+        case OS::TGT_SIGTERM:
+        case OS::TGT_SIGKILL:
+            return exitGroupSignaledFunc(desc, tc, sig);
+        default:
+            return -EINVAL;
+    }
 
     return 0;
 }
@@ -2945,11 +3048,16 @@ wait4Func(SyscallDesc *desc, ThreadContext *tc,
     return (options & OS::TGT_WNOHANG) ? 0 : SyscallReturn::retry();
 
 success:
-    // Set status to EXITED for WIFEXITED evaluations.
-    const int EXITED = 0;
-    BufferArg statusBuf(statPtr, sizeof(int));
-    *(int *)statusBuf.bufferPtr() = EXITED;
-    statusBuf.copyOut(SETranslatingPortProxy(tc));
+    // Report the child's actual wait(2) status (normal exit or signal).
+    // Previously this always wrote 0 (WIFEXITED with code 0), which hid
+    // abnormal terminations such as raise(SIGABRT).
+    // Linux allows a NULL status pointer; skip the guest write in that case
+    // (same pattern as the rusagePtr guard above).
+    if (statPtr) {
+        BufferArg statusBuf(statPtr, sizeof(int));
+        *(int *)statusBuf.bufferPtr() = iter->exitStatus;
+        statusBuf.copyOut(SETranslatingPortProxy(tc));
+    }
 
     // Return the child PID.
     pid_t retval = iter->sender->pid();
@@ -3254,6 +3362,28 @@ ftruncateFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
 
     int result = ftruncate(sim_fd, length);
     return (result == -1) ? -errno : result;
+}
+
+template <class OS>
+SyscallReturn
+rseqFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> rseq_ptr,
+         uint32_t rseq_len, int flags, uint32_t sig)
+{
+    // 1 is RSEQ_FLAG_UNREGISTER
+    if (flags & 1) {
+        return 0;
+    }
+
+    // Register
+    // Write current CPU ID to cpu_id_start (offset 0) and cpu_id (offset 4)
+    uint32_t cpu_id = tc->cpuId();
+    cpu_id = htog(cpu_id, OS::byteOrder);
+
+    SETranslatingPortProxy(tc).writeBlob(rseq_ptr, &cpu_id, sizeof(cpu_id));
+    SETranslatingPortProxy(tc).writeBlob(rseq_ptr + 4, &cpu_id,
+                                         sizeof(cpu_id));
+
+    return 0;
 }
 
 template <typename OS>

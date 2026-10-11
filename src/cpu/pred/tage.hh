@@ -95,15 +95,15 @@ class TAGE: public ConditionalPredictor
         }
     };
 
-    virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
-                         void* &b);
+    virtual Prediction predict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                               void *&b);
 
   public:
 
     TAGE(const TAGEParams &params);
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
+    Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond,
                          bool taken, Addr target, const StaticInstPtr &inst,
                          void * &bp_history) override;

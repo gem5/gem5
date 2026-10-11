@@ -92,9 +92,8 @@ LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
 // Place holder for a function that is called to update predictor history
 }
 
-
-bool
-LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
+Prediction
+LocalBP::lookup(ThreadID tid, Addr branch_addr, void *&bp_history)
 {
     bool taken;
     unsigned local_predictor_idx = getLocalIndex(branch_addr);
@@ -109,7 +108,7 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 
     taken = getPrediction(counter_val);
 
-    return taken;
+    return predictWithDefaultLatency(taken);
 }
 
 void

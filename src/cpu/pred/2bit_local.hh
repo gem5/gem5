@@ -46,6 +46,7 @@
 
 #include "base/sat_counter.hh"
 #include "base/types.hh"
+#include "cpu/pred/branch_type.hh"
 #include "cpu/pred/conditional.hh"
 #include "params/LocalBP.hh"
 
@@ -71,7 +72,7 @@ class LocalBP : public ConditionalPredictor
     LocalBP(const LocalBPParams &params);
 
     // Overriding interface functions
-    bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
+    Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) override;
 
     void branchPlaceholder(ThreadID tid, Addr pc, bool uncond,
                            void * &bpHistory) override;

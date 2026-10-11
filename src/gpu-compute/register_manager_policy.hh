@@ -53,14 +53,18 @@ class Wavefront;
 class RegisterManagerPolicy
 {
   public:
-    virtual void setParent(ComputeUnit *_cu) { cu = _cu; }
+    virtual void
+    setParent(ComputeUnit *_cu)
+    {
+        cu = _cu;
+    }
 
     // Execute: called by RenameStage::execute()
     virtual void exec() = 0;
 
     // provide virtual to physical register mapping
-    virtual int mapVgpr(Wavefront* w, int vgprIndex) = 0;
-    virtual int mapSgpr(Wavefront* w, int sgprIndex) = 0;
+    virtual int mapVgpr(Wavefront *w, int vgprIndex) = 0;
+    virtual int mapSgpr(Wavefront *w, int sgprIndex) = 0;
 
     // check if requested number of vector registers can be allocated
     virtual bool canAllocateVgprs(int simdId, int nWfs, int demandPerWf) = 0;
@@ -70,7 +74,7 @@ class RegisterManagerPolicy
 
     // allocate vector registers and reserve from register pool
     virtual void allocateRegisters(Wavefront *w, int vectorDemand,
-        int scalarDemand) = 0;
+                                   int scalarDemand) = 0;
 
     // free all remaining registers held by specified WF
     virtual void freeRegisters(Wavefront *w) = 0;

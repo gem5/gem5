@@ -43,7 +43,7 @@ from m5.objects import (
     LupioTMR,
     LupioTTY,
     LupV,
-    PciBus,
+    PciHost,
     Plic,
     PMAChecker,
     RawDiskImage,
@@ -260,7 +260,7 @@ class LupvBoard(RiscvSystem, AbstractBoard, KernelDiskWorkload):
         return False
 
     @overrides(AbstractBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "The LupvBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
@@ -275,14 +275,14 @@ class LupvBoard(RiscvSystem, AbstractBoard, KernelDiskWorkload):
         return self.iobus
 
     @overrides(AbstractBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return False
 
     @overrides(AbstractBoard)
-    def get_pci_bus(self) -> PciBus:
+    def get_pci_host(self) -> PciHost:
         raise NotImplementedError(
-            "The LupvBoard does not have PCI bus. "
-            "Use `has_pci_bus()` to check this."
+            "The LupvBoard does not have PCI host. "
+            "Use `has_pci_host()` to check this."
         )
 
     def has_coherent_io(self) -> bool:
@@ -567,7 +567,7 @@ class LupvBoard(RiscvSystem, AbstractBoard, KernelDiskWorkload):
         return "/dev/lda"
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         return [
             "console=ttyLIO0",
             "root={root_value}",

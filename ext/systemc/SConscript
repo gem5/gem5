@@ -57,7 +57,7 @@ with gem5_scons.Configure(systemc) as conf:
         systemc['QT_ARCH'] = 'iX86_64'
         arch = 'x86_64'
     else:
-        termcap = get_termcap(GetOption('use_colors'))
+        termcap = get_termcap(use_colors=GetOption('use_colors'))
         print(termcap.Yellow + termcap.Bold +
               "Warning: Unrecognized architecture for systemc." + termcap.Normal)
 

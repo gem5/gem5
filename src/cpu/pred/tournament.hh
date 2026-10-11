@@ -72,7 +72,7 @@ class TournamentBP : public ConditionalPredictor
     TournamentBP(const TournamentBPParams &params);
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
+    Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target, const StaticInstPtr &inst,
                          void * &bp_history) override;

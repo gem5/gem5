@@ -43,11 +43,124 @@ import subprocess
 import sys
 
 import protolib
+from google.protobuf import json_format
+from google.protobuf.descriptor import FieldDescriptor
 
 util_dir = os.path.dirname(os.path.realpath(__file__))
 # Make sure the proto definitions are up to date.
 subprocess.check_call(["make", "--quiet", "-C", util_dir, "packet_pb2.py"])
 import packet_pb2
+
+
+def _get_field_value(packet, field):
+    if field.is_repeated:
+        values = getattr(packet, field.name)
+        return list(values) if values else None
+
+    if field.has_presence and not packet.HasField(field.name):
+        return None
+
+    return getattr(packet, field.name)
+
+
+def _decode_packet(proto_in):
+    size, pos = protolib._DecodeVarint32(proto_in)
+    if pos == 0:
+        return None
+    if size <= 0:
+        raise ValueError(f"Invalid packet size {size}")
+
+    buf = proto_in.read(size)
+    if len(buf) != size:
+        raise ValueError(
+            f"Unexpected EOF while reading packet payload (expected {size} bytes, "
+            f"got {len(buf)})"
+        )
+
+    packet = packet_pb2.Packet()
+    packet.ParseFromString(buf)
+    return packet
+
+
+def _write_header(ascii_out, header):
+    try:
+        header_dict = json_format.MessageToDict(
+            header,
+            preserving_proto_field_name=True,
+            including_default_value_fields=True,
+        )
+    except TypeError:
+        # Fallback for older protobuf versions that lack
+        # including_default_value_fields.
+        header_dict = json_format.MessageToDict(
+            header, preserving_proto_field_name=True
+        )
+        for field in header.DESCRIPTOR.fields:
+            if field.is_repeated:
+                header_dict.setdefault(field.name, [])
+            elif not header.HasField(field.name):
+                header_dict[field.name] = field.default_value
+
+    def _render(item, indent=0, list_item=False):
+        space = "  " * indent
+        bullet = "- " if list_item else ""
+        if isinstance(item, dict):
+            ascii_out.write(f"# {space}{bullet}{{\n")
+            for k, v in item.items():
+                if isinstance(v, (dict, list)):
+                    ascii_out.write(f"# {space}  {k}: ")
+                    _render(v, indent + 1)
+                else:
+                    ascii_out.write(f"# {space}  {k}: {v}\n")
+            ascii_out.write(f"# {space}}}\n")
+        elif isinstance(item, list):
+            ascii_out.write(f"# {space}{bullet}[\n")
+            for v in item:
+                _render(v, indent + 1, list_item=True)
+            ascii_out.write(f"# {space}]\n")
+        else:
+            ascii_out.write(f"# {space}{bullet}{item}\n")
+
+    ascii_out.write("# header {\n")
+    for k, v in header_dict.items():
+        if isinstance(v, (dict, list)):
+            ascii_out.write(f"#   {k}: ")
+            _render(v, 2 if isinstance(v, dict) else 1)
+        else:
+            ascii_out.write(f"#   {k}: {v}\n")
+    ascii_out.write("# }\n")
+
+
+def _dump_packets(proto_in, ascii_out, packet_fields):
+    num_packets = 0
+
+    while True:
+        try:
+            packet = _decode_packet(proto_in)
+        except Exception as exc:
+            location = getattr(proto_in, "tell", lambda: -1)()
+            print(
+                f"Error decoding packet {num_packets} at offset {location}: {exc}",
+                file=sys.stderr,
+            )
+            exit(-1)
+        if packet is None:
+            break
+        num_packets += 1
+
+        row = []
+        for field in packet_fields:
+            value = _get_field_value(packet, field)
+            if value is None:
+                row.append("NULL")
+            elif field.is_repeated:
+                row.append("|".join(str(entry) for entry in value))
+            else:
+                row.append(str(value))
+
+        ascii_out.write(",".join(row) + "\n")
+
+    return num_packets
 
 
 def main():
@@ -77,34 +190,18 @@ def main():
     header = packet_pb2.PacketHeader()
     protolib.decodeMessage(proto_in, header)
 
-    print("Object id:", header.obj_id)
-    print("Tick frequency:", header.tick_freq)
-
-    for id_string in header.id_strings:
-        print("Master id %d: %s" % (id_string.key, id_string.value))
+    _write_header(ascii_out, header)
 
     print("Parsing packets")
 
-    num_packets = 0
-    packet = packet_pb2.Packet()
+    packet_fields = list(packet_pb2.Packet.DESCRIPTOR.fields)
+    header_columns = []
+    for field in packet_fields:
+        header_columns.append(field.name)
 
-    # Decode the packet messages until we hit the end of the file
-    while protolib.decodeMessage(proto_in, packet):
-        num_packets += 1
-        # ReadReq is 1 and WriteReq is 4 in src/mem/packet.hh Command enum
-        cmd = "r" if packet.cmd == 1 else ("w" if packet.cmd == 4 else "u")
-        if packet.HasField("pkt_id"):
-            ascii_out.write(f"{packet.pkt_id},")
-        if packet.HasField("flags"):
-            ascii_out.write(
-                f"{cmd},{packet.addr},{packet.size},{packet.flags},{packet.tick}"
-            )
-        else:
-            ascii_out.write(f"{cmd},{packet.addr},{packet.size},{packet.tick}")
-        if packet.HasField("pc"):
-            ascii_out.write(f",{packet.pc}\n")
-        else:
-            ascii_out.write("\n")
+    ascii_out.write("# " + ", ".join(header_columns) + "\n")
+
+    num_packets = _dump_packets(proto_in, ascii_out, packet_fields)
 
     print("Parsed packets:", num_packets)
 

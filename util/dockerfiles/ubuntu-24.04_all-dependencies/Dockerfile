@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024-2026 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     libprotoc-dev \
     libgoogle-perftools-dev \
     libboost-all-dev \
-    libhdf5-serial-dev \
+    libhdf5-dev \
     python3-pydot \
     python3-venv \
     python3-tk \
@@ -55,16 +55,22 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     wget \
     cmake \
     doxygen \
+    clang-format \
     vim \
     sudo \
-    jq
+    jq \
+    # The next three are required for codecov/codecov-action in GitHub Actions
+    bash \
+    curl \
+    gpg \
+    zstd
 
 # pre-commit, as installed via apt in 24.04, attempts to create a cache
 # directory at "${HOME}/.cache/pre-commit". If running docker with non-root,
 # the HOME directory is set to "/". Since non-root users do not have permission
 # to write to this directory, an error is returned when pre-commit is executed.
 # pre-commit's default cache directory can be changed via the `XDG_CACHE_HOME`
-# enivoronment variable. Here we set it to "/tmp". With this pre-commit will
+# environment variable. Here we set it to "/tmp". With this pre-commit will
 # create a "/tmp/pre-commit" directory to use for caching. "/tmp" was chosen
 # as it's a directory any user can access and write to. Given this only stores
 # caching information, the "/tmp" directory being wiped is not a concern.

@@ -54,7 +54,7 @@ def parse_args():
     return args
 
 
-def write_cc_file(sim_object: Type, cxx_config_cc: str):
+def write_cc_file(sim_object: type, cxx_config_cc: str):
     """
     Generates the C++ source file for the C++ configuration of a SimObject.
 
@@ -90,8 +90,7 @@ def write_cc_file(sim_object: Type, cxx_config_cc: str):
             else:
                 ptype.cxx_ini_predecls(code)
 
-    code(
-        """#include "${{sim_object._value_dict['cxx_header']}}"
+    code("""#include "${{sim_object._value_dict['cxx_header']}}"
 #include "base/str.hh"
 #include "cxx_config/${sim_object_name}.hh"
 
@@ -100,8 +99,7 @@ namespace gem5
 
 ${param_class}::DirectoryEntry::DirectoryEntry()
 {
-"""
-    )
+""")
     code.indent()
     for param in sim_object._params.values():
         is_dict = isinstance(param, m5.params.DictParamDesc)
@@ -138,16 +136,14 @@ ${param_class}::DirectoryEntry::DirectoryEntry()
 
     code.dedent()
 
-    code(
-        """}
+    code("""}
 
 bool
 ${param_class}::setSimObject(const std::string &name, SimObject *simObject)
 {
     bool ret = true;
     if (false) {
-"""
-    )
+""")
 
     code.indent()
     for param in sim_object._params.values():
@@ -168,8 +164,7 @@ ${param_class}::setSimObject(const std::string &name, SimObject *simObject)
                 code.dedent()
     code.dedent()
 
-    code(
-        """
+    code("""
     } else {
         ret = false;
     }
@@ -184,8 +179,7 @@ ${param_class}::setSimObjectVector(const std::string &name,
     bool ret = true;
 
     if (false) {
-"""
-    )
+""")
 
     code.indent()
     for param in sim_object._params.values():
@@ -217,8 +211,7 @@ ${param_class}::setSimObjectVector(const std::string &name,
                 code.dedent()
     code.dedent()
 
-    code(
-        """
+    code("""
     } else {
         ret = false;
     }
@@ -239,8 +232,7 @@ ${param_class}::setParam(const std::string &name,
     bool ret = true;
 
     if (false) {
-"""
-    )
+""")
 
     code.indent()
     for param in sim_object._params.values():
@@ -276,8 +268,7 @@ ${param_class}::setParam(const std::string &name,
                 code.dedent()
     code.dedent()
 
-    code(
-        """
+    code("""
     } else {
         ret = false;
     }
@@ -292,8 +283,7 @@ ${param_class}::setParamVector(const std::string &name,
     bool ret = true;
 
     if (false) {
-"""
-    )
+""")
 
     code.indent()
     for param in sim_object._params.values():
@@ -305,7 +295,7 @@ ${param_class}::setParamVector(const std::string &name,
             if not is_simobj and is_vector:
                 code('} else if (name == "${{param.name}}") {')
                 code.indent()
-                code("${{param.name}}.clear();")
+                code("this->${{param.name}}.clear();")
                 code(
                     "for (auto i = values.begin(); ret && i != values.end(); i ++)"
                 )
@@ -320,8 +310,7 @@ ${param_class}::setParamVector(const std::string &name,
                 code.dedent()
     code.dedent()
 
-    code(
-        """
+    code("""
     } else {
         ret = false;
     }
@@ -336,8 +325,7 @@ ${param_class}::setParamDict(const std::string &name,
     bool ret = true;
 
     if (false) {
-"""
-    )
+""")
 
     code.indent()
     for param in sim_object._params.values():
@@ -345,7 +333,7 @@ ${param_class}::setParamDict(const std::string &name,
         if is_dict:
             code('} else if (name == "${{param.name}}") {')
             code.indent()
-            code("${{param.name}}.clear();")
+            code("this->${{param.name}}.clear();")
             code(
                 "for (auto i = values.begin(); ret && i != values.end(); i ++)"
             )
@@ -367,8 +355,7 @@ ${param_class}::setParamDict(const std::string &name,
             code.dedent()
     code.dedent()
 
-    code(
-        """
+    code("""
     } else {
         ret = false;
     }
@@ -383,8 +370,7 @@ ${param_class}::setPortConnectionCount(const std::string &name,
     bool ret = true;
 
     if (false) {
-"""
-    )
+""")
 
     code.indent()
     for port in sim_object._ports.values():
@@ -392,8 +378,7 @@ ${param_class}::setPortConnectionCount(const std::string &name,
         code("    this->port_${{port.name}}_connection_count = count;")
     code.dedent()
 
-    code(
-        """
+    code("""
     } else {
         ret = false;
     }
@@ -404,8 +389,7 @@ ${param_class}::setPortConnectionCount(const std::string &name,
 SimObject *
 ${param_class}::simObjectCreate()
 {
-"""
-    )
+""")
 
     code.indent()
     if hasattr(sim_object, "abstract") and sim_object.abstract:
@@ -414,12 +398,10 @@ ${param_class}::simObjectCreate()
         code("return this->create();")
     code.dedent()
 
-    code(
-        """}
+    code("""}
 
 } // namespace gem5
-"""
-    )
+""")
 
     code.write(cxx_config_cc)
 

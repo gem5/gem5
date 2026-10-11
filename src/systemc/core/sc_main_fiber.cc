@@ -71,7 +71,7 @@ ScMainFiber::main()
             reportHandlerProc(reportifyException(),
                     ::sc_core::sc_report_handler::get_catch_actions());
         }
-        scheduler.clear();
+        scheduler().clear();
     } else {
         // If python tries to call sc_main but no sc_main was defined...
         fatal("sc_main called but not defined.\n");

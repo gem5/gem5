@@ -398,9 +398,9 @@ DistIface::SyncEvent::process()
         // global sync completed
     }
     if (DistIface::sync->doCkpt)
-        exitSimLoop("checkpoint");
+        exitSimulationLoopClassic("checkpoint");
     if (DistIface::sync->doExit) {
-        exitSimLoop("exit request from gem5 peers");
+        exitSimulationLoopClassic("exit request from gem5 peers");
         return;
     }
     if (DistIface::sync->doStopSync) {
@@ -684,7 +684,7 @@ DistIface::recvThreadFunc(Event *recv_done, Tick link_delay)
             // because one of them called m5 exit. So we stop here.
             // Grab the eventq lock to stop the simulation thread
             curEventQueue()->lock();
-            exitSimLoop("connection to gem5 peer got closed");
+            exitSimulationLoopClassic("connection to gem5 peer got closed");
             curEventQueue()->unlock();
             // The simulation thread may be blocked in processing an on-going
             // global synchronisation. Abort the sync to give the simulation

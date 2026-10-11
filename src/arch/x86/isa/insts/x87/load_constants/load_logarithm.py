@@ -37,23 +37,23 @@
 microcode = """
 
 def macroop FLDL2E {
-    lfpimm ufp1, 1.44269504089
-    movfp st(-1), ufp1, spm=-1
+    lfpimm ufp1, 1.44269504089, dataSize=8
+    movfp st(-1), ufp1, spm=-1, dataSize=8
 };
 
 def macroop FLDL2T {
-    lfpimm ufp1, 3.32192809489
-    movfp st(-1), ufp1, spm=-1
+    lfpimm ufp1, 3.32192809489, dataSize=8
+    movfp st(-1), ufp1, spm=-1, dataSize=8
 };
 
 def macroop FLDLG2 {
-    lfpimm ufp1, 0.30102999566
-    movfp st(-1), ufp1, spm=-1
+    lfpimm ufp1, 0.30102999566, dataSize=8
+    movfp st(-1), ufp1, spm=-1, dataSize=8
 };
 
 def macroop FLDLN2 {
-    lfpimm ufp1, 0.69314718056
-    movfp st(-1), ufp1, spm=-1
+    lfpimm ufp1, 0.69314718056, dataSize=8
+    movfp st(-1), ufp1, spm=-1, dataSize=8
 };
 
 """

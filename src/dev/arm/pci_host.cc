@@ -37,6 +37,7 @@
 
 #include "dev/arm/pci_host.hh"
 
+#include "dev/pci/device.hh"
 #include "params/GenericArmPciHost.hh"
 
 namespace gem5
@@ -50,24 +51,27 @@ GenericArmPciHost::GenericArmPciHost(const GenericArmPciHostParams &p)
 }
 
 uint32_t
-GenericArmPciHost::mapPciInterrupt(const PciDevAddr &addr, PciIntPin pin) const
+GenericArmPciHost::mapPciInterrupt(const PciDevice &device) const
 {
+    PciIntPin pin = device.interruptPin();
+    PciDevAddr addr = device.devAddr();
+
     fatal_if(pin == PciIntPin::NO_INT,
              "%02x:%02x.%i: Interrupt from a device without interrupts\n",
              getBusNum(), addr.dev, addr.func);
 
     switch (intPolicy) {
       case enums::ARM_PCI_INT_STATIC:
-        return GenericPciHost::mapPciInterrupt(addr, pin);
+          return GenericPciHost::mapPciInterrupt(device);
 
       case enums::ARM_PCI_INT_DEV:
-        return intBase + (addr.dev % intCount);
+          return intBase + (addr.dev % intCount);
 
       case enums::ARM_PCI_INT_PIN:
-        return intBase + ((static_cast<uint8_t>(pin) - 1) % intCount);
+          return intBase + ((static_cast<uint8_t>(pin) - 1) % intCount);
 
       default:
-        fatal("Unsupported PCI interrupt routing policy.");
+          fatal("Unsupported PCI interrupt routing policy.");
     }
 }
 

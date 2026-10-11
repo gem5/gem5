@@ -56,6 +56,7 @@ from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_handler import (
     ExitHandler,
+    ExitHypercall,
     WorkBeginExitHandler,
 )
 from gem5.simulate.simulator import Simulator
@@ -109,7 +110,9 @@ class WorkBeginExit(WorkBeginExitHandler):
         return False
 
 
-class ScheduledStatsDumpHandler(ExitHandler, hypercall_num=6):
+class ScheduledStatsDumpHandler(
+    ExitHandler, hypercall=ExitHypercall.SCHEDULED_EXIT
+):
     process_count = 0
 
     @overrides(ExitHandler)
@@ -184,6 +187,7 @@ if args.isa == "x86":
         switch_core_type=get_cpu_type_from_str(args.switch_cores),
         isa=ISA.X86,
         num_cores=args.num_cores,
+        clk_freq="3GHz",
     )
 
     board = X86Board(
@@ -223,6 +227,7 @@ elif args.isa == "arm":
         switch_core_type=get_cpu_type_from_str(args.switch_cores),
         isa=ISA.ARM,
         num_cores=args.num_cores,
+        clk_freq="3GHz",
     )
 
     release = ArmDefaultRelease.for_kvm()
@@ -266,6 +271,7 @@ elif args.isa == "riscv":
         switch_core_type=get_cpu_type_from_str(args.switch_cores),
         isa=ISA.RISCV,
         num_cores=args.num_cores,
+        clk_freq="3GHz",
     )
 
     board = RiscvBoard(

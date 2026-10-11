@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2025 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2015-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -91,6 +91,10 @@ class ArmExtension(ScopedEnum):
         "FEAT_BF16",  # Optional in Armv8.2
         "FEAT_AA32BF16",  # Optional in Armv8.2
         "FEAT_EBF16",  # Optional in Armv8.2
+        "FEAT_SHA3",
+        "FEAT_SHA512",
+        "FEAT_SM3",
+        "FEAT_SM4",
         # Armv8.3
         "FEAT_FCMA",
         "FEAT_JSCVT",
@@ -116,6 +120,7 @@ class ArmExtension(ScopedEnum):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
         # Armv8.9
         "FEAT_SCTLR2",
         "FEAT_TCR2",
@@ -129,9 +134,16 @@ class ArmExtension(ScopedEnum):
         "FEAT_SVE_PMULL128",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+        # Armv9.3
+        "FEAT_SME2",
         # Armv9.4
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
         "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
         # Others
         "SECURITY",
         "LPAE",
@@ -147,6 +159,10 @@ class ArmRelease(SimObject):
     cxx_class = "gem5::ArmRelease"
 
     extensions = VectorParam.ArmExtension([], "ISA extensions")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.extensions = list(self.extensions)
 
     def add(self, new_ext: ArmExtension) -> None:
         """
@@ -184,6 +200,25 @@ class ArmRelease(SimObject):
         release.remove(ArmExtension("VIRTUALIZATION"))
         return release
 
+    @classmethod
+    def for_se(cls):
+        """
+        Prunes the ArmRelease from FS specific extensions.
+        These can be broadly cathegorized in:
+        * EL1/EL2/EL3 specific FEAT_
+            * Example = Privileged / system maintenance instructions like TLBIS
+            * Example = Trapping based extensions
+            * VMSA management features (something which will be used in translateFs
+                only method
+
+        Differently, a good candidate for SE releases is a userspace
+        data processing feature (like FEAT_SVE)
+        """
+        release = cls()
+        for extension in cls.not_for_se():
+            release.remove(extension)
+        return release
+
 
 class Armv8(ArmRelease):
     extensions = [
@@ -196,6 +231,13 @@ class Armv8(ArmRelease):
         "FEAT_SHA256",
         "FEAT_CRC32",
     ]
+
+    @classmethod
+    def not_for_se(cls):
+        return [
+            ArmExtension("SECURITY"),
+            ArmExtension("VIRTUALIZATION"),
+        ]
 
 
 class ArmDefaultRelease(Armv8):
@@ -235,13 +277,26 @@ class ArmDefaultRelease(Armv8):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
         # Armv9.0
         "FEAT_SVE2",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+        # Armv9.3
+        "FEAT_SME2",
         # Armv9.4
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
+        "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
     ]
+
+    @classmethod
+    def not_for_se(cls):
+        return Armv94.not_for_se()
 
 
 class Armv81(Armv8):
@@ -254,6 +309,15 @@ class Armv81(Armv8):
         "FEAT_RDM",
         "FEAT_FHM",
     ]
+
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_VHE"),
+            ArmExtension("FEAT_PAN"),
+            ArmExtension("FEAT_HPDS"),
+            ArmExtension("FEAT_VMID16"),
+        ]
 
 
 class Armv82(Armv81):
@@ -270,7 +334,19 @@ class Armv82(Armv81):
         "FEAT_BF16",
         "FEAT_AA32BF16",
         "FEAT_EBF16",
+        "FEAT_SHA3",
+        "FEAT_SHA512",
+        "FEAT_SM3",
+        "FEAT_SM4",
     ]
+
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_UAO"),
+            ArmExtension("FEAT_LVA"),
+            ArmExtension("FEAT_LPA"),
+        ]
 
 
 class Armv83(Armv82):
@@ -288,6 +364,14 @@ class Armv84(Armv83):
         "FEAT_FRINTTS",
     ]
 
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_SEL2"),
+            ArmExtension("FEAT_TLBIOS"),
+            ArmExtension("FEAT_TLBIRANGE"),
+        ]
+
 
 class Armv85(Armv84):
     extensions = Armv84.extensions + [
@@ -297,6 +381,13 @@ class Armv85(Armv84):
         "FEAT_EVT",
     ]
 
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_EVT"),
+            ArmExtension("FEAT_RNG_TRAP"),
+        ]
+
 
 class Armv86(Armv85):
     extensions = Armv85.extensions + [
@@ -304,16 +395,38 @@ class Armv86(Armv85):
         "FEAT_AFP",
     ]
 
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_FGT"),
+        ]
+
 
 class Armv87(Armv86):
     extensions = Armv86.extensions + [
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
     ]
+
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_HCX"),
+            ArmExtension("FEAT_XS"),
+        ]
 
 
 class Armv89(Armv87):
     extensions = Armv87.extensions + ["FEAT_SCTLR2", "FEAT_TCR2", "FEAT_S1PIE"]
+
+    @classmethod
+    def not_for_se(cls):
+        return super().not_for_se() + [
+            ArmExtension("FEAT_SCTLR2"),
+            ArmExtension("FEAT_TCR2"),
+            ArmExtension("FEAT_S1PIE"),
+        ]
 
 
 class Armv90(Armv89):
@@ -328,13 +441,26 @@ class Armv90(Armv89):
 
 
 class Armv92(Armv90):
-    extensions = Armv90.extensions + ["FEAT_SME"]
+    extensions = Armv90.extensions + [
+        "FEAT_SME",
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+    ]
 
 
-class Armv94(Armv92):
+class Armv93(Armv92):
+    extensions = Armv92.extensions + [
+        "FEAT_SME2",
+    ]
+
+
+class Armv94(Armv93):
     extensions = Armv92.extensions + [
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
         "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
     ]
 
 

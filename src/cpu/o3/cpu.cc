@@ -88,7 +88,7 @@ CPU::CPU(const BaseO3CPUParams &params)
       iew(this, params),
       commit(this, params),
 
-      regFile(params.numPhysIntRegs, params.numPhysFloatRegs,
+      regFile(this, params.numPhysIntRegs, params.numPhysFloatRegs,
               params.numPhysVecRegs, params.numPhysVecPredRegs,
               params.numPhysMatRegs, params.numPhysCCRegs,
               params.isa[0]->regClasses()),

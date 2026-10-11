@@ -53,18 +53,19 @@ VIPERSequencer::~VIPERSequencer()
 }
 
 void
-VIPERSequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
-                            bool llscSuccess,
-                            const MachineType mach, const bool externalHit,
+VIPERSequencer::hitCallback(SequencerRequest *srequest, DataBlock &data,
+                            bool llscSuccess, const MachineType mach,
+                            const bool externalHit, const int cBusy,
                             const Cycles initialRequestTime,
                             const Cycles forwardRequestTime,
                             const Cycles firstResponseTime,
                             const bool was_coalesced)
 {
     if (srequest->m_type != RubyRequestType_hasNoAddr) {
-        return Sequencer::hitCallback(
-            srequest, data, llscSuccess, mach, externalHit, initialRequestTime,
-            forwardRequestTime, firstResponseTime, was_coalesced);
+        return Sequencer::hitCallback(srequest, data, llscSuccess, mach,
+                                      externalHit, cBusy, initialRequestTime,
+                                      forwardRequestTime, firstResponseTime,
+                                      was_coalesced);
     }
 
     PacketPtr pkt = srequest->pkt;

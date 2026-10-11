@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
 #
@@ -33,7 +45,10 @@ from m5.objects import (
     Root,
     SparseHistStatTester,
 )
-from m5.stats.gem5stats import get_simstat
+from m5.stats.gem5stats import (
+    JsonOutputVistor,
+    get_simstat,
+)
 
 parser = argparse.ArgumentParser(
     description="Tests the output of a SparseHist Pystat."
@@ -72,7 +87,8 @@ m5.instantiate()
 m5.simulate()
 
 simstats = get_simstat(stat_tester)
-output = simstats.to_json()
+json_visitor = JsonOutputVistor(None)
+output = json_visitor.visit_simstat(simstats)
 
 
 value_dict = {}

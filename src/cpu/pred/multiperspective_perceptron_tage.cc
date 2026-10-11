@@ -515,9 +515,9 @@ MultiperspectivePerceptronTAGE::updateHistories(ThreadID tid,
     }
 }
 
-bool
+Prediction
 MultiperspectivePerceptronTAGE::lookup(ThreadID tid, Addr instPC,
-                                   void * &bp_history)
+                                       void *&bp_history)
 {
     MPPTAGEBranchInfo *bi =
         new MPPTAGEBranchInfo(instPC, pcshift, true, *tage, *loopPredictor,
@@ -543,7 +543,7 @@ MultiperspectivePerceptronTAGE::lookup(ThreadID tid, Addr instPC,
             0 /* altBank: unused */, init_lsum);
     bi->predictedTaken = pred_taken;
     bi->lpBranchInfo->predTaken = pred_taken;
-    return pred_taken;
+    return predictWithDefaultLatency(pred_taken);
 }
 
 

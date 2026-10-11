@@ -540,7 +540,7 @@ class Scheduler
     void trace(bool delta);
 };
 
-extern Scheduler scheduler;
+Scheduler &scheduler();
 
 // A proxy function to avoid having to expose the scheduler in header files.
 Process *getCurrentProcess();
@@ -548,22 +548,22 @@ Process *getCurrentProcess();
 inline void
 Scheduler::TimeSlot::process()
 {
-    scheduler.stepChangeStamp();
-    scheduler.status(StatusTiming);
+    scheduler().stepChangeStamp();
+    scheduler().status(StatusTiming);
 
     try {
         while (!events.empty())
             events.front()->run();
     } catch (...) {
         if (events.empty())
-            scheduler.completeTimeSlot(this);
+            scheduler().completeTimeSlot(this);
         else
-            scheduler.schedule(this);
-        scheduler.throwUp();
+            scheduler().schedule(this);
+        scheduler().throwUp();
     }
 
-    scheduler.status(StatusOther);
-    scheduler.completeTimeSlot(this);
+    scheduler().status(StatusOther);
+    scheduler().completeTimeSlot(this);
 }
 
 const ::sc_core::sc_report reportifyException();

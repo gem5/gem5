@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017-2018, 2025 Arm Limited
+# Copyright (c) 2012-2014, 2017-2018, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -217,7 +217,9 @@ class MinorDefaultFloatSimdFU(MinorFU):
             "SimdSha256Hash2",
             "SimdShaSigma2",
             "SimdShaSigma3",
+            "SimdSha512Hash",
             "SimdSha3",
+            "SimdSm3",
             "SimdSm4e",
             "SimdCrc",
             "Matrix",

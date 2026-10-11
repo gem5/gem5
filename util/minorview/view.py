@@ -139,7 +139,7 @@ class BlobView:
             pos = blob.render(cr, self, blob_event, self.dataSelect, self.time)
             cr.restore()
             if pos is not None:
-                (centre, size) = pos
+                centre, size = pos
                 positions.append((blob, centre, size))
 
         # Draw all the overlays over the top

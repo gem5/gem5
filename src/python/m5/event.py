@@ -38,6 +38,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+
 import m5
 
 import _m5.event
@@ -89,6 +91,49 @@ def create(func, priority=Event.Default_Pri):
     return EventWrapper(func, priority=priority)
 
 
+def exitSimulationLoopClassic(
+    message, exit_code=0, when=None, repeat=0, serialize=False
+):
+    """Schedule a classic exit while preserving its cause and code."""
+    return _m5.event.exitSimulationLoopClassic(
+        str(message), int(exit_code), when, repeat, serialize
+    )
+
+
+def exitSimulationLoop(hypercall_id, payload=None, when=None, repeat=None):
+    """Schedule an exit identified by a hypercall ID and payload."""
+    if payload is None:
+        payload = {}
+    return _m5.event.exitSimulationLoop(hypercall_id, payload, when, repeat)
+
+
+def exitSimLoop(message, exit_code=0, when=None, repeat=0, serialize=False):
+    """Compatibility wrapper preserving the legacy exitSimLoop signature.
+
+    This helper preserves the original signature and uses the classic
+    hypercall path so handlers can observe structured metadata.
+    """
+
+    warnings.warn(
+        "m5.event.exitSimLoop is deprecated. Use "
+        "exitSimulationLoopClassic to preserve legacy cause/code behavior, "
+        "or exitSimulationLoop for hypercall-based exits.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    # Use the classic C++ helper so this compatibility wrapper keeps the
+    # legacy message/code, delay, repeat, and simQuantum behavior while also
+    # attaching structured hypercall metadata for ExitHandlers.
+    _m5.event.exitSimulationLoopClassic(
+        str(message),
+        int(exit_code),
+        when,
+        repeat,
+        serialize,
+    )
+
+
 __all__ = [
     "Event",
     "EventWrapper",
@@ -96,4 +141,7 @@ __all__ = [
     "SimExit",
     "mainq",
     "create",
+    "exitSimulationLoop",
+    "exitSimulationLoopClassic",
+    "exitSimLoop",
 ]

@@ -88,10 +88,10 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
     msgInfo.checkLimits(severity, actions);
     sevInfo.checkLimit(actions);
 
-    ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
+    ::sc_gem5::Process *current = ::sc_gem5::scheduler().current();
     sc_report report(severity, msg_type, msg, verbosity, file, line,
-            sc_time::from_value(::sc_gem5::scheduler.getCurTick()),
-            current ? current->name() : nullptr, msgInfo.id);
+                     sc_time::from_value(::sc_gem5::scheduler().getCurTick()),
+                     current ? current->name() : nullptr, msgInfo.id);
 
     if (actions & SC_CACHE_REPORT) {
         if (current) {
@@ -298,7 +298,7 @@ sc_report_handler::default_handler(
     if (actions & SC_ABORT)
         sc_abort();
     if (actions & SC_THROW) {
-        ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
+        ::sc_gem5::Process *current = ::sc_gem5::scheduler().current();
         if (current)
             current->isUnwinding(false);
         throw report;
@@ -316,7 +316,7 @@ sc_report_handler::get_new_action_id()
 sc_report *
 sc_report_handler::get_cached_report()
 {
-    ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
+    ::sc_gem5::Process *current = ::sc_gem5::scheduler().current();
     if (current)
         return current->lastReport();
     return ::sc_gem5::globalReportCache.get();
@@ -325,7 +325,7 @@ sc_report_handler::get_cached_report()
 void
 sc_report_handler::clear_cached_report()
 {
-    ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
+    ::sc_gem5::Process *current = ::sc_gem5::scheduler().current();
     if (current) {
         current->lastReport(nullptr);
     } else {
@@ -392,7 +392,7 @@ sc_report_compose_message(const sc_report &report)
         gem5::ccprintf(str, "\nIn file: %s:%d", report.get_file_name(),
                  report.get_line_number());
 
-        ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
+        ::sc_gem5::Process *current = ::sc_gem5::scheduler().current();
         const char *name = report.get_process_name();
         if (current && sc_is_running() && name) {
             gem5::ccprintf(str, "\nIn process: %s @ %s", name,

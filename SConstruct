@@ -1,6 +1,6 @@
-# -*- mode:python -*-
+    # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2020, 2023, 2025 Arm Limited
+# Copyright (c) 2013, 2015-2020, 2023, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -93,15 +93,6 @@ except ImportError:
     # SCons.Errors.EnvironmentError for version < 4.0.0
     from SCons.Errors import EnvironmentError as SConsEnvironmentError
 
-if getattr(SCons, '__version__', None) in ('3.0.0', '3.0.1'):
-    # Monkey patch a fix which appears in version 3.0.2, since we only
-    # require version 3.0.0
-    def __hash__(self):
-        return hash(self.lstr)
-    import SCons.Subst
-    SCons.Subst.Literal.__hash__ = __hash__
-
-
 ########################################################################
 #
 # Command line options.
@@ -132,10 +123,14 @@ AddOption('--without-python', action='store_true',
           help='Build without Python configuration support')
 AddOption('--without-tcmalloc', action='store_true',
           help='Disable linking against tcmalloc')
+AddOption('--no-omit-frame-pointer', action='store_true',
+          help='No omit frame pointer')
 AddOption('--with-ubsan', action='store_true',
           help='Build with Undefined Behavior Sanitizer if available')
 AddOption('--with-asan', action='store_true',
           help='Build with Address Sanitizer if available')
+AddOption('--with-tsan', action='store_true',
+          help='Build with Thread Sanitizer if available')
 AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 AddOption('--install-hooks', action='store_true',
@@ -147,15 +142,18 @@ AddOption('--gprof', action='store_true',
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
 AddOption('--debug-fission', action='store_true', help='Enable debug fission')
-# Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
-# of this new build behaviour in case it introduces regressions. We could use
-# action=argparse.BooleanOptionalAction here once Python 3.9 is required.
+AddOption('--gdb-index', action='store_true', help='Build GDB index')
+# Default to --no-duplicate-sources, but keep --duplicate-sources to opt out
+# of this build behavior in case it introduces regressions.
 AddOption('--duplicate-sources', action='store_true', default=False,
           dest='duplicate_sources',
           help='Create symlinks to sources in the build directory')
 AddOption('--no-duplicate-sources', action='store_false',
           dest='duplicate_sources',
           help='Do not create symlinks to sources in the build directory')
+AddOption('--gcov', action='store_true', default=False,
+          help="Build gem5 with symbols used by gcov to enable obtaining code "
+          "coverage metrics. This option does not work on Arm hosts.")
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -456,9 +454,12 @@ main['LTO_LINKFLAGS'] = []
 # compiler we're using.
 main['TCMALLOC_CCFLAGS'] = []
 
+CC_version = readCommand([main['CC'], '--version'], exception=False)
 CXX_version = readCommand([main['CXX'], '--version'], exception=False)
 
-main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
+main['CC_CLANG'] = CC_version and CC_version.find('clang') >= 0
+main['GCC'] = CXX_version and CXX_version.find('g++') >= 0 and \
+              CXX_version.find('clang') < 0
 main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
 if main['GCC'] + main['CLANG'] > 1:
     error('Two compilers enabled at once?')
@@ -523,7 +524,8 @@ def config_embedded_python(env):
             error("Check failed for Python.h header.\n",
                   "Two possible reasons:\n"
                   "1. Python headers are not installed (You can install the "
-                  "package python-dev on Ubuntu and RedHat)\n"
+                  "package python3-dev on Ubuntu or python3-devel on "
+                  "Red Hat)\n"
                   "2. SCons is using a wrong C compiler. This can happen if "
                   "CC has the wrong value.\n"
                   f"CC = {env['CC']}")
@@ -534,8 +536,8 @@ def config_embedded_python(env):
     # Found a working Python installation. Check if it meets minimum
     # requirements.
     ver_string = '.'.join(map(str, py_version))
-    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 6):
-        error('Embedded python library 3.6 or newer required, found '
+    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 10):
+        error('Embedded python library 3.10 or newer required, found '
               f'{ver_string}.')
     elif py_version[0] > 3:
         warning('Embedded python library too new. '
@@ -591,8 +593,14 @@ for variant_path in variant_paths:
         env.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
                             '-Wno-sign-compare', '-Wno-unused-parameter'])
 
-        # We always compile using C++17
-        env.Append(CXXFLAGS=['-std=c++17'])
+        # We always compile using C++20
+        env.Append(CXXFLAGS=['-std=c++20'])
+        # Left operand of volatile is deprecated in C++20 and then
+        # de-deprecaetd. This skip is a workaround to avoid warning on
+        # intermediate compiler versions. Ref:
+        # https://cplusplus.github.io/CWG/issues/2654.html
+        with gem5_scons.Configure(env) as conf:
+            conf.CheckCxxFlag('-Wno-volatile')
 
         if sys.platform.startswith('freebsd'):
             env.Append(CCFLAGS=['-I/usr/local/include'])
@@ -652,6 +660,21 @@ for variant_path in variant_paths:
                 ) or not conf.CheckLinkFlag('-gsplit-dwarf'):
                     error('Debug fission is not supported in the toolchain')
 
+        gdb_index = GetOption('gdb_index')
+        if gdb_index:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckCxxFlag(
+                    '-ggnu-pubnames'
+                ) or not conf.CheckLinkFlag('-Wl,--gdb-index'):
+                    error('GDB index generation is not supported')
+
+        # Treat warnings as errors but white list some warnings that we
+        # want to allow (e.g., deprecation warnings).
+        env.Append(CCFLAGS=['-Werror',
+                            '-Wno-error=deprecated-declarations',
+                            '-Wno-error=deprecated',
+                           ])
+
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",
@@ -666,18 +689,31 @@ for variant_path in variant_paths:
               "above you will need to ease fix SConstruct and ",
               "src/SConscript to support that compiler.")))
 
+    def compiler_major_version(version):
+        return version.split(".")[0]
+
+    # Clang versions before 17 require this extension to accept C23-style
+    # attributes such as [[fallthrough]] in older C language modes.
+    if env['CC_CLANG'] and \
+            compareVersions(env['CCVERSION'], "17") < 0:
+        env.Append(CFLAGS=['-fdouble-square-bracket-attributes'])
+
     if env['GCC']:
         gcc_min_version = "11"
-        gcc_max_version = "14.2"
+        gcc_max_version = "16"
         gcc_version = env['CXXVERSION']
-        if compareVersions(gcc_version, gcc_min_version) < 0 or \
-              compareVersions(gcc_version, gcc_max_version) > 0:
+        gcc_major_version = compiler_major_version(gcc_version)
+        if compareVersions(gcc_major_version, gcc_min_version) < 0 or \
+              compareVersions(gcc_major_version, gcc_max_version) > 0:
             warning(
                 f'Detected GCC version {gcc_version} is not officially '
-                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '
-                f'to v{gcc_max_version}.\n'
+                f'supported.\n'f'gem5 supports GCC major versions '
+                f'{gcc_min_version} through {gcc_max_version}.\n'
             )
 
+        # Workaround https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
+        if compareVersions(gcc_version, "13") < 0:
+            env.Append(CXXFLAGS=['-Wno-restrict'])
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
@@ -700,16 +736,26 @@ for variant_path in variant_paths:
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
+        if GetOption('gcov'):
+            env.Append(CCFLAGS=['-fprofile-arcs', '-ftest-coverage'],
+                       LINKFLAGS=['-lgcov', '--coverage'])
+            if main["BIN_TARGET_ARCH"] == "aarch64":
+                warning('The --gcov option only works on X86 host systems. If '
+                        'using an Arm system, the build will most likely fail '
+                        'due to the code model being too small.'
+                        )
+
     elif env['CLANG']:
         clang_min_version = "14"
-        clang_max_version = "19"
+        clang_max_version = "22"
         clang_version = env['CXXVERSION']
-        if compareVersions(clang_version, clang_min_version) < 0 or \
-              compareVersions(clang_version, clang_max_version) > 0:
+        clang_major_version = compiler_major_version(clang_version)
+        if compareVersions(clang_major_version, clang_min_version) < 0 or \
+              compareVersions(clang_major_version, clang_max_version) > 0:
             warning(
                 f'Detected Clang version {clang_version} is not officially '
-                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '
-                f'to v{clang_max_version}.\n'
+                f'supported.\n'f'gem5 supports Clang major versions '
+                f'{clang_min_version} through {clang_max_version}.\n'
             )
         # Set the Link-Time Optimization (LTO) flags if enabled.
         if GetOption('with_lto'):
@@ -721,6 +767,8 @@ for variant_path in variant_paths:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 
+        env.Append(CCFLAGS=['-Wno-error=nonportable-include-path'])
+
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
@@ -728,6 +776,11 @@ for variant_path in variant_paths:
         if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
+        if GetOption('gcov'):
+            warning("Detected use of the Clang compiler with the --gcov "
+                    "option. Gcov can't be used with Clang, so the --gcov "
+                    "option will be ignored."
+                    )
 
     if sys.platform == 'cygwin':
         # cygwin has some header file issues...
@@ -748,6 +801,9 @@ for variant_path in variant_paths:
         gem5py_env = env.Clone()
         config_embedded_python(gem5py_env)
 
+    if GetOption('no_omit_frame_pointer'):
+        env.Append(CCFLAGS=['-fno-omit-frame-pointer'])
+
     # Add sanitizers flags
     sanitizers=[]
     if GetOption('with_ubsan'):
@@ -767,17 +823,28 @@ for variant_path in variant_paths:
                 suppressions_opts)
         warning('LSAN_OPTIONS=%s' % suppressions_opts)
         print()
+    if GetOption('with_tsan'):
+        if GetOption('with_asan'):
+            error('Address Sanitizer and Thread Sanitizer cannot be used '
+                  'together')
+        sanitizers.append('thread')
     if sanitizers:
         sanitizers = ','.join(sanitizers)
         if env['GCC'] or env['CLANG']:
-            libsan = (
-                ['-static-libubsan', '-static-libasan']
-                if env['GCC']
-                else ['-static-libsan']
-            )
+            if env['GCC']:
+                libsan = []
+                if GetOption('with_ubsan'):
+                    libsan.append('-static-libubsan')
+                if GetOption('with_asan'):
+                    libsan.append('-static-libasan')
+                if GetOption('with_tsan'):
+                    libsan.append('-static-libtsan')
+            else:
+                libsan = ['-static-libsan']
             env.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
                                  '-fno-omit-frame-pointer'],
                        LINKFLAGS=['-fsanitize=%s' % sanitizers] + libsan)
+            print(f"Info: Building gem5 with {sanitizers} sanitizer(s)")
 
             if main["BIN_TARGET_ARCH"] == "x86_64":
                 # Sanitizers can enlarge binary size drammatically, north of
@@ -839,6 +906,13 @@ for variant_path in variant_paths:
             error('Did not find needed zlib compression library '
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')
+        if not conf.CheckZlibVersion():
+            error('zlib 1.2 or newer is required.')
+        if not conf.CheckM4Version():
+            error('GNU m4 1.4 or newer is required.')
+
+        conf.env['HAVE_ZSTD'] = conf.CheckLibWithHeader(
+            'zstd', 'zstd.h', 'C++', call='ZSTD_versionNumber();')
 
     if not GetOption('without_tcmalloc'):
         with gem5_scons.Configure(env) as conf:
@@ -901,6 +975,7 @@ for variant_path in variant_paths:
 
     # Variables which were determined with Configure.
     env['CONF'] = {}
+    env['CONF']['HAVE_ZSTD'] = env['HAVE_ZSTD']
 
     # Walk the tree and execute all SConsopts scripts that wil add to the
     # above variables
@@ -915,8 +990,9 @@ for variant_path in variant_paths:
             print("Reading", sconsopts_path)
         SConscript(sconsopts_path, exports={'main': env})
 
+    ext_dir = Dir('#ext').abspath
     trySConsopts(Dir('#').abspath)
-    for bdir in [ base_dir ] + extras_dir_list:
+    for bdir in [ base_dir, ext_dir ] + extras_dir_list:
         if not isdir(bdir):
             error("Directory '%s' does not exist." % bdir)
         for root, dirs, files in os.walk(bdir):
@@ -989,7 +1065,6 @@ for variant_path in variant_paths:
 
     exports=['env', 'gem5py_env']
 
-    ext_dir = Dir('#ext').abspath
     variant_ext = os.path.join(variant_path, 'ext')
     for root, dirs, files in os.walk(ext_dir):
         if 'SConscript' in files:

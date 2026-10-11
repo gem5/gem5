@@ -26,16 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "cpu/o3/mem_dep_unit.hh"
+
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "base/compiler.hh"
-#include "base/debug.hh"
+#include "base/cprintf.hh"
+#include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/units.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
-#include "cpu/o3/mem_dep_unit.hh"
 #include "debug/MemDepUnit.hh"
 #include "params/BaseO3CPU.hh"
 
