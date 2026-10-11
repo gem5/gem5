@@ -72,6 +72,7 @@ class RiscvDemoBoard(RiscvBoard):
             cpu_type=CPUTypes.TIMING,
             isa=ISA.RISCV,
             num_cores=2,
+            clk_freq="1.4GHz",
         )
 
         # Here we setup the parameters of the l1 and l2 caches.

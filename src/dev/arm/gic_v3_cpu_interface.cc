@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2021-2022 Arm Limited
+ * Copyright (c) 2019, 2021-2022, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -132,7 +132,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Active Priorities Group 1 Registers
       case MISCREG_ICC_AP1R0:
       case MISCREG_ICC_AP1R0_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
               return isa->readMiscRegNoEffect(MISCREG_ICV_AP1R0_EL1);
           }
 
@@ -155,7 +155,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Active Priorities Group 0 Registers
       case MISCREG_ICC_AP0R0:
       case MISCREG_ICC_AP0R0_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
               return isa->readMiscRegNoEffect(MISCREG_ICV_AP0R0_EL1);
           }
 
@@ -178,7 +178,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Interrupt Group 0 Enable register EL1
       case MISCREG_ICC_IGRPEN0:
       case MISCREG_ICC_IGRPEN0_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
               return readMiscReg(MISCREG_ICV_IGRPEN0_EL1);
           }
 
@@ -195,7 +195,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Interrupt Group 1 Enable register EL1
       case MISCREG_ICC_IGRPEN1:
       case MISCREG_ICC_IGRPEN1_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
               return readMiscReg(MISCREG_ICV_IGRPEN1_EL1);
           }
 
@@ -227,7 +227,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Running Priority Register
       case MISCREG_ICC_RPR:
       case MISCREG_ICC_RPR_EL1: {
-          if ((currEL() == EL1) && !inSecureState() &&
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) &&
               (hcr_imo || hcr_fmo)) {
               return readMiscReg(MISCREG_ICV_RPR_EL1);
           }
@@ -263,7 +263,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Highest Priority Pending Interrupt Register 0
       case MISCREG_ICC_HPPIR0:
       case MISCREG_ICC_HPPIR0_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
               return readMiscReg(MISCREG_ICV_HPPIR0_EL1);
           }
 
@@ -293,7 +293,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Highest Priority Pending Interrupt Register 1
       case MISCREG_ICC_HPPIR1:
       case MISCREG_ICC_HPPIR1_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
               return readMiscReg(MISCREG_ICV_HPPIR1_EL1);
           }
 
@@ -323,9 +323,9 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Binary Point Register 0
       case MISCREG_ICC_BPR0:
       case MISCREG_ICC_BPR0_EL1: {
-        if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
-            return readMiscReg(MISCREG_ICV_BPR0_EL1);
-        }
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
+              return readMiscReg(MISCREG_ICV_BPR0_EL1);
+          }
 
         value = isa->readMiscRegNoEffect(MISCREG_ICC_BPR0_EL1);
         break;
@@ -366,9 +366,10 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Interrupt Priority Mask Register
       case MISCREG_ICC_PMR:
       case MISCREG_ICC_PMR_EL1:
-        if ((currEL() == EL1) && !inSecureState() && (hcr_imo || hcr_fmo)) {
-            return readMiscReg(MISCREG_ICV_PMR_EL1);
-        }
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) &&
+              (hcr_imo || hcr_fmo)) {
+              return readMiscReg(MISCREG_ICV_PMR_EL1);
+          }
 
         if (haveEL(EL3) && !inSecureState() &&
             (tc->readMiscRegNoEffect(MISCREG_SCR_EL3) & (1U << 2))) {
@@ -399,7 +400,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Interrupt Acknowledge Register 0
       case MISCREG_ICC_IAR0:
       case MISCREG_ICC_IAR0_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
               return readMiscReg(MISCREG_ICV_IAR0_EL1);
           }
 
@@ -455,7 +456,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Interrupt Acknowledge Register 1
       case MISCREG_ICC_IAR1:
       case MISCREG_ICC_IAR1_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
               return readMiscReg(MISCREG_ICV_IAR1_EL1);
           }
 
@@ -567,7 +568,8 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       // Control Register
       case MISCREG_ICC_CTLR:
       case MISCREG_ICC_CTLR_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && (hcr_imo || hcr_fmo)) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) &&
+              (hcr_imo || hcr_fmo)) {
               return readMiscReg(MISCREG_ICV_CTLR_EL1);
           }
 
@@ -754,9 +756,9 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Active Priorities Group 1 Registers
       case MISCREG_ICC_AP1R0:
       case MISCREG_ICC_AP1R0_EL1:
-        if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
-            return isa->setMiscRegNoEffect(MISCREG_ICV_AP1R0_EL1, val);
-        }
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
+              return isa->setMiscRegNoEffect(MISCREG_ICV_AP1R0_EL1, val);
+          }
 
         setBankedMiscReg(MISCREG_ICC_AP1R0_EL1, val);
         return;
@@ -777,9 +779,9 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Active Priorities Group 0 Registers
       case MISCREG_ICC_AP0R0:
       case MISCREG_ICC_AP0R0_EL1:
-        if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
-            return isa->setMiscRegNoEffect(MISCREG_ICV_AP0R0_EL1, val);
-        }
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
+              return isa->setMiscRegNoEffect(MISCREG_ICV_AP0R0_EL1, val);
+          }
 
         break;
 
@@ -799,7 +801,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // End Of Interrupt Register 0
       case MISCREG_ICC_EOIR0:
       case MISCREG_ICC_EOIR0_EL1: { // End Of Interrupt Register 0
-          if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
               return setMiscReg(MISCREG_ICV_EOIR0_EL1, val);
           }
 
@@ -869,7 +871,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // End Of Interrupt Register 1
       case MISCREG_ICC_EOIR1:
       case MISCREG_ICC_EOIR1_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
               return setMiscReg(MISCREG_ICV_EOIR1_EL1, val);
           }
 
@@ -947,7 +949,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Deactivate Interrupt Register
       case MISCREG_ICC_DIR:
       case MISCREG_ICC_DIR_EL1: {
-          if ((currEL() == EL1) && !inSecureState() &&
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) &&
               (hcr_imo || hcr_fmo)) {
               return setMiscReg(MISCREG_ICV_DIR_EL1, val);
           }
@@ -1057,17 +1059,17 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Binary Point Register 0
       case MISCREG_ICC_BPR0:
       case MISCREG_ICC_BPR0_EL1: {
-        if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
-            return setMiscReg(MISCREG_ICV_BPR0_EL1, val);
-        }
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
+              return setMiscReg(MISCREG_ICV_BPR0_EL1, val);
+          }
         break;
       }
       // Binary Point Register 1
       case MISCREG_ICC_BPR1:
       case MISCREG_ICC_BPR1_EL1: {
-        if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
-            return setMiscReg(MISCREG_ICV_BPR1_EL1, val);
-        }
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
+              return setMiscReg(MISCREG_ICV_BPR1_EL1, val);
+          }
 
         val &= 0x7;
 
@@ -1138,7 +1140,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Control Register EL1
       case MISCREG_ICC_CTLR:
       case MISCREG_ICC_CTLR_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && (hcr_imo || hcr_fmo)) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) &&
+              (hcr_imo || hcr_fmo)) {
               return setMiscReg(MISCREG_ICV_CTLR_EL1, val);
           }
 
@@ -1290,7 +1293,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Priority Mask Register
       case MISCREG_ICC_PMR:
       case MISCREG_ICC_PMR_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && (hcr_imo || hcr_fmo)) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) &&
+              (hcr_imo || hcr_fmo)) {
               return setMiscReg(MISCREG_ICV_PMR_EL1, val);
           }
 
@@ -1334,7 +1338,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Interrupt Group 0 Enable Register EL1
       case MISCREG_ICC_IGRPEN0:
       case MISCREG_ICC_IGRPEN0_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_fmo) {
               return setMiscReg(MISCREG_ICV_IGRPEN0_EL1, val);
           }
 
@@ -1357,7 +1361,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       // Interrupt Group 1 Enable register EL1
       case MISCREG_ICC_IGRPEN1:
       case MISCREG_ICC_IGRPEN1_EL1: {
-          if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+          if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
               return setMiscReg(MISCREG_ICV_IGRPEN1_EL1, val);
           }
 
@@ -2517,7 +2521,7 @@ RegVal
 Gicv3CPUInterface::bpr1(Gicv3::GroupId group)
 {
     bool hcr_imo = getHCREL2IMO();
-    if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
+    if ((currEL() == EL1) && ArmISA::EL2Enabled(tc) && hcr_imo) {
         return readMiscReg(MISCREG_ICV_BPR1_EL1);
     }
 

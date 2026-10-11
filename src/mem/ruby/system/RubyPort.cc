@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2020-2021 ARM Limited
+ * Copyright (c) 2012-2013,2020-2021,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -56,17 +56,22 @@ namespace ruby
 {
 
 RubyPort::RubyPort(const Params &p)
-    : ClockedObject(p), m_ruby_system(p.ruby_system), m_version(p.version),
-      m_controller(NULL), m_mandatory_q_ptr(NULL),
-      m_usingRubyTester(p.using_ruby_tester), system(p.system),
+    : ClockedObject(p),
+      m_ruby_system(p.ruby_system),
+      m_version(p.version),
+      m_controller(NULL),
+      m_mandatory_q_ptr(NULL),
+      m_usingRubyTester(p.using_ruby_tester),
+      system(p.system),
       pioRequestPort(csprintf("%s.pio-request-port", name()), *this),
       pioResponsePort(csprintf("%s.pio-response-port", name()), *this),
       memRequestPort(csprintf("%s.mem-request-port", name()), *this),
       memResponsePort(csprintf("%s-mem-response-port", name()), *this,
-                   p.ruby_system->getAccessBackingStore(), -1,
-                   p.no_retry_on_stall),
+                      p.ruby_system->getAccessBackingStore(), -1,
+                      p.no_retry_on_stall),
       gotAddrRanges(p.port_interrupt_out_port_connection_count),
-      m_isCPUSequencer(p.is_cpu_sequencer)
+      m_isCPUSequencer(p.is_cpu_sequencer),
+      m_responseLatency(p.response_latency)
 {
     assert(m_version != -1);
 
@@ -680,7 +685,8 @@ RubyPort::MemResponsePort::hitCallback(PacketPtr pkt)
         // Send a response in the same cycle. There is no need to delay the
         // response because the response latency is already incurred in the
         // Ruby protocol.
-        schedTimingResp(pkt, curTick());
+        Tick rsp_lat = owner.cyclesToTicks(owner.m_responseLatency);
+        schedTimingResp(pkt, curTick() + rsp_lat);
     } else {
         delete pkt;
     }
@@ -704,25 +710,10 @@ RubyPort::PioResponsePort::getAddrRanges() const
 }
 
 bool
-RubyPort::MemResponsePort::isShadowRomAddress(Addr addr) const
-{
-    AddrRangeList ranges = owner.system->getShadowRomRanges();
-
-    for (auto it = ranges.begin(); it != ranges.end(); ++it) {
-        if (it->contains(addr)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool
 RubyPort::MemResponsePort::isPhysMemAddress(PacketPtr pkt) const
 {
-    Addr addr = pkt->getAddr();
-    return (owner.system->isMemAddr(addr) && !isShadowRomAddress(addr))
-           || owner.system->isDeviceMemAddr(pkt);
+    return owner.system->isMemAddr(pkt->getAddr()) ||
+           owner.system->isDeviceMemAddr(pkt);
 }
 
 void

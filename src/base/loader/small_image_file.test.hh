@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2019 The Regents of the University of California
  * All rights reserved
  *
@@ -138,6 +150,15 @@ const uint8_t image_file_gzipped[] = {
     0x51, 0xd1, 0x51, 0xd1, 0x41, 0x26, 0x0a, 0x00,
     0xc9, 0x58, 0x6c, 0x4e, 0xaa, 0x02, 0x00, 0x00
 };
+
+/**
+ * This is "image_file" compressed using Zstandard.
+ */
+const uint8_t image_file_zstd[] = {
+    0x28, 0xb5, 0x2f, 0xfd, 0x04, 0x58, 0xed, 0x00, 0x00, 0xb0, 0x54,
+    0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 0x74, 0x65,
+    0x73, 0x74, 0x20, 0x69, 0x6d, 0x61, 0x67, 0x65, 0x2e, 0x0a, 0x01,
+    0x00, 0x22, 0x65, 0x35, 0x9b, 0x51, 0x33, 0xf2, 0xa2};
 
 } // namespace gem5
 

@@ -89,7 +89,8 @@ class Interrupts : public BaseInterrupts
     bool checkInterrupts() const override
     {
         ISA* isa = static_cast<ISA*>(tc->getIsaPtr());
-        if (isa->enableSmrnmi() && tc->readMiscReg(MISCREG_NMIE) == 0) {
+        if (isa->reportsExtension("Smrnmi") &&
+            tc->readMiscReg(MISCREG_NMIE) == 0) {
             return false;
         }
         return checkNonMaskableInterrupt() ||

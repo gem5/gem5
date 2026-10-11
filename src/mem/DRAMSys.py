@@ -39,7 +39,6 @@ class DRAMSys(AbstractMemory):
     tlm = TlmTargetSocket(32, "TLM target port")
 
     configuration = Param.String("Path to the DRAMSys configuration")
-    resource_directory = Param.String("Path to the DRAMSys resource directory")
 
 
 add_citation(

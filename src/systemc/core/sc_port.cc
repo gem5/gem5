@@ -63,7 +63,7 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
         reportError(SC_ID_INSERT_PORT_, "simulation running",
                 name(), kind());
     }
-    if (::sc_gem5::scheduler.elaborationDone()) {
+    if (::sc_gem5::scheduler().elaborationDone()) {
         reportError(SC_ID_INSERT_PORT_, "elaboration done",
                 name(), kind());
     }

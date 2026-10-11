@@ -165,8 +165,8 @@ RubyPrefetcherProxy::notifyPfHit(const RequestPtr& req, bool is_read,
 {
     assert(ppHit);
     assert(req);
-    Packet pkt(req, is_read ? Packet::makeReadCmd(req) :
-                              Packet::makeWriteCmd(req));
+    Packet pkt(req, is_read ? Packet::makeReadCmd(req).responseCommand()
+                            : Packet::makeWriteCmd(req));
     // NOTE: for now we only communicate physical address with prefetchers
     pkt.dataStaticConst<uint8_t>(data_blk.getData(getOffset(req->getPaddr()),
                                   pkt.getSize()));
@@ -198,9 +198,8 @@ RubyPrefetcherProxy::notifyPfFill(const RequestPtr& req,
 {
     assert(ppFill);
     assert(req);
-    Packet pkt(req, Packet::makeReadCmd(req));
-    if (from_pf)
-        pkt.cmd = Packet::Command::HardPFReq;
+    Packet pkt(req, from_pf ? MemCmd::HardPFResp
+                            : Packet::makeReadCmd(req).responseCommand());
     // NOTE: for now we only communicate physical address with prefetchers
     pkt.dataStaticConst<uint8_t>(data_blk.getData(getOffset(req->getPaddr()),
                                   pkt.getSize()));

@@ -42,8 +42,13 @@ class BasicSignal
     Process *sender;
     Process *receiver;
     int signalValue;
+    // wait()/wait4() status word for SIGCHLD (Linux WIFEXITED /
+    // WIFSIGNALED encoding). Stored when the child exits so the parent
+    // can report it.
+    int exitStatus;
 
-    BasicSignal(Process *sender, Process *receiver, int signal_val);
+    BasicSignal(Process *sender, Process *receiver, int signal_val,
+                int exit_status = 0);
     ~BasicSignal();
 };
 

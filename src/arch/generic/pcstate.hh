@@ -100,6 +100,22 @@ class PCStateBase : public Serializable
     }
 
     /**
+     * Full architectural PC compare, including ISA extras that equals()
+     * may ignore (e.g. RISC-V vl/vtype when new_vconf is false).
+     *
+     * Why a second predicate: O3 mispredict detection uses equals() and
+     * must keep ignoring stale vl on ordinary branches (#1708/#1709).
+     * In-order models that stamp fetch/decode from the predicted PCState
+     * (Minor) still need to notice a vl/vtype mismatch and redirect.
+     * Default: same as equals(); ISAs override when the two differ.
+     */
+    virtual bool
+    fullEquals(const PCStateBase &other) const
+    {
+        return equals(other);
+    }
+
+    /**
      * Returns the memory address of the instruction this PC points to.
      *
      * @return Memory address of the instruction this PC points to.

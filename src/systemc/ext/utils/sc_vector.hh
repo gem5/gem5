@@ -487,6 +487,16 @@ class sc_vector : public sc_vector_base
         unforceParent();
     }
 
+    // SystemC IEEE 1666-2023 standard
+    template <typename... Args>
+    void
+    emplace_back(Args &&...args)
+    {
+        const char *unique_name = sc_gen_unique_name(this->basename());
+        T *p = new T(unique_name, std::forward<Args>(args)...);
+        objs.push_back(p);
+    }
+
     T &operator [] (size_type index) { return *static_cast<T *>(objs[index]); }
     const T &
     operator [] (size_type index) const

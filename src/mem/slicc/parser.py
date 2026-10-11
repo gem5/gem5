@@ -1,4 +1,4 @@
-# Copyright (c) 2020,2021 ARM Limited
+# Copyright (c) 2020,2021,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -152,6 +152,7 @@ class SLICC(Grammar):
         "out_port": "OUT_PORT",
         "action": "ACTION",
         "transition": "TRANS",
+        "transition_no_stall": "TRANS_NO_STALL",
         "structure": "STRUCT",
         "external_type": "EXTERN_TYPE",
         "enumeration": "ENUM",
@@ -174,6 +175,8 @@ class SLICC(Grammar):
         "new": "NEW",
         "OOD": "OOD",
         "defer_enqueueing": "DEFER_ENQUEUEING",
+        "public": "PUBLIC",
+        "this": "THIS",
     }
 
     literals = ":[]{}(),="
@@ -368,20 +371,32 @@ class SLICC(Grammar):
         p[0] = ast.OutPortDeclAST(self, p[3], p[5], p[7], p[8])
 
     def p_decl__trans0(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents"
-        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[9])
+        """
+        decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents
+            | TRANS_NO_STALL '(' idents ',' idents ',' ident_or_star ')' idents
+        """
+        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], p[7], p[9], p[1])
 
     def p_decl__trans1(self, p):
-        "decl : TRANS '(' idents ',' idents ')' idents"
-        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[7])
+        """
+        decl : TRANS '(' idents ',' idents ')' idents
+            | TRANS_NO_STALL '(' idents ',' idents ')' idents
+        """
+        p[0] = ast.TransitionDeclAST(self, [], p[3], p[5], None, p[7], p[1])
 
     def p_decl__trans2(self, p):
-        "decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents idents"
-        p[0] = ast.TransitionDeclAST(self, p[9], p[3], p[5], p[7], p[10])
+        """
+            decl : TRANS '(' idents ',' idents ',' ident_or_star ')' idents idents
+        | TRANS_NO_STALL '(' idents ',' idents ',' ident_or_star ')' idents idents
+        """
+        p[0] = ast.TransitionDeclAST(self, p[9], p[3], p[5], p[7], p[10], p[1])
 
     def p_decl__trans3(self, p):
-        "decl : TRANS '(' idents ',' idents ')' idents idents"
-        p[0] = ast.TransitionDeclAST(self, p[7], p[3], p[5], None, p[8])
+        """
+        decl : TRANS '(' idents ',' idents ')' idents idents
+            | TRANS_NO_STALL '(' idents ',' idents ')' idents idents
+        """
+        p[0] = ast.TransitionDeclAST(self, p[7], p[3], p[5], None, p[8], p[1])
 
     def p_decl__extern0(self, p):
         "decl : EXTERN_TYPE '(' type pairs ')' SEMI"
@@ -464,12 +479,22 @@ class SLICC(Grammar):
     def p_func_decl__0(self, p):
         """func_decl :  void ident '(' params ')' pairs SEMI
         | type ident '(' params ')' pairs SEMI"""
-        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
+        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None, False)
 
     def p_func_decl__1(self, p):
         """func_decl :  void ident '(' types ')' pairs SEMI
         | type ident '(' types ')' pairs SEMI"""
-        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
+        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None, False)
+
+    def p_func_decl__public_0(self, p):
+        """func_decl :  PUBLIC void ident '(' params ')' pairs SEMI
+        | PUBLIC type ident '(' params ')' pairs SEMI"""
+        p[0] = ast.FuncDeclAST(self, p[2], p[3], p[5], p[7], None, True)
+
+    def p_func_decl__public_1(self, p):
+        """func_decl :  PUBLIC void ident '(' types ')' pairs SEMI
+        | PUBLIC type ident '(' types ')' pairs SEMI"""
+        p[0] = ast.FuncDeclAST(self, p[2], p[3], p[5], p[7], None, True)
 
     def p_decl__func_def(self, p):
         "decl : func_def"
@@ -478,7 +503,12 @@ class SLICC(Grammar):
     def p_func_def__0(self, p):
         """func_def : void ident '(' params ')' pairs statements
         | type ident '(' params ')' pairs statements"""
-        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
+        p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7], False)
+
+    def p_func_def__public_0(self, p):
+        """func_def : PUBLIC void ident '(' params ')' pairs statements
+        | PUBLIC type ident '(' params ')' pairs statements"""
+        p[0] = ast.FuncDeclAST(self, p[2], p[3], p[5], p[7], p[8], True)
 
     # Enum fields
     def p_type_enums__list(self, p):
@@ -679,15 +709,27 @@ class SLICC(Grammar):
 
     def p_statement__enqueue(self, p):
         "statement : ENQUEUE '(' var ',' type ')' statements"
-        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], None, None, p[7])
+        p[0] = ast.EnqueueStatementAST(
+            self, p[3], p[5], None, None, None, p[7]
+        )
 
     def p_statement__enqueue_latency(self, p):
         "statement : ENQUEUE '(' var ',' type ',' expr ')' statements"
-        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[7], None, p[9])
+        p[0] = ast.EnqueueStatementAST(
+            self, p[3], p[5], p[7], None, None, p[9]
+        )
 
     def p_statement__enqueue_latency_bypass_strict_fifo(self, p):
         "statement : ENQUEUE '(' var ',' type ',' expr ',' expr ')' statements"
-        p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[7], p[9], p[11])
+        p[0] = ast.EnqueueStatementAST(
+            self, p[3], p[5], p[7], p[9], None, p[11]
+        )
+
+    def p_statement__enqueue_latency_bypass_strict_fifo_timestamp(self, p):
+        "statement : ENQUEUE '(' var ',' type ',' expr ',' expr ',' expr ')' statements"
+        p[0] = ast.EnqueueStatementAST(
+            self, p[3], p[5], p[7], p[9], p[11], p[13]
+        )
 
     def p_statement__defer_enqueueing(self, p):
         "statement : DEFER_ENQUEUEING '(' var ',' type ')' statements"
@@ -774,6 +816,10 @@ class SLICC(Grammar):
     def p_expr__new(self, p):
         "aexpr : NEW type"
         p[0] = ast.NewExprAST(self, p[2])
+
+    def p_expr__this(self, p):
+        "aexpr : THIS"
+        p[0] = ast.ThisExprAST(self)
 
     def p_expr__null(self, p):
         "aexpr : OOD"

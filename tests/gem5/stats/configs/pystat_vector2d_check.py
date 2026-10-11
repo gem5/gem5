@@ -33,7 +33,10 @@ from m5.objects import (
     Root,
     Vector2dStatTester,
 )
-from m5.stats.gem5stats import get_simstat
+from m5.stats.gem5stats import (
+    JsonOutputVistor,
+    get_simstat,
+)
 
 """This script is used for checking that Vector2d statistics set in the
 simulation are correctly parsed through to the python Pystats.
@@ -163,7 +166,8 @@ m5.instantiate()
 m5.simulate()
 
 simstats = get_simstat(stat_tester)
-output = simstats.to_json()
+json_visitor = JsonOutputVistor(None)
+output = json_visitor.visit_simstat(simstats)
 
 # Remove the time related fields from the outputs if they exist.
 # `creation_time` is not deterministic, and `simulated_begin_time` and

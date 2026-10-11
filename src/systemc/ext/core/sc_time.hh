@@ -49,6 +49,8 @@ enum sc_time_unit {
 class sc_time
 {
   public:
+    using value_type = sc_dt::uint64;
+
     sc_time();
     sc_time(double, sc_time_unit);
     sc_time(const sc_time &);

@@ -374,7 +374,7 @@ Scheduler::pause()
         if (scMainFiber.finished())
             fatal("Pausing systemc after sc_main completed.");
         else
-            gem5::exitSimLoopNow("systemc pause");
+            exitSimulationLoopClassicNow("systemc pause");
     }
 }
 
@@ -396,7 +396,7 @@ Scheduler::stop()
         if (scMainFiber.finished())
             fatal("Stopping systemc after sc_main completed.");
         else
-            gem5::exitSimLoopNow("systemc stop");
+            exitSimulationLoopClassicNow("systemc stop");
     }
 }
 
@@ -491,8 +491,18 @@ Scheduler::trace(bool delta)
         tf->trace(delta);
 }
 
-Scheduler scheduler;
-Process *getCurrentProcess() { return scheduler.current(); }
+Scheduler &
+scheduler()
+{
+    static Scheduler s;
+    return s;
+}
+
+Process *
+getCurrentProcess()
+{
+    return scheduler().current();
+}
 
 namespace {
 

@@ -161,4 +161,7 @@ sc_find_object(const char *name)
     return sc_gem5::findObject(name);
 }
 
+// Non-standard symbol.
+const char SC_HIERARCHY_CHAR = '.';
+
 } // namespace sc_core

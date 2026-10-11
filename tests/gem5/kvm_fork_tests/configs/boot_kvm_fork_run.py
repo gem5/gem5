@@ -166,6 +166,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=get_cpu_type_from_str(args.cpu),
     isa=ISA.X86,
     num_cores=args.num_cpus,
+    clk_freq="3GHz",
 )
 
 # Setup the motherboard.
@@ -190,12 +191,10 @@ motherboard.set_kernel_disk_workload(
         resource_directory=args.resource_directory,
         resource_version="1.0.0",
     ),
-    readfile_contents=dedent(
-        """
+    readfile_contents=dedent("""
         m5 exit # signal end of boot
         m5 exit # exit in children and parent
-        """
-    ),
+        """),
     kernel_args=kernel_args,
 )
 

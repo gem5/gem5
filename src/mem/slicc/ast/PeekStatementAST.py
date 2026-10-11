@@ -71,8 +71,7 @@ class PeekStatementAST(StatementAST):
         # Declare the new "in_msg_ptr" variable
         mtid = msg_type.c_ident
         qcode = self.queue_name.var.code
-        code(
-            """
+        code("""
 {
     // Declare message
     [[maybe_unused]] const $mtid* in_msg_ptr;
@@ -83,13 +82,11 @@ class PeekStatementAST(StatementAST):
         // different inport or punt.
         throw RejectException();
     }
-"""
-        )
+""")
 
         if "block_on" in self.pairs:
             address_field = self.pairs["block_on"]
-            code(
-                """
+            code("""
     if (m_is_blocking &&
         (m_block_map.count(in_msg_ptr->m_$address_field) == 1) &&
         (m_block_map[in_msg_ptr->m_$address_field] != &$qcode)) {
@@ -97,18 +94,15 @@ class PeekStatementAST(StatementAST):
             m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
             continue;
     }
-            """
-            )
+            """)
 
         if "wake_up" in self.pairs:
             address_field = self.pairs["wake_up"]
-            code(
-                """
+            code("""
     if (m_waiting_buffers.count(in_msg_ptr->m_$address_field) > 0) {
         wakeUpBuffers(in_msg_ptr->m_$address_field);
     }
-            """
-            )
+            """)
 
         # The other statements
         self.statements.generate(code, return_type, **kwargs)

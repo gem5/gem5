@@ -180,8 +180,8 @@ def macroop PHMINPOSUW_XMM_XMM {
 };
 
 def macroop PHMINPOSUW_XMM_M {
-    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
     phminposuw xmml, ufp1, ufp2, size=2
     xorfp xmmh, xmmh, xmmh
 };

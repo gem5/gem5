@@ -62,18 +62,18 @@ class Disjoint_VIPER(RubySystem):
 
         # Construct CPU controllers
         cpu_dir_nodes = construct_dirs(options, system, self, self.network_cpu)
-        (cp_sequencers, cp_cntrl_nodes) = construct_corepairs(
+        cp_sequencers, cp_cntrl_nodes = construct_corepairs(
             options, system, self, self.network_cpu
         )
 
         # Construct GPU controllers
-        (tcp_sequencers, tcp_cntrl_nodes) = construct_tcps(
+        tcp_sequencers, tcp_cntrl_nodes = construct_tcps(
             options, system, self, self.network_gpu
         )
-        (sqc_sequencers, sqc_cntrl_nodes) = construct_sqcs(
+        sqc_sequencers, sqc_cntrl_nodes = construct_sqcs(
             options, system, self, self.network_gpu
         )
-        (scalar_sequencers, scalar_cntrl_nodes) = construct_scalars(
+        scalar_sequencers, scalar_cntrl_nodes = construct_scalars(
             options, system, self, self.network_gpu
         )
         tcc_cntrl_nodes = construct_tccs(
@@ -84,7 +84,7 @@ class Disjoint_VIPER(RubySystem):
         Ruby.setup_memory_controllers(system, self, cpu_dir_nodes, options)
 
         # Construct GPU memories
-        (gpu_dir_nodes, gpu_mem_ctrls) = construct_gpudirs(
+        gpu_dir_nodes, gpu_mem_ctrls = construct_gpudirs(
             options, system, self, self.network_gpu
         )
 

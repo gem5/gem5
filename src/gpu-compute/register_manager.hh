@@ -63,8 +63,8 @@ class RegisterManager : public SimObject
     void exec();
 
     // lookup virtual to physical register translation
-    int mapVgpr(Wavefront* w, int vgprIndex);
-    int mapSgpr(Wavefront* w, int sgprIndex);
+    int mapVgpr(Wavefront *w, int vgprIndex);
+    int mapSgpr(Wavefront *w, int sgprIndex);
 
     // check if we can allocate registers
     bool canAllocateVgprs(int simdId, int nWfs, int demandPerWf);
@@ -76,8 +76,8 @@ class RegisterManager : public SimObject
     // free all registers used by the WF
     void freeRegisters(Wavefront *w);
 
-    std::vector<PoolManager*> srfPoolMgrs;
-    std::vector<PoolManager*> vrfPoolMgrs;
+    std::vector<PoolManager *> srfPoolMgrs;
+    std::vector<PoolManager *> vrfPoolMgrs;
 
   private:
     RegisterManagerPolicy *policy;

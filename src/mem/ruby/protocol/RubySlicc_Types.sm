@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021,2023-2024 Arm Limited
+ * Copyright (c) 2020-2021,2023-2024,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,6 +55,7 @@ structure(MessageBuffer, buffer="yes", inport="yes", outport="yes",
   // in debug traces dumped by the protocol.
   bool areNSlotsAvailable(int n, Tick curTime);
   int getSize(Tick curTime);
+  Tick oldestMsgStallTicks(Tick current_time);
 }
 
 external_type(Scalar, primitive="yes");
@@ -126,24 +127,30 @@ structure (NetDest, external = "yes", non_obj="yes", implicit_ctor="m_ruby_syste
 }
 
 structure (Sequencer, external = "yes") {
+  void stashCallback(Addr);
   void readCallback(Addr, DataBlock);
   void readCallback(Addr, DataBlock, bool);
   void readCallback(Addr, DataBlock, bool, MachineType);
   void readCallback(Addr, DataBlock, bool, MachineType,
                     Cycles, Cycles, Cycles);
+  void readCallbackCBusy(Addr, DataBlock, bool, int);
 
   void writeCallback(Addr, DataBlock);
   void writeCallback(Addr, DataBlock, bool);
   void writeCallback(Addr, DataBlock, bool, MachineType);
   void writeCallback(Addr, DataBlock, bool, MachineType,
                      Cycles, Cycles, Cycles);
+  void writeCallbackCBusy(Addr, DataBlock, bool, int);
+
   void writeUniqueCallback(Addr, DataBlock);
+  void writeUniqueCallbackCBusy(Addr, DataBlock, int);
 
   void atomicCallback(Addr, DataBlock);
   void atomicCallback(Addr, DataBlock, bool);
   void atomicCallback(Addr, DataBlock, bool, MachineType);
   void atomicCallback(Addr, DataBlock, bool, MachineType,
                       Cycles, Cycles, Cycles);
+  void atomicCallbackCBusy(Addr, DataBlock, bool, int);
 
 
   void unaddressedCallback(Addr, RubyRequestType);
@@ -176,6 +183,10 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   RubyAccessMode AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
+  int StashNID,              desc="Stash target NodeID";
+  bool StashNIDValid,        desc="StashNID is valid";
+  int StashLPID,             desc="Stash target logical processor ID";
+  bool StashLPIDValid,       desc="StashLPID is valid";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
   int contextId,             desc="this goes away but must be replace with Nilay";
   WriteMask writeMask,       desc="Writethrough mask";
@@ -215,6 +226,7 @@ structure (CacheMemory, external = "yes") {
   AbstractCacheEntry allocate(Addr, AbstractCacheEntry, bool);
   void allocateVoid(Addr, AbstractCacheEntry);
   void deallocate(Addr);
+  void flushEntries();
   AbstractCacheEntry lookup(Addr);
   bool isTagPresent(Addr);
   Cycles getTagLatency();
@@ -273,4 +285,14 @@ structure(RubyPrefetcherProxy, external = "yes") {
     // SLICC controller must define its own regProbePoints and call
     // this for every RubyPrefetcherProxy object present
     void regProbePoints();
+}
+structure (BackpressureGen, external = "yes") {
+    int generate(AbstractController * controller, Message msg);
+}
+
+// Helper class for tracking responder occupancy
+structure(BackpressureTracker, external ="yes") {
+    void update(MachineID, int);
+    void updateDMT(MachineID, int);
+    int report();
 }

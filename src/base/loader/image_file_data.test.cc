@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2019 The Regents of the University of California
  * All rights reserved
  *
@@ -34,6 +46,7 @@
 
 #include "base/loader/image_file_data.hh"
 #include "base/loader/small_image_file.test.hh"
+#include "config/have_zstd.hh"
 
 using namespace gem5;
 using namespace loader;
@@ -108,4 +121,49 @@ TEST(ImageFileDataTest, GZipImage)
     unlink(filename);
     close(fd_gz);
     unlink(filename_gz);
+}
+
+TEST(ImageFileDataTest, ZstdImage)
+{
+#if HAVE_ZSTD
+    /*
+     * Create temporary files from our data blobs.
+     */
+    char filename_zstd[] = "image-XXXXXX";
+    int fd_zstd = mkstemp(filename_zstd);
+    ASSERT_NE(-1, fd_zstd);
+    ssize_t size_zstd =
+        write(fd_zstd, image_file_zstd, sizeof(image_file_zstd));
+
+    char filename[] = "image-XXXXXX";
+    int fd = mkstemp(filename);
+    ASSERT_NE(-1, fd);
+    ssize_t size = write(fd, image_file, sizeof(image_file));
+
+    /*
+     * ImageFileData decompresses a zstd file. image_file_zstd is just
+     * image_file zstd-compressed. Therefore ifd_zstd.len() should equal
+     * ifd.len() and ifd.data() should equal ifd_zstd.data().
+     */
+    ImageFileData ifd_zstd(filename_zstd);
+    ImageFileData ifd(filename);
+
+    EXPECT_EQ(ifd.len(), ifd_zstd.len());
+    EXPECT_EQ(size, ifd.len());
+    EXPECT_NE(size_zstd, ifd_zstd.len());
+
+    for (size_t index = 0; index < ifd.len(); index++) {
+        EXPECT_EQ(ifd.data()[index], ifd_zstd.data()[index]);
+    }
+
+    /*
+     * Close and delete the temporary files.
+     */
+    close(fd);
+    unlink(filename);
+    close(fd_zstd);
+    unlink(filename_zstd);
+#else
+    GTEST_SKIP() << "Skipping as ZSTD is not installed";
+#endif
 }

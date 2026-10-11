@@ -8,9 +8,8 @@ guidance for changes in their directory trees.
 
 ## Determining what you can contribute
 
-The easiest way to see how you can contribute to gem5 is to check our Jira
-issue tracker: <https://gem5.atlassian.net> or GitHub issue tracker:
-<https://github.com/gem5/gem5/issues>.
+The easiest way to see how you can contribute to gem5 is to check our GitHub
+issue tracker: <https://github.com/gem5/gem5/issues>.
 
 Browse these open issues and see if there are any which you are capable of
 handling. When you find a task you are happy to carry out, verify no one else
@@ -259,7 +258,7 @@ lines, and multiple paragraphs. **No line in the description may exceed 72
 characters.**
 
 To improve the navigability of the gem5 project we would appreciate if commit
-messages include a link to the relevant Jira issue/issues.
+messages include a link to the relevant GitHub issue or issues.
 
 Below is an example of how a gem5 commit message should be formatted:
 
@@ -271,7 +270,7 @@ as is necessary to adequately describe the change.
 
 A description may spawn multiple paragraphs if desired.
 
-Jira Issue: https://gem5.atlassian.net/browse/GEM5-186
+GitHub Issue: https://github.com/gem5/gem5/issues/<issue-number>
 ```
 
 If you feel the need to change your commit, add the necessary files then

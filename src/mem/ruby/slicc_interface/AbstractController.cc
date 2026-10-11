@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019-2022 ARM Limited
+ * Copyright (c) 2017,2019-2022, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -117,6 +117,16 @@ AbstractController::init()
     upstreamDestinations.resize();
     for (auto abs_cntrl : params().upstream_destinations) {
         upstreamDestinations.add(abs_cntrl->getMachineID());
+    }
+}
+
+DrainState
+AbstractController::drain()
+{
+    if (noInTransactions()) {
+        return DrainState::Drained;
+    } else {
+        return DrainState::Draining;
     }
 }
 
@@ -453,7 +463,6 @@ const
     fatal("%s: couldn't find mapping for address %x mtype=%s\n",
         name(), addr, mtype);
 }
-
 
 void
 AbstractController::memRespQueueDequeued() {

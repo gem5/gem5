@@ -38,6 +38,7 @@
 #ifndef __MEM_QOS_POLICY_PF_HH__
 #define __MEM_QOS_POLICY_PF_HH__
 
+#include <string>
 #include <vector>
 
 #include "base/compiler.hh"
@@ -74,10 +75,14 @@ class PropFairPolicy : public Policy
     PropFairPolicy(const Params &);
     virtual ~PropFairPolicy();
 
+    void init() override;
+
     /**
      * Initialize the requestor's score by providing
      * the requestor's name and initial score value.
      * The requestor's name has to match a name in the system.
+     *
+     * The requestor is only resolved to a RequestorID in init().
      *
      * @param requestor requestor's name to lookup.
      * @param score initial score value for the requestor
@@ -88,6 +93,8 @@ class PropFairPolicy : public Policy
      * Initialize the requestor's score by providing
      * the requestor's SimObject pointer and initial score value.
      * The requestor's pointer has to match a requestor in the system.
+     *
+     * The requestor is only resolved to a RequestorID in init().
      *
      * @param requestor requestor's SimObject pointer to lookup.
      * @param score initial score value for the requestor
@@ -105,8 +112,7 @@ class PropFairPolicy : public Policy
     schedule(const RequestorID id, const uint64_t pkt_size) override;
 
   protected:
-    template <typename Requestor>
-    void initRequestor(const Requestor requestor, const double score);
+    void initRequestor(const RequestorID id, const double score);
 
     inline double
     updateScore(const double old_score, const uint64_t served_bytes) const;
@@ -118,6 +124,9 @@ class PropFairPolicy : public Policy
     /** history is keeping track of every requestor's score */
     using RequestorHistory = std::pair<RequestorID, double>;
     std::vector<RequestorHistory> history;
+
+    /** Requestors in configuration order, resolved in init() */
+    std::vector<PendingRequestor<double>> pendingRequestors;
 };
 
 } // namespace qos

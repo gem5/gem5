@@ -48,58 +48,67 @@ class Wavefront;
 
 namespace VegaISA
 {
-    class GPUISA
+class GPUISA
+{
+  public:
+    GPUISA(Wavefront &wf);
+
+    template <typename T>
+    T
+    readConstVal(int opIdx) const
     {
-      public:
-        GPUISA(Wavefront &wf);
+        T val(0);
 
-        template<typename T> T
-        readConstVal(int opIdx) const
-        {
-            panic_if(!std::is_integral_v<T>,
-                    "Constant values must be an integer.");
-            T val(0);
-
-            if (isPosConstVal(opIdx)) {
-                val = (T)readPosConstReg(opIdx);
-            }
-
-            if (isNegConstVal(opIdx)) {
-                val = (T)readNegConstReg(opIdx);
-            }
-
+        // Real hardware returned 0 when using an integer constant with a
+        // floating point instruction. Replicate the behavior.
+        if (!std::is_integral_v<T>) {
             return val;
         }
 
-        ScalarRegU32 readMiscReg(int opIdx) const;
-        void writeMiscReg(int opIdx, ScalarRegU32 operandVal);
-        bool hasScalarUnit() const { return true; }
-        void advancePC(GPUDynInstPtr gpuDynInst);
-
-      private:
-        ScalarRegU32 readPosConstReg(int opIdx) const
-        {
-            return posConstRegs[opIdx - REG_INT_CONST_POS_MIN];
+        if (isPosConstVal(opIdx)) {
+            val = (T)readPosConstReg(opIdx);
         }
 
-        ScalarRegI32 readNegConstReg(int opIdx) const
-        {
-            return negConstRegs[opIdx - REG_INT_CONST_NEG_MIN];
+        if (isNegConstVal(opIdx)) {
+            val = (T)readNegConstReg(opIdx);
         }
 
-        static const std::array<const ScalarRegU32, NumPosConstRegs>
-            posConstRegs;
-        static const std::array<const ScalarRegI32, NumNegConstRegs>
-            negConstRegs;
+        return val;
+    }
 
-        // parent wavefront
-        Wavefront &wavefront;
+    ScalarRegU32 readMiscReg(int opIdx) const;
+    void writeMiscReg(int opIdx, ScalarRegU32 operandVal);
+    bool
+    hasScalarUnit() const
+    {
+        return true;
+    }
+    void advancePC(GPUDynInstPtr gpuDynInst);
 
-        // shader status bits
-        StatusReg statusReg;
-        // memory descriptor reg
-        ScalarRegU32 m0;
-    };
+  private:
+    ScalarRegU32
+    readPosConstReg(int opIdx) const
+    {
+        return posConstRegs[opIdx - REG_INT_CONST_POS_MIN];
+    }
+
+    ScalarRegI32
+    readNegConstReg(int opIdx) const
+    {
+        return negConstRegs[opIdx - REG_INT_CONST_NEG_MIN];
+    }
+
+    static const std::array<const ScalarRegU32, NumPosConstRegs> posConstRegs;
+    static const std::array<const ScalarRegI32, NumNegConstRegs> negConstRegs;
+
+    // parent wavefront
+    Wavefront &wavefront;
+
+    // shader status bits
+    StatusReg statusReg;
+    // memory descriptor reg
+    ScalarRegU32 m0;
+};
 } // namespace VegaISA
 } // namespace gem5
 

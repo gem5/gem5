@@ -47,6 +47,7 @@
 #define __DRAM_INTERFACE_HH__
 
 #include "mem/drampower.hh"
+#include "mem/mem_ctrl.hh"
 #include "mem/mem_interface.hh"
 #include "params/DRAMInterface.hh"
 

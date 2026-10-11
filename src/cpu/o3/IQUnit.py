@@ -43,6 +43,10 @@ from m5.proxy import Parent
 from m5.SimObject import SimObject
 
 
+class IQInsertionPolicy(ScopedEnum):
+    vals = ["FirstMatch", "LeastLoaded"]
+
+
 class IQUnit(SimObject):
     type = "IQUnit"
     cxx_class = "gem5::o3::IQUnit"

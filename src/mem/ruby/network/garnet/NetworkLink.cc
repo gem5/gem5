@@ -61,6 +61,20 @@ NetworkLink::NetworkLink(const Params &p)
 }
 
 void
+NetworkLink::regStats()
+{
+    ClockedObject::regStats();
+
+    m_flits_per_vnet.name(name() + ".flits_per_vnet")
+        .desc("Number of flits transmitted per virtual network")
+        .flags(statistics::nozero | statistics::total)
+        .init(m_virt_nets);
+    for (int v = 0; v < (int)m_virt_nets; v++) {
+        m_flits_per_vnet.subname(v, "vnet-" + std::to_string(v));
+    }
+}
+
+void
 NetworkLink::setLinkConsumer(Consumer *consumer)
 {
     link_consumer = consumer;
@@ -102,6 +116,7 @@ NetworkLink::wakeup()
         link_consumer->scheduleEventAbsolute(clockEdge(m_latency));
         m_link_utilized++;
         m_vc_load[t_flit->get_vc()]++;
+        m_flits_per_vnet[t_flit->get_vnet()]++;
     }
 
     if (!link_srcQueue->isEmpty()) {
@@ -115,7 +130,9 @@ NetworkLink::resetStats()
     for (int i = 0; i < m_vc_load.size(); i++) {
         m_vc_load[i] = 0;
     }
-
+    for (int v = 0; v < (int)m_virt_nets; v++) {
+        m_flits_per_vnet[v] = 0;
+    }
     m_link_utilized = 0;
 }
 

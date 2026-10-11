@@ -70,8 +70,19 @@ FetchDirectedPrefetcher::notifyFTQInsert(const o3::FetchTargetPtr &ft)
     const Addr start_blk_addr = blockAddress(ft->startAddress());
     const Addr end_blk_addr = blockAddress(ft->endAddress());
 
-    for (Addr blk_addr = start_blk_addr; blk_addr <= end_blk_addr;
-         blk_addr += blkSize) {
+    if (end_blk_addr < start_blk_addr) {
+        DPRINTF(HWPrefetch,
+                "Ignoring invalid FetchTarget range: "
+                "%#x -> %#x\n",
+                start_blk_addr, end_blk_addr);
+        return;
+    }
+
+    // Advancing an Addr past the final block near MaxAddr wraps it to zero.
+    // Bound iteration by a non-address counter so the loop still terminates.
+    const uint64_t num_blocks = (end_blk_addr - start_blk_addr) / blkSize + 1;
+    for (uint64_t block = 0; block < num_blocks; ++block) {
+        const Addr blk_addr = start_blk_addr + block * blkSize;
 
         // Check if the address is already in the prefetch queue
         auto it = std::find(pfq.begin(), pfq.end(), blk_addr);

@@ -43,6 +43,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+#include <utility>
+
 #include "base/logging.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
@@ -110,13 +112,97 @@ pybind_init_event(py::module_ &m_native)
     m.def("setMaxTick", &set_max_tick, py::arg("tick"));
     m.def("getMaxTick", &get_max_tick, py::return_value_policy::copy);
     m.def("terminateEventQueueThreads", &terminateEventQueueThreads);
-    m.def("exitSimLoop", &exitSimLoop);
-    m.def("exitSimulationLoop", &exitSimulationLoop);
+    /* Python-level deprecation wrapper for the legacy exitSimLoop API.
+     * Preserve the original behavior and ABI but emit a DeprecationWarning
+     * so Python callers start migrating to the replacement matching their
+     * compatibility requirements.
+     */
+    m.def(
+        "exitSimLoop",
+        [](const std::string &message, int exit_code = 0,
+           py::object when = py::none(), py::object repeat = py::none(),
+           bool serialize = false) {
+            const Tick tick = when.is_none() ? curTick() : when.cast<Tick>();
+            const Tick repeat_tick =
+                repeat.is_none() ? 0 : repeat.cast<Tick>();
+            py::module_ warnings = py::module_::import("warnings");
+            warnings.attr("warn")(
+                "exitSimLoop is deprecated; use exitSimulationLoopClassic "
+                "to preserve legacy cause/code behavior, or "
+                "exitSimulationLoop for hypercall-based exits",
+                py::module_::import("builtins").attr("DeprecationWarning"));
+            exitSimulationLoopClassic(message, exit_code, tick, repeat_tick,
+                                      serialize);
+        },
+        py::arg("message"), py::arg("exit_code") = 0,
+        py::arg("when") = py::none(), py::arg("repeat") = py::none(),
+        py::arg("serialize") = false);
+    m.def(
+        "exitSimulationLoop",
+        [](uint64_t hypercall_id,
+           std::map<std::string, std::string> payload =
+               std::map<std::string, std::string>(),
+           py::object when = py::none(), py::object repeat = py::none()) {
+            const Tick tick = when.is_none() ? curTick() : when.cast<Tick>();
+            const Tick repeat_tick =
+                repeat.is_none() ? 0 : repeat.cast<Tick>();
+            exitSimulationLoop(hypercall_id, std::move(payload), tick,
+                               repeat_tick);
+        },
+        py::arg("hypercall_id"),
+        py::arg("payload") = std::map<std::string, std::string>(),
+        py::arg("when") = py::none(), py::arg("repeat") = py::none());
+    m.def(
+        "exitSimulationLoop",
+        [](ExitHypercall hypercall,
+           std::map<std::string, std::string> payload =
+               std::map<std::string, std::string>(),
+           py::object when = py::none(), py::object repeat = py::none()) {
+            const Tick tick = when.is_none() ? curTick() : when.cast<Tick>();
+            const Tick repeat_tick =
+                repeat.is_none() ? 0 : repeat.cast<Tick>();
+            exitSimulationLoop(hypercall, std::move(payload), tick,
+                               repeat_tick);
+        },
+        py::arg("hypercall"),
+        py::arg("payload") = std::map<std::string, std::string>(),
+        py::arg("when") = py::none(), py::arg("repeat") = py::none());
+    m.def(
+        "exitSimulationLoopClassic",
+        [](const std::string &message, int exit_code = 0,
+           py::object when = py::none(), py::object repeat = py::none(),
+           bool serialize = false) {
+            const Tick tick = when.is_none() ? curTick() : when.cast<Tick>();
+            const Tick repeat_tick =
+                repeat.is_none() ? 0 : repeat.cast<Tick>();
+            exitSimulationLoopClassic(message, exit_code, tick, repeat_tick,
+                                      serialize);
+        },
+        py::arg("message"), py::arg("exit_code") = 0,
+        py::arg("when") = py::none(), py::arg("repeat") = py::none(),
+        py::arg("serialize") = false);
+    m.def(
+        "exitSimulationLoopClassicNow",
+        [](const std::string &message, int exit_code = 0,
+           py::object repeat = py::none(), bool serialize = false) {
+            const Tick repeat_tick =
+                repeat.is_none() ? 0 : repeat.cast<Tick>();
+            exitSimulationLoopClassicNow(message, exit_code, repeat_tick,
+                                         serialize);
+        },
+        py::arg("message"), py::arg("exit_code") = 0,
+        py::arg("repeat") = py::none(), py::arg("serialize") = false);
     m.def("getEventQueue", []() { return curEventQueue(); },
           py::return_value_policy::reference);
     m.def("setEventQueue", [](EventQueue *q) { return curEventQueue(q); });
     m.def("getEventQueue", &getEventQueue,
           py::return_value_policy::reference);
+
+    auto exit_hypercall = py::enum_<ExitHypercall>(m, "ExitHypercall");
+    for (const auto &desc : kExitHypercallDescriptors) {
+        exit_hypercall.value(desc.name, desc.id, desc.description);
+    }
+    exit_hypercall.export_values();
 
     py::class_<EventQueue>(m, "EventQueue")
         .def("name",  [](EventQueue *eq) { return eq->name(); })
@@ -166,7 +252,7 @@ pybind_init_event(py::module_ &m_native)
 
 #define PRIO(n) c_event.attr(# n) = py::cast((int)Event::n)
     PRIO(Minimum_Pri);
-    PRIO(Minimum_Pri);
+    PRIO(CPU_Exit_Pri);
     PRIO(Debug_Enable_Pri);
     PRIO(Debug_Break_Pri);
     PRIO(CPU_Switch_Pri);

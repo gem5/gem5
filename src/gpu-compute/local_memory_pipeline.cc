@@ -43,17 +43,18 @@ namespace gem5
 {
 
 LocalMemPipeline::LocalMemPipeline(const ComputeUnitParams &p, ComputeUnit &cu)
-    : computeUnit(cu), _name(cu.name() + ".LocalMemPipeline"),
-      lmQueueSize(p.local_mem_queue_size), stats(&cu)
-{
-}
+    : computeUnit(cu),
+      _name(cu.name() + ".LocalMemPipeline"),
+      lmQueueSize(p.local_mem_queue_size),
+      stats(&cu)
+{}
 
 void
 LocalMemPipeline::exec()
 {
     // apply any returned shared (LDS) memory operations
-    GPUDynInstPtr m = !lmReturnedRequests.empty() ?
-        lmReturnedRequests.front() : nullptr;
+    GPUDynInstPtr m =
+        !lmReturnedRequests.empty() ? lmReturnedRequests.front() : nullptr;
 
     bool accessVrf = true;
     Wavefront *w = nullptr;
@@ -61,21 +62,21 @@ LocalMemPipeline::exec()
     if ((m) && m->latency.rdy() && (m->isLoad() || m->isAtomicRet())) {
         w = m->wavefront();
 
-        accessVrf = w->computeUnit->vrf[w->simdId]->
-            canScheduleWriteOperandsFromLoad(w, m);
-
+        accessVrf =
+            w->computeUnit->vrf[w->simdId]->canScheduleWriteOperandsFromLoad(
+                w, m);
     }
 
     if (!lmReturnedRequests.empty() && m->latency.rdy() && accessVrf &&
-        computeUnit.locMemToVrfBus.rdy()
-        && (computeUnit.shader->coissue_return
-        || computeUnit.vectorSharedMemUnit.rdy())) {
+        computeUnit.locMemToVrfBus.rdy() &&
+        (computeUnit.shader->coissue_return ||
+         computeUnit.vectorSharedMemUnit.rdy())) {
 
         lmReturnedRequests.pop();
         w = m->wavefront();
 
-        if (m->isFlat() && !m->isMemSync() && !m->isEndOfKernel()
-            && m->allLanesZero()) {
+        if (m->isFlat() && !m->isMemSync() && !m->isEndOfKernel() &&
+            m->allLanesZero()) {
             computeUnit.getTokenManager()->recvTokens(1);
         }
 
@@ -86,27 +87,28 @@ LocalMemPipeline::exec()
         w->untrackLGKMInst(m);
 
         if (m->isLoad() || m->isAtomicRet()) {
-            w->computeUnit->vrf[w->simdId]->
-                scheduleWriteOperandsFromLoad(w, m);
+            w->computeUnit->vrf[w->simdId]->scheduleWriteOperandsFromLoad(w,
+                                                                          m);
         }
 
         // Decrement outstanding request count
         computeUnit.shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
 
         if (m->isStore() || m->isAtomic()) {
-            computeUnit.shader->ScheduleAdd(&w->outstandingReqsWrLm,
-                                             m->time, -1);
+            computeUnit.shader->ScheduleAdd(&w->outstandingReqsWrLm, m->time,
+                                            -1);
         }
 
         if (m->isLoad() || m->isAtomic()) {
-            computeUnit.shader->ScheduleAdd(&w->outstandingReqsRdLm,
-                                             m->time, -1);
+            computeUnit.shader->ScheduleAdd(&w->outstandingReqsRdLm, m->time,
+                                            -1);
         }
 
         // Mark write bus busy for appropriate amount of time
         computeUnit.locMemToVrfBus.set(m->time);
-        if (computeUnit.shader->coissue_return == 0)
+        if (computeUnit.shader->coissue_return == 0) {
             w->computeUnit->vectorSharedMemUnit.set(m->time);
+        }
     }
 
     // If pipeline has executed a local memory instruction
@@ -153,15 +155,15 @@ void
 LocalMemPipeline::printProgress()
 {
     std::cout << "LMPipe issued: " << lmIssuedRequests.size()
-              << " returned: "<< lmReturnedRequests.size() << "\n";
+              << " returned: " << lmReturnedRequests.size() << "\n";
 }
 
-LocalMemPipeline::
-LocalMemPipelineStats::LocalMemPipelineStats(statistics::Group *parent)
+LocalMemPipeline::LocalMemPipelineStats::LocalMemPipelineStats(
+    statistics::Group *parent)
     : statistics::Group(parent, "LocalMemPipeline"),
-      ADD_STAT(loadVrfBankConflictCycles, "total number of cycles LDS data "
+      ADD_STAT(loadVrfBankConflictCycles,
+               "total number of cycles LDS data "
                "are delayed before updating the VRF")
-{
-}
+{}
 
 } // namespace gem5

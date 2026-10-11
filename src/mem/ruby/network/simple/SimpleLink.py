@@ -66,10 +66,8 @@ class SimpleIntLink(BasicIntLink):
 
     def setup_buffers(self, network):
         if len(self.buffers) > 0:
-            fatal(
-                "User should not manually set links' \
-                   in_buffers or out_buffers"
-            )
+            fatal("User should not manually set links' \
+                   in_buffers or out_buffers")
 
         # The network needs number_of_virtual_networks buffers per
         # in and out port

@@ -137,6 +137,26 @@ class X86ACPIMadtLAPICOverride(X86ACPIMadtRecord):
     address = Param.Addr(0, "64-bit Physical Address of Local APIC")
 
 
+# Differentiated System Description Table. Requires "AML" bytecode which is
+# embedded at build time from src/arch/x86/bios/dsdt.aml used by the OS.
+class X86ACPIDSDT(SimObject):
+    type = "X86ACPIDSDT"
+    cxx_class = "gem5::X86ISA::ACPI::DSDT"
+    cxx_header = "arch/x86/bios/acpi.hh"
+
+
+# Fixed ACPI Description Table. Has a pointer to DSDT which prevents Linux
+# from disabling ACPI during boot up.
+class X86ACPIFADT(X86ACPISysDescTable):
+    type = "X86ACPIFADT"
+    cxx_class = "gem5::X86ISA::ACPI::FADT"
+    cxx_header = "arch/x86/bios/acpi.hh"
+
+    dsdt = Param.X86ACPIDSDT(
+        X86ACPIDSDT(), "differentiated system description table"
+    )
+
+
 # Root System Description Pointer Structure
 class X86ACPIRSDP(SimObject):
     type = "X86ACPIRSDP"

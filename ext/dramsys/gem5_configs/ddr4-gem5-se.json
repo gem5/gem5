@@ -1,0 +1,19 @@
+{
+    "simulation": {
+        "addressmapping":
+            "../DRAMSys/configs/addressmapping/am_ddr4_8x4Gbx8_dimm_p1KB_brc.json",
+        "mcconfig": "../DRAMSys/configs/mcconfig/fr_fcfs.json",
+        "memspec":
+            "../DRAMSys/configs/memspec/JEDEC_4Gb_DDR4-1866_8bit_A.json",
+        "simconfig": "../DRAMSys/configs/simconfig/gem5_se.json",
+        "simulationid": "ddr4-gem5-se",
+        "tracesetup": [
+            {
+                "type": "player",
+                "clkMhz": 200,
+                "dataLength": 64,
+                "name": "../DRAMSys/configs/traces/example.stl"
+            }
+        ]
+    }
+}

@@ -113,10 +113,8 @@ def define_options(parser):
 
 def construct(options, system, ruby_system):
     if buildEnv["PROTOCOL"] != "GPU_VIPER":
-        panic(
-            "This script requires VIPER based protocols \
-        to be built."
-        )
+        panic("This script requires VIPER based protocols \
+        to be built.")
     cpu_sequencers = []
     cpuCluster = None
     cpuCluster = Cluster(name="CPU Cluster", extBW=8, intBW=8)  # 16 GB/s

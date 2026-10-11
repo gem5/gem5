@@ -62,7 +62,7 @@ class VegaTLBCoalescer : public ClockedObject
 {
   public:
     VegaTLBCoalescer(const VegaTLBCoalescerParams &p);
-    ~VegaTLBCoalescer() { }
+    ~VegaTLBCoalescer() {}
 
     // Number of TLB probes per cycle. Parameterizable - default 2.
     int TLBProbesPerCycle;
@@ -94,8 +94,8 @@ class VegaTLBCoalescer : public ClockedObject
      *
      * pair.second represents the assume page size.
      */
-    typedef std::map<Tick, std::vector<std::pair<coalescedReq, Addr> > >
-      CoalescingFIFO;
+    typedef std::map<Tick, std::vector<std::pair<coalescedReq, Addr>>>
+        CoalescingFIFO;
 
     CoalescingFIFO coalescerFIFO;
 
@@ -127,9 +127,9 @@ class VegaTLBCoalescer : public ClockedObject
     // spends waiting?
     statistics::Scalar localqueuingCycles;
     statistics::Scalar localCycles;
-  // localqueuingCycles/uncoalescedAccesses
+    // localqueuingCycles/uncoalescedAccesses
     statistics::Formula localLatency;
-   // latency of a request to be completed
+    // latency of a request to be completed
     statistics::Formula latency;
 
     bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2, Addr pagebytes);
@@ -141,24 +141,30 @@ class VegaTLBCoalescer : public ClockedObject
       public:
         CpuSidePort(const std::string &_name, VegaTLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : ResponsePort(_name), coalescer(tlb_coalescer),
-              index(_index) { }
+            : ResponsePort(_name), coalescer(tlb_coalescer), index(_index)
+        {}
 
       protected:
         VegaTLBCoalescer *coalescer;
         int index;
 
         virtual bool recvTimingReq(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
+        virtual Tick
+        recvAtomic(PacketPtr pkt)
+        {
+            return 0;
+        }
         virtual void recvFunctional(PacketPtr pkt);
-        virtual void recvRangeChange() { }
+        virtual void
+        recvRangeChange()
+        {}
         virtual void recvReqRetry();
 
         virtual void
         recvRespRetry()
         {
             fatal("recvRespRetry() is not implemented in the TLB "
-                "coalescer.\n");
+                  "coalescer.\n");
         }
 
         virtual AddrRangeList getAddrRanges() const;
@@ -169,8 +175,8 @@ class VegaTLBCoalescer : public ClockedObject
       public:
         MemSidePort(const std::string &_name, VegaTLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : RequestPort(_name), coalescer(tlb_coalescer),
-              index(_index) { }
+            : RequestPort(_name), coalescer(tlb_coalescer), index(_index)
+        {}
 
         std::deque<PacketPtr> retries;
 
@@ -179,9 +185,15 @@ class VegaTLBCoalescer : public ClockedObject
         int index;
 
         virtual bool recvTimingResp(PacketPtr pkt);
-        virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
+        virtual Tick
+        recvAtomic(PacketPtr pkt)
+        {
+            return 0;
+        }
         virtual void recvFunctional(PacketPtr pkt);
-        virtual void recvRangeChange() { }
+        virtual void
+        recvRangeChange()
+        {}
         virtual void recvReqRetry();
 
         virtual void
@@ -192,12 +204,12 @@ class VegaTLBCoalescer : public ClockedObject
     };
 
     // Coalescer response ports on the cpu Side
-    std::vector<CpuSidePort*> cpuSidePort;
+    std::vector<CpuSidePort *> cpuSidePort;
     // Coalescer request ports on the memory side
-    std::vector<MemSidePort*> memSidePort;
+    std::vector<MemSidePort *> memSidePort;
 
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override;
+                  PortID idx = InvalidPortID) override;
 
     void processProbeTLBEvent();
     /// This event issues the TLB probes
@@ -221,7 +233,9 @@ class VegaTLBCoalescer : public ClockedObject
     // enforce uniqueness in queue
     std::map<CpuSidePort *, CpuSidePort *> stalledPortsMap;
 
-    unsigned int availDownstreamSlots() {
+    unsigned int
+    availDownstreamSlots()
+    {
         assert(tlb_level == 1);
         return maxDownstream - numDownstream;
     }
@@ -229,25 +243,30 @@ class VegaTLBCoalescer : public ClockedObject
     void insertStalledPortIfNotMapped(CpuSidePort *);
     bool mustStallCUPort(CpuSidePort *);
 
-    bool stalledPorts() {
+    bool
+    stalledPorts()
+    {
         assert(tlb_level == 1);
-      return stalledPortsQueue.size() > 0;
+        return stalledPortsQueue.size() > 0;
     }
 
-    void decrementNumDownstream() {
+    void
+    decrementNumDownstream()
+    {
         assert(tlb_level == 1);
         assert(numDownstream > 0);
         numDownstream--;
     }
 
-    void incrementNumDownstream() {
+    void
+    incrementNumDownstream()
+    {
         assert(tlb_level == 1);
         assert(maxDownstream >= numDownstream);
         numDownstream++;
     }
 
     void unstallPorts();
-
 
     // this FIFO queue keeps track of the virt. page
     // addresses that are pending cleanup

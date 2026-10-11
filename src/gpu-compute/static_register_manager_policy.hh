@@ -42,19 +42,18 @@ class HSAQueueEntry;
 class StaticRegisterManagerPolicy : public RegisterManagerPolicy
 {
   public:
-
     StaticRegisterManagerPolicy();
 
     void exec() override;
 
-    int mapVgpr(Wavefront* w, int vgprIndex) override;
-    int mapSgpr(Wavefront* w, int sgprIndex) override;
+    int mapVgpr(Wavefront *w, int vgprIndex) override;
+    int mapSgpr(Wavefront *w, int sgprIndex) override;
 
     bool canAllocateVgprs(int simdId, int nWfs, int demandPerWf) override;
     bool canAllocateSgprs(int simdId, int nWfs, int demandPerWf) override;
 
     void allocateRegisters(Wavefront *w, int vectorDemand,
-        int scalarDemand) override;
+                           int scalarDemand) override;
 
     void freeRegisters(Wavefront *w) override;
 };

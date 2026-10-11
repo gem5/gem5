@@ -225,10 +225,11 @@ def create_system(
     full_system,
     system,
     piobus=None,
-    dma_ports=[],
+    dma_ports=None,
     bootmem=None,
     cpus=None,
 ):
+    dma_ports = [] if dma_ports is None else dma_ports
     system.ruby = RubySystem()
     ruby = system.ruby
 
@@ -249,7 +250,7 @@ def create_system(
         cpus = system.cpu
 
     try:
-        (cpu_sequencers, dir_cntrls, topology) = import_module(
+        cpu_sequencers, dir_cntrls, topology = import_module(
             f"ruby.{buildEnv['PROTOCOL']}"
         ).create_system(
             options, full_system, system, dma_ports, bootmem, ruby, cpus

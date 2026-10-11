@@ -31,7 +31,7 @@ from typing import (
 
 from m5.objects import (
     IOXBar,
-    PciBus,
+    PciHost,
 )
 from m5.params import (
     AddrRange,
@@ -63,7 +63,7 @@ class TestBoard(AbstractSystemBoard):
         clk_freq: str,
         generator: AbstractGenerator,
         memory: AbstractMemorySystem,
-        cache_hierarchy: Optional[AbstractCacheHierarchy],
+        cache_hierarchy: AbstractCacheHierarchy | None,
     ):
         super().__init__(
             clk_freq=clk_freq,  # Only used if cache hierarchy or GUPS-gen
@@ -89,22 +89,18 @@ class TestBoard(AbstractSystemBoard):
         )
 
     @overrides(AbstractSystemBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return False
 
     @overrides(AbstractSystemBoard)
-    def get_pci_bus(self) -> PciBus:
+    def get_pci_host(self) -> PciHost:
         raise NotImplementedError(
-            "The TestBoard does not have an PCI Bus. "
-            "Use `has_pci_bus()` to check this."
+            "The TestBoard does not have a PCI host. "
+            "Use `has_pci_host()` to check this."
         )
 
     @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
-        return False
-
-    @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "The TestBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."

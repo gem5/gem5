@@ -33,24 +33,26 @@
 
 #include "arch/amdgpu/common/dtype/mxfp_types.hh"
 
-template<typename T>
-bool test_raw_mxfp(T raw_mxfp, int bits)
+template <typename T>
+bool
+test_raw_mxfp(T raw_mxfp, int bits)
 {
     float tmp = float(raw_mxfp);
     T from_float(tmp);
 
     // Simply check that casting to float and back yields the same bit values.
     // Exclude inf/NaN as those have multiple values in some MXFP types.
-    if (raw_mxfp.data != from_float.data &&
-        !std::isnan(tmp) && !std::isinf(tmp)) {
+    if (raw_mxfp.data != from_float.data && !std::isnan(tmp) &&
+        !std::isinf(tmp)) {
         return false;
     }
 
     return true;
 }
 
-template<typename T>
-int test_type(int bits)
+template <typename T>
+int
+test_type(int bits)
 {
     T raw_mxfp;
     int errors = 0;

@@ -243,19 +243,26 @@ BaseCPU::contextToThread(ContextID cid)
     return static_cast<ThreadID>(cid - threadContexts[0]->contextId());
 }
 
-void
-BaseCPU::postInterrupt(ThreadID tid, int int_num, int index)
+bool
+BaseCPU::wakeupOnInterrupt(ThreadID tid) const
 {
-    interrupts[tid]->post(int_num, index);
     // Only wake up syscall emulation if it is not waiting on a futex.
     // This is to model the fact that instructions such as ARM SEV
     // should wake up a WFE sleep, but not a futex syscall WAIT.
     //
     // For RISC-V, the WFI sleep wake up is implementation defined.
     // The SiFive WFI wake up the hart only if mip & mie != 0
-    if ((FullSystem && interrupts[tid]->isWakeUp()) ||
-        (!FullSystem && !system->futexMap.is_waiting(threadContexts[tid])))
+    return (FullSystem && interrupts[tid]->isWakeUp()) ||
+           (!FullSystem && !system->futexMap.is_waiting(threadContexts[tid]));
+}
+
+void
+BaseCPU::postInterrupt(ThreadID tid, int int_num, int index)
+{
+    interrupts[tid]->post(int_num, index);
+    if (wakeupOnInterrupt(tid)) {
         wakeup(tid);
+    }
 }
 
 void

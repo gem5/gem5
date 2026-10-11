@@ -233,8 +233,5 @@ system.tgen.start(trace())
 
 m5.simulate()
 
-print(
-    "DRAM sweep with burst: %d, banks: %d, max stride: %d, request \
-       generation period: %d"
-    % (burst_size, nbr_banks, max_stride, itt)
-)
+print("DRAM sweep with burst: %d, banks: %d, max stride: %d, request \
+       generation period: %d" % (burst_size, nbr_banks, max_stride, itt))

@@ -429,7 +429,8 @@ def template AtomicMemOpRMWCompleteAcc {{
 // LR/SC/AMO decode formats
 
 def format LoadReserved(memacc_code, postacc_code={{ }},
-        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
+        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[],
+        xlate_flags=[]) {{
     macro_ea_code = ''
     macro_inst_flags = []
     macro_iop = InstObjParams(name, Name, 'LoadReserved', macro_ea_code,
@@ -442,13 +443,23 @@ def format LoadReserved(memacc_code, postacc_code={{ }},
 
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
+    xlate_flags = makeList(xlate_flags)
     iop = InstObjParams(name, Name, 'LoadReservedMicro',
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
-    mem_flags = ['(Request::%s)' % flag for flag in mem_flags]
+    mem_flags = [
+        'static_cast<Request::FlagsType>(Request::%s)' % flag
+        for flag in mem_flags
+    ]
     align_flag = getAlignFlag(iop)
     if align_flag:
-        mem_flags.append(align_flag)
+        mem_flags.append('static_cast<Request::FlagsType>(%s)' % align_flag)
+    if xlate_flags:
+        xlate_flags_casted = [
+            ('(static_cast<Request::FlagsType>(Request::ARCH_BITS) & '
+             'static_cast<Request::FlagsType>(XlateFlags::%s))') % flag
+            for flag in xlate_flags]
+        mem_flags.extend(xlate_flags_casted)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
         '|'.join(mem_flags) + ';'
 

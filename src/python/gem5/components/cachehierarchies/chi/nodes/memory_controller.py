@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All Rights Reserved.
 #
@@ -30,6 +42,7 @@ from m5.objects import (
     CHI_Memory_Controller,
     MessageBuffer,
     RubyNetwork,
+    SnfCBusy,
 )
 from m5.params import (
     AddrRange,
@@ -61,7 +74,7 @@ class MemoryController(CHI_Memory_Controller):
         return cls._version - 1
 
     def __init__(
-        self, network: RubyNetwork, ranges: List[AddrRange], port: Port
+        self, network: RubyNetwork, ranges: list[AddrRange], port: Port
     ):
         super().__init__()
 
@@ -70,6 +83,7 @@ class MemoryController(CHI_Memory_Controller):
         self.addr_ranges = ranges
         self.memory_out_port = port
         self.data_channel_size = 32
+        self.cbusy_generator = SnfCBusy()
 
         self.connectQueues(network)
 

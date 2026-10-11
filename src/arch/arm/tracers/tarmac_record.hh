@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2019, 2025-2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -150,6 +150,7 @@ class TarmacTracerRecord : public TarmacBaseRecord
         virtual void updateInt(const TarmacContext& tarmCtx);
         virtual void updateVec(const TarmacContext& tarmCtx) {};
         virtual void updatePred(const TarmacContext& tarmCtx) {};
+        virtual void updateMatrix(const TarmacContext &tarmCtx) {};
 
       public:
         /** True if register entry is valid */
@@ -158,6 +159,10 @@ class TarmacTracerRecord : public TarmacBaseRecord
         RegId regId;
         /** Register name to be printed */
         std::string regName;
+        /** True if matrix register entry is valid */
+        bool matRegValid;
+        /** List of register name to be printed */
+        std::vector<std::string> matRegName;
     };
 
     /** Memory Entry */

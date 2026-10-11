@@ -62,7 +62,7 @@ Sensitivity::notifyWork(Event *e)
 bool
 Sensitivity::notify(Event *e)
 {
-    if (scheduler.current() == process) {
+    if (scheduler().current() == process) {
         static bool warned = false;
         if (!warned) {
             SC_REPORT_WARNING(sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_,
