@@ -47,6 +47,7 @@
 #define __MEM_CACHE_PREFETCH_MLOP_HH__
 
 #include <cstdint>
+#include <deque>
 #include <utility>
 #include <vector>
 
@@ -58,10 +59,6 @@
 namespace gem5
 {
 
-namespace replacement_policy
-{
-class Base;
-}
 struct MLOPPrefetcherParams;
 
 namespace prefetch
@@ -78,57 +75,52 @@ class MLOP : public Queued
                            const CacheAccessor &cache) override;
 
   private:
+    /** A lookahead level, in [1, lookaheadLevels]. */
+    using LookaheadLevel = unsigned;
+    /** A signed displacement from the triggering block, in cache lines. */
+    using Offset = int;
+
     /**
-     * Score of one candidate offset at each lookahead level. Indexed
-     * within offset_table by offset + max_offset; the offset itself is
+     * scores[L - 1] is an offset's score at lookahead level L. Indexed
+     * within offsetTable by offset + maxOffset; the offset itself is
      * never stored, only derived from its position in that table.
      */
-    struct OffsetEntry
-    {
-        /** scores[L - 1] is this offset's score at lookahead level L */
-        std::vector<uint32_t> scores;
-    };
+    using OffsetEntry = std::vector<uint32_t>;
 
     /** An Access Map Table entry, tagged by its region's base block. */
     struct AMTEntry : public TaggedEntry
     {
-        AMTEntry(TagExtractor ext) { registerTagExtractor(ext); }
+        AMTEntry(TagExtractor ext);
 
-        void
-        invalidate() override
-        {
-            TaggedEntry::invalidate();
-            bit_vector = 0;
-            recent.clear();
-        }
+        void invalidate() override;
 
-        uint64_t bit_vector = 0;
-        /** Most-recent-first access indices, size <= recent_depth */
-        std::vector<uint8_t> recent;
+        uint64_t bitVector = 0;
+        /** Most-recent-first access indices, size <= recentDepth */
+        std::deque<uint8_t> recent;
     };
     using AMTCache = AssociativeCache<AMTEntry>;
 
-    const unsigned eval_period = 0;
-    const unsigned lookahead_levels = 0;
-    const int max_offset = 0;
-    const unsigned score_threshold = 0;
-    const unsigned prefetch_degree = 0;
-    const unsigned amt_entries = 0;
-    const unsigned bit_vector_size = 0;
-    const unsigned recent_depth = 0;
-    const Addr region_mask = 0;
+    const unsigned evalPeriod = 0;
+    const LookaheadLevel lookaheadLevels = 0;
+    const Offset maxOffset = 0;
+    const unsigned scoreThreshold = 0;
+    const unsigned prefetchDegree = 0;
+    const unsigned amtEntries = 0;
+    const unsigned bitVectorSize = 0;
+    const unsigned recentDepth = 0;
+    const Addr regionMask = 0;
 
     AMTCache amt;
 
-    /** Indexed by offset + max_offset; the slot at index max_offset
+    /** Indexed by offset + maxOffset; the slot at index maxOffset
      * (offset 0) is left unused. */
-    std::vector<OffsetEntry> offset_table;
+    std::vector<OffsetEntry> offsetTable;
     /** (lookahead level, offset) pairs selected at the last epoch. */
-    std::vector<std::pair<unsigned, int>> best_offsets;
-    unsigned access_counter = 0;
+    std::vector<std::pair<LookaheadLevel, Offset>> bestOffsets;
+    unsigned accessCounter = 0;
 
     void resetScores();
-    std::vector<std::pair<unsigned, int>> selectBestOffsets();
+    std::vector<std::pair<LookaheadLevel, Offset>> selectBestOffsets();
 
     AMTEntry &findOrAllocAmtEntry(Addr base_block);
     void updateScoresWithAccess(Addr block);

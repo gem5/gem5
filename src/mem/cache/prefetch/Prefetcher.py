@@ -799,20 +799,25 @@ class MLOPPrefetcher(QueuedPrefetcher):
     cxx_class = "gem5::prefetch::MLOP"
     cxx_header = "mem/cache/prefetch/mlop.hh"
 
-    evaluation_period = Param.Unsigned(500, "Accesses per scoring epoch")
+    evaluation_period = Param.Unsigned(
+        500,
+        "Accesses per scoring epoch, matching the reference DPC3 "
+        "submission's NUM_UPDATES",
+    )
     lookahead_levels = Param.Unsigned(16, "Number of lookahead levels")
     max_offset = Param.Unsigned(63, "Max signed offset, in cache lines")
     score_threshold = Param.Unsigned(
         200,
         "Min score for an offset to be selected at a given lookahead. "
-        "confidence threshold (0.40) times the default evaluation "
-        "period (500) from their implementation",
+        "Not described in the paper; comes from the reference DPC3 "
+        "submission's source with confidence ratio (0.40) times the default "
+        "evaluation period (500)",
     )
     degree = Param.Unsigned(16, "Max number of prefetches issued per access")
     amt_entries = Param.MemorySize(
         "256", "Number of entries in the Access Map Table"
     )
-    amt_assoc = Param.Unsigned(256, "Associativity of the Access Map Table")
+    amt_assoc = Param.Unsigned(16, "Associativity of the Access Map Table.")
     amt_indexing_policy = Param.TaggedIndexingPolicy(
         TaggedSetAssociative(
             entry_size=1, assoc=Parent.amt_assoc, size=Parent.amt_entries
