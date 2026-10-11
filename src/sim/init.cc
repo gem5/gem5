@@ -55,7 +55,7 @@ namespace py = pybind11;
 namespace gem5
 {
 
-pybind11::module_ *EmbeddedPyBind::mod = nullptr;
+pybind11::handle EmbeddedPyBind::mod;
 
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
                                void (*init_func)(py::module_ &),
@@ -89,7 +89,8 @@ EmbeddedPyBind::init()
     }
 
     // We must be ready, so set this module up.
-    initFunc(*mod);
+    auto module = py::reinterpret_borrow<py::module_>(mod);
+    initFunc(module);
     ready[name] = this;
     registered = true;
 
@@ -136,7 +137,7 @@ EmbeddedPyBind::initAll(py::module_ &_m5)
 
     pybind_init_port(_m5);
 
-    mod = &_m5;
+    mod = _m5;
 
     // Init all the modules that were waiting on the _m5 module itself.
     initPending("");
