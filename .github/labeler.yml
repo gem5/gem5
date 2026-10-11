@@ -166,7 +166,7 @@ resources:
 
 scons:
     - changed-files:
-          - any-glob-to-any-file: [SConstruct, build_opts/**, build_tools/**]
+          - any-glob-to-any-file: [SConstruct, build_opts/**, build_tools/**, site_scons/**]
 
 sim:
     - changed-files:
