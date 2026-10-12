@@ -78,12 +78,12 @@ repos:
       hooks:
           - id: yamlfmt
     - repo: https://github.com/psf/black-pre-commit-mirror
-      rev: 26.10.0
+      rev: 26.10.1
       hooks:
           - id: black
             exclude: ^util/gem5art/
     - repo: https://github.com/asottile/pyupgrade
-      rev: v3.21.2
+      rev: v3.22.0
       hooks:
           - id: pyupgrade
             exclude: ^util/gem5art/
