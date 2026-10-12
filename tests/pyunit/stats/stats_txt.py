@@ -26,15 +26,13 @@
 
 import re
 from collections import OrderedDict
+from collections import OrderedDict as OrderedDictType
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
-    Iterable,
     List,
     Optional,
-)
-from typing import OrderedDict as OrderedDictType
-from typing import (
     Tuple,
     Union,
 )
@@ -62,17 +60,17 @@ class StatsDump:
         return self.stats[stat_name]
 
 
-def parse_stats_file(path: Union[Path, str]) -> List[StatsDump]:
+def parse_stats_file(path: Path | str) -> list[StatsDump]:
     with open(path, encoding="utf-8") as stats_file:
         return parse_stats_text(stats_file)
 
 
-def parse_stats_text(lines: Union[Iterable[str], str]) -> List[StatsDump]:
+def parse_stats_text(lines: Iterable[str] | str) -> list[StatsDump]:
     if isinstance(lines, str):
         lines = lines.splitlines()
 
-    dumps: List[StatsDump] = []
-    current: Optional[StatsDump] = None
+    dumps: list[StatsDump] = []
+    current: StatsDump | None = None
 
     for line_number, line in enumerate(lines, start=1):
         stripped = line.strip()
@@ -137,7 +135,7 @@ def _parse_message(line: str) -> str:
 
 def _parse_stat_line(
     line: str, line_number: int
-) -> Optional[Tuple[str, StatsValue]]:
+) -> tuple[str, StatsValue] | None:
     parts = line.split(maxsplit=2)
     if len(parts) < 2:
         raise StatsParseError(f"line {line_number}: missing stat value")
