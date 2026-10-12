@@ -61,6 +61,7 @@
 #include "base/atomicio.hh"
 #include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "base/output.hh"
 #include "debug/ExternalSignal.hh"
 #include "sim/async.hh"
 #include "sim/backtrace.hh"
@@ -164,6 +165,8 @@ abortHandler(int sigtype)
     }
 
     print_backtrace();
+    // Write out buffered output (e.g. a .gz debug trace) before dying.
+    simout.flushAll();
     raiseFatalSignal(sigtype);
 }
 
@@ -174,6 +177,9 @@ segvHandler(int sigtype)
     STATIC_ERR("gem5 has encountered a segmentation fault!\n\n");
 
     print_backtrace();
+    // Best effort: the heap may be corrupt, but the handler is installed
+    // with SA_RESETHAND, so a second fault here just ends the process.
+    simout.flushAll();
     raiseFatalSignal(SIGSEGV);
 }
 
