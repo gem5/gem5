@@ -292,7 +292,7 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Average SQ Occupancy (UsedSlots/TotalSlots)")
 {
     loadToUse
-        .init(0, 299, 10)
+        .init(0, 299, 1)
         .flags(statistics::nozero);
 
     lqAvgOccupancy.precision(2);
