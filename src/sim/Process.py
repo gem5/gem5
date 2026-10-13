@@ -51,6 +51,10 @@ class Process(SimObject):
                             table in an architecture-specific format",
     )
     kvmInSE = Param.Bool("false", "initialize the process for KvmCPU in SE")
+    addrSpaceShift = Param.Int64(
+        0,
+        "Shift the process's address space by this amount.",
+    )
     maxStackSize = Param.MemorySize("64MiB", "maximum size of the stack")
     zeroPages = Param.Bool(
         True,
