@@ -260,6 +260,10 @@ SyscallReturn dupFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn dup2Func(SyscallDesc *desc, ThreadContext *tc,
                        int old_tgt_fd, int new_tgt_fd);
 
+/// Target dup3() handler.
+SyscallReturn dup3Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd,
+                       int new_tgt_fd, int flags);
+
 /// Target fcntl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
                         int tgt_fd, int cmd, guest_abi::VarArgs<int> varargs);
@@ -378,6 +382,37 @@ atSyscallPath(ThreadContext *tc, int dirfd, std::string &path)
     }
 
     return 0;
+}
+
+/// Target prctl() handler.
+template <class OS>
+SyscallReturn
+prctlFunc(SyscallDesc *desc, ThreadContext *tc, int option, uint64_t arg2,
+          uint64_t arg3, uint64_t arg4, uint64_t arg5)
+{
+    auto p = tc->getProcessPtr();
+    std::shared_ptr<MemState> mem_state = p->memState;
+
+    if (option == OS::TGT_PR_SET_MM) {
+        switch (arg2) {
+            case OS::TGT_PR_SET_MM_START_BRK:
+                DPRINTF_SYSCALL(
+                    Verbose, "prctl(PR_SET_MM, PR_SET_MM_START_BRK, %#lx)\n",
+                    arg3);
+                return 0;
+            case OS::TGT_PR_SET_MM_BRK:
+                DPRINTF_SYSCALL(
+                    Verbose, "prctl(PR_SET_MM, PR_SET_MM_BRK, %#lx)\n", arg3);
+                mem_state->setBrkPoint(arg3);
+                return 0;
+            default:
+                warn("prctl(PR_SET_MM, %d, ...) unimplemented\n", arg2);
+                return -EINVAL;
+        }
+    }
+
+    warn("prctl(%d, ...) unimplemented\n", option);
+    return -EINVAL;
 }
 
 /// Futex system call
