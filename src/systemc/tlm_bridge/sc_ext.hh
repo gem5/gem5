@@ -124,6 +124,27 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     std::optional<uint32_t> getSubstreamId() const;
     void setSubstreamId(std::optional<uint32_t> s);
 
+    /* AXI4 Cache Attributes */
+    bool hasBufferable() const;
+    std::optional<bool> getBufferable() const;
+    void setBufferable(std::optional<bool> b);
+    bool hasModifiable() const;
+    std::optional<bool> getModifiable() const;
+    void setModifiable(std::optional<bool> m);
+    bool hasReadAllocate() const;
+    std::optional<bool> getReadAllocate() const;
+    void setReadAllocate(std::optional<bool> ra);
+    bool hasWriteAllocate() const;
+    std::optional<bool> getWriteAllocate() const;
+    void setWriteAllocate(std::optional<bool> wa);
+
+    void setAXI4CacheAttributesFromFlag(uint32_t axi4_flag);
+
+    /* AXI4 Domain */
+    bool hasDomain() const;
+    std::optional<uint32_t> getDomain() const;
+    void setDomain(std::optional<uint32_t> d);
+
   private:
     /* Secure and privileged access */
     bool privileged;
@@ -136,6 +157,15 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     /* Stream ID and Substream ID */
     std::optional<uint32_t> stream_id;
     std::optional<uint32_t> substream_id;
+
+    /* AXI4 Cache Attributes */
+    std::optional<bool> bufferable;
+    std::optional<bool> modifiable;
+    std::optional<bool> read_allocate;
+    std::optional<bool> write_allocate;
+
+    /* AXI4 Domain */
+    std::optional<uint32_t> domain;
 };
 
 } // namespace Gem5SystemC
