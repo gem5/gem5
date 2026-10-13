@@ -120,11 +120,18 @@ Terminal::DataEvent::process(int revent)
  * Terminal code
  */
 Terminal::Terminal(const Params &p)
-    : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
-      number(p.number), data_fd(-1), listener(p.port.build(p.name)),
-      txbuf(16384), rxbuf(16384), outfile(terminalDump(p))
+    : SerialDevice(p),
+      listenEvent(NULL),
+      dataEvent(NULL),
+      number(p.number),
+      data_fd(-1),
+      listener(p.port.build(p.name)),
+      txbuf(p.bufsize),
+      rxbuf(p.bufsize),
+      outfile(terminalDump(p))
 #if TRACING_ON == 1
-      , linebuf(16384)
+      ,
+      linebuf(p.bufsize)
 #endif
 {
     if (outfile)
