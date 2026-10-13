@@ -26,7 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-from slicc.ast.StatementAST import StatementAST
+from .StatementAST import StatementAST
 
 
 class CheckNextCycleAST(StatementAST):
