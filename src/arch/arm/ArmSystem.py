@@ -160,6 +160,10 @@ class ArmRelease(SimObject):
 
     extensions = VectorParam.ArmExtension([], "ISA extensions")
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.extensions = list(self.extensions)
+
     def add(self, new_ext: ArmExtension) -> None:
         """
         Add the provided extension (ArmExtension) to the system
