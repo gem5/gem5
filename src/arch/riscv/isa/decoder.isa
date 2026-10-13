@@ -2065,6 +2065,200 @@ decode QUADRANT default Unknown::unknown() {
         }
 
         0x0b: decode FUNCT3 {
+            0x0: decode AMOFUNCT {
+                0x0: AtomicMemOp::amoadd_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<int8_t> *amo_op =
+                          new AtomicGenericOp<int8_t>(Rs2_sb,
+                                  [](int8_t* b, int8_t a){
+                                      int8_t mem_data = letoh(*b);
+                                      int8_t new_data = mem_data + a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1: AtomicMemOp::amoswap_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){ *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x4: AtomicMemOp::amoxor_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){
+                                      uint8_t mem_data = letoh(*b);
+                                      uint8_t new_data = mem_data ^ a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x8: AtomicMemOp::amoor_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){
+                                      uint8_t mem_data = letoh(*b);
+                                      uint8_t new_data = mem_data | a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0xc: AtomicMemOp::amoand_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){
+                                      uint8_t mem_data = letoh(*b);
+                                      uint8_t new_data = mem_data & a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x10: AtomicMemOp::amomin_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<int8_t> *amo_op =
+                      new AtomicGenericOp<int8_t>(Rs2_sb,
+                        [](int8_t* b, int8_t a){
+                            int8_t mem_data = letoh(*b);
+                            int8_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x14: AtomicMemOp::amomax_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<int8_t> *amo_op =
+                      new AtomicGenericOp<int8_t>(Rs2_sb,
+                        [](int8_t* b, int8_t a){
+                            int8_t mem_data = letoh(*b);
+                            int8_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x18: AtomicMemOp::amominu_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                      new AtomicGenericOp<uint8_t>(Rs2_ub,
+                        [](uint8_t* b, uint8_t a){
+                            uint8_t mem_data = letoh(*b);
+                            uint8_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1c: AtomicMemOp::amomaxu_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                      new AtomicGenericOp<uint8_t>(Rs2_ub,
+                        [](uint8_t* b, uint8_t a){
+                            uint8_t mem_data = letoh(*b);
+                            uint8_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+            }
+            0x1: decode AMOFUNCT {
+                0x0: AtomicMemOp::amoadd_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<int16_t> *amo_op =
+                          new AtomicGenericOp<int16_t>(Rs2_sh,
+                                  [](int16_t* b, int16_t a){
+                                      int16_t mem_data = letoh(*b);
+                                      int16_t new_data = mem_data + a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1: AtomicMemOp::amoswap_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){ *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x4: AtomicMemOp::amoxor_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){
+                                      uint16_t mem_data = letoh(*b);
+                                      uint16_t new_data = mem_data ^ a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x8: AtomicMemOp::amoor_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){
+                                      uint16_t mem_data = letoh(*b);
+                                      uint16_t new_data = mem_data | a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0xc: AtomicMemOp::amoand_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){
+                                      uint16_t mem_data = letoh(*b);
+                                      uint16_t new_data = mem_data & a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x10: AtomicMemOp::amomin_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<int16_t> *amo_op =
+                      new AtomicGenericOp<int16_t>(Rs2_sh,
+                        [](int16_t* b, int16_t a){
+                            int16_t mem_data = letoh(*b);
+                            int16_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x14: AtomicMemOp::amomax_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<int16_t> *amo_op =
+                      new AtomicGenericOp<int16_t>(Rs2_sh,
+                        [](int16_t* b, int16_t a){
+                            int16_t mem_data = letoh(*b);
+                            int16_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x18: AtomicMemOp::amominu_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                      new AtomicGenericOp<uint16_t>(Rs2_uh,
+                        [](uint16_t* b, uint16_t a){
+                            uint16_t mem_data = letoh(*b);
+                            uint16_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1c: AtomicMemOp::amomaxu_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                      new AtomicGenericOp<uint16_t>(Rs2_uh,
+                        [](uint16_t* b, uint16_t a){
+                            uint16_t mem_data = letoh(*b);
+                            uint16_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+            }
             0x2: decode AMOFUNCT {
                 0x2: LoadReserved::lr_w({{
                     Rd_sd = Mem_sw;
