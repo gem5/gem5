@@ -96,7 +96,7 @@ def generatePartPolicy(args):
     ], "Only support generating way and max_capacity policies"
 
     if args.policy == "way":
-        allocated_ways = [way for way in range(0, args.way_allocation)]
+        allocated_ways = [*range(0, args.way_allocation)]
         allocation = WayPolicyAllocation(partition_id=0, ways=allocated_ways)
 
         return WayPartitioningPolicy(allocations=[allocation])
