@@ -63,6 +63,20 @@ namespace gem5
 namespace ruby
 {
 
+namespace
+{
+
+// Cache maintenance operations (including the flushes issued by the cache
+// recorder) carry no data and must always be performed by the protocol
+bool
+isCacheMaintenance(const PacketPtr pkt)
+{
+    return pkt->isFlush() || pkt->isCleanInvalidateRequest() ||
+           pkt->req->isCacheMaintenance();
+}
+
+} // anonymous namespace
+
 Sequencer::Sequencer(const Params &p)
     : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
       deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
@@ -483,14 +497,20 @@ Sequencer::writeCallbackCBusy(Addr address, DataBlock &data,
     // ruby request was outstanding. Since only 1 ruby request was made,
     // profile the ruby latency once.
     bool ruby_request = true;
+    // A cache maintenance operation may leave the line invalid or without
+    // write permission, so requests coalesced behind it are reissued
+    const bool no_coales =
+        noCoales || isCacheMaintenance(seq_req_list.front().pkt);
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
         // Atomic Request may be executed remotly in the cache hierarchy
         bool atomic_req =
            ((seq_req.m_type == RubyRequestType_ATOMIC_RETURN) ||
             (seq_req.m_type == RubyRequestType_ATOMIC_NO_RETURN));
+        // Cache maintenance operations must always reach the protocol
+        bool cmo_req = isCacheMaintenance(seq_req.pkt);
 
-        if ((noCoales || atomic_req) && !ruby_request) {
+        if ((no_coales || atomic_req || cmo_req) && !ruby_request) {
             // Do not process follow-up requests
             // (e.g. if full line no present)
             // Reissue to the cache hierarchy
@@ -776,7 +796,7 @@ Sequencer::hitCallback(SequencerRequest *srequest, DataBlock &data,
     // update the data unless it is a non-data-carrying flush
     if (m_ruby_system->getWarmupEnabled()) {
         data.setData(pkt);
-    } else if (!pkt->isFlush() && !pkt->isCleanInvalidateRequest()) {
+    } else if (!isCacheMaintenance(pkt)) {
         if ((type == RubyRequestType_LD) || (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
             (type == RubyRequestType_Locked_RMW_Read) ||
@@ -1100,8 +1120,20 @@ Sequencer::makeRequest(PacketPtr pkt)
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }
-        } else if (pkt->isFlush() || pkt->isCleanInvalidateRequest()) {
-            primary_type = secondary_type = RubyRequestType_FLUSH;
+        } else if (isCacheMaintenance(pkt)) {
+            // Invalidations are performed as clean+invalidate (FLUSH):
+            // Ruby may cache data the architecture expects to be in
+            // memory already (e.g., stores made with the MMU off), and
+            // dropping it would lose the data. Protocols that do not
+            // support cleans perform them as the stronger FLUSH.
+            const ProtocolInfo &protocol_info =
+                m_ruby_system->getProtocolInfo();
+            if (pkt->req->isCacheClean() && !pkt->req->isCacheInvalidate() &&
+                protocol_info.getSupportsCleans()) {
+                primary_type = secondary_type = RubyRequestType_CLEAN;
+            } else {
+                primary_type = secondary_type = RubyRequestType_FLUSH;
+            }
         } else if (pkt->cmd == MemCmd::MemSyncReq) {
             primary_type = secondary_type = RubyRequestType_REPLACEMENT;
             assert(!m_cache_inv_pkt);

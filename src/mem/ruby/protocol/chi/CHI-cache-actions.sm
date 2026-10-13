@@ -162,6 +162,7 @@ action(AllocateTBE_SeqRequest, desc="") {
       out_msg.is_remote_pf := false;
       out_msg.txnId := max_outstanding_transactions;
       out_msg.ns := !in_msg.isSecure;
+      out_msg.nonTemporal := in_msg.isNonTemporal;
 
       out_msg.atomic_op.clear();
       out_msg.atomic_op.orMask(in_msg.writeMask);
@@ -183,6 +184,10 @@ action(AllocateTBE_SeqRequest, desc="") {
         out_msg.type := CHIRequestType:StashUnique;
       } else if (in_msg.Type == RubyRequestType:Stash_Shared) {
         out_msg.type := CHIRequestType:StashShared;
+      } else if (in_msg.Type == RubyRequestType:CLEAN) {
+        out_msg.type := CHIRequestType:Clean;
+      } else if (in_msg.Type == RubyRequestType:FLUSH) {
+        out_msg.type := CHIRequestType:Flush;
       } else {
         error("Invalid RubyRequestType");
       }
@@ -292,7 +297,7 @@ action(Initiate_Request, desc="") {
 
   bool alloc_entry := needCacheEntry(tbe.reqType,
                                      cache_entry, dir_entry,
-                                     tbe.is_local_pf);
+                                     tbe.is_local_pf, tbe.nonTemporal);
   bool dealloc_entry := needDeallocCacheEntry(tbe.reqType);
   assert((alloc_entry && dealloc_entry) == false);
 
@@ -436,8 +441,9 @@ action(RestoreFromHazard, desc="") {
   // the hazard and needs to wakeup up now
   wakeupPendingTgrs(tbe);
 
-  // For stash request, we need to process the next state if it has already done
-  if (isStashReqType(tbe.reqType)) {
+  // For stash requests and CMOs, which get no CompAck, the completion may
+  // have been received during the hazard, so process the next state if done
+  if (isStashReqType(tbe.reqType) || isCMOReqType(tbe.reqType)) {
     processNextState(address, tbe, cache_entry);
   }
 }
@@ -1148,6 +1154,77 @@ action(Finish_CleanUnique, desc="") {
   }
 }
 
+// Cache maintenance operations (CMOs)
+// Caches that are not the PoC just forward the CMO downstream. The HN (PoC)
+// snoops every cache that may hold the line, including the requestor and the
+// caches between them, which handle the snoop as a hazard while waiting for
+// the CMO completion. The HN then writes any dirty data back to memory before
+// completing the CMO.
+
+action(Initiate_CMO, desc="") {
+  assert(is_HN == false);
+  tbe.actions.push(Event:SendCMO);
+  tbe.actions.push(Event:FinishCMO);
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Initiate_CMO_PoC, desc="") {
+  // In UD_RU our dirty copy is not considered valid as the upstream owner may
+  // have newer data. Keep it in case the owner has it clean and doesn't
+  // return data on the snoop (same as Initiate_Replacement)
+  if (is_valid(cache_entry) && tbe.dataDirty && (tbe.dataValid == false)) {
+    tbe.dataBlk := cache_entry.DataBlk;
+    tbe.dataBlkValid.fillMask();
+  }
+}
+
+action(Initiate_CleanShared_PoC, desc="") {
+  assert(is_HN);
+  // only an owner may have dirty data
+  if (tbe.dir_ownerExists) {
+    tbe.actions.push(Event:SendSnpShared);
+  }
+  tbe.actions.push(Event:CMOWriteBack);
+}
+
+action(Initiate_CleanInvalid_PoC, desc="") {
+  assert(is_HN);
+  if (tbe.dir_sharers.count() > 0) {
+    tbe.actions.push(Event:SendSnpCleanInvalid);
+  }
+  tbe.actions.push(Event:CMOWriteBack);
+  tbe.dataToBeInvalid := true;
+}
+
+action(Initiate_CMOWriteBack, desc="") {
+  // This is executed after all snoops completed
+  assert(is_HN);
+  assert(tbe.actions.empty());
+  assert(tbe.dataMaybeDirtyUpstream == false);
+  if (tbe.dataDirty) {
+    assert(tbe.dataBlkValid.isFull());
+    tbe.actions.push(Event:SendWriteNoSnp);
+    tbe.actions.push(Event:WriteBEPipe);
+    tbe.actions.push(Event:SendWBData);
+  }
+  tbe.actions.push(Event:FinishCMO);
+  tbe.actions.pushNB(Event:TagArrayWrite);
+}
+
+action(Finish_CMO, desc="") {
+  assert(is_valid(tbe));
+  assert(isCMOReqType(tbe.reqType));
+  if (is_HN) {
+    // any dirty data was written back by Initiate_CMOWriteBack
+    tbe.dataDirty := false;
+  }
+  if (fromSequencer(tbe.reqType)) {
+    sequencer.writeCallback(tbe.addr, tbe.dataBlk, true);
+  } else {
+    tbe.actions.pushFront(Event:SendCompIResp);
+  }
+}
+
 
 action(Initiate_LoadHit, desc="") {
   // Local prefetch requests do not read data array
@@ -1666,6 +1743,14 @@ action(Finish_CopyBack_Stale, desc="") {
   // the Initiate_Evict
   if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
       (tbe.dataValid == false)) {
+    // Until the Evict is processed downstream we may still be snooped for
+    // data (e.g. SnpOnceFwd), so keep any clean data returned by the stale
+    // copy back valid until the end of the transaction
+    if (tbe.dataBlkValid.isFull() &&
+        tbe.expected_req_resp.receivedDataType(CHIDataType:CBWrData_SC)) {
+      tbe.dataValid := true;
+      tbe.dataToBeInvalid := true;
+    }
     tbe.actions.push(Event:SendEvict);
   }
 }
@@ -2026,6 +2111,28 @@ action(Send_CleanUnique, desc="") {
 
   enqueue(reqOutPort, CHIRequestMsg, request_latency) {
     prepareRequest(tbe, CHIRequestType:CleanUnique, out_msg);
+    out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    allowRequestRetry(tbe, out_msg);
+  }
+}
+
+action(Send_CMO, desc="") {
+  assert(is_valid(tbe));
+  assert(is_HN == false);
+  assert(isCMOReqType(tbe.reqType));
+
+  assert(tbe.expected_req_resp.hasExpected() == false);
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp_I);
+  tbe.expected_req_resp.setExpectedCount(1);
+
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    if ((tbe.reqType == CHIRequestType:Clean) ||
+        (tbe.reqType == CHIRequestType:CleanShared)) {
+      prepareRequest(tbe, CHIRequestType:CleanShared, out_msg);
+    } else {
+      prepareRequest(tbe, CHIRequestType:CleanInvalid, out_msg);
+    }
     out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
     allowRequestRetry(tbe, out_msg);
   }
@@ -3622,9 +3729,12 @@ action(Send_RespSepData, desc="") {
 action(Send_CompI, desc="") {
   assert(is_valid(tbe));
 
-  bool is_stale := (!isStashReqType(tbe.reqType)) && (!tbe.dir_sharers.isElement(tbe.requestor));
+  // Stash requests and CMOs don't track the requestor in the directory
+  bool is_evict := (!isStashReqType(tbe.reqType)) &&
+                   (!isCMOReqType(tbe.reqType));
+  bool is_stale := is_evict && (!tbe.dir_sharers.isElement(tbe.requestor));
 
-  if (!isStashReqType(tbe.reqType)) {
+  if (is_evict) {
     // Used to ack Evict request. upstream maybe invalidated by hazard SnpCleanInvalid.
     if (tbe.dir_sharers.isElement(tbe.requestor)) {
       assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
