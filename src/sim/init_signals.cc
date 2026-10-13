@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <csignal>
 #include <cstring>
 #include <iostream>
@@ -290,7 +291,9 @@ processExternalSignal(void)
     id_pos += id_field.length();
 
     // Skip whitespace
-    while (id_pos < full_payload_str.length() && isspace(id_pos)) {
+    while (
+        id_pos < full_payload_str.length() &&
+        std::isspace(static_cast<unsigned char>(full_payload_str[id_pos]))) {
         id_pos++;
     }
 
