@@ -77,11 +77,11 @@ dependencies:
 
 dev:
     - changed-files:
-          - all-globs-to-any-file: [src/dev/**, '!src/dev/arm/**', '!src/dev/hsa/**', '!src/dev/virtio/**']
+          - all-globs-to-any-file: [src/dev/**, '!src/dev/amdgpu/**', '!src/dev/arm/**', '!src/dev/hsa/**', '!src/dev/virtio/**']
 
 dev-amdgpu:
     - changed-files:
-          - all-globs-to-any-file: src/dev/amdgpu/**
+          - any-glob-to-any-file: src/dev/amdgpu/**
 
 dev-arm:
     - changed-files:
