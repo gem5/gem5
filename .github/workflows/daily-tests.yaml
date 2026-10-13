@@ -163,7 +163,7 @@ jobs:
             - uses: actions/checkout@v7
 
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
-              run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              run: python3 util/ci/native.py unittests-${{ matrix.type }} --jobs "$(nproc)" --status "$RUNNER_TEMP/native-status.json"
 
     get-testlib-long-dirs:
         runs-on: ubuntu-24.04
@@ -174,28 +174,16 @@ jobs:
         steps:
             - uses: actions/checkout@v7
             - name: Get directories for testlib-long
-              working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=long > "$RUNNER_TEMP/test-suites"
-                  test_dirs=$(jq -Rsc '
-                    split("\n") |
-                    map(select(startswith("SuiteUID:")) |
-                        split(":")[1] | split("/")[1:-1] | join("/")) |
-                    unique |
-                    if length == 0 then error("No TestLib suites found") else . end
-                  ' "$RUNNER_TEMP/test-suites")
-                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
-
+                  python3 util/ci/testlib.py discover --length long > "$RUNNER_TEMP/test-plan.json"
+                  echo "test-dirs-matrix=$(jq -c '.directories' "$RUNNER_TEMP/test-plan.json")" >> "$GITHUB_OUTPUT"
             - name: Discover required binary configurations
               id: build-matrix
-              working-directory: ${{ github.workspace }}/tests
               run: |
-                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q > "$RUNNER_TEMP/build-targets"
                   # Always refresh the ALL cache for the PR and weekly tests.
-                  build_matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | . + ["ALL"] | unique' "$RUNNER_TEMP/build-targets")
+                  build_matrix=$(jq -c '.targets | map(split("/")[-2]) | . + ["ALL"] | unique' "$RUNNER_TEMP/test-plan.json")
                   echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
-
   # start running all of the long tests
     testlib-long-tests:
         name: long-tests
@@ -220,20 +208,18 @@ jobs:
             - uses: actions/checkout@v7
             - name: Select the binaries needed by these suites
               id: required-binaries
-              working-directory: ${{ github.workspace }}/tests
               env:
                   TEST_DIR: ${{ matrix.test-type }}
               run: |
-                  ./main.py list "$TEST_DIR" --length=long --build-targets -q > "$RUNNER_TEMP/required-binaries"
-                  if [ ! -s "$RUNNER_TEMP/required-binaries" ]; then
+                  python3 util/ci/testlib.py discover --directory "$TEST_DIR" --length long > "$RUNNER_TEMP/required-plan.json"
+                  if [ "$(jq '.targets | length' "$RUNNER_TEMP/required-plan.json")" = 0 ]; then
                     echo "has-binaries=false" >> "$GITHUB_OUTPUT"
                     exit 0
                   fi
-                  targets=$(jq -Rrsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique | join("|")' "$RUNNER_TEMP/required-binaries")
+                  targets=$(jq -r '.targets | map(split("/")[-2]) | unique | join("|")' "$RUNNER_TEMP/required-plan.json")
                   echo "has-binaries=true" >> "$GITHUB_OUTPUT"
                   # download-artifact uses minimatch: match exactly this set.
                   echo "artifact-pattern=daily-gem5-$GITHUB_RUN_ID-@($targets)" >> "$GITHUB_OUTPUT"
-
             - name: Download this run's binary artifacts
               if: steps.required-binaries.outputs.has-binaries == 'true'
               uses: actions/download-artifact@v8
@@ -252,17 +238,9 @@ jobs:
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 1410
-              working-directory: ${{ github.workspace }}/tests
-              run: |
-                  resource_dir="$GEM5_RESOURCE_DIR"
-                  # These legacy fixtures do not checksum or lock downloads.
-                  case "${{ matrix.test-type }}" in
-                    gem5/cpu_tests|gem5/fdp_tests|gem5/m5threads_test_atomic)
-                      resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
-                      ;;
-                  esac
-                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t $(nproc) --bin-path "$resource_dir"
-
+              env:
+                  TEST_DIR: ${{ matrix.test-type }}
+              run: python3 util/ci/testlib.py run --directory "$TEST_DIR" --length long --skip-build --jobs "$(nproc)"
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
               if: always()
@@ -294,19 +272,8 @@ jobs:
                   restore-keys: |
                       sst-build
 
-            - name: Build RISCV/libgem5_opt.so with SST
-              run: |
-                  scons defconfig build/RISCV build_opts/RISCV --ignore-style
-                  scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
-            - name: Makefile ext/sst
-              working-directory: ${{ github.workspace }}/ext/sst
-              run: mv Makefile.linux Makefile
-            - name: Compile ext/sst
-              working-directory: ${{ github.workspace }}/ext/sst
-              run: make -j $(nproc)
-            - name: Run SST test
-              working-directory: ${{ github.workspace }}/ext/sst
-              run: sst --add-lib-path=./ sst/example.py
+            - name: Run SST integration tests
+              run: python3 util/ci/native.py sst --jobs "$(nproc)" --status "$RUNNER_TEMP/native-status.json"
 
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
   # simulation with it.
@@ -318,21 +285,8 @@ jobs:
         # headers. Restoring it can race header regeneration on the next run.
         steps:
             - uses: actions/checkout@v7
-            - name: Build ARM/gem5.opt
-              run: |
-                  scons defconfig build/ARM build_opts/ARM --ignore-style
-                  scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
-            - name: disable systemc
-              run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
-            - name: Build ARM/libgem5_opt.so
-              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
-            - name: Compile gem5 withing SystemC
-              working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
-              run: make
-            - name: Run gem5 within SystemC test
-              run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
-            - name: Continue gem5 within SystemC test
-              run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+            - name: Run SystemC integration tests
+              run: python3 util/ci/native.py systemc --jobs "$(nproc)" --status "$RUNNER_TEMP/native-status.json"
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
@@ -346,9 +300,6 @@ jobs:
         needs: get-date
         steps:
             - uses: actions/checkout@v7
-            - name: Checkout DRAMSys
-              working-directory: ${{ github.workspace }}/ext/dramsys
-              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.6.0 --depth 1 DRAMSys
 
             - name: Cache the build
               uses: actions/cache@v6
@@ -358,16 +309,5 @@ jobs:
                   restore-keys: |
                       dramsys-build
 
-              # gem5 is built separately because it depends on the DRAMSys library
-            - name: Build gem5
-              working-directory: ${{ github.workspace }}
-              run: |
-                  scons defconfig build/ALL build_opts/ALL
-                  scons build/ALL/gem5.opt -j $(nproc)
-
-            - name: Run DRAMSys Checks
-              working-directory: ${{ github.workspace }}
-              run: |
-                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
-                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
-                  ./build/ALL/gem5.opt configs/example/dramsys.py
+            - name: Run DRAMSys integration tests
+              run: python3 util/ci/native.py dramsys --jobs "$(nproc)" --status "$RUNNER_TEMP/native-status.json"
