@@ -1323,7 +1323,14 @@ Inst_DS__DS_WRXCHG_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
     Wavefront *wf = gpuDynInst->wavefront();
 
     if (gpuDynInst->exec_mask.none()) {
+        // reserveLmResource already reserved both sides of the atomic.
+        // No request will reach LocalMemPipeline::issueRequest to release
+        // them when every lane is inactive.
+        wf->rdLmReqsInPipe--;
+        wf->wrLmReqsInPipe--;
+        wf->validateRequestCounters();
         wf->decLGKMInstsIssued();
+        wf->untrackLGKMInst(gpuDynInst);
         return;
     }
 
