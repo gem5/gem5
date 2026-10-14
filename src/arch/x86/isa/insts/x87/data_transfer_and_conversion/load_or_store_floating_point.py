@@ -36,17 +36,17 @@
 microcode = """
 def macroop FLD_M {
     ldfp87 ufp1, seg, sib, disp
-    movfp st(-1), ufp1, spm=-1
+    movfp st(-1), ufp1, spm=-1, dataSize=8
 };
 
 def macroop FLD_P {
     rdip t7
     ldfp87 ufp1, seg, riprel, disp
-    movfp st(-1), ufp1, spm=-1
+    movfp st(-1), ufp1, spm=-1, dataSize=8
 };
 
 def macroop FLD_R {
-    movfp st(-1), sti, spm=-1
+    movfp st(-1), sti, spm=-1, dataSize=8
 };
 
 def macroop FLD80_M {
@@ -63,7 +63,7 @@ def macroop FLD80_P {
 };
 
 def macroop FST_R {
-    movfp sti, st(0)
+    movfp sti, st(0), dataSize=8
 };
 
 def macroop FST_M {
@@ -76,17 +76,17 @@ def macroop FST_P {
 };
 
 def macroop FSTP_R {
-    movfp sti, st(0), spm=1
+    movfp sti, st(0), spm=1, dataSize=8
 };
 
 def macroop FSTP_M {
-    movfp ufp1, st(0)
+    movfp ufp1, st(0), dataSize=8
     stfp87 ufp1, seg, sib, disp
     pop87
 };
 
 def macroop FSTP_P {
-    movfp ufp1, st(0)
+    movfp ufp1, st(0), dataSize=8
     rdip t7
     stfp87 ufp1, seg, riprel, disp
     pop87

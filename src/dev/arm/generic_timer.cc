@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018,2020,2022 Arm Limited
+ * Copyright (c) 2013, 2015, 2017-2018,2020,2022,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -808,6 +808,20 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
     }
 }
 
+ArchTimer *
+GenericTimer::coreTimer(int cpu_id, CoreTimersType type)
+{
+    CoreTimers &core(getTimers(cpu_id));
+    switch (type) {
+        case CoreTimersType::Cntv:
+            return &core.virtEL1;
+        case CoreTimersType::Cntp:
+            return &core.physEL1;
+        default:
+            return nullptr;
+    }
+}
+
 GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
     ArmSystem &system, unsigned cpu,
     ArmInterruptPin *irq_el3_phys, ArmInterruptPin *irq_el1_phys,
@@ -983,12 +997,15 @@ GenericTimerFrame::GenericTimerFrame(const GenericTimerFrameParams &p)
       timerRange(RangeSize(p.cnt_base, ArmSystem::PageBytes)),
       addrRanges({timerRange}),
       systemCounter(*p.counter),
-      physTimer(csprintf("%s.phys_timer", name()),
-                *this, systemCounter, p.int_phys->get()),
-      virtTimer(csprintf("%s.virt_timer", name()),
-                *this, systemCounter,
+      physTimer(csprintf("%s.phys_timer", name()), *this, systemCounter,
+                p.int_phys->get()),
+      virtTimer(csprintf("%s.virt_timer", name()), *this, systemCounter,
                 p.int_virt->get()),
       accessBits(0x3f),
+      // Default to true: enable non-secure access to simplify bootloader
+      // implementation, which otherwise would need to program CNTNSAR
+      // before booting a non-secure kernel.
+      nonSecureAccess(true),
       system(*dynamic_cast<ArmSystem *>(sys))
 {
     SystemCounter::validateCounterRef(p.counter);

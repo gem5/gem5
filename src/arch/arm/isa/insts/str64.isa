@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013,2017,2019-2020 ARM Limited
+// Copyright (c) 2011-2013,2017,2019-2020,2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -213,13 +213,20 @@ let {{
 
             # Code that actually handles the access
             if self.flavor == "fp":
+                numElements = self.size // 4
+                numTotalElements = numElements * 2
                 accCode = '''
-                    uint64_t data = AA64FpDest2P0_uw;
-                    data = isBigEndian64(xc->tcBase())
-                            ? ((uint64_t(AA64FpDestP0_uw) << 32) | data)
-                            : ((data << 32) | AA64FpDestP0_uw);
-                    Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
-                '''
+                    std::array<uint32_t,%(size)d> temp = {};
+                ''' % { "size" : (numTotalElements) }
+                for reg in range(numElements):
+                    accCode += '''
+                        temp[%(bottom)d] = htole(AA64FpDestP%(reg)d_uw);
+                        temp[%(top)d] = htole(AA64FpDest2P%(reg)d_uw);
+                    ''' % { "bottom" : reg, "top" : reg + numElements, "reg" : reg }
+
+                accCode += '''
+                    Mem_tu%(size)ds = temp;
+                ''' % { "size" : numTotalElements }
             else:
                 if self.size == 4:
                     accCode = '''
@@ -245,6 +252,7 @@ let {{
             if self.writeback and not self.micro:
                 wbDecl = self.wbDecl
             self.emitHelper(self.base, wbDecl)
+
 
     class StoreImm64(StoreImmInst64, StoreSingle64):
         decConstBase = 'LoadStoreImm64'
@@ -367,6 +375,7 @@ let {{
     StoreRegU64("strxr_uop", "MicroStrXRegUop", size=8).emit()
     StoreImmU64("strfpxi_uop", "MicroStrFpXImmUop", size=8, flavor="fp").emit()
     StoreRegU64("strfpxr_uop", "MicroStrFpXRegUop", size=8, flavor="fp").emit()
+
     StoreImmU64("strqbfpxi_uop", "MicroStrQBFpXImmUop",
                 size=16, flavor="fp", top=False).emit()
     StoreRegU64("strqbfpxr_uop", "MicroStrQBFpXRegUop",
@@ -376,7 +385,11 @@ let {{
     StoreRegU64("strqtfpxr_uop", "MicroStrQTFpXRegUop",
                 size=16, flavor="fp", top=True).emit()
     StoreImmDU64("strdxi_uop", "MicroStrDXImmUop", size=4).emit()
-    StoreImmDU64("strdfpxi_uop", "MicroStrDFpXImmUop",
-                 size=4, flavor="fp").emit()
+
+    StoreImmDU64("stp_uop", "MicroStpWUop", size=4).emit()
+    StoreImmDU64("stp_uop", "MicroStpXUop", size=8).emit()
+    StoreImmDU64("stpfp_uop", "MicroStpFpSUop", size=4, flavor="fp").emit()
+    StoreImmDU64("stpfp_uop", "MicroStpFpDUop", size=8, flavor="fp").emit()
+    StoreImmDU64("stpfp_uop", "MicroStpFpQUop", size=16, flavor="fp").emit()
 
 }};

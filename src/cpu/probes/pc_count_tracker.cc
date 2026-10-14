@@ -28,17 +28,14 @@
 
 #include "cpu/probes/pc_count_tracker.hh"
 
-
 namespace gem5
 {
 
 PcCountTracker::PcCountTracker(const PcCountTrackerParams &p)
-    : ProbeListenerObject(p),
-      cpuptr(p.core),
-      manager(p.ptmanager)
+    : ProbeListenerObject(p), cpuptr(p.core), manager(p.ptmanager)
 {
     if (!cpuptr || !manager) {
-        fatal("%s is NULL", !cpuptr ? "CPU": "PcCountTrackerManager");
+        fatal("%s is NULL", !cpuptr ? "CPU" : "PcCountTrackerManager");
     }
     for (int i = 0; i < p.targets.size(); i++) {
         // initialize the set of targeting Program Counter addresses

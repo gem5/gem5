@@ -94,6 +94,7 @@ class Workload : public SimObject
     // system object, this helper can be removed.
     bool trapToGdb(GDBSignal sig, ContextID ctx_id);
     bool sendToGdb(std::string msg);
+    std::string getGdbListenerOutput() const;
 
     virtual void registerThreadContext(ThreadContext *tc);
     virtual void replaceThreadContext(ThreadContext *tc);

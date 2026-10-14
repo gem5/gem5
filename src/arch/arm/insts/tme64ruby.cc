@@ -74,7 +74,7 @@ Tstart64::initiateAcc(ExecContext *xc,
         // These Requests are marked as NO_ACCESS to indicate that the request
         // should not be sent to the cache controller.
         if (htm_depth > 1) {
-            memAccessFlags = memAccessFlags | Request::NO_ACCESS;
+            memAccessFlags.set(Request::NO_ACCESS);
         }
 
         fault = xc->initiateMemMgmtCmd(memAccessFlags);
@@ -228,7 +228,7 @@ MicroTcommit64::initiateAcc(ExecContext *xc,
     // These Requests are marked as NO_ACCESS to indicate that the request
     // should not be sent to the cache controller.
     if (htm_depth > 1) {
-        memAccessFlags = memAccessFlags | Request::NO_ACCESS;
+        memAccessFlags.set(Request::NO_ACCESS);
     }
 
     fault = xc->initiateMemMgmtCmd(memAccessFlags);

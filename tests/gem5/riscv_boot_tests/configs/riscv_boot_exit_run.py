@@ -150,7 +150,10 @@ else:
     )
 
 processor = SimpleProcessor(
-    cpu_type=cpu_type, isa=ISA.RISCV, num_cores=args.num_cpus
+    cpu_type=cpu_type,
+    isa=ISA.RISCV,
+    num_cores=args.num_cpus,
+    clk_freq="1GHz",
 )
 
 # Setup the board.

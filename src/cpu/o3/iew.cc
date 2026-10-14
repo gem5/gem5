@@ -46,16 +46,31 @@
 #include "cpu/o3/iew.hh"
 
 #include <queue>
+#include <string>
 
+#include "arch/generic/pcstate.hh"
+#include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/lsq_unit.hh"
+#include "cpu/o3/scoreboard.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
 #include "params/BaseO3CPU.hh"
+#include "sim/cur_tick.hh"
+#include "sim/probe/probe.hh"
 
 namespace gem5
 {
@@ -557,6 +572,39 @@ void
 IEW::wakeDependents(const DynInstPtr& inst)
 {
     instQueue.wakeDependents(inst);
+}
+
+void
+IEW::wakeCommittedMiscRegDependents(const DynInstPtr &inst)
+{
+    int dependents = 0;
+    const bool update_producer = inst->lastWakeDependents == -1;
+
+    DPRINTF(IEW,
+            "Waking misc register dependents of committed instruction.\n");
+
+    assert(!inst->isSquashed());
+
+    for (int i = 0; i < inst->numDestRegs(); i++) {
+        PhysRegIdPtr dest_reg = inst->renamedDestIdx(i);
+        if (!dest_reg->is(MiscRegClass)) {
+            continue;
+        }
+
+        dependents += instQueue.wakeDependents(dest_reg);
+
+        DPRINTF(IEW, "Setting committed misc register %i (%s)\n",
+                dest_reg->index(), dest_reg->className());
+        scoreboard->setReg(dest_reg);
+    }
+
+    if (dependents) {
+        ThreadID tid = inst->threadNumber;
+        if (update_producer) {
+            iewStats.producerInst[tid]++;
+        }
+        iewStats.consumerInst[tid] += dependents;
+    }
 }
 
 void
@@ -1407,20 +1455,27 @@ IEW::writebackInsts()
             int dependents = instQueue.wakeDependents(inst);
 
             for (int i = 0; i < inst->numDestRegs(); i++) {
+                PhysRegIdPtr dest_reg = inst->renamedDestIdx(i);
+                if (dest_reg->is(MiscRegClass)) {
+                    continue;
+                }
+
                 // Mark register as ready if not pinned
-                if (inst->renamedDestIdx(i)->
-                        getNumPinnedWritesToComplete() == 0) {
-                    DPRINTF(IEW,"Setting Destination Register %i (%s)\n",
-                            inst->renamedDestIdx(i)->index(),
-                            inst->renamedDestIdx(i)->className());
-                    scoreboard->setReg(inst->renamedDestIdx(i));
+                if (dest_reg->getNumPinnedWritesToComplete() == 0) {
+                    DPRINTF(IEW, "Setting Destination Register %i (%s)\n",
+                            dest_reg->index(), dest_reg->className());
+                    scoreboard->setReg(dest_reg);
                 }
             }
 
+            // Misc-register dependents are excluded here. They are woken and
+            // accounted for after the producer commits its misc-register
+            // updates.
             if (dependents) {
                 iewStats.producerInst[tid]++;
-                iewStats.consumerInst[tid]+= dependents;
+                iewStats.consumerInst[tid] += dependents;
             }
+
             iewStats.writebackCount[tid]++;
         }
     }

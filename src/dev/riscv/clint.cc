@@ -77,23 +77,7 @@ Clint::raiseInterruptPin(int id)
     }
 
     for (int context_id = 0; context_id < nThread; context_id++) {
-
-        auto tc = system->threads[context_id];
-
-        // Post timer interrupt
-        uint64_t mtimecmp = registers.mtimecmp[context_id].get();
-        if (mtime >= mtimecmp) {
-            if (mtime == mtimecmp) {
-                DPRINTF(Clint,
-                    "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
-                    context_id, mtime, mtimecmp);
-            }
-            tc->getCpuPtr()->postInterrupt(tc->threadId(),
-                    ExceptionCode::INT_TIMER_MACHINE, 0);
-        } else {
-            tc->getCpuPtr()->clearInterrupt(tc->threadId(),
-                    ExceptionCode::INT_TIMER_MACHINE, 0);
-        }
+        updateMTIP(context_id);
     }
 }
 
@@ -132,10 +116,13 @@ Clint::ClintRegisters::init()
     }
     addRegister(reserved[0]);
     for (int i = 0; i < clint->nThread; i++) {
+        auto write_cb = std::bind(&Clint::writeMTIMECMP, clint, _1, _2, i);
+        mtimecmp[i].writer(write_cb);
         addRegister(mtimecmp[i]);
     }
     addRegister(reserved[1]);
-    mtime.readonly();
+    auto write_cb = std::bind(&Clint::writeMTIME, clint, _1, _2);
+    mtime.writer(write_cb);
     addRegister(mtime);
     if (reserved2_size > 0) {
         addRegister(reserved[2]);
@@ -148,6 +135,23 @@ Clint::writeMSIP(Register32& reg, const uint32_t& data, const int thread_id)
     reg.update(data);
     updateMSIP(thread_id);
 };
+
+void
+Clint::writeMTIMECMP(Register64 &reg, const uint64_t &data,
+                     const int thread_id)
+{
+    reg.update(data);
+    updateMTIP(thread_id);
+}
+
+void
+Clint::writeMTIME(Register64 &reg, const uint64_t &data)
+{
+    reg.update(data);
+    for (int context_id = 0; context_id < nThread; context_id++) {
+        updateMTIP(context_id);
+    }
+}
 
 Tick
 Clint::read(PacketPtr pkt)
@@ -250,6 +254,27 @@ Clint::updateMSIP(const int thread_id)
 }
 
 void
+Clint::updateMTIP(const int context_id)
+{
+    auto tc = system->threads[context_id];
+    auto mtime = registers.mtime.get();
+    uint64_t mtimecmp = registers.mtimecmp[context_id].get();
+    // Post timer interrupt
+    if (mtime >= mtimecmp) {
+        if (mtime == mtimecmp) {
+            DPRINTF(Clint,
+                    "MTIP posted - thread: %d, mtime: %d, mtimecmp: %d\n",
+                    context_id, mtime, mtimecmp);
+        }
+        tc->getCpuPtr()->postInterrupt(tc->threadId(),
+                                       ExceptionCode::INT_TIMER_MACHINE, 0);
+    } else {
+        tc->getCpuPtr()->clearInterrupt(tc->threadId(),
+                                        ExceptionCode::INT_TIMER_MACHINE, 0);
+    }
+}
+
+void
 Clint::doReset() {
     registers.mtime.reset();
     for (int i = 0; i < nThread; i++) {
@@ -259,11 +284,10 @@ Clint::doReset() {
         if (resetMtimecmp) {
             registers.mtimecmp[i].reset();
         }
+        updateMTIP(i);
         registers.msip[i].reset();
         updateMSIP(i);
     }
-    // We need to update the mtip interrupt bits when reset
-    raiseInterruptPin(INT_RESET);
 }
 
 } // namespace gem5

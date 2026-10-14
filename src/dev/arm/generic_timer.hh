@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018,2020,2022 Arm Limited
+ * Copyright (c) 2013, 2015, 2017-2018,2020,2022,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -297,6 +297,14 @@ class GenericTimer : public SimObject
   public:
     void setMiscReg(int misc_reg, unsigned cpu, RegVal val);
     RegVal readMiscReg(int misc_reg, unsigned cpu);
+
+    enum class CoreTimersType
+    {
+        Cntv,
+        Cntp
+    };
+
+    ArchTimer *coreTimer(int cpu_id, CoreTimersType type);
 
   protected:
     class CoreTimers : public SystemCounterListener, public Serializable

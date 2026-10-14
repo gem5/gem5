@@ -456,10 +456,6 @@ class Rename
      * after squashing. */
     bool resumeSerialize;
 
-    /** Whether or not rename needs to resume clearing out the skidbuffer
-     * after squashing. */
-    bool resumeUnblocking;
-
     /** The number of threads active in rename. */
     ThreadID numThreads;
 

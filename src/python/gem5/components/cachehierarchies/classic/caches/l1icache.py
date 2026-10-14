@@ -53,7 +53,7 @@ class L1ICache(Cache):
         mshrs: int = 16,
         tgts_per_mshr: int = 20,
         writeback_clean: bool = True,
-        PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
+        PrefetcherCls: type[BasePrefetcher] = StridePrefetcher,
     ):
         super().__init__()
         self.size = size

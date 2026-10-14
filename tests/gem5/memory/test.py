@@ -45,7 +45,7 @@ simple_mem_params = [
     ("low-latency", {"latency": "1ns"}),
     ("high-latency", {"latency": "1us"}),
     ("low-bandwidth", {"bandwidth": "1MiB/s"}),
-    ("high-var", {"latency_var": "100ns"}),
+    ("high-var", {"latency_dist": "Uniform", "latency_dist_param": "100ns"}),
 ]
 
 
@@ -72,6 +72,21 @@ gem5_verify_config(
 
 null_tests = [
     ("garnet_synth_traffic", None, ["--sim-cycles", "5000000"]),
+    (
+        "garnet_synth_traffic-per-vnet-links",
+        "garnet_synth_traffic",
+        [
+            "--sim-cycles",
+            "5000000",
+            "--network=garnet",
+            "--topology=Mesh_XY",
+            "--num-cpus=4",
+            "--num-dirs=4",
+            "--mesh-rows=2",
+            "--routing-algorithm=1",
+            "--per-vnet-links",
+        ],
+    ),
     ("memcheck", None, ["--maxtick", "2000000000", "--prefetchers"]),
     (
         "ruby_mem_test-garnet",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2019,2021 ARM Limited
+ * Copyright (c) 2012-2013,2019,2021,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -108,7 +108,6 @@ class RubyPort : public ClockedObject
         void addToRetryList();
 
       private:
-        bool isShadowRomAddress(Addr addr) const;
         bool isPhysMemAddress(PacketPtr pkt) const;
     };
 
@@ -242,6 +241,8 @@ class RubyPort : public ClockedObject
     std::vector<MemResponsePort *> retryList;
 
     bool m_isCPUSequencer;
+
+    const Cycles m_responseLatency;
 };
 
 } // namespace ruby

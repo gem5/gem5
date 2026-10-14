@@ -85,8 +85,9 @@ class UncontendedMutex
              * such case, we shouldn't wait for the condition variable because
              * there is no the other thread to notify us.
              */
-            if (flag++ == 0)
+            if (flag++ == 0) {
                 break;
+            }
             cv.wait(ul);
         }
     }
@@ -97,8 +98,9 @@ class UncontendedMutex
         /* In case there are no other threads waiting, we will just clear the
          * flag and return.
          */
-        if (testAndSet(1, 0))
+        if (testAndSet(1, 0)) {
             return;
+        }
 
         /*
          * Otherwise, clear the flag and notify all the waiting threads. We
@@ -114,6 +116,57 @@ class UncontendedMutex
          * However, tests show that notify_one() is much slower than
          * notify_all() in this case. Here we choose to use notify_all().
          */
+        cv.notify_all();
+    }
+};
+
+/*
+ * A fair mutex that is fast in uncontended cases.
+ *
+ * `FairUncontendedMutex` is implemented with index based FIFO queue.
+ * When the queue size is 1, the fast path does not involve `std::mutex`.
+ * Otherwise, all the waiting threads check if it is at the front of the queue.
+ */
+class FairUncontendedMutex
+{
+  private:
+    std::atomic<unsigned int> head_id;
+    std::atomic<unsigned int> tail_id;
+
+    std::mutex m;
+    std::condition_variable cv;
+
+  public:
+    FairUncontendedMutex() : head_id(0), tail_id(0) {}
+
+    void
+    lock()
+    {
+        unsigned int slot_id = tail_id++;
+        if (slot_id == head_id) { // Only one in the queue.
+            return;
+        }
+        std::unique_lock<std::mutex> ul(m);
+        while (slot_id != head_id) {
+            cv.wait(ul);
+        }
+    }
+
+    void
+    unlock()
+    {
+        /*
+         * Pop the first element in the queue and notify all.
+         * The thread with lock_id == head_id wakes and obtains the lock.
+         * Must increase head_id before loading tail_id to avoid race
+         * conditions.
+         */
+        unsigned int new_head = ++head_id;
+        if (new_head == tail_id) { // Only one in the queue.
+            return;
+        }
+        // Make sure the waiting thread is asleep before `notify_all`.
+        std::lock_guard<std::mutex> g(m);
         cv.notify_all();
     }
 };

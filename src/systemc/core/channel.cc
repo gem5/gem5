@@ -46,13 +46,13 @@ Channel::~Channel()
 void
 Channel::requestUpdate()
 {
-    scheduler.requestUpdate(this);
+    scheduler().requestUpdate(this);
 }
 
 void
 Channel::asyncRequestUpdate()
 {
-    scheduler.asyncRequestUpdate(this);
+    scheduler().asyncRequestUpdate(this);
 }
 
 std::set<Channel *> allChannels;

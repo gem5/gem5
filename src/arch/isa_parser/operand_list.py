@@ -60,7 +60,7 @@ class OperandList:
         for match in parser.operandsRE().finditer(code):
             op = match.groups()
             # regexp groups are operand full name, base, and extension
-            (op_full, op_base, op_ext) = op
+            op_full, op_base, op_ext = op
             # If is a elem operand, define or update the corresponding
             # vector operand
             isElem = False
@@ -85,10 +85,10 @@ class OperandList:
                 op_desc.is_src = op_desc.is_src or is_src
                 op_desc.is_dest = op_desc.is_dest or is_dest
                 if isElem:
-                    (elem_base, elem_ext) = elem_op
+                    elem_base, elem_ext = elem_op
                     found = False
                     for ae in op_desc.active_elems:
-                        (ae_base, ae_ext) = ae
+                        ae_base, ae_ext = ae
                         if ae_base == elem_base:
                             if ae_ext != elem_ext:
                                 error(
@@ -199,7 +199,7 @@ class SubOperandList(OperandList):
         for match in parser.operandsRE().finditer(code):
             op = match.groups()
             # regexp groups are operand full name, base, and extension
-            (op_full, op_base, op_ext) = op
+            op_full, op_base, op_ext = op
             # If is a elem operand, define or update the corresponding
             # vector operand
             if op_base in parser.elemToVector:

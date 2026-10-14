@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2018 ARM Limited
+// Copyright (c) 2018, 2026 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -45,6 +45,21 @@ let {{
 
     StaticInstPtr
     decodeCryptoTwoRegSHA(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCrypto3RegImm2(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCrypto3RegSha512(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCrypto4Reg(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCrypto2RegSha512(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeCryptoXar(ExtMachInst machInst);
     '''
 
     decoder_output = '''
@@ -120,5 +135,114 @@ let {{
             }
         }
     }
+
+    StaticInstPtr
+    decodeCrypto3RegImm2(ExtMachInst machInst)
+    {
+        uint8_t imm2 = bits(machInst, 13, 12);
+        uint8_t opcode = bits(machInst, 11, 10);
+
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        switch (opcode) {
+          case 0x0:
+            return new SM3TT1A(machInst, rd, rn, rm, imm2);
+          case 0x1:
+            return new SM3TT1B(machInst, rd, rn, rm, imm2);
+          case 0x2:
+            return new SM3TT2A(machInst, rd, rn, rm, imm2);
+          case 0x3:
+            return new SM3TT2B(machInst, rd, rn, rm, imm2);
+          default:
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeCrypto3RegSha512(ExtMachInst machInst)
+    {
+        uint8_t o_opcode = (bits(machInst, 14) << 2) | bits(machInst, 11, 10);
+
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        switch (o_opcode) {
+          case 0x0:
+            return new SHA512H(machInst, rd, rn, rm);
+          case 0x1:
+            return new SHA512H2(machInst, rd, rn, rm);
+          case 0x2:
+            return new SHA512SU1(machInst, rd, rn, rm);
+          case 0x3:
+            return new RAX1(machInst, rd, rn, rm);
+          case 0x4:
+            return new SM3PARTW1(machInst, rd, rn, rm);
+          case 0x5:
+            return new SM3PARTW2(machInst, rd, rn, rm);
+          case 0x6:
+            return new SM4EKEY(machInst, rd, rn, rm);
+          default:
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeCrypto4Reg(ExtMachInst machInst)
+    {
+        uint8_t op0 = bits(machInst, 22, 21);
+
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        RegIndex ra = (RegIndex)(uint32_t)bits(machInst, 14, 10);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        switch (op0) {
+          case 0x0:
+            return new EOR3(machInst, rd, rn, rm, ra);
+          case 0x1:
+            return new BCAX(machInst, rd, rn, rm, ra);
+          case 0x2:
+            return new SM3SS1(machInst, rd, rn, rm, ra);
+          default:
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeCrypto2RegSha512(ExtMachInst machInst)
+    {
+        uint8_t opcode = bits(machInst, 11, 10);
+
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        switch (opcode) {
+          case 0x0:
+            return new SHA512SU0(machInst, rd, rn);
+          case 0x1:
+            return new SM4E(machInst, rd, rn);
+          default:
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeCryptoXar(ExtMachInst machInst)
+    {
+        uint8_t imm6 = bits(machInst, 15, 10);
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        return new XAR(machInst, rd, rn, rm, imm6);
+    }
+
    '''
 }};

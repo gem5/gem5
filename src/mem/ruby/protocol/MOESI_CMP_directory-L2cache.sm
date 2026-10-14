@@ -1586,6 +1586,13 @@ machine(MachineType:L2Cache, "Token protocol")
     localDirectory.deallocate(address);
   }
 
+  action(removeFromDirIfExists, "/rmdir1", desc="Remove dir state if exists") {
+    if(isDirTagPresent(address)){
+      assert(isDirEntryClean(getDirEntry(address)));
+      localDirectory.deallocate(address);
+    }
+  }
+
   action(zz_recycleGlobalRequestQueue, "\zglb", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(requestNetwork_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
@@ -2907,6 +2914,7 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition(MII, Writeback_Nack, I) {
     s_deallocateTBE;
+    removeFromDirIfExists;
     n_popResponseQueue;
     wa_wakeUpDependents;
   }
@@ -2925,6 +2933,7 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition(MII, Writeback_Ack, I) {
     f_sendUnblock;
+    removeFromDirIfExists;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;

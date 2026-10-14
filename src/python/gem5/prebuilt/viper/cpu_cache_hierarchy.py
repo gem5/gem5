@@ -130,7 +130,7 @@ class ViperCPUCacheHierarchy(AbstractRubyCacheHierarchy):
 
             cache.version = i // 2
             cache.ruby_system = self.ruby_system
-            cache.clk_domain = board.get_clock_domain()
+            cache.clk_domain = board.get_processor().get_clock_domain()
 
             cache.sequencer = RubySequencer(
                 version=i,
@@ -138,7 +138,7 @@ class ViperCPUCacheHierarchy(AbstractRubyCacheHierarchy):
                 ruby_system=self.ruby_system,
                 coreid=0,
                 is_cpu_sequencer=True,
-                clk_domain=board.get_clock_domain(),
+                clk_domain=cache.clk_domain,
             )
 
             cache.sequencer1 = RubySequencer(
@@ -147,7 +147,7 @@ class ViperCPUCacheHierarchy(AbstractRubyCacheHierarchy):
                 ruby_system=self.ruby_system,
                 coreid=1,
                 is_cpu_sequencer=True,
-                clk_domain=board.get_clock_domain(),
+                clk_domain=cache.clk_domain,
             )
 
             cache.sequencer.connectIOPorts(board.get_io_bus())

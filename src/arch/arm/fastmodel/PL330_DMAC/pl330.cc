@@ -182,9 +182,8 @@ PL330::PL330(const FastModelPL330Params &params,
         irq[i].bind(irqReceiver[i]->signal_in);
 
         // Set up a handler for when the signal changes state.
-        auto on_change = [&port = irqPort[i]](bool status)
-        {
-            // Loop through all the connections and propogate the signal.
+        auto on_change = [&port = irqPort[i]](bool status) {
+            // Loop through all the connections and propagate the signal.
             for (auto &pin: port)
                 status ? pin->raise() : pin->lower();
         };

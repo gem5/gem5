@@ -46,6 +46,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cassert>
 #include <string>
 
@@ -391,6 +392,9 @@ ElfObject::handleLoadableSegment(GElf_Phdr phdr, int seg_num)
         image.addSegment({ name + "(uninitialized)",
                            phdr.p_paddr + phdr.p_filesz, uninitialized });
     }
+
+    ldMin = std::min(ldMin, phdr.p_vaddr);
+    ldMax = std::max(ldMax, phdr.p_vaddr + phdr.p_memsz);
 
     const Addr file_start = phdr.p_offset;
     const Addr file_end = file_start + phdr.p_filesz;

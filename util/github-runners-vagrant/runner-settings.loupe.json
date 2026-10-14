@@ -1,0 +1,78 @@
+{
+    "loupe-1": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-2": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-3": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-4": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-5": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-6": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true,
+        "storage_pool": "loupe-ssd",
+        "disk_cache": "none"
+    },
+    "loupe-7": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-8": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true,
+        "storage_pool": "loupe-ssd",
+        "disk_cache": "none"
+    },
+    "loupe-9": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true,
+        "storage_pool": "loupe-ssd",
+        "disk_cache": "none"
+    },
+    "loupe-10": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true,
+        "storage_pool": "loupe-ssd",
+        "disk_cache": "none"
+    },
+    "loupe-11": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-12": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true
+    },
+    "loupe-14": {
+        "box": "gem5/runner-ubuntu2204",
+        "box_version": "2026.9.8.2",
+        "prebuilt": true,
+        "cpus": 4,
+        "memory": 32768,
+        "storage_pool": "default"
+    }
+}

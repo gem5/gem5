@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017-2018, 2020, 2022, 2025 Arm Limited
+ * Copyright (c) 2010, 2017-2018, 2020, 2022, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -100,7 +100,9 @@ static const OpClass SimdSha256HashOp = enums::SimdSha256Hash;
 static const OpClass SimdSha256Hash2Op = enums::SimdSha256Hash2;
 static const OpClass SimdShaSigma2Op = enums::SimdShaSigma2;
 static const OpClass SimdShaSigma3Op = enums::SimdShaSigma3;
+static const OpClass SimdSha512HashOp = enums::SimdSha512Hash;
 static const OpClass SimdSha3Op = enums::SimdSha3;
+static const OpClass SimdSm3Op = enums::SimdSm3;
 static const OpClass SimdSm4eOp = enums::SimdSm4e;
 static const OpClass SimdCrcOp = enums::SimdCrc;
 static const OpClass SimdPredAluOp = enums::SimdPredAlu;

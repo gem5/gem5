@@ -95,16 +95,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-# The simulation may fail when using size "c" and size "d" of the
-# benchmarks. This is because the X86Board is currently limited to 3 GB of
-# memory.
-# We warn the user here.
-
-if args.size.endswith("c") or args.size.endswith("d"):
-    warn(
-        f"The X86Board is currently limited to 3 GB of memory. The benchmark "
-        f"{args.benchmark}, size {args.size} may fail to run."
-    )
+# The simulation may fail when using size "d" of the
+# benchmarks if the memory is not large enough.
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
@@ -122,10 +114,9 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
     l2_assoc=16,
     num_l2_banks=2,
 )
-# Memory: Dual Channel DDR4 2400 DRAM device.
-# The X86 board only supports 3 GiB of main memory.
 
-memory = DualChannelDDR4_2400(size="3GiB")
+# Memory: Dual Channel DDR4 2400 DRAM device.
+memory = DualChannelDDR4_2400()
 
 # Here we set up the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -141,6 +132,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=CPUTypes.TIMING,
     isa=ISA.X86,
     num_cores=2,
+    clk_freq="3GHz",
 )
 
 # Here we set up the board. The X86Board allows for FS mode (full system) or

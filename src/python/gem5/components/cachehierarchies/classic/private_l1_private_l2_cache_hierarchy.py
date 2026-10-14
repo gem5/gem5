@@ -86,7 +86,7 @@ class PrivateL1PrivateL2CacheHierarchy(
         l1d_size: str,
         l1i_size: str,
         l2_size: str,
-        membus: Optional[BaseXBar] = None,
+        membus: BaseXBar | None = None,
     ) -> None:
         """
         :param l1d_size: The size of the L1 Data Cache (e.g., "32KiB").

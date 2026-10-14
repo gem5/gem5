@@ -346,18 +346,18 @@ class Logger
  *
  * @ingroup api_logger
  */
-#define gem5_assert(cond, ...)                                  \
-    (                                                           \
-    GEM5_UNLIKELY(NDEBUG_DEFINED || static_cast<bool>(cond)) ?  \
-    void(0) :                                                   \
-    [](const auto&... args) {                                   \
-        auto msg = [&]{                                         \
-            if constexpr (sizeof...(args) == 0) return "";      \
-            else return std::string(": ") + csprintf(args...);  \
-        };                                                      \
-        panic("assert(" #cond ") failed%s", msg());             \
-    }(__VA_ARGS__)                                              \
-    )
+#define gem5_assert(cond, ...)                                                \
+    (GEM5_UNLIKELY(NDEBUG_DEFINED || static_cast<bool>(cond))                 \
+         ? void(0)                                                            \
+         : [](const auto &...args) {                                          \
+               auto msg = [&] {                                               \
+                   if constexpr (sizeof...(args) == 0)                        \
+                       return "";                                             \
+                   else                                                       \
+                       return std::string(": ") + ::gem5::csprintf(args...);  \
+               };                                                             \
+               panic("assert(" #cond ") failed%s", msg());                    \
+           }(__VA_ARGS__))
 
 /** @} */ // end of api_logger
 

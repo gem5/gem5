@@ -52,20 +52,15 @@ def _printErrorQuit(error_message):
         + " : "
     )
 
-    print(
-        """
+    print("""
 --------------------------------------------------------------------------
-    """
-    )
+    """)
     print(open(sys.argv[1]).read())
-    print(
-        """
+    print("""
 --------------------------------------------------------------------------
-    """
-    )
+    """)
 
-    print(
-        """
+    print("""
 The first line of a commit must contain one or more gem5 tags separated by
 commas (see MAINTAINERS.yaml for the possible tags), followed by a colon and
 a commit title. There must be no leading nor trailing whitespaces.
@@ -83,8 +78,7 @@ e.g.:
     mem,mem-cache: Improve packet class readability
 
     The packet class...
-"""
-    )
+""")
     sys.exit(1)
 
 

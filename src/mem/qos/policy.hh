@@ -39,7 +39,9 @@
 #define __MEM_QOS_POLICY_HH__
 
 #include <cstdint>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "base/compiler.hh"
 #include "base/logging.hh"
@@ -119,6 +121,27 @@ class Policy : public SimObject
     uint8_t schedule(const PacketPtr pkt);
 
   protected:
+    /**
+     * A requestor recorded by initRequestor*(), not yet resolved to a
+     * RequestorID. Derived policies keep their own list of these.
+     */
+    template <typename T>
+    struct PendingRequestor
+    {
+        /** Only used when obj is null */
+        std::string name;
+        const SimObject *obj = nullptr;
+        T value{};
+    };
+
+    /**
+     * Resolve recorded requestors, in configuration order. Order is kept
+     * because a requestor may be configured more than once.
+     */
+    template <typename T>
+    std::vector<std::pair<RequestorID, T>>
+    resolvePending(const std::vector<PendingRequestor<T>> &pending);
+
     /** Pointer to parent memory controller implementing the policy */
     MemCtrl* memCtrl;
 };
@@ -137,6 +160,22 @@ Policy::pair(Requestor requestor, T value)
             requestor, id, value);
 
     return std::pair<RequestorID, T>(id, value);
+}
+
+template <typename T>
+std::vector<std::pair<RequestorID, T>>
+Policy::resolvePending(const std::vector<PendingRequestor<T>> &pending)
+{
+    std::vector<std::pair<RequestorID, T>> resolved;
+    resolved.reserve(pending.size());
+
+    for (const auto &requestor : pending) {
+        resolved.push_back(requestor.obj ?
+            pair<const SimObject *, T>(requestor.obj, requestor.value) :
+            pair<std::string, T>(requestor.name, requestor.value));
+    }
+
+    return resolved;
 }
 
 } // namespace qos

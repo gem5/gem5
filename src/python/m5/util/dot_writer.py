@@ -93,7 +93,15 @@ def dot_create_nodes(simNode, callgraph):
         label = simNode._name
     full_path = re.sub(r"\.", "_", simNode.path())
     # add class name under the label
-    label = '"' + label + " \\n: " + simNode.__class__.__name__ + '"'
+    label = (
+        '"'
+        + label
+        + " \\nclass: "
+        + simNode.__class__.__name__
+        + " \\neventq: "
+        + str(simNode.eventq_index)
+        + '"'
+    )
 
     # each component is a sub-graph (cluster)
     cluster = dot_create_cluster(simNode, full_path, label)
@@ -167,6 +175,8 @@ def dot_create_cluster(simNode, full_path, label):
     # Pydot limit line length to 16384.
     # Account for the quotes added later around the tooltip string
     tooltip = "&#10;\\".join(ini_strings)
+    # Remove existing quotes from the tooltip string.
+    tooltip = tooltip.replace('"', "")
     max_tooltip_length = 16384 - 2
     if len(tooltip) > max_tooltip_length:
         truncated = "... (truncated)"

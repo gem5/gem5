@@ -37,13 +37,18 @@ namespace gem5
 {
 
 GPUStaticInst::GPUStaticInst(const std::string &opcode)
-    : executed_as(enums::SC_NONE), _opcode(opcode),
-      _instNum(0), _instAddr(0), srcVecDWords(-1), dstVecDWords(-1),
-      srcScalarDWords(-1), dstScalarDWords(-1), maxOpSize(-1)
-{
-}
+    : executed_as(enums::SC_NONE),
+      _opcode(opcode),
+      _instNum(0),
+      _instAddr(0),
+      srcVecDWords(-1),
+      dstVecDWords(-1),
+      srcScalarDWords(-1),
+      dstScalarDWords(-1),
+      maxOpSize(-1)
+{}
 
-const std::string&
+const std::string &
 GPUStaticInst::disassemble()
 {
     if (disassembly.empty()) {
@@ -54,11 +59,10 @@ GPUStaticInst::disassemble()
     return disassembly;
 }
 
-
 void
 GPUStaticInst::generateVirtToPhysMap(Wavefront *wf, ComputeUnit *cu,
-                                     OperandInfo& op,
-                                     std::vector<OperandInfo>& opVec,
+                                     OperandInfo &op,
+                                     std::vector<OperandInfo> &opVec,
                                      OpType opType)
 {
     std::vector<int> virt_idxs;
@@ -79,12 +83,16 @@ GPUStaticInst::generateVirtToPhysMap(Wavefront *wf, ComputeUnit *cu,
         virt_idxs.push_back(virt_idx + i);
         phys_idxs.push_back(phys_idx);
     }
-    DPRINTF(GPUInst, "%s adding %s %s (%d->%d) operand that uses "
-            "%d registers.\n", disassemble(),
-            (opType == OpType::SRC_VEC || opType == OpType::DST_VEC) ?
-            "vector" : "scalar",
-            (opType == OpType::SRC_VEC || opType == OpType::SRC_SCALAR) ?
-            "src" : "dst", virt_idxs[0], phys_idxs[0], num_dwords);
+    DPRINTF(
+        GPUInst,
+        "%s adding %s %s (%d->%d) operand that uses "
+        "%d registers.\n",
+        disassemble(),
+        (opType == OpType::SRC_VEC || opType == OpType::DST_VEC) ? "vector"
+                                                                 : "scalar",
+        (opType == OpType::SRC_VEC || opType == OpType::SRC_SCALAR) ? "src"
+                                                                    : "dst",
+        virt_idxs[0], phys_idxs[0], num_dwords);
 
     op.setVirtToPhysMapping(virt_idxs, phys_idxs);
 
@@ -94,7 +102,7 @@ GPUStaticInst::generateVirtToPhysMap(Wavefront *wf, ComputeUnit *cu,
 void
 GPUStaticInst::initDynOperandInfo(Wavefront *wf, ComputeUnit *cu)
 {
-    for (auto& srcOp : srcOps) {
+    for (auto &srcOp : srcOps) {
         if (srcOp.isVectorReg()) {
             generateVirtToPhysMap(wf, cu, srcOp, srcVecRegOps,
                                   OpType::SRC_VEC);
@@ -104,7 +112,7 @@ GPUStaticInst::initDynOperandInfo(Wavefront *wf, ComputeUnit *cu)
         }
     }
 
-    for (auto& dstOp : dstOps) {
+    for (auto &dstOp : dstOps) {
         if (dstOp.isVectorReg()) {
             generateVirtToPhysMap(wf, cu, dstOp, dstVecRegOps,
                                   OpType::DST_VEC);
@@ -136,9 +144,11 @@ GPUStaticInst::numSrcVecDWords()
 
     srcVecDWords = 0;
 
-    for (const auto& srcOp : srcOps)
-        if (srcOp.isVectorReg())
+    for (const auto &srcOp : srcOps) {
+        if (srcOp.isVectorReg()) {
             srcVecDWords += srcOp.sizeInDWords();
+        }
+    }
 
     return srcVecDWords;
 }
@@ -152,9 +162,11 @@ GPUStaticInst::numDstVecDWords()
 
     dstVecDWords = 0;
 
-    for (const auto& dstOp : dstOps)
-        if (dstOp.isVectorReg())
+    for (const auto &dstOp : dstOps) {
+        if (dstOp.isVectorReg()) {
             dstVecDWords += dstOp.sizeInDWords();
+        }
+    }
 
     return dstVecDWords;
 }
@@ -174,14 +186,17 @@ GPUStaticInst::numDstScalarOperands()
 int
 GPUStaticInst::numSrcScalarDWords()
 {
-    if (srcScalarDWords != -1)
+    if (srcScalarDWords != -1) {
         return srcScalarDWords;
+    }
 
     srcScalarDWords = 0;
 
-    for (const auto& srcOp : srcOps)
-        if (srcOp.isScalarReg())
+    for (const auto &srcOp : srcOps) {
+        if (srcOp.isScalarReg()) {
             srcScalarDWords += srcOp.sizeInDWords();
+        }
+    }
 
     return srcScalarDWords;
 }
@@ -189,14 +204,17 @@ GPUStaticInst::numSrcScalarDWords()
 int
 GPUStaticInst::numDstScalarDWords()
 {
-    if (dstScalarDWords != -1)
+    if (dstScalarDWords != -1) {
         return dstScalarDWords;
+    }
 
     dstScalarDWords = 0;
 
-    for (const auto& dstOp : dstOps)
-        if (dstOp.isScalarReg())
+    for (const auto &dstOp : dstOps) {
+        if (dstOp.isScalarReg()) {
             dstScalarDWords += dstOp.sizeInDWords();
+        }
+    }
 
     return dstScalarDWords;
 }
@@ -204,18 +222,23 @@ GPUStaticInst::numDstScalarDWords()
 int
 GPUStaticInst::maxOperandSize()
 {
-    if (maxOpSize != -1)
+    if (maxOpSize != -1) {
         return maxOpSize;
+    }
 
     maxOpSize = 0;
 
-    for (const auto& dstOp : dstOps)
-        if (dstOp.size() > maxOpSize)
+    for (const auto &dstOp : dstOps) {
+        if (dstOp.size() > maxOpSize) {
             maxOpSize = dstOp.size();
+        }
+    }
 
-    for (const auto& srcOp : srcOps)
-        if (srcOp.size() > maxOpSize)
+    for (const auto &srcOp : srcOps) {
+        if (srcOp.size() > maxOpSize) {
             maxOpSize = srcOp.size();
+        }
+    }
 
     return maxOpSize;
 }

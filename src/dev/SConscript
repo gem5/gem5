@@ -53,3 +53,5 @@ DebugFlag('Intel8254Timer')
 DebugFlag('MC146818')
 
 GTest('reg_bank.test', 'reg_bank.test.cc', with_tag('gem5 trace'))
+GTest('dma_device.test', 'dma_device.test.cc', '../cpu/reg_class.cc',
+      '../sim/bufval.cc', with_tag('gem5 drain'))

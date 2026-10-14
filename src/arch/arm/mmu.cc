@@ -40,6 +40,7 @@
 
 #include "arch/arm/mmu.hh"
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/isa.hh"
 #include "arch/arm/mpam.hh"
 #include "arch/arm/reg_abi.hh"
@@ -390,7 +391,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                       CachedState &state)
 {
     // a data cache maintenance instruction that operates by MVA does
-    // not generate a Data Abort exeception due to a Permission fault
+    // not generate a Data Abort exception due to a Permission fault
     if (req->isCacheMaintenance()) {
         return NoFault;
     }
@@ -401,7 +402,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool is_write  = (mode == Write);
     bool is_priv   = state.isPriv && !(flags & UserMode);
 
-    // Get the translation type from the actuall table entry
+    // Get the translation type from the actual table entry
     TranMethod tran_method = te->longDescFormat ?
         TranMethod::LpaeTran : TranMethod::VmsaTran;
 
@@ -413,7 +414,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
         (te->mtype != TlbEntry::MemoryType::Normal)) {
         return std::make_shared<DataAbort>(
             vaddr, te->domain, is_write,
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2, tran_method);
     }
 
@@ -455,12 +456,12 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                 // address reported in FAR
                 return std::make_shared<PrefetchAbort>(
                     req->getPC(),
-                    ArmFault::DomainLL + te->lookupLevel,
+                    llFaultSource(ArmFault::DomainLL, te->lookupLevel),
                     state.isStage2, tran_method);
             } else
                 return std::make_shared<DataAbort>(
                     vaddr, te->domain, is_write,
-                    ArmFault::DomainLL + te->lookupLevel,
+                    llFaultSource(ArmFault::DomainLL, te->lookupLevel),
                     state.isStage2, tran_method);
           case 1:
             // Continue with permissions check
@@ -551,7 +552,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
         // cache line and should not be the address reported in FAR
         return std::make_shared<PrefetchAbort>(
             req->getPC(),
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2, tran_method);
     } else if (abt | hapAbt) {
         stats.permsFaults++;
@@ -559,7 +560,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                " write:%d\n", ap, is_priv, is_write);
         return std::make_shared<DataAbort>(
             vaddr, te->domain, is_write,
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2 | !abt, tran_method);
     }
     return NoFault;
@@ -604,7 +605,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
         (te->mtype != TlbEntry::MemoryType::Normal)) {
         return std::make_shared<DataAbort>(
             vaddr_tainted, te->domain, is_write,
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2, TranMethod::LpaeTran);
     }
 
@@ -661,7 +662,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             // cache line and should not be the address reported in FAR
             return std::make_shared<PrefetchAbort>(
                 req->getPC(),
-                ArmFault::PermissionLL + te->lookupLevel,
+                llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
                 state.isStage2, TranMethod::LpaeTran);
         } else {
             stats.permsFaults++;
@@ -670,7 +671,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             return std::make_shared<DataAbort>(
                 vaddr_tainted, te->domain,
                 (is_atomic && !grant_read) ? false : is_write,
-                ArmFault::PermissionLL + te->lookupLevel,
+                llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
                 state.isStage2, TranMethod::LpaeTran);
         }
     }
@@ -882,7 +883,7 @@ MMU::s1DirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
 
     TranslationRegime regime = !is_priv ? TranslationRegime::EL10 :
                                           state.currRegime;
-    // Tranditional permission check.
+    // Traditional permission check.
     if (hasUnprivRegime(regime)) {
         bool pr = false;
         bool pw = false;
@@ -954,7 +955,7 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool grant = false;
     bool grant_read = true, grant_write = true, grant_exec = true;
 
-    // Check the feature of indirected premission.
+    // Check the feature of indirected permission.
     if (state.pie) {
         std::tie(grant_read, grant_write, grant_exec) =
             s1IndirectPermBits64(te, req, mode, tc, state, r, w, x);
@@ -1714,7 +1715,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         }
 
         // start translation table walk, pass variables rather than
-        // re-retreaving in table walker for speed
+        // re-retrieving in table walker for speed
         DPRINTF(MMU,
                 "TLB Miss: Starting hardware table walker for %#x(%d:%d)\n",
                 vaddr_tainted, state.asid, state.vmid);

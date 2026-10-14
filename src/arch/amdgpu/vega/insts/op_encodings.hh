@@ -46,287 +46,289 @@ namespace gem5
 
 namespace VegaISA
 {
-    struct BufferRsrcDescriptor
+struct BufferRsrcDescriptor
+{
+    uint64_t baseAddr : 48;
+    uint32_t stride : 14;
+    uint32_t cacheSwizzle : 1;
+    uint32_t swizzleEn : 1;
+    uint32_t numRecords : 32;
+    uint32_t dstSelX : 3;
+    uint32_t dstSelY : 3;
+    uint32_t dstSelZ : 3;
+    uint32_t dstSelW : 3;
+    uint32_t numFmt : 3;
+    uint32_t dataFmt : 4;
+    uint32_t elemSize : 2;
+    uint32_t idxStride : 2;
+    uint32_t addTidEn : 1;
+    uint32_t atc : 1;
+    uint32_t hashEn : 1;
+    uint32_t heap : 1;
+    uint32_t mType : 3;
+    uint32_t type : 2;
+};
+
+// --- purely virtual instruction classes ---
+
+class Inst_SOP2 : public VEGAGPUStaticInst
+{
+  public:
+    Inst_SOP2(InFmt_SOP2 *, const std::string &opcode);
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_SOP2 instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+  private:
+    bool hasSecondDword(InFmt_SOP2 *);
+}; // Inst_SOP2
+
+class Inst_SOPK : public VEGAGPUStaticInst
+{
+  public:
+    Inst_SOPK(InFmt_SOPK *, const std::string &opcode);
+    ~Inst_SOPK();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_SOPK instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+  private:
+    bool hasSecondDword(InFmt_SOPK *);
+}; // Inst_SOPK
+
+class Inst_SOP1 : public VEGAGPUStaticInst
+{
+  public:
+    Inst_SOP1(InFmt_SOP1 *, const std::string &opcode);
+    ~Inst_SOP1();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_SOP1 instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+  private:
+    bool hasSecondDword(InFmt_SOP1 *);
+}; // Inst_SOP1
+
+class Inst_SOPC : public VEGAGPUStaticInst
+{
+  public:
+    Inst_SOPC(InFmt_SOPC *, const std::string &opcode);
+    ~Inst_SOPC();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_SOPC instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+  private:
+    bool hasSecondDword(InFmt_SOPC *);
+}; // Inst_SOPC
+
+class Inst_SOPP : public VEGAGPUStaticInst
+{
+  public:
+    Inst_SOPP(InFmt_SOPP *, const std::string &opcode);
+    ~Inst_SOPP();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_SOPP instData;
+}; // Inst_SOPP
+
+class Inst_SMEM : public VEGAGPUStaticInst
+{
+  public:
+    Inst_SMEM(InFmt_SMEM *, const std::string &opcode);
+    ~Inst_SMEM();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    /**
+     * initiate a memory read access for N dwords
+     */
+    template <int N>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst)
     {
-        uint64_t baseAddr : 48;
-        uint32_t stride : 14;
-        uint32_t cacheSwizzle : 1;
-        uint32_t swizzleEn : 1;
-        uint32_t numRecords : 32;
-        uint32_t dstSelX : 3;
-        uint32_t dstSelY : 3;
-        uint32_t dstSelZ : 3;
-        uint32_t dstSelW : 3;
-        uint32_t numFmt : 3;
-        uint32_t dataFmt : 4;
-        uint32_t elemSize : 2;
-        uint32_t idxStride : 2;
-        uint32_t addTidEn : 1;
-        uint32_t atc : 1;
-        uint32_t hashEn : 1;
-        uint32_t heap : 1;
-        uint32_t mType : 3;
-        uint32_t type : 2;
-    };
+        initMemReqScalarHelper<ScalarRegU32, N>(gpuDynInst, MemCmd::ReadReq);
+    }
 
-    // --- purely virtual instruction classes ---
-
-    class Inst_SOP2 : public VEGAGPUStaticInst
+    /**
+     * initiate a memory write access for N dwords
+     */
+    template <int N>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst)
     {
-      public:
-        Inst_SOP2(InFmt_SOP2*, const std::string &opcode);
+        initMemReqScalarHelper<ScalarRegU32, N>(gpuDynInst, MemCmd::WriteReq);
+    }
 
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_SOP2 instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-      private:
-        bool hasSecondDword(InFmt_SOP2 *);
-    }; // Inst_SOP2
-
-    class Inst_SOPK : public VEGAGPUStaticInst
+    /**
+     * For normal s_load_dword/s_store_dword instruction addresses.
+     */
+    void
+    calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU64 &addr,
+             ScalarRegU32 offset)
     {
-      public:
-        Inst_SOPK(InFmt_SOPK*, const std::string &opcode);
-        ~Inst_SOPK();
+        Addr vaddr = ((addr.rawData() + offset) & ~0x3);
+        gpu_dyn_inst->scalarAddr = vaddr;
+    }
 
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_SOPK instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-      private:
-        bool hasSecondDword(InFmt_SOPK *);
-    }; // Inst_SOPK
-
-    class Inst_SOP1 : public VEGAGPUStaticInst
+    /**
+     * For s_buffer_load_dword/s_buffer_store_dword instruction addresses.
+     * The s_buffer instructions use the same buffer resource descriptor
+     * as the MUBUF instructions.
+     */
+    void
+    calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU128 &s_rsrc_desc,
+             ScalarRegU32 offset)
     {
-      public:
-        Inst_SOP1(InFmt_SOP1*, const std::string &opcode);
-        ~Inst_SOP1();
+        BufferRsrcDescriptor rsrc_desc;
+        ScalarRegU32 clamped_offset(offset);
+        std::memcpy((void *)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
+                    sizeof(BufferRsrcDescriptor));
 
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_SOP1 instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-      private:
-        bool hasSecondDword(InFmt_SOP1 *);
-    }; // Inst_SOP1
-
-    class Inst_SOPC : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_SOPC(InFmt_SOPC*, const std::string &opcode);
-        ~Inst_SOPC();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_SOPC instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-      private:
-        bool hasSecondDword(InFmt_SOPC *);
-    }; // Inst_SOPC
-
-    class Inst_SOPP : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_SOPP(InFmt_SOPP*, const std::string &opcode);
-        ~Inst_SOPP();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_SOPP instData;
-    }; // Inst_SOPP
-
-    class Inst_SMEM : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_SMEM(InFmt_SMEM*, const std::string &opcode);
-        ~Inst_SMEM();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
         /**
-         * initiate a memory read access for N dwords
+         * The address is clamped if:
+         *     Stride is zero: clamp if offset >= num_records
+         *     Stride is non-zero: clamp if offset > (stride * num_records)
          */
-        template<int N>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst)
-        {
-            initMemReqScalarHelper<ScalarRegU32, N>(gpuDynInst,
-                                                    MemCmd::ReadReq);
+        if (!rsrc_desc.stride && offset >= rsrc_desc.numRecords) {
+            clamped_offset = rsrc_desc.numRecords;
+        } else if (rsrc_desc.stride &&
+                   offset > (rsrc_desc.stride * rsrc_desc.numRecords)) {
+            clamped_offset = (rsrc_desc.stride * rsrc_desc.numRecords);
         }
 
-        /**
-         * initiate a memory write access for N dwords
-         */
-        template<int N>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst)
-        {
-            initMemReqScalarHelper<ScalarRegU32, N>(gpuDynInst,
-                                                    MemCmd::WriteReq);
-        }
+        Addr vaddr = ((rsrc_desc.baseAddr + clamped_offset) & ~0x3);
+        gpu_dyn_inst->scalarAddr = vaddr;
+    }
 
-        /**
-         * For normal s_load_dword/s_store_dword instruction addresses.
-         */
-        void
-        calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU64 &addr,
-                 ScalarRegU32 offset)
-        {
-            Addr vaddr = ((addr.rawData() + offset) & ~0x3);
-            gpu_dyn_inst->scalarAddr = vaddr;
-        }
+    // first instruction DWORD
+    InFmt_SMEM instData;
+    // second instruction DWORD
+    InFmt_SMEM_1 extData;
+}; // Inst_SMEM
 
-        /**
-         * For s_buffer_load_dword/s_buffer_store_dword instruction addresses.
-         * The s_buffer instructions use the same buffer resource descriptor
-         * as the MUBUF instructions.
-         */
-        void
-        calcAddr(GPUDynInstPtr gpu_dyn_inst,
-                 ConstScalarOperandU128 &s_rsrc_desc, ScalarRegU32 offset)
-        {
-            BufferRsrcDescriptor rsrc_desc;
-            ScalarRegU32 clamped_offset(offset);
-            std::memcpy((void*)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
-                        sizeof(BufferRsrcDescriptor));
+class Inst_VOP2 : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOP2(InFmt_VOP2 *, const std::string &opcode);
+    ~Inst_VOP2();
 
-            /**
-             * The address is clamped if:
-             *     Stride is zero: clamp if offset >= num_records
-             *     Stride is non-zero: clamp if offset > (stride * num_records)
-             */
-            if (!rsrc_desc.stride && offset >= rsrc_desc.numRecords) {
-                clamped_offset = rsrc_desc.numRecords;
-            } else if (rsrc_desc.stride && offset
-                       > (rsrc_desc.stride * rsrc_desc.numRecords)) {
-                clamped_offset = (rsrc_desc.stride * rsrc_desc.numRecords);
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VOP2 instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+    template <typename T>
+    T
+    sdwaSrcHelper(GPUDynInstPtr gpuDynInst, T &src1)
+    {
+        T src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+        // use copies of original src0, src1, and dest during selecting
+        T origSrc0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+        T origSrc1(gpuDynInst, instData.VSRC1);
+
+        src0_sdwa.read();
+        origSrc0_sdwa.read();
+        origSrc1.read();
+
+        DPRINTF(
+            VEGA,
+            "Handling %s SRC SDWA. SRC0: register v[%d], "
+            "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, SRC0_SEXT: "
+            "%d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, SRC1_SEXT: %d, "
+            "SRC1_NEG: %d, SRC1_ABS: %d\n",
+            opcode().c_str(), extData.iFmt_VOP_SDWA.SRC0,
+            extData.iFmt_VOP_SDWA.DST_SEL, extData.iFmt_VOP_SDWA.DST_U,
+            extData.iFmt_VOP_SDWA.CLMP, extData.iFmt_VOP_SDWA.SRC0_SEL,
+            extData.iFmt_VOP_SDWA.SRC0_SEXT, extData.iFmt_VOP_SDWA.SRC0_NEG,
+            extData.iFmt_VOP_SDWA.SRC0_ABS, extData.iFmt_VOP_SDWA.SRC1_SEL,
+            extData.iFmt_VOP_SDWA.SRC1_SEXT, extData.iFmt_VOP_SDWA.SRC1_NEG,
+            extData.iFmt_VOP_SDWA.SRC1_ABS);
+
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa, src1,
+                        origSrc1);
+
+        return src0_sdwa;
+    }
+
+    template <typename T>
+    void
+    sdwaDstHelper(GPUDynInstPtr gpuDynInst, T &vdst)
+    {
+        T origVdst(gpuDynInst, instData.VDST);
+
+        Wavefront *wf = gpuDynInst->wavefront();
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                origVdst[lane] = vdst[lane]; // keep copy consistent
             }
-
-            Addr vaddr = ((rsrc_desc.baseAddr + clamped_offset) & ~0x3);
-            gpu_dyn_inst->scalarAddr = vaddr;
         }
 
-        // first instruction DWORD
-        InFmt_SMEM instData;
-        // second instruction DWORD
-        InFmt_SMEM_1 extData;
-    }; // Inst_SMEM
+        processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+    }
 
-    class Inst_VOP2 : public VEGAGPUStaticInst
+    template <typename T>
+    T
+    dppHelper(GPUDynInstPtr gpuDynInst, T &src1)
     {
-      public:
-        Inst_VOP2(InFmt_VOP2*, const std::string &opcode);
-        ~Inst_VOP2();
+        T src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+        src0_dpp.read();
 
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_VOP2 instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-        template<typename T>
-        T sdwaSrcHelper(GPUDynInstPtr gpuDynInst, T & src1)
-        {
-            T src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            // use copies of original src0, src1, and dest during selecting
-            T origSrc0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            T origSrc1(gpuDynInst, instData.VSRC1);
-
-            src0_sdwa.read();
-            origSrc0_sdwa.read();
-            origSrc1.read();
-
-            DPRINTF(VEGA, "Handling %s SRC SDWA. SRC0: register v[%d], "
-                "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, SRC0_SEXT: "
-                "%d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, SRC1_SEXT: %d, "
-                "SRC1_NEG: %d, SRC1_ABS: %d\n",
-                opcode().c_str(), extData.iFmt_VOP_SDWA.SRC0,
-                extData.iFmt_VOP_SDWA.DST_SEL, extData.iFmt_VOP_SDWA.DST_U,
-                extData.iFmt_VOP_SDWA.CLMP, extData.iFmt_VOP_SDWA.SRC0_SEL,
-                extData.iFmt_VOP_SDWA.SRC0_SEXT,
-                extData.iFmt_VOP_SDWA.SRC0_NEG, extData.iFmt_VOP_SDWA.SRC0_ABS,
-                extData.iFmt_VOP_SDWA.SRC1_SEL,
-                extData.iFmt_VOP_SDWA.SRC1_SEXT,
-                extData.iFmt_VOP_SDWA.SRC1_NEG,
-                extData.iFmt_VOP_SDWA.SRC1_ABS);
-
-            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
-                            src1, origSrc1);
-
-            return src0_sdwa;
-        }
-
-        template<typename T>
-        void sdwaDstHelper(GPUDynInstPtr gpuDynInst, T & vdst)
-        {
-            T origVdst(gpuDynInst, instData.VDST);
-
-            Wavefront *wf = gpuDynInst->wavefront();
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    origVdst[lane] = vdst[lane]; // keep copy consistent
-                }
-            }
-
-            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
-        }
-
-        template<typename T>
-        T dppHelper(GPUDynInstPtr gpuDynInst, T & src1)
-        {
-            T src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
-            src0_dpp.read();
-
-            DPRINTF(VEGA, "Handling %s SRC DPP. SRC0: register v[%d], "
+        DPRINTF(VEGA,
+                "Handling %s SRC DPP. SRC0: register v[%d], "
                 "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, SRC1_ABS: %d, "
                 "SRC1_NEG: %d, BC: %d, BANK_MASK: %d, ROW_MASK: %d\n",
                 opcode().c_str(), extData.iFmt_VOP_DPP.SRC0,
@@ -335,1470 +337,1574 @@ namespace VegaISA
                 extData.iFmt_VOP_DPP.SRC1_NEG, extData.iFmt_VOP_DPP.BC,
                 extData.iFmt_VOP_DPP.BANK_MASK, extData.iFmt_VOP_DPP.ROW_MASK);
 
-            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
+        processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
 
-            return src0_dpp;
+        return src0_dpp;
+    }
+
+    template <typename ConstT, typename T>
+    void
+    vop2Helper(GPUDynInstPtr gpuDynInst,
+               void (*fOpImpl)(T &, T &, T &, Wavefront *))
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        T src0(gpuDynInst, instData.SRC0);
+        T src1(gpuDynInst, instData.VSRC1);
+        T vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+
+        if (isSDWAInst()) {
+            T src0_sdwa = sdwaSrcHelper(gpuDynInst, src1);
+            fOpImpl(src0_sdwa, src1, vdst, wf);
+            sdwaDstHelper(gpuDynInst, vdst);
+        } else if (isDPPInst()) {
+            T src0_dpp = dppHelper(gpuDynInst, src1);
+            fOpImpl(src0_dpp, src1, vdst, wf);
+        } else {
+            // src0 is unmodified. We need to use the const container
+            // type to allow reading scalar operands from src0. Only
+            // src0 can index scalar operands. We copy this to vdst
+            // temporarily to pass to the lambda so the instruction
+            // does not need to write two lambda functions (one for
+            // a const src0 and one of a mutable src0).
+            ConstT const_src0(gpuDynInst, instData.SRC0);
+            const_src0.readSrc();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                vdst[lane] = const_src0[lane];
+            }
+            fOpImpl(vdst, src1, vdst, wf);
         }
 
-        template<typename ConstT, typename T>
-        void vop2Helper(GPUDynInstPtr gpuDynInst,
-                        void (*fOpImpl)(T&, T&, T&, Wavefront*))
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-            T src0(gpuDynInst, instData.SRC0);
-            T src1(gpuDynInst, instData.VSRC1);
-            T vdst(gpuDynInst, instData.VDST);
+        vdst.write();
+    }
 
-            src0.readSrc();
-            src1.read();
+  private:
+    bool hasSecondDword(InFmt_VOP2 *);
+}; // Inst_VOP2
 
-            if (isSDWAInst()) {
-                T src0_sdwa = sdwaSrcHelper(gpuDynInst, src1);
-                fOpImpl(src0_sdwa, src1, vdst, wf);
-                sdwaDstHelper(gpuDynInst, vdst);
-            } else if (isDPPInst()) {
-                T src0_dpp = dppHelper(gpuDynInst, src1);
-                fOpImpl(src0_dpp, src1, vdst, wf);
+class Inst_VOP1 : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOP1(InFmt_VOP1 *, const std::string &opcode);
+    ~Inst_VOP1();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VOP1 instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+    template <typename T>
+    T
+    sdwaSrcHelper(GPUDynInstPtr gpuDynInst)
+    {
+        T src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+        // use copies of original src and dest during selecting
+        T origSrc0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+
+        src0_sdwa.read();
+        origSrc0_sdwa.read();
+
+        DPRINTF(
+            VEGA,
+            "Handling %s SRC SDWA. SRC0: register v[%d], "
+            "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, SRC0_SEXT: "
+            "%d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, SRC1_SEXT: %d, "
+            "SRC1_NEG: %d, SRC1_ABS: %d\n",
+            opcode().c_str(), extData.iFmt_VOP_SDWA.SRC0,
+            extData.iFmt_VOP_SDWA.DST_SEL, extData.iFmt_VOP_SDWA.DST_U,
+            extData.iFmt_VOP_SDWA.CLMP, extData.iFmt_VOP_SDWA.SRC0_SEL,
+            extData.iFmt_VOP_SDWA.SRC0_SEXT, extData.iFmt_VOP_SDWA.SRC0_NEG,
+            extData.iFmt_VOP_SDWA.SRC0_ABS, extData.iFmt_VOP_SDWA.SRC1_SEL,
+            extData.iFmt_VOP_SDWA.SRC1_SEXT, extData.iFmt_VOP_SDWA.SRC1_NEG,
+            extData.iFmt_VOP_SDWA.SRC1_ABS);
+
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa);
+
+        return src0_sdwa;
+    }
+
+    template <typename T>
+    void
+    sdwaDstHelper(GPUDynInstPtr gpuDynInst, T &vdst)
+    {
+        T origVdst(gpuDynInst, instData.VDST);
+
+        Wavefront *wf = gpuDynInst->wavefront();
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                origVdst[lane] = vdst[lane]; // keep copy consistent
+            }
+        }
+
+        processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+    }
+
+    template <typename T>
+    T
+    dppHelper(GPUDynInstPtr gpuDynInst)
+    {
+        T src_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+        src_dpp.read();
+
+        DPRINTF(VEGA,
+                "Handling %s SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, SRC1_ABS: %d, "
+                "SRC1_NEG: %d, BC: %d, BANK_MASK: %d, ROW_MASK: %d\n",
+                opcode().c_str(), extData.iFmt_VOP_DPP.SRC0,
+                extData.iFmt_VOP_DPP.DPP_CTRL, extData.iFmt_VOP_DPP.SRC0_ABS,
+                extData.iFmt_VOP_DPP.SRC0_NEG, extData.iFmt_VOP_DPP.SRC1_ABS,
+                extData.iFmt_VOP_DPP.SRC1_NEG, extData.iFmt_VOP_DPP.BC,
+                extData.iFmt_VOP_DPP.BANK_MASK, extData.iFmt_VOP_DPP.ROW_MASK);
+
+        processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src_dpp);
+
+        return src_dpp;
+    }
+
+    template <typename ConstT, typename T>
+    void
+    vop1Helper(GPUDynInstPtr gpuDynInst,
+               void (*fOpImpl)(T &, T &, Wavefront *))
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        T src(gpuDynInst, instData.SRC0);
+        T vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        if (isSDWAInst()) {
+            T src_sdwa = sdwaSrcHelper<T>(gpuDynInst);
+            fOpImpl(src_sdwa, vdst, wf);
+            sdwaDstHelper(gpuDynInst, vdst);
+        } else if (isDPPInst()) {
+            T src_dpp = dppHelper<T>(gpuDynInst);
+            fOpImpl(src_dpp, vdst, wf);
+        } else {
+            // src is unmodified. We need to use the const container
+            // type to allow reading scalar operands from src. Only
+            // src can index scalar operands. We copy this to vdst
+            // temporarily to pass to the lambda so the instruction
+            // does not need to write two lambda functions (one for
+            // a const src and one of a mutable src).
+            ConstT const_src(gpuDynInst, instData.SRC0);
+            const_src.readSrc();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                vdst[lane] = const_src[lane];
+            }
+            fOpImpl(vdst, vdst, wf);
+        }
+
+        vdst.write();
+    }
+
+  private:
+    bool hasSecondDword(InFmt_VOP1 *);
+}; // Inst_VOP1
+
+class Inst_VOPC : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOPC(InFmt_VOPC *, const std::string &opcode);
+    ~Inst_VOPC();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VOPC instData;
+    // possible second DWORD
+    InstFormat extData;
+    uint32_t varSize;
+
+    template <typename T>
+    uint32_t
+    sdwabSelect(uint32_t dword, const SDWASelVals sel, bool sign_ext, bool neg,
+                bool abs)
+    {
+        // Use the gem5 bits() helper to select a sub region from the
+        // dword based on the select. Return a 32-bit unsigned which will
+        // be cast to the appropriate compare type in the lambda passed to
+        // sdwabHelper.
+        int low_bit = 0, high_bit = 0;
+        uint32_t rv = dword;
+
+        if (sel < SDWA_WORD_0) {
+            // Selecting a sub-dword value smaller than a word (i.e., a
+            // byte). These values are 0-3 so multiplying by BITS_PER_BYTE
+            // gives the lower and upper bit easily.
+            low_bit = sel * VegaISA::BITS_PER_BYTE;
+            high_bit = low_bit + VegaISA::BITS_PER_BYTE - 1;
+        } else if (sel < SDWA_DWORD) {
+            // Selecting a sub-dword value of word size. Enum value is 4
+            // or 5, so selecting the LSb and multiplying gives the lower
+            // and upper bit.
+            low_bit = (sel & 1) * VegaISA::BITS_PER_WORD;
+            high_bit = low_bit + VegaISA::MSB_PER_WORD - 1;
+        } else {
+            // We are selecting the whole dword. Assert that is true and
+            // set the bit locations for lower and upper based on dword
+            // size.
+            assert(sel == SDWA_DWORD);
+            low_bit = 0;
+            high_bit = sizeof(uint32_t) * VegaISA::BITS_PER_BYTE - 1;
+        }
+
+        rv = bits(dword, high_bit, low_bit);
+
+        uint32_t sign_bit = 1 << high_bit;
+
+        // Panic on combinations which do not make sense.
+        if (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+            panic_if(neg, "SWDAB negation operation on unsigned type!\n");
+            panic_if(sign_ext, "SWDAB sign extend on unsigned type!\n");
+        }
+
+        // Apply ABS, then NEG, then SEXT.
+        if (abs) {
+            if (std::is_integral_v<T>) {
+                // If sign is set, sign extend first then call std::abs.
+                if ((rv & sign_bit) && std::is_signed_v<T>) {
+                    rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
+                    rv = std::abs(static_cast<long long>(rv)) & 0xFFFFFFFF;
+                }
             } else {
-                // src0 is unmodified. We need to use the const container
-                // type to allow reading scalar operands from src0. Only
-                // src0 can index scalar operands. We copy this to vdst
-                // temporarily to pass to the lambda so the instruction
-                // does not need to write two lambda functions (one for
-                // a const src0 and one of a mutable src0).
-                ConstT const_src0(gpuDynInst, instData.SRC0);
-                const_src0.readSrc();
-
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    vdst[lane] = const_src0[lane];
-                }
-                fOpImpl(vdst, src1, vdst, wf);
+                // Clear sign bit for FP types.
+                rv = rv & mask(high_bit);
             }
-
-            vdst.write();
         }
 
-      private:
-        bool hasSecondDword(InFmt_VOP2 *);
-    }; // Inst_VOP2
-
-    class Inst_VOP1 : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_VOP1(InFmt_VOP1*, const std::string &opcode);
-        ~Inst_VOP1();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_VOP1 instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-      private:
-        bool hasSecondDword(InFmt_VOP1 *);
-    }; // Inst_VOP1
-
-    class Inst_VOPC : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_VOPC(InFmt_VOPC*, const std::string &opcode);
-        ~Inst_VOPC();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_VOPC instData;
-        // possible second DWORD
-        InstFormat extData;
-        uint32_t varSize;
-
-        template<typename T>
-        uint32_t
-        sdwabSelect(uint32_t dword, const SDWASelVals sel,
-                    bool sign_ext, bool neg, bool abs)
-        {
-            // Use the gem5 bits() helper to select a sub region from the
-            // dword based on the select. Return a 32-bit unsigned which will
-            // be cast to the appropriate compare type in the lambda passed to
-            // sdwabHelper.
-            int low_bit = 0, high_bit = 0;
-            uint32_t rv = dword;
-
-            if (sel < SDWA_WORD_0) {
-                // Selecting a sub-dword value smaller than a word (i.e., a
-                // byte). These values are 0-3 so multiplying by BITS_PER_BYTE
-                // gives the lower and upper bit easily.
-                low_bit = sel * VegaISA::BITS_PER_BYTE;
-                high_bit = low_bit + VegaISA::BITS_PER_BYTE - 1;
-            } else if (sel < SDWA_DWORD) {
-                // Selecting a sub-dword value of word size. Enum value is 4
-                // or 5, so selecting the LSb and multiplying gives the lower
-                // and upper bit.
-                low_bit = (sel & 1) * VegaISA::BITS_PER_WORD;
-                high_bit = low_bit + VegaISA::MSB_PER_WORD - 1;
+        if (neg) {
+            if (std::is_integral_v<T>) {
+                // If sign is set, sign extend first then call unary-.
+                if (rv & sign_bit) {
+                    rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
+                    rv = -rv;
+                }
             } else {
-                // We are selecting the whole dword. Assert that is true and
-                // set the bit locations for lower and upper based on dword
-                // size.
-                assert(sel == SDWA_DWORD);
-                low_bit = 0;
-                high_bit = sizeof(uint32_t) * VegaISA::BITS_PER_BYTE - 1;
+                // Flip sign bit for FP types.
+                rv = rv ^ mask(high_bit);
             }
-
-            rv = bits(dword, high_bit, low_bit);
-
-            uint32_t sign_bit = 1 << high_bit;
-
-            // Panic on combinations which do not make sense.
-            if (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-                panic_if(neg, "SWDAB negation operation on unsigned type!\n");
-                panic_if(sign_ext, "SWDAB sign extend on unsigned type!\n");
-            }
-
-            // Apply ABS, then NEG, then SEXT.
-            if (abs) {
-                if (std::is_integral_v<T>) {
-                    // If sign is set, sign extend first then call std::abs.
-                    if ((rv & sign_bit) && std::is_signed_v<T>) {
-                        rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
-                        rv = std::abs(static_cast<long long>(rv)) & 0xFFFFFFFF;
-                    }
-                } else {
-                    // Clear sign bit for FP types.
-                    rv = rv & mask(high_bit);
-                }
-            }
-
-            if (neg) {
-                if (std::is_integral_v<T>) {
-                    // If sign is set, sign extend first then call unary-.
-                    if (rv & sign_bit) {
-                        rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
-                        rv = -rv;
-                    }
-                } else {
-                    // Flip sign bit for FP types.
-                    rv = rv ^ mask(high_bit);
-                }
-            }
-
-            if (sign_ext) {
-                if (std::is_integral_v<T>) {
-                    if (rv & sign_bit) {
-                        rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
-                    }
-                } else {
-                    // It is not entirely clear what to do here. Literal
-                    // extensions for FP operands append zeros to mantissa
-                    // but specification does not state anything for SDWAB.
-                    panic("SDWAB sign extend set for non-integral type!\n");
-                }
-            }
-
-            return rv;
         }
 
-        template<typename T>
-        void
-        sdwabHelper(GPUDynInstPtr gpuDynInst, int (*cmpFunc)(T, T))
-        {
-            DPRINTF(VEGA, "Handling %s SRC SDWA. SRC0: register %s[%d], "
-                    "sDst s[%d], sDst type %s, SRC0_SEL: %d, SRC0_SEXT: %d "
-                    "SRC0_NEG: %d, SRC0_ABS: %d, SRC1: register %s[%d], "
-                    "SRC1_SEL: %d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: "
-                    "%d\n", _opcode.c_str(),
-                    (extData.iFmt_VOP_SDWAB.S0 ? "s" : "v"),
-                    extData.iFmt_VOP_SDWAB.SRC0,
-                    extData.iFmt_VOP_SDWAB.SDST,
-                    (extData.iFmt_VOP_SDWAB.SD ? "SGPR" : "VCC"),
-                    extData.iFmt_VOP_SDWAB.SRC0_SEL,
-                    extData.iFmt_VOP_SDWAB.SRC0_SEXT,
-                    extData.iFmt_VOP_SDWAB.SRC0_NEG,
-                    extData.iFmt_VOP_SDWAB.SRC0_ABS,
-                    (extData.iFmt_VOP_SDWAB.S1 ? "s" : "v"),
-                    instData.VSRC1,
-                    extData.iFmt_VOP_SDWAB.SRC1_SEL,
-                    extData.iFmt_VOP_SDWAB.SRC1_SEXT,
-                    extData.iFmt_VOP_SDWAB.SRC1_NEG,
-                    extData.iFmt_VOP_SDWAB.SRC1_ABS);
-
-            // Start with SRC0 and insert 9th bit for VGPR source (S0 == 0).
-            int src0_idx = extData.iFmt_VOP_SDWAB.SRC0;
-            src0_idx += (extData.iFmt_VOP_SDWAB.S0 == 0) ? 0x100 : 0;
-
-            // Start with VSRC1[7:0], insert 9th bit for VGPR source (S1 == 0).
-            int src1_idx = instData.VSRC1;
-            src1_idx += (extData.iFmt_VOP_SDWAB.S1 == 0) ? 0x100 : 0;
-
-            // SD == 0 if VCC is dest, else use SDST index.
-            int sdst_idx = (extData.iFmt_VOP_SDWAB.SD == 1) ?
-                int(extData.iFmt_VOP_SDWAB.SDST) : REG_VCC_LO;
-
-            ConstVecOperandU32 src0(gpuDynInst, src0_idx);
-            ConstVecOperandU32 src1(gpuDynInst, src1_idx);
-            ScalarOperandU64 sdst(gpuDynInst, sdst_idx);
-
-            // Use readSrc in case of scalar const register.
-            src0.readSrc();
-            src1.readSrc();
-
-            // Select bits first, then cast to type, then apply modifiers.
-            const SDWASelVals src0_sel =
-                (SDWASelVals)extData.iFmt_VOP_SDWAB.SRC0_SEL;
-            const SDWASelVals src1_sel =
-                (SDWASelVals)extData.iFmt_VOP_SDWAB.SRC1_SEL;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->wavefront()->execMask(lane)) {
-                    T a = sdwabSelect<T>(src0[lane], src0_sel,
-                                         extData.iFmt_VOP_SDWAB.SRC0_SEXT,
-                                         extData.iFmt_VOP_SDWAB.SRC0_NEG,
-                                         extData.iFmt_VOP_SDWAB.SRC0_ABS);
-                    T b = sdwabSelect<T>(src1[lane], src1_sel,
-                                         extData.iFmt_VOP_SDWAB.SRC1_SEXT,
-                                         extData.iFmt_VOP_SDWAB.SRC1_NEG,
-                                         extData.iFmt_VOP_SDWAB.SRC1_ABS);
-                    sdst.setBit(lane, cmpFunc(a, b));
+        if (sign_ext) {
+            if (std::is_integral_v<T>) {
+                if (rv & sign_bit) {
+                    rv = sext(rv, high_bit + 1) & 0xFFFFFFFF;
                 }
-            }
-
-            sdst.write();
-        }
-
-      private:
-        bool hasSecondDword(InFmt_VOPC *);
-    }; // Inst_VOPC
-
-    class Inst_VINTRP : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_VINTRP(InFmt_VINTRP*, const std::string &opcode);
-        ~Inst_VINTRP();
-
-        int instSize() const override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_VINTRP instData;
-    }; // Inst_VINTRP
-
-    class Inst_VOP3A : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_VOP3A(InFmt_VOP3A*, const std::string &opcode, bool sgpr_dst);
-        ~Inst_VOP3A();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_VOP3A instData;
-        // second instruction DWORD
-        InFmt_VOP3_1 extData;
-
-        // Output modifier for VOP3 instructions. This 2-bit field can be set
-        // to "0" to do nothing, "1" to multiply output value by 2, "2" to
-        // multiply output value by 4, or "3" to divide output value by 2. If
-        // the instruction supports clamping, this is applied *before* clamp
-        // but after the abs and neg modifiers.
-        template<typename T>
-        T omodModifier(T val, unsigned omod)
-        {
-            assert(omod < 4);
-
-            if constexpr (std::is_floating_point_v<T>) {
-                if (omod == 1) return val * T(2.0f);
-                if (omod == 2) return val * T(4.0f);
-                if (omod == 3) return val / T(2.0f);
             } else {
-                assert(std::is_integral_v<T>);
-                if (omod == 1) return val * T(2);
-                if (omod == 2) return val * T(4);
-                if (omod == 3) return val / T(2);
+                // It is not entirely clear what to do here. Literal
+                // extensions for FP operands append zeros to mantissa
+                // but specification does not state anything for SDWAB.
+                panic("SDWAB sign extend set for non-integral type!\n");
             }
-
-            return val;
         }
-      private:
-        bool hasSecondDword(InFmt_VOP3A *);
-        /**
-         * the v_cmp and readlane instructions in the VOP3
-         * encoding are unique because they are the only
-         * instructions that use the VDST field to specify
-         * a scalar register destination. for VOP3::V_CMP insts
-         * VDST specifies the arbitrary SGPR pair used to write
-         * VCC. for V_READLANE VDST specifies the SGPR to return
-         * the value of the selected lane in the source VGPR
-         * from which we are reading.
-         */
-        const bool sgprDst;
-    }; // Inst_VOP3A
 
-    class Inst_VOP3B : public VEGAGPUStaticInst
+        return rv;
+    }
+
+    template <typename T>
+    void
+    sdwabHelper(GPUDynInstPtr gpuDynInst, int (*cmpFunc)(T, T))
     {
-      public:
-        Inst_VOP3B(InFmt_VOP3B*, const std::string &opcode);
-        ~Inst_VOP3B();
+        DPRINTF(
+            VEGA,
+            "Handling %s SRC SDWA. SRC0: register %s[%d], "
+            "sDst s[%d], sDst type %s, SRC0_SEL: %d, SRC0_SEXT: %d "
+            "SRC0_NEG: %d, SRC0_ABS: %d, SRC1: register %s[%d], "
+            "SRC1_SEL: %d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: "
+            "%d\n",
+            _opcode.c_str(), (extData.iFmt_VOP_SDWAB.S0 ? "s" : "v"),
+            extData.iFmt_VOP_SDWAB.SRC0, extData.iFmt_VOP_SDWAB.SDST,
+            (extData.iFmt_VOP_SDWAB.SD ? "SGPR" : "VCC"),
+            extData.iFmt_VOP_SDWAB.SRC0_SEL, extData.iFmt_VOP_SDWAB.SRC0_SEXT,
+            extData.iFmt_VOP_SDWAB.SRC0_NEG, extData.iFmt_VOP_SDWAB.SRC0_ABS,
+            (extData.iFmt_VOP_SDWAB.S1 ? "s" : "v"), instData.VSRC1,
+            extData.iFmt_VOP_SDWAB.SRC1_SEL, extData.iFmt_VOP_SDWAB.SRC1_SEXT,
+            extData.iFmt_VOP_SDWAB.SRC1_NEG, extData.iFmt_VOP_SDWAB.SRC1_ABS);
 
-        int instSize() const override;
-        void generateDisassembly() override;
+        // Start with SRC0 and insert 9th bit for VGPR source (S0 == 0).
+        int src0_idx = extData.iFmt_VOP_SDWAB.SRC0;
+        src0_idx += (extData.iFmt_VOP_SDWAB.S0 == 0) ? 0x100 : 0;
 
-        void initOperandInfo() override;
+        // Start with VSRC1[7:0], insert 9th bit for VGPR source (S1 == 0).
+        int src1_idx = instData.VSRC1;
+        src1_idx += (extData.iFmt_VOP_SDWAB.S1 == 0) ? 0x100 : 0;
 
-      protected:
-        // first instruction DWORD
-        InFmt_VOP3B instData;
-        // second instruction DWORD
-        InFmt_VOP3_1 extData;
+        // SD == 0 if VCC is dest, else use SDST index.
+        int sdst_idx = (extData.iFmt_VOP_SDWAB.SD == 1)
+                           ? int(extData.iFmt_VOP_SDWAB.SDST)
+                           : REG_VCC_LO;
 
-      private:
-        bool hasSecondDword(InFmt_VOP3B *);
-    }; // Inst_VOP3B
+        ConstVecOperandU32 src0(gpuDynInst, src0_idx);
+        ConstVecOperandU32 src1(gpuDynInst, src1_idx);
+        ScalarOperandU64 sdst(gpuDynInst, sdst_idx);
 
-    class Inst_VOP3P : public VEGAGPUStaticInst
+        // Use readSrc in case of scalar const register.
+        src0.readSrc();
+        src1.readSrc();
+
+        // Select bits first, then cast to type, then apply modifiers.
+        const SDWASelVals src0_sel =
+            (SDWASelVals)extData.iFmt_VOP_SDWAB.SRC0_SEL;
+        const SDWASelVals src1_sel =
+            (SDWASelVals)extData.iFmt_VOP_SDWAB.SRC1_SEL;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->wavefront()->execMask(lane)) {
+                T a = sdwabSelect<T>(src0[lane], src0_sel,
+                                     extData.iFmt_VOP_SDWAB.SRC0_SEXT,
+                                     extData.iFmt_VOP_SDWAB.SRC0_NEG,
+                                     extData.iFmt_VOP_SDWAB.SRC0_ABS);
+                T b = sdwabSelect<T>(src1[lane], src1_sel,
+                                     extData.iFmt_VOP_SDWAB.SRC1_SEXT,
+                                     extData.iFmt_VOP_SDWAB.SRC1_NEG,
+                                     extData.iFmt_VOP_SDWAB.SRC1_ABS);
+                sdst.setBit(lane, cmpFunc(a, b));
+            }
+        }
+
+        sdst.write();
+    }
+
+  private:
+    bool hasSecondDword(InFmt_VOPC *);
+}; // Inst_VOPC
+
+class Inst_VINTRP : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VINTRP(InFmt_VINTRP *, const std::string &opcode);
+    ~Inst_VINTRP();
+
+    int instSize() const override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VINTRP instData;
+}; // Inst_VINTRP
+
+class Inst_VOP3A : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOP3A(InFmt_VOP3A *, const std::string &opcode, bool sgpr_dst);
+    ~Inst_VOP3A();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VOP3A instData;
+    // second instruction DWORD
+    InFmt_VOP3_1 extData;
+
+    // Output modifier for VOP3 instructions. This 2-bit field can be set
+    // to "0" to do nothing, "1" to multiply output value by 2, "2" to
+    // multiply output value by 4, or "3" to divide output value by 2. If
+    // the instruction supports clamping, this is applied *before* clamp
+    // but after the abs and neg modifiers.
+    template <typename T>
+    T
+    omodModifier(T val, unsigned omod)
     {
-      public:
-        Inst_VOP3P(InFmt_VOP3P*, const std::string &opcode);
-        ~Inst_VOP3P();
+        assert(omod < 4);
 
-        int instSize() const override;
-        void generateDisassembly() override;
+        if constexpr (std::is_floating_point_v<T>) {
+            if (omod == 1) {
+                return val * T(2.0f);
+            }
+            if (omod == 2) {
+                return val * T(4.0f);
+            }
+            if (omod == 3) {
+                return val / T(2.0f);
+            }
+        } else {
+            assert(std::is_integral_v<T>);
+            if (omod == 1) {
+                return val * T(2);
+            }
+            if (omod == 2) {
+                return val * T(4);
+            }
+            if (omod == 3) {
+                return val / T(2);
+            }
+        }
 
-        void initOperandInfo() override;
+        return val;
+    }
 
-      protected:
-        // first instruction DWORD
-        InFmt_VOP3P instData;
-        // second instruction DWORD
-        InFmt_VOP3P_1 extData;
+  private:
+    bool hasSecondDword(InFmt_VOP3A *);
+    /**
+     * the v_cmp and readlane instructions in the VOP3
+     * encoding are unique because they are the only
+     * instructions that use the VDST field to specify
+     * a scalar register destination. for VOP3::V_CMP insts
+     * VDST specifies the arbitrary SGPR pair used to write
+     * VCC. for V_READLANE VDST specifies the SGPR to return
+     * the value of the selected lane in the source VGPR
+     * from which we are reading.
+     */
+    const bool sgprDst;
+}; // Inst_VOP3A
 
-        template<typename T>
-        void vop3pHelper(GPUDynInstPtr gpuDynInst,
-                        T (*fOpImpl)(T, T, bool))
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
-            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
-            VecOperandU32 D(gpuDynInst, instData.VDST);
+class Inst_VOP3B : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOP3B(InFmt_VOP3B *, const std::string &opcode);
+    ~Inst_VOP3B();
 
-            S0.readSrc();
-            S1.readSrc();
+    int instSize() const override;
+    void generateDisassembly() override;
 
-            int opLo = instData.OPSEL;
-            int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
-            int negLo = extData.NEG;
-            int negHi = instData.NEG_HI;
-            bool clamp = instData.CLMP;
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    T upper_val = fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
-                                          word<T>(S1[lane], opHi, negHi, 1),
-                                          clamp);
-                    T lower_val = fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
-                                          word<T>(S1[lane], opLo, negLo, 1),
-                                          clamp);
+    void initOperandInfo() override;
 
-                    uint16_t upper_raw =
-                        *reinterpret_cast<uint16_t*>(&upper_val);
-                    uint16_t lower_raw =
-                        *reinterpret_cast<uint16_t*>(&lower_val);
+  protected:
+    // first instruction DWORD
+    InFmt_VOP3B instData;
+    // second instruction DWORD
+    InFmt_VOP3_1 extData;
 
-                    D[lane] = upper_raw << 16 | lower_raw;
+  private:
+    bool hasSecondDword(InFmt_VOP3B *);
+}; // Inst_VOP3B
+
+class Inst_VOP3P : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOP3P(InFmt_VOP3P *, const std::string &opcode);
+    ~Inst_VOP3P();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VOP3P instData;
+    // second instruction DWORD
+    InFmt_VOP3P_1 extData;
+
+    template <typename T>
+    void
+    vop3pHelper(GPUDynInstPtr gpuDynInst, T (*fOpImpl)(T, T, bool))
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+        VecOperandU32 D(gpuDynInst, instData.VDST);
+
+        S0.readSrc();
+        S1.readSrc();
+
+        int opLo = instData.OPSEL;
+        int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
+        int negLo = extData.NEG;
+        int negHi = instData.NEG_HI;
+        bool clamp = instData.CLMP;
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                T upper_val =
+                    fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
+                            word<T>(S1[lane], opHi, negHi, 1), clamp);
+                T lower_val =
+                    fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
+                            word<T>(S1[lane], opLo, negLo, 1), clamp);
+
+                uint16_t upper_raw = *reinterpret_cast<uint16_t *>(&upper_val);
+                uint16_t lower_raw = *reinterpret_cast<uint16_t *>(&lower_val);
+
+                D[lane] = upper_raw << 16 | lower_raw;
+            }
+        }
+
+        D.write();
+    }
+
+    template <typename T>
+    void
+    vop3pHelper(GPUDynInstPtr gpuDynInst, T (*fOpImpl)(T, T, T, bool))
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+        ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
+        VecOperandU32 D(gpuDynInst, instData.VDST);
+
+        S0.readSrc();
+        S1.readSrc();
+        S2.readSrc();
+
+        int opLo = instData.OPSEL;
+        int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
+        int negLo = extData.NEG;
+        int negHi = instData.NEG_HI;
+        bool clamp = instData.CLMP;
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                T upper_val =
+                    fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
+                            word<T>(S1[lane], opHi, negHi, 1),
+                            word<T>(S2[lane], opHi, negHi, 2), clamp);
+                T lower_val =
+                    fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
+                            word<T>(S1[lane], opLo, negLo, 1),
+                            word<T>(S2[lane], opLo, negLo, 2), clamp);
+
+                uint16_t upper_raw = *reinterpret_cast<uint16_t *>(&upper_val);
+                uint16_t lower_raw = *reinterpret_cast<uint16_t *>(&lower_val);
+
+                D[lane] = upper_raw << 16 | lower_raw;
+            }
+        }
+
+        D.write();
+    }
+
+    void
+    dotHelper(GPUDynInstPtr gpuDynInst,
+              uint32_t (*fOpImpl)(uint32_t, uint32_t, uint32_t, bool))
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
+        ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
+        VecOperandU32 D(gpuDynInst, instData.VDST);
+
+        S0.readSrc();
+        S1.readSrc();
+        S2.readSrc();
+
+        // OPSEL[2] and OPSEL_HI2 are unused. Craft two dwords where:
+        // dword1[15:0]  is upper/lower 16b of src0 based on opsel[0]
+        // dword1[31:15] is upper/lower 16b of src0 based on opsel_hi[0]
+        // dword2[15:0]  is upper/lower 16b of src1 based on opsel[1]
+        // dword2[31:15] is upper/lower 16b of src1 based on opsel_hi[1]
+        int opLo = instData.OPSEL;
+        int opHi = extData.OPSEL_HI;
+        int negLo = extData.NEG;
+        int negHi = instData.NEG_HI;
+        bool clamp = instData.CLMP;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t dword1l = word<uint16_t>(S0[lane], opLo, negLo, 0);
+                uint32_t dword1h = word<uint16_t>(S0[lane], opHi, negHi, 0);
+                uint32_t dword2l = word<uint16_t>(S1[lane], opLo, negLo, 1);
+                uint32_t dword2h = word<uint16_t>(S1[lane], opHi, negHi, 1);
+
+                uint32_t dword1 = (dword1h << 16) | dword1l;
+                uint32_t dword2 = (dword2h << 16) | dword2l;
+
+                // Take in two uint32_t dwords and one src2 dword. The
+                // function will need to call bits to break up to the
+                // correct size and then reinterpret cast to the correct
+                // value.
+                D[lane] = fOpImpl(dword1, dword2, S2[lane], clamp);
+            }
+        }
+
+        D.write();
+    }
+
+  private:
+    bool hasSecondDword(InFmt_VOP3P *);
+
+    template <typename T>
+    T
+    word(uint32_t data, int opSel, int neg, int opSelBit)
+    {
+        // This method assumes two words packed into a dword
+        static_assert(sizeof(T) == 2);
+
+        bool select = bits(opSel, opSelBit, opSelBit);
+        uint16_t raw = select ? bits(data, 31, 16) : bits(data, 15, 0);
+
+        // Apply input modifiers. This may seem odd, but the hardware
+        // just flips the MSb instead of doing unary negation.
+        bool negate = bits(neg, opSelBit, opSelBit);
+        if (negate) {
+            raw ^= 0x8000;
+        }
+
+        return *reinterpret_cast<T *>(&raw);
+    }
+}; // Inst_VOP3P
+
+class Inst_VOP3P_MAI : public VEGAGPUStaticInst
+{
+  public:
+    Inst_VOP3P_MAI(InFmt_VOP3P_MAI *, const std::string &opcode);
+    ~Inst_VOP3P_MAI();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_VOP3P_MAI instData;
+    // second instruction DWORD
+    InFmt_VOP3P_MAI_1 extData;
+
+  private:
+    bool hasSecondDword(InFmt_VOP3P_MAI *);
+}; // Inst_VOP3P
+
+class Inst_DS : public VEGAGPUStaticInst
+{
+  public:
+    Inst_DS(InFmt_DS *, const std::string &opcode);
+    ~Inst_DS();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    template <typename T>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst, Addr offset)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr = gpuDynInst->addr[lane] + offset;
+
+                (reinterpret_cast<T *>(gpuDynInst->d_data))[lane] =
+                    wf->ldsChunk->read<T>(vaddr);
+            }
+        }
+    }
+
+    template <int N>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst, Addr offset)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr = gpuDynInst->addr[lane] + offset;
+                for (int i = 0; i < N; ++i) {
+                    (reinterpret_cast<VecElemU32 *>(
+                        gpuDynInst->d_data))[lane * N + i] =
+                        wf->ldsChunk->read<VecElemU32>(vaddr +
+                                                       i * sizeof(VecElemU32));
                 }
             }
-
-            D.write();
         }
+    }
 
-        template<typename T>
-        void vop3pHelper(GPUDynInstPtr gpuDynInst,
-                        T (*fOpImpl)(T, T, T, bool))
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
-            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
-            ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
-            VecOperandU32 D(gpuDynInst, instData.VDST);
+    template <typename T>
+    void
+    initDualMemRead(GPUDynInstPtr gpuDynInst, Addr offset0, Addr offset1)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
 
-            S0.readSrc();
-            S1.readSrc();
-            S2.readSrc();
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr0 = gpuDynInst->addr[lane] + offset0;
+                Addr vaddr1 = gpuDynInst->addr[lane] + offset1;
 
-            int opLo = instData.OPSEL;
-            int opHi = instData.OPSEL_HI2 << 2 | extData.OPSEL_HI;
-            int negLo = extData.NEG;
-            int negHi = instData.NEG_HI;
-            bool clamp = instData.CLMP;
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    T upper_val = fOpImpl(word<T>(S0[lane], opHi, negHi, 0),
-                                          word<T>(S1[lane], opHi, negHi, 1),
-                                          word<T>(S2[lane], opHi, negHi, 2),
-                                          clamp);
-                    T lower_val = fOpImpl(word<T>(S0[lane], opLo, negLo, 0),
-                                          word<T>(S1[lane], opLo, negLo, 1),
-                                          word<T>(S2[lane], opLo, negLo, 2),
-                                          clamp);
+                (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2] =
+                    wf->ldsChunk->read<T>(vaddr0);
+                (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2 + 1] =
+                    wf->ldsChunk->read<T>(vaddr1);
+            }
+        }
+    }
 
-                    uint16_t upper_raw =
-                        *reinterpret_cast<uint16_t*>(&upper_val);
-                    uint16_t lower_raw =
-                        *reinterpret_cast<uint16_t*>(&lower_val);
+    template <typename T>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst, Addr offset)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
 
-                    D[lane] = upper_raw << 16 | lower_raw;
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr = gpuDynInst->addr[lane] + offset;
+                wf->ldsChunk->write<T>(
+                    vaddr, (reinterpret_cast<T *>(gpuDynInst->d_data))[lane]);
+            }
+        }
+    }
+
+    template <int N>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst, Addr offset)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr = gpuDynInst->addr[lane] + offset;
+                for (int i = 0; i < N; ++i) {
+                    wf->ldsChunk->write<VecElemU32>(
+                        vaddr + i * sizeof(VecElemU32),
+                        (reinterpret_cast<VecElemU32 *>(
+                            gpuDynInst->d_data))[lane * N + i]);
                 }
             }
-
-            D.write();
         }
+    }
 
-        void
-        dotHelper(GPUDynInstPtr gpuDynInst,
-                  uint32_t (*fOpImpl)(uint32_t, uint32_t, uint32_t, bool))
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-            ConstVecOperandU32 S0(gpuDynInst, extData.SRC0);
-            ConstVecOperandU32 S1(gpuDynInst, extData.SRC1);
-            ConstVecOperandU32 S2(gpuDynInst, extData.SRC2);
-            VecOperandU32 D(gpuDynInst, instData.VDST);
+    template <typename T>
+    void
+    initDualMemWrite(GPUDynInstPtr gpuDynInst, Addr offset0, Addr offset1)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
 
-            S0.readSrc();
-            S1.readSrc();
-            S2.readSrc();
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr0 = gpuDynInst->addr[lane] + offset0;
+                Addr vaddr1 = gpuDynInst->addr[lane] + offset1;
+                wf->ldsChunk->write<T>(
+                    vaddr0,
+                    (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2]);
+                wf->ldsChunk->write<T>(
+                    vaddr1,
+                    (reinterpret_cast<T *>(gpuDynInst->d_data))[lane * 2 + 1]);
+            }
+        }
+    }
 
-            // OPSEL[2] and OPSEL_HI2 are unused. Craft two dwords where:
-            // dword1[15:0]  is upper/lower 16b of src0 based on opsel[0]
-            // dword1[31:15] is upper/lower 16b of src0 based on opsel_hi[0]
-            // dword2[15:0]  is upper/lower 16b of src1 based on opsel[1]
-            // dword2[31:15] is upper/lower 16b of src1 based on opsel_hi[1]
-            int opLo = instData.OPSEL;
-            int opHi = extData.OPSEL_HI;
-            int negLo = extData.NEG;
-            int negHi = instData.NEG_HI;
-            bool clamp = instData.CLMP;
+    template <typename T>
+    void
+    initAtomicAccess(GPUDynInstPtr gpuDynInst, Addr offset)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
 
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    uint32_t dword1l =
-                        word<uint16_t>(S0[lane], opLo, negLo, 0);
-                    uint32_t dword1h =
-                        word<uint16_t>(S0[lane], opHi, negHi, 0);
-                    uint32_t dword2l =
-                        word<uint16_t>(S1[lane], opLo, negLo, 1);
-                    uint32_t dword2h =
-                        word<uint16_t>(S1[lane], opHi, negHi, 1);
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                Addr vaddr = gpuDynInst->addr[lane] + offset;
 
-                    uint32_t dword1 = (dword1h << 16) | dword1l;
-                    uint32_t dword2 = (dword2h << 16) | dword2l;
+                AtomicOpFunctorPtr amo_op = gpuDynInst->makeAtomicOpFunctor<T>(
+                    &(reinterpret_cast<T *>(gpuDynInst->a_data))[lane],
+                    &(reinterpret_cast<T *>(gpuDynInst->x_data))[lane]);
 
-                    // Take in two uint32_t dwords and one src2 dword. The
-                    // function will need to call bits to break up to the
-                    // correct size and then reinterpret cast to the correct
-                    // value.
-                    D[lane] = fOpImpl(dword1, dword2, S2[lane], clamp);
+                (reinterpret_cast<T *>(gpuDynInst->d_data))[lane] =
+                    wf->ldsChunk->atomic<T>(vaddr, std::move(amo_op));
+            }
+        }
+    }
+
+    void
+    calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &addr)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                gpuDynInst->addr.at(lane) = (Addr)addr[lane];
+            }
+        }
+    }
+
+    // first instruction DWORD
+    InFmt_DS instData;
+    // second instruction DWORD
+    InFmt_DS_1 extData;
+}; // Inst_DS
+
+class Inst_MUBUF : public VEGAGPUStaticInst
+{
+  public:
+    Inst_MUBUF(InFmt_MUBUF *, const std::string &opcode);
+    ~Inst_MUBUF();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    template <typename T>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst)
+    {
+        // temporarily modify exec_mask to supress memory accesses to oob
+        // regions.  Only issue memory requests for lanes that have their
+        // exec_mask set and are not out of bounds.
+        VectorMask old_exec_mask = gpuDynInst->exec_mask;
+        gpuDynInst->exec_mask &= ~oobMask;
+        initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+        gpuDynInst->exec_mask = old_exec_mask;
+    }
+
+    template <int N>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst)
+    {
+        // temporarily modify exec_mask to supress memory accesses to oob
+        // regions.  Only issue memory requests for lanes that have their
+        // exec_mask set and are not out of bounds.
+        VectorMask old_exec_mask = gpuDynInst->exec_mask;
+        gpuDynInst->exec_mask &= ~oobMask;
+        initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+        gpuDynInst->exec_mask = old_exec_mask;
+    }
+
+    template <typename T>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst)
+    {
+        // temporarily modify exec_mask to supress memory accesses to oob
+        // regions.  Only issue memory requests for lanes that have their
+        // exec_mask set and are not out of bounds.
+        VectorMask old_exec_mask = gpuDynInst->exec_mask;
+        gpuDynInst->exec_mask &= ~oobMask;
+        initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+        gpuDynInst->exec_mask = old_exec_mask;
+    }
+
+    template <int N>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst)
+    {
+        // temporarily modify exec_mask to supress memory accesses to oob
+        // regions.  Only issue memory requests for lanes that have their
+        // exec_mask set and are not out of bounds.
+        VectorMask old_exec_mask = gpuDynInst->exec_mask;
+        gpuDynInst->exec_mask &= ~oobMask;
+        initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+        gpuDynInst->exec_mask = old_exec_mask;
+    }
+
+    template <typename T>
+    void
+    initAtomicAccess(GPUDynInstPtr gpuDynInst)
+    {
+        // temporarily modify exec_mask to supress memory accesses to oob
+        // regions.  Only issue memory requests for lanes that have their
+        // exec_mask set and are not out of bounds.
+        VectorMask old_exec_mask = gpuDynInst->exec_mask;
+        gpuDynInst->exec_mask &= ~oobMask;
+        initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+        gpuDynInst->exec_mask = old_exec_mask;
+    }
+
+    void
+    injectGlobalMemFence(GPUDynInstPtr gpuDynInst)
+    {
+        // create request and set flags
+        gpuDynInst->resetEntireStatusVector();
+        gpuDynInst->setStatusVector(0, 1);
+        RequestPtr req = std::make_shared<Request>(
+            0, 0, 0, gpuDynInst->computeUnit()->requestorId(), 0,
+            gpuDynInst->wfDynId);
+        gpuDynInst->setRequestFlags(req);
+        gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false,
+                                                        req);
+    }
+
+    template <int NumDwords, int SignBit = 0>
+    void
+    ldsComplete(GPUDynInstPtr gpuDynInst)
+    {
+        assert(gpuDynInst->executedAs() == enums::SC_GLOBAL);
+
+        Wavefront *wf = gpuDynInst->wavefront();
+        ScalarRegU32 inst_offset = instData.OFFSET;
+        ConstScalarOperandU32 lds_offset(gpuDynInst, REG_M0);
+
+        lds_offset.read();
+
+        // LDS base should be implied by the ldsChunk for the wave.
+        // m0[17:0] for CDNA4; m0[15:0] for others, but upper bits
+        // should be zero.
+        uint32_t m0_offset = bits(lds_offset.rawData(), 17, 0);
+        uint32_t lds_addr = m0_offset + inst_offset;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                uint32_t chunk_addr =
+                    lds_addr + lane * NumDwords * sizeof(VecElemU32);
+
+                for (int i = 0; i < NumDwords; ++i) {
+                    VecElemU32 val = (reinterpret_cast<VecElemU32 *>(
+                        gpuDynInst->d_data))[lane * NumDwords + i];
+                    if constexpr (SignBit != 0) {
+                        val = (VecElemI32)sext<SignBit>(val);
+                    }
+
+                    wf->ldsChunk->write<VecElemU32>(
+                        chunk_addr + i * sizeof(VecElemU32), val);
                 }
             }
-
-            D.write();
         }
+    }
 
-      private:
-        bool hasSecondDword(InFmt_VOP3P *);
+    /**
+     * MUBUF insructions calculate their addresses as follows:
+     *
+     * index  = (IDXEN ? vgpr_idx : 0) + (const_add_tid_en ? TID : 0)
+     * offset = (OFFEN ? vgpr_off : 0) + inst_off
+     *
+     * / ====================== LINEAR ADDRESSING ====================== /
+     * VADDR = base + sgpr_off + offset + stride * index
+     *
+     * / ===================== SWIZZLED ADDRESSING ===================== /
+     * index_msb  = index / const_index_stride
+     * index_lsb  = index % const_index_stride
+     * offset_msb = offset / const_element_size
+     * offset_lsb = offset % const_element_size
+     * buffer_offset = ((index_msb * stride + offset_msb *
+     *                  const_element_size) * const_index_stride +
+     *                  index_lsb * const_element_size + offset_lsb)
+     *
+     * VADDR = base + sgpr_off + buffer_offset
+     */
+    template <typename VOFF, typename VIDX, typename SRSRC, typename SOFF>
+    void
+    calcAddr(GPUDynInstPtr gpuDynInst, VOFF v_off, VIDX v_idx,
+             SRSRC s_rsrc_desc, SOFF s_offset, int inst_offset)
+    {
+        Addr vaddr = 0;
+        Addr base_addr = 0;
+        Addr stride = 0;
+        Addr buf_idx = 0;
+        Addr buf_off = 0;
+        Addr buffer_offset = 0;
+        BufferRsrcDescriptor rsrc_desc;
 
-        template<typename T>
-        T
-        word(uint32_t data, int opSel, int neg, int opSelBit)
-        {
-            // This method assumes two words packed into a dword
-            static_assert(sizeof(T) == 2);
+        std::memcpy((void *)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
+                    sizeof(BufferRsrcDescriptor));
 
-            bool select = bits(opSel, opSelBit, opSelBit);
-            uint16_t raw = select ? bits(data, 31, 16)
-                                  : bits(data, 15, 0);
+        base_addr = rsrc_desc.baseAddr;
 
-            // Apply input modifiers. This may seem odd, but the hardware
-            // just flips the MSb instead of doing unary negation.
-            bool negate = bits(neg, opSelBit, opSelBit);
-            if (negate) {
-                raw ^= 0x8000;
+        stride = rsrc_desc.addTidEn
+                     ? ((rsrc_desc.dataFmt << 14) + rsrc_desc.stride)
+                     : rsrc_desc.stride;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                vaddr = base_addr + s_offset.rawData();
+                /**
+                 * first we calculate the buffer's index and offset.
+                 * these will be used for either linear or swizzled
+                 * buffers.
+                 */
+                buf_idx = v_idx[lane] + (rsrc_desc.addTidEn ? lane : 0);
+
+                buf_off = v_off[lane] + inst_offset;
+
+                if (rsrc_desc.swizzleEn) {
+                    Addr idx_stride = 8 << rsrc_desc.idxStride;
+                    Addr elem_size = 2 << rsrc_desc.elemSize;
+                    Addr idx_msb = buf_idx / idx_stride;
+                    Addr idx_lsb = buf_idx % idx_stride;
+                    Addr off_msb = buf_off / elem_size;
+                    Addr off_lsb = buf_off % elem_size;
+                    DPRINTF(VEGA,
+                            "mubuf swizzled lane %d: "
+                            "idx_stride = %llx, elem_size = %llx, "
+                            "idx_msb = %llx, idx_lsb = %llx, "
+                            "off_msb = %llx, off_lsb = %llx\n",
+                            lane, idx_stride, elem_size, idx_msb, idx_lsb,
+                            off_msb, off_lsb);
+
+                    buffer_offset =
+                        (idx_msb * stride + off_msb * elem_size) * idx_stride +
+                        idx_lsb * elem_size + off_lsb;
+                } else {
+                    buffer_offset = buf_off + stride * buf_idx;
+                }
+
+                /**
+                 * Range check behavior causes out of range accesses to
+                 * to be treated differently. Out of range accesses return
+                 * 0 for loads and are ignored for stores. For
+                 * non-formatted accesses, this is done on a per-lane
+                 * basis.
+                 */
+                if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
+                    if (buffer_offset >=
+                        rsrc_desc.numRecords - s_offset.rawData()) {
+                        DPRINTF(VEGA,
+                                "mubuf out-of-bounds condition 1: "
+                                "lane = %d, buffer_offset = %llx, "
+                                "const_stride = %llx, "
+                                "const_num_records = %llx\n",
+                                lane, buf_off + stride * buf_idx, stride,
+                                rsrc_desc.numRecords);
+                        oobMask.set(lane);
+                        continue;
+                    }
+                }
+
+                if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
+                    if (buf_idx >= rsrc_desc.numRecords || buf_off >= stride) {
+                        DPRINTF(VEGA,
+                                "mubuf out-of-bounds condition 2: "
+                                "lane = %d, offset = %llx, "
+                                "index = %llx, "
+                                "const_num_records = %llx\n",
+                                lane, buf_off, buf_idx, rsrc_desc.numRecords);
+                        oobMask.set(lane);
+                        continue;
+                    }
+                }
+
+                vaddr += buffer_offset;
+
+                DPRINTF(VEGA,
+                        "Calculating mubuf address for lane %d: "
+                        "vaddr = %llx, base_addr = %llx, "
+                        "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
+                        lane, vaddr, base_addr, stride, buf_idx, buf_off);
+                gpuDynInst->addr.at(lane) = vaddr;
             }
-
-            return *reinterpret_cast<T*>(&raw);
         }
-    }; // Inst_VOP3P
+    }
 
-    class Inst_VOP3P_MAI : public VEGAGPUStaticInst
+    // first instruction DWORD
+    InFmt_MUBUF instData;
+    // second instruction DWORD
+    InFmt_MUBUF_1 extData;
+    // Mask of lanes with out-of-bounds accesses.  Needs to be tracked
+    // seperately from the exec_mask so that we remember to write zero
+    // to the registers associated with out of bounds lanes.
+    VectorMask oobMask;
+}; // Inst_MUBUF
+
+class Inst_MTBUF : public VEGAGPUStaticInst
+{
+  public:
+    Inst_MTBUF(InFmt_MTBUF *, const std::string &opcode);
+    ~Inst_MTBUF();
+
+    int instSize() const override;
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_MTBUF instData;
+    // second instruction DWORD
+    InFmt_MTBUF_1 extData;
+
+  private:
+    bool hasSecondDword(InFmt_MTBUF *);
+}; // Inst_MTBUF
+
+class Inst_MIMG : public VEGAGPUStaticInst
+{
+  public:
+    Inst_MIMG(InFmt_MIMG *, const std::string &opcode);
+    ~Inst_MIMG();
+
+    int instSize() const override;
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_MIMG instData;
+    // second instruction DWORD
+    InFmt_MIMG_1 extData;
+}; // Inst_MIMG
+
+class Inst_EXP : public VEGAGPUStaticInst
+{
+  public:
+    Inst_EXP(InFmt_EXP *, const std::string &opcode);
+    ~Inst_EXP();
+
+    int instSize() const override;
+    void initOperandInfo() override;
+
+  protected:
+    // first instruction DWORD
+    InFmt_EXP instData;
+    // second instruction DWORD
+    InFmt_EXP_1 extData;
+}; // Inst_EXP
+
+class Inst_FLAT : public VEGAGPUStaticInst
+{
+  public:
+    Inst_FLAT(InFmt_FLAT *, const std::string &opcode);
+    ~Inst_FLAT();
+
+    int instSize() const override;
+    void generateDisassembly() override;
+
+    void initOperandInfo() override;
+
+  protected:
+    template <typename T>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst)
     {
-      public:
-        Inst_VOP3P_MAI(InFmt_VOP3P_MAI*, const std::string &opcode);
-        ~Inst_VOP3P_MAI();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_VOP3P_MAI instData;
-        // second instruction DWORD
-        InFmt_VOP3P_MAI_1 extData;
-
-      private:
-        bool hasSecondDword(InFmt_VOP3P_MAI *);
-    }; // Inst_VOP3P
-
-    class Inst_DS : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_DS(InFmt_DS*, const std::string &opcode);
-        ~Inst_DS();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        template<typename T>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst, Addr offset)
-        {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            // Store with more than one dword need to be swizzled and
+            // should use the template<int N> version of this method.
+            static_assert(sizeof(T) <= 4);
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
             Wavefront *wf = gpuDynInst->wavefront();
-
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane] + offset;
-
-                    (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]
-                        = wf->ldsChunk->read<T>(vaddr);
+                    Addr vaddr = gpuDynInst->addr[lane];
+                    (reinterpret_cast<T *>(gpuDynInst->d_data))[lane] =
+                        wf->ldsChunk->read<T>(vaddr);
                 }
             }
         }
+    }
 
-        template<int N>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst, Addr offset)
-        {
+    template <int N>
+    void
+    initMemRead(GPUDynInstPtr gpuDynInst)
+    {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            initScratchReqHelper<N>(gpuDynInst, MemCmd::ReadReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
             Wavefront *wf = gpuDynInst->wavefront();
-
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+                    Addr vaddr = gpuDynInst->addr[lane];
                     for (int i = 0; i < N; ++i) {
-                        (reinterpret_cast<VecElemU32*>(
-                            gpuDynInst->d_data))[lane * N + i]
-                            = wf->ldsChunk->read<VecElemU32>(
-                                vaddr + i*sizeof(VecElemU32));
+                        (reinterpret_cast<VecElemU32 *>(
+                            gpuDynInst->d_data))[lane * N + i] =
+                            wf->ldsChunk->read<VecElemU32>(
+                                vaddr + i * sizeof(VecElemU32));
                     }
                 }
             }
         }
+    }
 
-        template<typename T>
-        void
-        initDualMemRead(GPUDynInstPtr gpuDynInst, Addr offset0, Addr offset1)
-        {
+    template <typename T>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst)
+    {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            // Store with more than one dword need to be swizzled and
+            // should use the template<int N> version of this method.
+            static_assert(sizeof(T) <= 4);
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
             Wavefront *wf = gpuDynInst->wavefront();
-
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr0 = gpuDynInst->addr[lane] + offset0;
-                    Addr vaddr1 = gpuDynInst->addr[lane] + offset1;
-
-                    (reinterpret_cast<T*>(gpuDynInst->d_data))[lane * 2]
-                        = wf->ldsChunk->read<T>(vaddr0);
-                    (reinterpret_cast<T*>(gpuDynInst->d_data))[lane * 2 + 1]
-                        = wf->ldsChunk->read<T>(vaddr1);
+                    Addr vaddr = gpuDynInst->addr[lane];
+                    wf->ldsChunk->write<T>(
+                        vaddr,
+                        (reinterpret_cast<T *>(gpuDynInst->d_data))[lane]);
                 }
             }
         }
+    }
 
-        template<typename T>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst, Addr offset)
-        {
+    template <int N>
+    void
+    initMemWrite(GPUDynInstPtr gpuDynInst)
+    {
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
+            swizzleData<N>(gpuDynInst);
+            initScratchReqHelper<N>(gpuDynInst, MemCmd::WriteReq);
+        } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
             Wavefront *wf = gpuDynInst->wavefront();
-
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane] + offset;
-                    wf->ldsChunk->write<T>(vaddr,
-                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]);
-                }
-            }
-        }
-
-        template<int N>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst, Addr offset)
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+                    Addr vaddr = gpuDynInst->addr[lane];
                     for (int i = 0; i < N; ++i) {
                         wf->ldsChunk->write<VecElemU32>(
-                            vaddr + i*sizeof(VecElemU32),
-                            (reinterpret_cast<VecElemU32*>(
+                            vaddr + i * sizeof(VecElemU32),
+                            (reinterpret_cast<VecElemU32 *>(
                                 gpuDynInst->d_data))[lane * N + i]);
                     }
                 }
             }
         }
+    }
 
-        template<typename T>
-        void
-        initDualMemWrite(GPUDynInstPtr gpuDynInst, Addr offset0, Addr offset1)
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr0 = gpuDynInst->addr[lane] + offset0;
-                    Addr vaddr1 = gpuDynInst->addr[lane] + offset1;
-                    wf->ldsChunk->write<T>(vaddr0, (reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane * 2]);
-                    wf->ldsChunk->write<T>(vaddr1, (reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane * 2 + 1]);
-                }
-            }
-        }
-
-        template<typename T>
-        void
-        initAtomicAccess(GPUDynInstPtr gpuDynInst, Addr offset)
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane] + offset;
-
-                    AtomicOpFunctorPtr amo_op =
-                        gpuDynInst->makeAtomicOpFunctor<T>(
-                        &(reinterpret_cast<T*>(gpuDynInst->a_data))[lane],
-                        &(reinterpret_cast<T*>(gpuDynInst->x_data))[lane]);
-
-                    (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]
-                        = wf->ldsChunk->atomic<T>(vaddr, std::move(amo_op));
-                }
-            }
-        }
-
-        void
-        calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &addr)
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    gpuDynInst->addr.at(lane) = (Addr)addr[lane];
-                }
-            }
-        }
-
-        // first instruction DWORD
-        InFmt_DS instData;
-        // second instruction DWORD
-        InFmt_DS_1 extData;
-    }; // Inst_DS
-
-    class Inst_MUBUF : public VEGAGPUStaticInst
+    template <typename T>
+    void
+    initAtomicAccess(GPUDynInstPtr gpuDynInst)
     {
-      public:
-        Inst_MUBUF(InFmt_MUBUF*, const std::string &opcode);
-        ~Inst_MUBUF();
+        // Flat scratch requests may not be atomic according to ISA manual
+        // up to MI200. See MI200 manual Table 45.
+        assert(gpuDynInst->executedAs() != enums::SC_PRIVATE);
 
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        template<typename T>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst)
-        {
-            // temporarily modify exec_mask to supress memory accesses to oob
-            // regions.  Only issue memory requests for lanes that have their
-            // exec_mask set and are not out of bounds.
-            VectorMask old_exec_mask = gpuDynInst->exec_mask;
-            gpuDynInst->exec_mask &= ~oobMask;
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
-            gpuDynInst->exec_mask = old_exec_mask;
-        }
-
-
-        template<int N>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst)
-        {
-            // temporarily modify exec_mask to supress memory accesses to oob
-            // regions.  Only issue memory requests for lanes that have their
-            // exec_mask set and are not out of bounds.
-            VectorMask old_exec_mask = gpuDynInst->exec_mask;
-            gpuDynInst->exec_mask &= ~oobMask;
-            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
-            gpuDynInst->exec_mask = old_exec_mask;
-        }
-
-        template<typename T>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst)
-        {
-            // temporarily modify exec_mask to supress memory accesses to oob
-            // regions.  Only issue memory requests for lanes that have their
-            // exec_mask set and are not out of bounds.
-            VectorMask old_exec_mask = gpuDynInst->exec_mask;
-            gpuDynInst->exec_mask &= ~oobMask;
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
-            gpuDynInst->exec_mask = old_exec_mask;
-        }
-
-        template<int N>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst)
-        {
-            // temporarily modify exec_mask to supress memory accesses to oob
-            // regions.  Only issue memory requests for lanes that have their
-            // exec_mask set and are not out of bounds.
-            VectorMask old_exec_mask = gpuDynInst->exec_mask;
-            gpuDynInst->exec_mask &= ~oobMask;
-            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
-            gpuDynInst->exec_mask = old_exec_mask;
-        }
-
-        template<typename T>
-        void
-        initAtomicAccess(GPUDynInstPtr gpuDynInst)
-        {
-            // temporarily modify exec_mask to supress memory accesses to oob
-            // regions.  Only issue memory requests for lanes that have their
-            // exec_mask set and are not out of bounds.
-            VectorMask old_exec_mask = gpuDynInst->exec_mask;
-            gpuDynInst->exec_mask &= ~oobMask;
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
             initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
-            gpuDynInst->exec_mask = old_exec_mask;
-        }
-
-        void
-        injectGlobalMemFence(GPUDynInstPtr gpuDynInst)
-        {
-            // create request and set flags
-            gpuDynInst->resetEntireStatusVector();
-            gpuDynInst->setStatusVector(0, 1);
-            RequestPtr req = std::make_shared<Request>(0, 0, 0,
-                                       gpuDynInst->computeUnit()->
-                                       requestorId(), 0,
-                                       gpuDynInst->wfDynId);
-            gpuDynInst->setRequestFlags(req);
-            gpuDynInst->computeUnit()->
-                injectGlobalMemFence(gpuDynInst, false, req);
-        }
-
-        template<int NumDwords, int SignBit = 0>
-        void
-        ldsComplete(GPUDynInstPtr gpuDynInst)
-        {
-            assert(gpuDynInst->executedAs() == enums::SC_GLOBAL);
-
+        } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
             Wavefront *wf = gpuDynInst->wavefront();
-            ScalarRegU32 inst_offset = instData.OFFSET;
-            ConstScalarOperandU32 lds_offset(gpuDynInst, REG_M0);
-
-            lds_offset.read();
-
-            // LDS base should be implied by the ldsChunk for the wave.
-            // m0[17:0] for CDNA4; m0[15:0] for others, but upper bits
-            // should be zero.
-            uint32_t m0_offset = bits(lds_offset.rawData(), 17, 0);
-            uint32_t lds_addr = m0_offset + inst_offset;
-
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    uint32_t chunk_addr =
-                        lds_addr + lane * NumDwords * sizeof(VecElemU32);
+                    Addr vaddr = gpuDynInst->addr[lane];
+                    auto amo_op = gpuDynInst->makeAtomicOpFunctor<T>(
+                        &(reinterpret_cast<T *>(gpuDynInst->a_data))[lane],
+                        &(reinterpret_cast<T *>(gpuDynInst->x_data))[lane]);
 
-                    for (int i = 0; i < NumDwords; ++i) {
-                        VecElemU32 val = (reinterpret_cast<VecElemU32*>(
-                            gpuDynInst->d_data))[lane * NumDwords + i];
-                        if constexpr (SignBit != 0) {
-                            val = (VecElemI32)sext<SignBit>(val);
-                        }
-
-                        wf->ldsChunk->write<VecElemU32>(
-                            chunk_addr + i*sizeof(VecElemU32), val);
-                    }
+                    T tmp = wf->ldsChunk->read<T>(vaddr);
+                    (*amo_op)(reinterpret_cast<uint8_t *>(&tmp));
+                    wf->ldsChunk->write<T>(vaddr, tmp);
+                    (reinterpret_cast<T *>(gpuDynInst->d_data))[lane] = tmp;
                 }
             }
         }
+    }
 
-        /**
-         * MUBUF insructions calculate their addresses as follows:
-         *
-         * index  = (IDXEN ? vgpr_idx : 0) + (const_add_tid_en ? TID : 0)
-         * offset = (OFFEN ? vgpr_off : 0) + inst_off
-         *
-         * / ====================== LINEAR ADDRESSING ====================== /
-         * VADDR = base + sgpr_off + offset + stride * index
-         *
-         * / ===================== SWIZZLED ADDRESSING ===================== /
-         * index_msb  = index / const_index_stride
-         * index_lsb  = index % const_index_stride
-         * offset_msb = offset / const_element_size
-         * offset_lsb = offset % const_element_size
-         * buffer_offset = ((index_msb * stride + offset_msb *
-         *                  const_element_size) * const_index_stride +
-         *                  index_lsb * const_element_size + offset_lsb)
-         *
-         * VADDR = base + sgpr_off + buffer_offset
-         */
-        template<typename VOFF, typename VIDX, typename SRSRC, typename SOFF>
-        void
-        calcAddr(GPUDynInstPtr gpuDynInst, VOFF v_off, VIDX v_idx,
-            SRSRC s_rsrc_desc, SOFF s_offset, int inst_offset)
-        {
-            Addr vaddr = 0;
-            Addr base_addr = 0;
-            Addr stride = 0;
-            Addr buf_idx = 0;
-            Addr buf_off = 0;
-            Addr buffer_offset = 0;
-            BufferRsrcDescriptor rsrc_desc;
-
-            std::memcpy((void*)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
-                sizeof(BufferRsrcDescriptor));
-
-            base_addr = rsrc_desc.baseAddr;
-
-            stride = rsrc_desc.addTidEn ? ((rsrc_desc.dataFmt << 14)
-                + rsrc_desc.stride) : rsrc_desc.stride;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    vaddr = base_addr + s_offset.rawData();
-                    /**
-                     * first we calculate the buffer's index and offset.
-                     * these will be used for either linear or swizzled
-                     * buffers.
-                     */
-                    buf_idx = v_idx[lane] + (rsrc_desc.addTidEn ? lane : 0);
-
-                    buf_off = v_off[lane] + inst_offset;
-
-                    if (rsrc_desc.swizzleEn) {
-                        Addr idx_stride = 8 << rsrc_desc.idxStride;
-                        Addr elem_size = 2 << rsrc_desc.elemSize;
-                        Addr idx_msb = buf_idx / idx_stride;
-                        Addr idx_lsb = buf_idx % idx_stride;
-                        Addr off_msb = buf_off / elem_size;
-                        Addr off_lsb = buf_off % elem_size;
-                        DPRINTF(VEGA, "mubuf swizzled lane %d: "
-                                "idx_stride = %llx, elem_size = %llx, "
-                                "idx_msb = %llx, idx_lsb = %llx, "
-                                "off_msb = %llx, off_lsb = %llx\n",
-                                lane, idx_stride, elem_size, idx_msb, idx_lsb,
-                                off_msb, off_lsb);
-
-                        buffer_offset =(idx_msb * stride + off_msb * elem_size)
-                            * idx_stride + idx_lsb * elem_size + off_lsb;
-                    } else {
-                        buffer_offset = buf_off + stride * buf_idx;
-                    }
-
-
-                    /**
-                     * Range check behavior causes out of range accesses to
-                     * to be treated differently. Out of range accesses return
-                     * 0 for loads and are ignored for stores. For
-                     * non-formatted accesses, this is done on a per-lane
-                     * basis.
-                     */
-                    if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
-                        if (buffer_offset >=
-                            rsrc_desc.numRecords - s_offset.rawData()) {
-                            DPRINTF(VEGA, "mubuf out-of-bounds condition 1: "
-                                    "lane = %d, buffer_offset = %llx, "
-                                    "const_stride = %llx, "
-                                    "const_num_records = %llx\n",
-                                    lane, buf_off + stride * buf_idx,
-                                    stride, rsrc_desc.numRecords);
-                            oobMask.set(lane);
-                            continue;
-                        }
-                    }
-
-                    if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
-                        if (buf_idx >= rsrc_desc.numRecords ||
-                            buf_off >= stride) {
-                            DPRINTF(VEGA, "mubuf out-of-bounds condition 2: "
-                                    "lane = %d, offset = %llx, "
-                                    "index = %llx, "
-                                    "const_num_records = %llx\n",
-                                    lane, buf_off, buf_idx,
-                                    rsrc_desc.numRecords);
-                            oobMask.set(lane);
-                            continue;
-                        }
-                    }
-
-                    vaddr += buffer_offset;
-
-                    DPRINTF(VEGA, "Calculating mubuf address for lane %d: "
-                            "vaddr = %llx, base_addr = %llx, "
-                            "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
-                            lane, vaddr, base_addr, stride,
-                            buf_idx, buf_off);
-                    gpuDynInst->addr.at(lane) = vaddr;
-                }
-            }
-        }
-
-        // first instruction DWORD
-        InFmt_MUBUF instData;
-        // second instruction DWORD
-        InFmt_MUBUF_1 extData;
-        // Mask of lanes with out-of-bounds accesses.  Needs to be tracked
-        // seperately from the exec_mask so that we remember to write zero
-        // to the registers associated with out of bounds lanes.
-        VectorMask oobMask;
-    }; // Inst_MUBUF
-
-    class Inst_MTBUF : public VEGAGPUStaticInst
+    void
+    calcAddr(GPUDynInstPtr gpuDynInst, ScalarRegU32 vaddr, ScalarRegU32 saddr,
+             ScalarRegI32 offset)
     {
-      public:
-        Inst_MTBUF(InFmt_MTBUF*, const std::string &opcode);
-        ~Inst_MTBUF();
-
-        int instSize() const override;
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_MTBUF instData;
-        // second instruction DWORD
-        InFmt_MTBUF_1 extData;
-
-      private:
-        bool hasSecondDword(InFmt_MTBUF *);
-    }; // Inst_MTBUF
-
-    class Inst_MIMG : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_MIMG(InFmt_MIMG*, const std::string &opcode);
-        ~Inst_MIMG();
-
-        int instSize() const override;
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_MIMG instData;
-        // second instruction DWORD
-        InFmt_MIMG_1 extData;
-    }; // Inst_MIMG
-
-    class Inst_EXP : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_EXP(InFmt_EXP*, const std::string &opcode);
-        ~Inst_EXP();
-
-        int instSize() const override;
-        void initOperandInfo() override;
-
-      protected:
-        // first instruction DWORD
-        InFmt_EXP instData;
-        // second instruction DWORD
-        InFmt_EXP_1 extData;
-    }; // Inst_EXP
-
-    class Inst_FLAT : public VEGAGPUStaticInst
-    {
-      public:
-        Inst_FLAT(InFmt_FLAT*, const std::string &opcode);
-        ~Inst_FLAT();
-
-        int instSize() const override;
-        void generateDisassembly() override;
-
-        void initOperandInfo() override;
-
-      protected:
-        template<typename T>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst)
-        {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
-                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
-                // Store with more than one dword need to be swizzled and
-                // should use the template<int N> version of this method.
-                static_assert(sizeof(T) <= 4);
-                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
-                Wavefront *wf = gpuDynInst->wavefront();
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        Addr vaddr = gpuDynInst->addr[lane];
-                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]
-                            = wf->ldsChunk->read<T>(vaddr);
-                    }
-                }
-            }
+        // Offset is a 13-bit field w/the following meanings:
+        // In Flat instructions, offset is a 12-bit unsigned number
+        // In Global/Scratch instructions, offset is a 13-bit signed number
+        if (isFlat()) {
+            offset = offset & 0xfff;
+        } else {
+            offset = (ScalarRegI32)sext<13>(offset);
         }
+        // If saddr = 0x7f there is no scalar reg to read and address will
+        // be a 64-bit address. Otherwise, saddr is the reg index for a
+        // scalar reg used as the base address for a 32-bit address.
+        if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
+            ConstVecOperandU64 vbase(gpuDynInst, vaddr);
+            vbase.read();
 
-        template<int N>
-        void
-        initMemRead(GPUDynInstPtr gpuDynInst)
-        {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
-                initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
-                initScratchReqHelper<N>(gpuDynInst, MemCmd::ReadReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
-                Wavefront *wf = gpuDynInst->wavefront();
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        Addr vaddr = gpuDynInst->addr[lane];
-                        for (int i = 0; i < N; ++i) {
-                            (reinterpret_cast<VecElemU32*>(
-                                gpuDynInst->d_data))[lane * N + i]
-                                = wf->ldsChunk->read<VecElemU32>(
-                                        vaddr + i*sizeof(VecElemU32));
-                        }
-                    }
-                }
-            }
-        }
+            calcAddrVgpr(gpuDynInst, vbase, offset);
+        } else if (isFlatGlobal()) {
+            // Assume we are operating in 64-bit mode and read a pair of
+            // SGPRs for the address base.
+            ConstScalarOperandU64 sbase(gpuDynInst, saddr);
+            sbase.read();
 
-        template<typename T>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst)
-        {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
-                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
-                // Store with more than one dword need to be swizzled and
-                // should use the template<int N> version of this method.
-                static_assert(sizeof(T) <= 4);
-                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
-                Wavefront *wf = gpuDynInst->wavefront();
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        Addr vaddr = gpuDynInst->addr[lane];
-                        wf->ldsChunk->write<T>(vaddr,
-                            (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]);
-                    }
-                }
-            }
-        }
+            ConstVecOperandU32 voffset(gpuDynInst, vaddr);
+            voffset.read();
 
-        template<int N>
-        void
-        initMemWrite(GPUDynInstPtr gpuDynInst)
-        {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
-                initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_PRIVATE) {
-                swizzleData<N>(gpuDynInst);
-                initScratchReqHelper<N>(gpuDynInst, MemCmd::WriteReq);
-            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
-                Wavefront *wf = gpuDynInst->wavefront();
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        Addr vaddr = gpuDynInst->addr[lane];
-                        for (int i = 0; i < N; ++i) {
-                            wf->ldsChunk->write<VecElemU32>(
-                                vaddr + i*sizeof(VecElemU32),
-                                (reinterpret_cast<VecElemU32*>(
-                                    gpuDynInst->d_data))[lane * N + i]);
-                        }
-                    }
-                }
-            }
-        }
-
-        template<typename T>
-        void
-        initAtomicAccess(GPUDynInstPtr gpuDynInst)
-        {
-            // Flat scratch requests may not be atomic according to ISA manual
-            // up to MI200. See MI200 manual Table 45.
-            assert(gpuDynInst->executedAs() != enums::SC_PRIVATE);
-
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
-                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
-            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
-                Wavefront *wf = gpuDynInst->wavefront();
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        Addr vaddr = gpuDynInst->addr[lane];
-                        auto amo_op =
-                            gpuDynInst->makeAtomicOpFunctor<T>(
-                                &(reinterpret_cast<T*>(
-                                    gpuDynInst->a_data))[lane],
-                                &(reinterpret_cast<T*>(
-                                    gpuDynInst->x_data))[lane]);
-
-                        T tmp = wf->ldsChunk->read<T>(vaddr);
-                        (*amo_op)(reinterpret_cast<uint8_t *>(&tmp));
-                        wf->ldsChunk->write<T>(vaddr, tmp);
-                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane] = tmp;
-                    }
-                }
-            }
-        }
-
-        void
-        calcAddr(GPUDynInstPtr gpuDynInst, ScalarRegU32 vaddr,
-                 ScalarRegU32 saddr, ScalarRegI32 offset)
-        {
-            // Offset is a 13-bit field w/the following meanings:
-            // In Flat instructions, offset is a 12-bit unsigned number
-            // In Global/Scratch instructions, offset is a 13-bit signed number
-            if (isFlat()) {
-                offset = offset & 0xfff;
-            } else {
-                offset = (ScalarRegI32)sext<13>(offset);
-            }
-            // If saddr = 0x7f there is no scalar reg to read and address will
-            // be a 64-bit address. Otherwise, saddr is the reg index for a
-            // scalar reg used as the base address for a 32-bit address.
-            if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
-                ConstVecOperandU64 vbase(gpuDynInst, vaddr);
-                vbase.read();
-
-                calcAddrVgpr(gpuDynInst, vbase, offset);
-            } else if (isFlatGlobal()) {
-                // Assume we are operating in 64-bit mode and read a pair of
-                // SGPRs for the address base.
-                ConstScalarOperandU64 sbase(gpuDynInst, saddr);
-                sbase.read();
-
-                ConstVecOperandU32 voffset(gpuDynInst, vaddr);
-                voffset.read();
-
-                calcAddrSgpr(gpuDynInst, voffset, sbase, offset);
+            calcAddrSgpr(gpuDynInst, voffset, sbase, offset);
             // For scratch, saddr = 0x7f there is no scalar reg to read and
             // a vgpr will be used for address offset. Otherwise, saddr is
             // the sgpr index holding the address offset. For scratch
             // instructions the offset GPR is always 32-bits.
-            } else if (saddr != 0x7f) {
-                assert(isFlatScratch());
+        } else if (saddr != 0x7f) {
+            assert(isFlatScratch());
 
-                ConstScalarOperandU32 soffset(gpuDynInst, saddr);
-                soffset.read();
+            ConstScalarOperandU32 soffset(gpuDynInst, saddr);
+            soffset.read();
 
-                ConstVecOperandU32 voffset(gpuDynInst, vaddr);
-                if (instData.SVE) {
-                    voffset.read();
-                }
+            ConstVecOperandU32 voffset(gpuDynInst, vaddr);
+            if (instData.SVE) {
+                voffset.read();
+            }
 
-                Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
-                VecElemI32 swizzleOffset = soffset.rawData() + offset;
+            Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
+            VecElemI32 swizzleOffset = soffset.rawData() + offset;
 
-                // These are the same as RDNA3. From RDNA3 ISA manual:
-                // In Scratch SS mode (saddr != NULL (0x7f) SVE==0), the
-                // inst_offset must be aligned to the payload size: 4 byte
-                // aligned for 1-DWORD, 16-byte aligned for 4-DWORD.
-                //
-                // Also (SADDR + INST_OFFSET) must be at least DWORD-aligned.
-                if (!instData.SVE) {
-                    [[maybe_unused]] int elemSize;
-                    [[maybe_unused]] auto staticInst =
-                        gpuDynInst->staticInstruction();
-                    if (gpuDynInst->isLoad()) {
-                        elemSize = staticInst->getOperandSize(2);
-                    } else {
-                        assert(gpuDynInst->isStore());
-                        elemSize = staticInst->getOperandSize(1);
-                    }
-
-                    // Check offset aligned to payload and saddr+offset is
-                    // dword aligned.
-                    assert((offset % elemSize) == 0);
-                    assert((swizzleOffset % 4) == 0);
-                }
-
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        swizzleOffset += instData.SVE ? voffset[lane] : 0;
-                        gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzleAddr(swizzleOffset, lane);
-                    }
-                }
-            } else {
-                assert(isFlatScratch());
-
-                ConstVecOperandU32 voffset(gpuDynInst, vaddr);
-                if (instData.SVE) {
-                    voffset.read();
+            // These are the same as RDNA3. From RDNA3 ISA manual:
+            // In Scratch SS mode (saddr != NULL (0x7f) SVE==0), the
+            // inst_offset must be aligned to the payload size: 4 byte
+            // aligned for 1-DWORD, 16-byte aligned for 4-DWORD.
+            //
+            // Also (SADDR + INST_OFFSET) must be at least DWORD-aligned.
+            if (!instData.SVE) {
+                [[maybe_unused]] int elemSize;
+                [[maybe_unused]] auto staticInst =
+                    gpuDynInst->staticInstruction();
+                if (gpuDynInst->isLoad()) {
+                    elemSize = staticInst->getOperandSize(2);
                 } else {
-                    // In Scratch-ST mode (saddr == NULL (0x7f) and SVE==0),
-                    // inst_offset must not be negative.
-                    assert(offset > 0);
+                    assert(gpuDynInst->isStore());
+                    elemSize = staticInst->getOperandSize(1);
                 }
 
-                Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
-
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        VecElemU32 vgpr_offset =
-                            instData.SVE ? voffset[lane] : 0;
-
-                        gpuDynInst->addr.at(lane) = flat_scratch_addr
-                            + swizzleAddr(vgpr_offset+offset, lane);
-                    }
-                }
+                // Check offset aligned to payload and saddr+offset is
+                // dword aligned.
+                assert((offset % elemSize) == 0);
+                assert((swizzleOffset % 4) == 0);
             }
-
-            if (isFlat()) {
-                gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
-            } else if (isFlatGlobal()) {
-                gpuDynInst->staticInstruction()->executed_as =
-                    enums::SC_GLOBAL;
-            } else {
-                assert(isFlatScratch());
-                gpuDynInst->staticInstruction()->executed_as =
-                    enums::SC_PRIVATE;
-                gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
-            }
-        }
-
-        void
-        issueRequestHelper(GPUDynInstPtr gpuDynInst)
-        {
-            if ((gpuDynInst->executedAs() == enums::SC_GLOBAL && isFlat())
-                    || isFlatGlobal()) {
-                gpuDynInst->computeUnit()->globalMemoryPipe
-                    .issueRequest(gpuDynInst);
-            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
-                assert(isFlat());
-                gpuDynInst->computeUnit()->localMemoryPipe
-                    .issueRequest(gpuDynInst);
-            } else {
-                assert(gpuDynInst->executedAs() == enums::SC_PRIVATE);
-                gpuDynInst->computeUnit()->globalMemoryPipe
-                    .issueRequest(gpuDynInst);
-            }
-        }
-
-        // Execute for atomics is identical besides the flag set in the
-        // constructor, except cmpswap. For cmpswap, the offset to the "cmp"
-        // register is needed. For all other operations this offset is zero
-        // and implies the atomic is not a cmpswap.
-        // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
-        // LaneT defines the type of the register elements (e.g., VecElemU32)
-        template<typename RegT, typename LaneT, int CmpRegOffset = 0>
-        void
-        atomicExecute(GPUDynInstPtr gpuDynInst)
-        {
-            Wavefront *wf = gpuDynInst->wavefront();
-
-            if (gpuDynInst->exec_mask.none()) {
-                wf->decVMemInstsIssued();
-                wf->untrackVMemInst(gpuDynInst);
-                if (isFlat()) {
-                    wf->decLGKMInstsIssued();
-                    wf->untrackLGKMInst(gpuDynInst);
-                }
-                return;
-            }
-
-            gpuDynInst->execUnitId = wf->execUnitId;
-            gpuDynInst->latency.init(gpuDynInst->computeUnit());
-            gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-
-            RegT data(gpuDynInst, extData.DATA);
-            RegT cmp(gpuDynInst, extData.DATA + CmpRegOffset);
-
-            data.read();
-            if constexpr (CmpRegOffset) {
-                cmp.read();
-            }
-
-            calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    if constexpr (CmpRegOffset) {
-                        (reinterpret_cast<VecElemU32*>(
-                            gpuDynInst->x_data))[lane] = data[lane];
-                        (reinterpret_cast<VecElemU32*>(
-                            gpuDynInst->a_data))[lane] = cmp[lane];
-                    } else {
-                        (reinterpret_cast<LaneT*>(gpuDynInst->a_data))[lane]
-                            = data[lane];
-                    }
-                }
-            }
-
-            issueRequestHelper(gpuDynInst);
-        }
-
-        // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
-        // LaneT defines the type of the register elements (e.g., VecElemU32)
-        template<typename RegT, typename LaneT>
-        void
-        atomicComplete(GPUDynInstPtr gpuDynInst)
-        {
-            if (isAtomicRet()) {
-                RegT vdst(gpuDynInst, extData.VDST);
-
-                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                    if (gpuDynInst->exec_mask[lane]) {
-                        vdst[lane] = (reinterpret_cast<LaneT*>(
-                            gpuDynInst->d_data))[lane];
-                    }
-                }
-
-                vdst.write();
-            }
-        }
-
-        // Swizzle memory such that dwords from each lane are interleaved.
-        // For example, a global_store_dwordx2 where every lane has two dwords
-        // A and B would write A B A B, A B ... A B in contiguous memory while
-        // scratch should write A A ... A B B ... B for 64 x2 total dwords.
-        // Only applies to >1 dword.
-        template<int N>
-        void
-        swizzleData(GPUDynInstPtr gpuDynInst)
-        {
-            static_assert(N > 1);
-
-            uint32_t data[N * NumVecElemPerVecReg];
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                for (int dword = 0; dword < N; ++dword) {
-                    data[dword * NumVecElemPerVecReg + lane] =
-                        (reinterpret_cast<VecElemU32*>(
-                            gpuDynInst->d_data))[lane * N + dword];
-                }
-            }
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                for (int dword = 0; dword < N; ++dword) {
-                    (reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane * N + dword] =
-                            data[lane * N + dword];
-                }
-            }
-        }
-
-        template<int NumDwords, int SignBit = 0>
-        void
-        ldsComplete(GPUDynInstPtr gpuDynInst)
-        {
-            assert(isFlatGlobal() || isFlatScratch());
-
-            Wavefront *wf = gpuDynInst->wavefront();
-            ScalarRegI32 inst_offset = sext<13>(instData.OFFSET);
-            ConstScalarOperandU32 lds_offset(gpuDynInst, REG_M0);
-
-            lds_offset.read();
-
-            uint32_t m0_offset = bits(lds_offset.rawData(), 17, 2);
-            uint32_t lds_addr = m0_offset * 4 + inst_offset;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    uint32_t chunk_addr =
-                        lds_addr + lane * NumDwords * sizeof(VecElemU32);
-
-                    for (int i = 0; i < NumDwords; ++i) {
-                        VecElemU32 val = (reinterpret_cast<VecElemU32*>(
-                            gpuDynInst->d_data))[lane * NumDwords + i];
-                        if constexpr (SignBit != 0) {
-                            val = (VecElemI32)sext<SignBit>(val);
-                        }
-
-                        wf->ldsChunk->write<VecElemU32>(
-                            chunk_addr + i*sizeof(VecElemU32), val);
-                    }
-                }
-            }
-        }
-
-        bool
-        vgprIsOffset()
-        {
-            return (extData.SADDR != 0x7f);
-        }
-
-        // first instruction DWORD
-        InFmt_FLAT instData;
-        // second instruction DWORD
-        InFmt_FLAT_1 extData;
-
-      private:
-        void initFlatOperandInfo();
-        void initGlobalScratchOperandInfo();
-
-        void generateFlatDisassembly();
-        void generateGlobalScratchDisassembly();
-
-        void
-        calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &vaddr,
-                     ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
-        {
-            // Use SGPR pair as a base address and add VGPR-offset and
-            // instruction offset. The VGPR-offset is always 32-bits so we
-            // mask any upper bits from the vaddr.
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    ScalarRegI32 voffset = vaddr[lane];
+                    swizzleOffset += instData.SVE ? voffset[lane] : 0;
                     gpuDynInst->addr.at(lane) =
-                        saddr.rawData() + voffset + offset;
+                        flat_scratch_addr + swizzleAddr(swizzleOffset, lane);
                 }
             }
-        }
+        } else {
+            assert(isFlatScratch());
 
-        void
-        calcAddrVgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
-                     ScalarRegI32 offset)
-        {
+            ConstVecOperandU32 voffset(gpuDynInst, vaddr);
+            if (instData.SVE) {
+                voffset.read();
+            } else {
+                // In Scratch-ST mode (saddr == NULL (0x7f) and SVE==0),
+                // inst_offset must not be negative.
+                assert(offset >= 0);
+            }
+
+            Addr flat_scratch_addr = readFlatScratch(gpuDynInst);
+
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
-                    gpuDynInst->addr.at(lane) = addr[lane] + offset;
+                    VecElemU32 vgpr_offset = instData.SVE ? voffset[lane] : 0;
+
+                    gpuDynInst->addr.at(lane) =
+                        flat_scratch_addr +
+                        swizzleAddr(vgpr_offset + offset, lane);
                 }
             }
         }
 
-        VecElemI32
-        swizzleAddr(VecElemI32 offset, int tid)
-        {
-            // See: RDNA3 Instruction Set Architecture, Section 11.2:
-            // https://www.amd.com/content/dam/amd/en/documents/
-            //        radeon-tech-docs/instruction-set-architectures/
-            //        rdna3-shader-instruction-set-architecture-feb-2023_0.pdf
-            // Description in Scratch Addressing Equation.
-            return ((offset / 4) * 4 * 64) + (offset % 4) + (tid * 4);
+        if (isFlat()) {
+            gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
+        } else if (isFlatGlobal()) {
+            gpuDynInst->staticInstruction()->executed_as = enums::SC_GLOBAL;
+        } else {
+            assert(isFlatScratch());
+            gpuDynInst->staticInstruction()->executed_as = enums::SC_PRIVATE;
+            gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
+        }
+    }
+
+    void
+    issueRequestHelper(GPUDynInstPtr gpuDynInst)
+    {
+        if ((gpuDynInst->executedAs() == enums::SC_GLOBAL && isFlat()) ||
+            isFlatGlobal()) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(
+                gpuDynInst);
+        } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+            assert(isFlat());
+            gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(
+                gpuDynInst);
+        } else {
+            assert(gpuDynInst->executedAs() == enums::SC_PRIVATE);
+            gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(
+                gpuDynInst);
+        }
+    }
+
+    // Execute for atomics is identical besides the flag set in the
+    // constructor, except cmpswap. For cmpswap, the offset to the "cmp"
+    // register is needed. For all other operations this offset is zero
+    // and implies the atomic is not a cmpswap.
+    // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
+    // LaneT defines the type of the register elements (e.g., VecElemU32)
+    template <typename RegT, typename LaneT, int CmpRegOffset = 0>
+    void
+    atomicExecute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            wf->untrackVMemInst(gpuDynInst);
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+                wf->untrackLGKMInst(gpuDynInst);
+            }
+            return;
         }
 
-        Addr
-        readFlatScratch(GPUDynInstPtr gpuDynInst)
-        {
-            return gpuDynInst->computeUnit()->shader->getScratchBase();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        RegT data(gpuDynInst, extData.DATA);
+        RegT cmp(gpuDynInst, extData.DATA + CmpRegOffset);
+
+        data.read();
+        if constexpr (CmpRegOffset) {
+            cmp.read();
         }
-    }; // Inst_FLAT
+
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                if constexpr (CmpRegOffset) {
+                    (reinterpret_cast<VecElemU32 *>(
+                        gpuDynInst->x_data))[lane] = data[lane];
+                    (reinterpret_cast<VecElemU32 *>(
+                        gpuDynInst->a_data))[lane] = cmp[lane];
+                } else {
+                    (reinterpret_cast<LaneT *>(gpuDynInst->a_data))[lane] =
+                        data[lane];
+                }
+            }
+        }
+
+        issueRequestHelper(gpuDynInst);
+    }
+
+    // RegT defines the type of GPU register (e.g., ConstVecOperandU32)
+    // LaneT defines the type of the register elements (e.g., VecElemU32)
+    template <typename RegT, typename LaneT>
+    void
+    atomicComplete(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            RegT vdst(gpuDynInst, extData.VDST);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] =
+                        (reinterpret_cast<LaneT *>(gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    }
+
+    // Swizzle memory such that dwords from each lane are interleaved.
+    // For example, a global_store_dwordx2 where every lane has two dwords
+    // A and B would write A B A B, A B ... A B in contiguous memory while
+    // scratch should write A A ... A B B ... B for 64 x2 total dwords.
+    // Only applies to >1 dword.
+    template <int N>
+    void
+    swizzleData(GPUDynInstPtr gpuDynInst)
+    {
+        static_assert(N > 1);
+
+        uint32_t data[N * NumVecElemPerVecReg];
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            for (int dword = 0; dword < N; ++dword) {
+                data[dword * NumVecElemPerVecReg + lane] =
+                    (reinterpret_cast<VecElemU32 *>(
+                        gpuDynInst->d_data))[lane * N + dword];
+            }
+        }
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            for (int dword = 0; dword < N; ++dword) {
+                (reinterpret_cast<VecElemU32 *>(
+                    gpuDynInst->d_data))[lane * N + dword] =
+                    data[lane * N + dword];
+            }
+        }
+    }
+
+    template <int NumDwords, int SignBit = 0>
+    void
+    ldsComplete(GPUDynInstPtr gpuDynInst)
+    {
+        assert(isFlatGlobal() || isFlatScratch());
+
+        Wavefront *wf = gpuDynInst->wavefront();
+        ScalarRegI32 inst_offset = sext<13>(instData.OFFSET);
+        ConstScalarOperandU32 lds_offset(gpuDynInst, REG_M0);
+
+        lds_offset.read();
+
+        uint32_t m0_offset = bits(lds_offset.rawData(), 17, 2);
+        uint32_t lds_addr = m0_offset * 4 + inst_offset;
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                uint32_t chunk_addr =
+                    lds_addr + lane * NumDwords * sizeof(VecElemU32);
+
+                for (int i = 0; i < NumDwords; ++i) {
+                    VecElemU32 val = (reinterpret_cast<VecElemU32 *>(
+                        gpuDynInst->d_data))[lane * NumDwords + i];
+                    if constexpr (SignBit != 0) {
+                        val = (VecElemI32)sext<SignBit>(val);
+                    }
+
+                    wf->ldsChunk->write<VecElemU32>(
+                        chunk_addr + i * sizeof(VecElemU32), val);
+                }
+            }
+        }
+    }
+
+    bool
+    vgprIsOffset()
+    {
+        return (extData.SADDR != 0x7f);
+    }
+
+    // first instruction DWORD
+    InFmt_FLAT instData;
+    // second instruction DWORD
+    InFmt_FLAT_1 extData;
+
+  private:
+    void initFlatOperandInfo();
+    void initGlobalScratchOperandInfo();
+
+    void generateFlatDisassembly();
+    void generateGlobalScratchDisassembly();
+
+    void
+    calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &vaddr,
+                 ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
+    {
+        // Use SGPR pair as a base address and add VGPR-offset and
+        // instruction offset. The VGPR-offset is always 32-bits so we
+        // mask any upper bits from the vaddr.
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                ScalarRegI32 voffset = vaddr[lane];
+                gpuDynInst->addr.at(lane) = saddr.rawData() + voffset + offset;
+            }
+        }
+    }
+
+    void
+    calcAddrVgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
+                 ScalarRegI32 offset)
+    {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                gpuDynInst->addr.at(lane) = addr[lane] + offset;
+            }
+        }
+    }
+
+    VecElemI32
+    swizzleAddr(VecElemI32 offset, int tid)
+    {
+        // See: RDNA3 Instruction Set Architecture, Section 11.2:
+        // https://www.amd.com/content/dam/amd/en/documents/
+        //        radeon-tech-docs/instruction-set-architectures/
+        //        rdna3-shader-instruction-set-architecture-feb-2023_0.pdf
+        // Description in Scratch Addressing Equation.
+        return ((offset / 4) * 4 * 64) + (offset % 4) + (tid * 4);
+    }
+
+    Addr
+    readFlatScratch(GPUDynInstPtr gpuDynInst)
+    {
+        return gpuDynInst->computeUnit()->shader->getScratchBase();
+    }
+}; // Inst_FLAT
 } // namespace VegaISA
 } // namespace gem5
 

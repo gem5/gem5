@@ -157,6 +157,14 @@ class AddrRangeMap
         if (intersects(r) != end())
             return tree.end();
 
+        if (r.isSparse()) {
+            iterator ret = tree.end();
+            for (const auto &chunk : r.decompose()) {
+                ret = tree.insert(std::make_pair(chunk, d)).first;
+            }
+            return ret;
+        }
+
         return tree.insert(std::make_pair(r, d)).first;
     }
 

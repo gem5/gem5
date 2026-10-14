@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017-2019, 2021, 2024-2025 Arm Limited
+# Copyright (c) 2012-2014, 2017-2019, 2021, 2024-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -47,7 +47,7 @@ from ..util import Singleton
 class NullSimObject(metaclass=Singleton):
     _name = "Null"
 
-    def __call__(cls):
+    def __call__(cls, **kwargs):
         return cls
 
     def _instantiate(self, parent=None, path=""):

@@ -237,6 +237,17 @@ PMP::pmpReset()
     }
 }
 
+void
+PMP::takeOverFrom(PMP *old)
+{
+    panic_if(!old, "Cannot take over from a null RISC-V PMP");
+    panic_if(pmpEntries != old->pmpEntries,
+             "Mismatched RISC-V PMP entry count during takeOverFrom");
+
+    pmpTable = old->pmpTable;
+    numRules = old->numRules;
+}
+
 bool
 PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 {

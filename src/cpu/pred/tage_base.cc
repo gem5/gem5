@@ -194,15 +194,17 @@ int
 TAGEBase::F(int A, int size, int bank) const
 {
     int A1, A2;
+    int table_size = logTagTableSizes[bank];
+    int shift = bank % table_size;
 
     A = A & ((1ULL << size) - 1);
-    A1 = (A & ((1ULL << logTagTableSizes[bank]) - 1));
-    A2 = (A >> logTagTableSizes[bank]);
-    A2 = ((A2 << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
-       + (A2 >> (logTagTableSizes[bank] - bank));
+    A1 = (A & ((1ULL << table_size) - 1));
+    A2 = (A >> table_size);
+    A2 = ((A2 << shift) & ((1ULL << table_size) - 1))
+       + (A2 >> (table_size - shift));
     A = A1 ^ A2;
-    A = ((A << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
-      + (A >> (logTagTableSizes[bank] - bank));
+    A = ((A << shift) & ((1ULL << table_size) - 1))
+      + (A >> (table_size - shift));
     return (A);
 }
 
@@ -481,9 +483,11 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
         //Allocate entries
         unsigned numAllocated = 0;
         for (int i = X; i <= nHistoryTables; i++) {
-            if (gtable[i][bi->tableIndices[i]].u == 0) {
-                gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
-                gtable[i][bi->tableIndices[i]].ctr = (taken) ? 0 : -1;
+            if (allocateEntry(i, bi, taken)) {
+                DPRINTF(Tage, "Allocate for %llx: i:%i Tidx:%i, Ttag:%x\n",
+                        bi->branchPC, i, bi->tableIndices[i],
+                        bi->tableTags[i]);
+
                 ++numAllocated;
                 if (numAllocated == maxNumAlloc) {
                     break;
@@ -495,6 +499,18 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
     tCounter++;
 
     handleUReset();
+}
+
+bool
+TAGEBase::allocateEntry(int idx, BranchInfo *bi, bool taken)
+{
+    if (gtable[idx][bi->tableIndices[idx]].u != 0) {
+        return false;
+    }
+
+    gtable[idx][bi->tableIndices[idx]].tag = bi->tableTags[idx];
+    gtable[idx][bi->tableIndices[idx]].ctr = (taken) ? 0 : -1;
+    return true;
 }
 
 void
@@ -862,8 +878,8 @@ TAGEBase::TAGEBaseStats::TAGEBaseStats(
       ADD_STAT(altMatchProvider, statistics::units::Count::get(),
                "TAGE provider for alt match")
 {
-    longestMatchProvider.init(nHistoryTables + 1);
-    altMatchProvider.init(nHistoryTables + 1);
+    longestMatchProvider.init(nHistoryTables + 1).flags(statistics::total);
+    altMatchProvider.init(nHistoryTables + 1).flags(statistics::total);
 }
 
 int8_t

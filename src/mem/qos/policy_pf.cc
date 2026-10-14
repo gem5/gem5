@@ -61,14 +61,9 @@ PropFairPolicy::PropFairPolicy(const Params &p)
 PropFairPolicy::~PropFairPolicy()
 {}
 
-template <typename Requestor>
 void
-PropFairPolicy::initRequestor(const Requestor requestor, const double score)
+PropFairPolicy::initRequestor(const RequestorID id, const double score)
 {
-    RequestorID id = memCtrl->system()->lookupRequestorId(requestor);
-
-    assert(id != Request::invldRequestorId);
-
     // Setting the Initial score for the selected requestor.
     history.push_back(std::make_pair(id, score));
 
@@ -78,15 +73,28 @@ PropFairPolicy::initRequestor(const Requestor requestor, const double score)
 }
 
 void
+PropFairPolicy::init()
+{
+    fatal_if(pendingRequestors.empty(),
+             "%s: use setInitialScore to init requestors/scores\n", name());
+
+    // Resolvable only now that every requestor has registered with the
+    // system, and in configuration order: history is a vector.
+    for (const auto &[id, score] : resolvePending(pendingRequestors)) {
+        initRequestor(id, score);
+    }
+}
+
+void
 PropFairPolicy::initRequestorName(const std::string requestor, const double score)
 {
-    initRequestor(requestor, score);
+    pendingRequestors.push_back({requestor, nullptr, score});
 }
 
 void
 PropFairPolicy::initRequestorObj(const SimObject* requestor, const double score)
 {
-    initRequestor(requestor, score);
+    pendingRequestors.push_back({"", requestor, score});
 }
 
 double

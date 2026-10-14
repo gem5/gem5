@@ -53,7 +53,9 @@ requires(isa_required=ISA.X86)
 cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16KiB", l1i_size="16KiB")
 
 memory = SingleChannelDDR3_1600(size="32MiB")
-processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4, clk_freq="3GHz"
+)
 board = SimpleBoard(
     clk_freq="3GHz",
     processor=processor,

@@ -44,11 +44,3 @@ def upgrader(cpt):
                 # Add the default value of XCR0 (1) if missing
                 regVals = f"{regVals} 1"
                 cpt.set(sec, "regVal", regVals)
-        elif re.search(rf"board\.processor\.cores.*isa$", sec):
-            # ISA name doesn't appear to be anywhere in the checkpoint.
-            # Assume it is X86.
-            regVals = cpt.get(sec, "regVal")
-
-            # Add the default value of XCR0 (1) if missing
-            regVals = f"{regVals} 1"
-            cpt.set(sec, "regVal", regVals)

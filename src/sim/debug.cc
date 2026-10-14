@@ -100,7 +100,7 @@ takeCheckpoint(Tick when)
 {
     if (!when)
         when = curTick() + 1;
-    exitSimLoop("checkpoint", 0, when, 0);
+    exitSimulationLoopClassic("checkpoint", 0, when, 0);
 }
 
 void

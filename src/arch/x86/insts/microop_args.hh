@@ -312,9 +312,11 @@ struct Imm64Op
     using ArgType = uint64_t;
 
     uint64_t imm64;
+    uint8_t imm8;
 
     template <class InstType>
-    Imm64Op(InstType *inst, ArgType _imm64) : imm64(_imm64) {}
+    Imm64Op(InstType *inst, ArgType _imm64) : imm64(_imm64), imm8(_imm64)
+    {}
 
     void
     print(std::ostream &os) const
@@ -422,7 +424,7 @@ class InstOperands : public Base, public Operands...
     {
         std::stringstream response;
         Base::printMnemonic(response, this->instMnem, this->mnemonic);
-        int count = 0;
+        [[maybe_unused]] int count = 0;
         GEM5_FOR_EACH_IN_PACK(ccprintf(response, count++ ? ", " : ""),
                               Operands::print(response));
         return response.str();

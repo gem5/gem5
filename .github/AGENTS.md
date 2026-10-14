@@ -33,5 +33,5 @@ selection; the container alone does not determine the selected gem5 build.
 Docker containers define the intended CI environment. When reproducing a
 failure, inspect the relevant workflow revision and use the same image digest
 where available; a mutable `:latest` tag may no longer match an older run. This
-especially matters for Ubuntu all-dependency jobs and GPU SE-mode jobs using
-the `gcn-gpu` image.
+especially matters for Ubuntu all-dependency jobs. GPU full-system suites use
+that general dependency environment and run with the `ALL` TestLib build.

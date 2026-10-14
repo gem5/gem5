@@ -97,6 +97,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=CPUTypes.ATOMIC,
     isa=ISA.ARM,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 # The ArmBoard requires a `release` to be specified. This adds all the

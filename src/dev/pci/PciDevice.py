@@ -37,7 +37,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Device import DmaDevice
-from m5.objects.PciUpstream import PciUpstream
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
@@ -96,7 +95,6 @@ class PciDevice(DmaDevice):
     cxx_header = "dev/pci/device.hh"
     abstract = True
 
-    upstream = Param.PciUpstream(Parent.any, "PCI upstream")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
 

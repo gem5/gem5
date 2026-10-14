@@ -42,9 +42,19 @@ import gem5_scons
 with gem5_scons.Configure(main) as conf:
     # Check for <capstone.h>
     conf.env['CONF']['HAVE_CAPSTONE'] = conf.CheckHeader('capstone/capstone.h', '<>')
+    if conf.env['CONF']['HAVE_CAPSTONE']:
+        conf.env['CONF']['HAVE_CAPSTONE'] = conf.TryCompile(
+            """
+            #include <capstone/capstone.h>
+            #if !defined(CS_API_MAJOR) || CS_API_MAJOR < 4
+            #error Capstone 4.0 or newer is required
+            #endif
+            """,
+            extension=".cc",
+        )
 
     if conf.env['CONF']['HAVE_CAPSTONE']:
         conf.env.TagImplies('capstone', 'gem5 lib')
     else:
-        warning("Header file <capstone/capstone.h> not found.\n"
-                "This host has no capstone library installed.")
+        warning("Capstone 4.0 or newer was not found.\n"
+                "Disabling Capstone disassembly support.")

@@ -59,8 +59,9 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
         reportError(SC_ID_INSERT_EXPORT_, "simulation running",
                 name(), kind());
     }
-    if (::sc_gem5::scheduler.elaborationDone())
+    if (::sc_gem5::scheduler().elaborationDone()) {
         reportError(SC_ID_INSERT_EXPORT_, "elaboration done", name(), kind());
+    }
 
     auto m = sc_gem5::pickParentModule();
     if (!m)

@@ -92,7 +92,8 @@ GlobalInstTracker::updateAndCheckInstCount(const uint64_t& inst)
         // and exit event but it will not reset the instruction counter.
         // user can reset the counter by calling the resetCounter() function
         // in the simulation script.
-        exitSimLoopNow("a thread reached the max instruction count");
+        exitSimulationLoopClassicNow(
+            "a thread reached the max instruction count");
     }
 }
 

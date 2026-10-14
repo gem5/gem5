@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
+    CBusyTracker,
     ClockDomain,
     RubyCache,
 )
@@ -34,10 +35,10 @@ from m5.params import (
 
 from .....isas import ISA
 from ....processors.abstract_core import AbstractCore
-from .abstract_node import AbstractNode
+from .abstract_node import CacheController
 
 
-class DMARequestor(AbstractNode):
+class DMARequestor(CacheController):
     def __init__(self, network, cache_line_size, clk_domain: ClockDomain):
         super().__init__(network, cache_line_size)
 
@@ -77,3 +78,6 @@ class DMARequestor(AbstractNode):
         self.number_of_DVM_TBEs = 1  # should not receive any dvm
         self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False
+
+        self.cbusy_generator = NULL
+        self.cbusy_tracker = CBusyTracker()

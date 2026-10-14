@@ -34,10 +34,9 @@ reproducible environment; use the workflow revision and image digest when an
 exact reproduction matters. When a CI job fails, inspect the relevant
 `.github/workflows` file and reproduce with the same image where practical.
 
-GPU SE-mode tests currently use the `gcn-gpu` image. A GPU-capable container
-does not by itself select GPU tests; TestLib still needs the `gcn_gpu` host
-filter. The current GPU suites declare `VEGA_X86`, so an ISA filter is optional
-unless a narrower host-and-ISA intersection is desired.
+GPU full-system tests use the standard Ubuntu dependency image and do not
+require ROCm on the host. A container does not by itself select GPU tests;
+TestLib still needs the `ALL` ISA filter or a focused suite UID.
 
 ## Validation
 

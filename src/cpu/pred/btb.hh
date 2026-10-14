@@ -55,6 +55,19 @@ namespace gem5
 namespace branch_prediction
 {
 
+struct BTBLookupResult
+{
+    /** The target of the branch */
+    const PCStateBase *target;
+    /** The latency of the lookup */
+    Cycles latency;
+
+    BTBLookupResult(const PCStateBase *_target = nullptr,
+                    Cycles _latency = Cycles(0))
+        : target(_target), latency(_latency)
+    {}
+};
+
 class BranchTargetBuffer : public ClockedObject
 {
   public:
@@ -76,10 +89,11 @@ class BranchTargetBuffer : public ClockedObject
      *  @param inst_PC The address of the branch to look up.
      *  @param type Optional type of the branch to look up.
      *  @return The target of the branch or nullptr if the branch is not
-     *          in the BTB.
+     *          in the BTB and the latency of the lookup.
      */
-    virtual const PCStateBase *lookup(ThreadID tid, Addr instPC,
-                            BranchType type = BranchType::NoBranch) = 0;
+    virtual const BTBLookupResult
+    lookup(ThreadID tid, Addr instPC,
+           BranchType type = BranchType::NoBranch) = 0;
 
     /** Looks up an address in the BTB and return the instruction
      * information if existant. Does not update statistics.
@@ -109,6 +123,9 @@ class BranchTargetBuffer : public ClockedObject
   protected:
     /** Number of the threads for which the branch history is maintained. */
     const unsigned numThreads;
+
+    /** Latency of BTB-lookup in cycles */
+    const Cycles latency;
 
     struct BranchTargetBufferStats : public statistics::Group
     {

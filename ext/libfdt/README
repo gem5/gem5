@@ -34,10 +34,11 @@ particularly for embedded systems, such as ARM, because it
 allows many different devices to be included in a single binary
 allowing for a high level of portability.
 
-The source and more information about the library can be found
-here:
-
-http://www.denx.de/wiki/U-Boot/UBootFdtInfo
+This source was obtained at: https://github.com/dgibson/dtc.
+The contents of this directory are the .h/.c files found in the
+"libfdt" directory of the dtc repository. The code here is from the
+v1.7.2 release of dtc
+(https://github.com/dgibson/dtc/releases/tag/v1.7.2).
 
 1) D. Gibson, B. Herrenschmidt. Device trees everywhere. 2006.
 http://ozlabs.org/~dgibson/papers/dtc-paper.pdf

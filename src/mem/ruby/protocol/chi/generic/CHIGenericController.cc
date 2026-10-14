@@ -59,15 +59,19 @@ namespace ruby
 using namespace CHI;
 
 CHIGenericController::CHIGenericController(const Params &p)
-  : AbstractController(p),
-    reqOut(p.reqOut), snpOut(p.snpOut),
-    rspOut(p.rspOut), datOut(p.datOut),
-    reqIn(p.reqIn), snpIn(p.snpIn),
-    rspIn(p.rspIn), datIn(p.datIn),
-    cacheLineSize(p.ruby_system->getBlockSizeBytes()),
-    cacheLineBits(floorLog2(cacheLineSize)),
-    dataChannelSize(p.data_channel_size),
-    dataMsgsPerLine(cacheLineSize / p.data_channel_size)
+    : AbstractController(p),
+      reqOut(p.reqOut),
+      snpOut(p.snpOut),
+      rspOut(p.rspOut),
+      datOut(p.datOut),
+      reqIn(p.reqIn),
+      snpIn(p.snpIn),
+      rspIn(p.rspIn),
+      datIn(p.datIn),
+      cacheLineSize(p.ruby_system->getBlockSizeBytes()),
+      cacheLineBits(floorLog2(cacheLineSize)),
+      dataChannelSize(p.data_channel_size),
+      dataMsgsPerLine(cacheLineSize / p.data_channel_size)
 {
     m_machineID.type = MachineType_Cache;
     m_machineID.num = m_version;

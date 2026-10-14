@@ -56,6 +56,11 @@ class ExitEvent(Enum):
     PERF_COUNTER_INTERRUPT = "performance counter interrupt"
     KERNEL_PANIC = "kernel panic in simulated system"
     KERNEL_OOPS = "kernel oops in simulated system"
+    # GPU model specific exit events
+    KERNEL_START = "GPU Kernel Started"
+    KERNEL_END = "GPU Kernel Completed"
+    BLIT_END = "GPU Blit Kernel Completed"
+    KERNEL_SKIP = "Skipping GPU Kernel"
 
     @classmethod
     def translate_exit_status(cls, exit_string: str) -> "ExitEvent":
@@ -118,6 +123,14 @@ class ExitEvent(Enum):
             return ExitEvent.EXIT
         elif exit_string.endswith("received all expected responses."):
             return ExitEvent.SPATTER_EXIT
+        elif exit_string == "GPU Kernel Started":
+            return ExitEvent.KERNEL_START
+        elif exit_string == "GPU Kernel Completed":
+            return ExitEvent.KERNEL_END
+        elif exit_string == "GPU Blit Kernel Completed":
+            return ExitEvent.BLIT_END
+        elif exit_string == "Skipping GPU Kernel":
+            return ExitEvent.KERNEL_SKIP
         raise NotImplementedError(
             f"Exit event '{exit_string}' not implemented"
         )

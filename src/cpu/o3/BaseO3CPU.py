@@ -56,7 +56,7 @@ from m5.SimObject import *
 class BaseO3CPU(BaseCPU):
     type = "BaseO3CPU"
     cxx_class = "gem5::o3::CPU"
-    cxx_header = "cpu/o3/dyn_inst.hh"
+    cxx_header = "cpu/o3/cpu.hh"
 
     @classmethod
     def memory_mode(cls):
@@ -185,6 +185,9 @@ class BaseO3CPU(BaseCPU):
     # most ISAs don't use condition-code regs, so default is 0
     numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
     instQueues = VectorParam.IQUnit(IQUnit(), "Vector of IQs")
+    iqInsertionPolicy = Param.IQInsertionPolicy(
+        "FirstMatch", "Policy for inserting instructions to IQs"
+    )
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")

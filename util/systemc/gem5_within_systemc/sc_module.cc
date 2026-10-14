@@ -164,7 +164,7 @@ Module::serviceAsyncEvent()
 
     if (gem5::async_exit) {
         gem5::async_exit = false;
-        gem5::exitSimLoop("user interrupt received");
+        gem5::exitSimulationLoopClassic("user interrupt received");
     }
 
     if (gem5::async_io) {
@@ -261,9 +261,10 @@ Module::simulate(gem5::Tick num_cycles)
     else /* counter would roll over or be set to MaxTick anyhow */
         num_cycles = gem5::MaxTick;
 
-    gem5::GlobalEvent *limit_event =
-        new gem5::GlobalSimLoopExitEvent(num_cycles,
-            "simulate() limit reached", 0, 0);
+    gem5::GlobalEvent *limit_event = new gem5::GlobalSimLoopExitEvent(
+        num_cycles, "simulate() limit reached", 0, 0,
+        static_cast<uint64_t>(gem5::ExitHypercall::CLASSIC_GENERATOR),
+        gem5::classicGeneratorPayload("simulate() limit reached"));
 
     exitEvent = NULL;
 

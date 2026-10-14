@@ -24,11 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import (
     List,
-    Optional,
-    Sequence,
     Tuple,
 )
 
@@ -60,31 +59,22 @@ class DRAMSysMem(AbstractMemorySystem):
     to notify gem5 of DRAMSys's memory size.
     Therefore it has to match the DRAMSys configuration.
     DRAMSys is configured using JSON files, whose base configuration has to be passed as a
-    parameter. Sub-configs are specified relative to the optional resource directory parameter.
+    parameter.
     """
 
     def __init__(
         self,
         configuration: str,
         size: str,
-        resource_directory: Optional[str] = None,
     ) -> None:
         """
         :param configuration: Path to the base configuration JSON for DRAMSys.
         :param size: Memory size of DRAMSys. Must match the size specified in JSON configuration.
-        :param resource_directory: Path to the base resource directory for DRAMSys.
         """
         super().__init__()
 
-        resource_directory_path = (
-            DEFAULT_DRAMSYS_DIRECTORY / "configs"
-            if resource_directory is None
-            else Path(resource_directory)
-        )
-
         self.dramsys = DRAMSys(
             configuration=configuration,
-            resource_directory=resource_directory_path.as_posix(),
         )
 
         self._size = toMemorySize(size)
@@ -97,11 +87,11 @@ class DRAMSysMem(AbstractMemorySystem):
         pass
 
     @overrides(AbstractMemorySystem)
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         return [(self.dramsys.range, self.bridge.gem5)]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_controllers(self) -> List[MemCtrl]:
+    def get_memory_controllers(self) -> list[MemCtrl]:
         return [self.dramsys]
 
     @overrides(AbstractMemorySystem)
@@ -109,39 +99,60 @@ class DRAMSysMem(AbstractMemorySystem):
         return self._size
 
     @overrides(AbstractMemorySystem)
-    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+    def set_memory_range(self, ranges: list[AddrRange]) -> None:
         if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "DRAMSys memory controller requires a single "
                 "range which matches the memory's size."
             )
+        from m5.params.param_types import (
+            SparseMaskedAddrRange,
+            SparseModuloAddrRange,
+        )
+
+        if isinstance(
+            ranges[0], (SparseModuloAddrRange, SparseMaskedAddrRange)
+        ):
+            raise ValueError("DRAMSys does not support sparse address ranges")
         self.dramsys.range = ranges[0]
         self.bridge.addr_ranges = ranges[0]
 
 
 class DRAMSysDDR4_1866(DRAMSysMem):
-    """
-    An example DDR4 1866 DRAMSys configuration.
+    """An example DDR4 1866 DRAMSys configuration.
+
+    Notes
+    -----
+    gem5 uses functional accesses (i.e., TLM debug transport) during
+    SE-mode binary loading. DRAMSys requires a storage-backed configuration
+    for debug transport. Therefore, for gem5 SE usage we point to a
+    configuration using DRAMSys's `simconfig/gem5_se.json`.
     """
 
     def __init__(self):
         super().__init__(
-            configuration=(
-                DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr4-example.json"
+            configuration=Path(
+                "ext/dramsys/gem5_configs/ddr4-gem5-se.json"
             ).as_posix(),
             size="4GiB",
         )
 
 
 class DRAMSysDDR3_1600(DRAMSysMem):
-    """
-    An example DDR3 1600 DRAMSys configuration.
+    """An example DDR3 1600 DRAMSys configuration.
+
+    Notes
+    -----
+    gem5 uses functional accesses (i.e., TLM debug transport) during
+    SE-mode binary loading. DRAMSys requires a storage-backed configuration
+    for debug transport. Therefore, for gem5 SE usage we point to a
+    configuration using DRAMSys's `simconfig/gem5_se.json`.
     """
 
     def __init__(self):
         super().__init__(
-            configuration=(
-                DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr3-gem5-se.json"
+            configuration=Path(
+                "ext/dramsys/gem5_configs/ddr3-gem5-se.json"
             ).as_posix(),
             size="1GiB",
         )

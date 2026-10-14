@@ -250,7 +250,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
 
     void init() override;
 
-    bool lookup(ThreadID tid, Addr instPC, void * &bp_history) override;
+    Prediction lookup(ThreadID tid, Addr instPC, void *&bp_history) override;
 
     void update(ThreadID tid, Addr pc, bool taken,
                 void * &bp_history, bool squashed,

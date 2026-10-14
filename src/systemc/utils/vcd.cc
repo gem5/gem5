@@ -250,7 +250,7 @@ VcdTraceFile::initialize()
 
     stream() << "$enddefinitions  $end" << std::endl << std::endl;
 
-    gem5::Tick now = scheduler.getCurTick();
+    gem5::Tick now = scheduler().getCurTick();
 
     std::string timedump_comment =
         gem5::csprintf("All initial values are dumped below at time "
@@ -277,7 +277,7 @@ VcdTraceFile::~VcdTraceFile()
 
     if (timeUnitTicks) {
         gem5::ccprintf(stream(), "#%u\n",
-            scheduler.getCurTick() / timeUnitTicks);
+                       scheduler().getCurTick() / timeUnitTicks);
     }
 }
 
@@ -300,7 +300,7 @@ VcdTraceFile::trace(bool delta)
         return;
     }
 
-    gem5::Tick now = scheduler.getCurTick() / timeUnitTicks + deltaOffset;
+    gem5::Tick now = scheduler().getCurTick() / timeUnitTicks + deltaOffset;
 
     if (now <= lastPrintedTime) {
         // TODO warn about reversed time?

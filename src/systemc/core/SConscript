@@ -74,6 +74,11 @@ if env['CONF']['USE_SYSTEMC']:
         Source('sc_time_python.cc', append=append)
 
     # Disable the false positive warning for the event members of the scheduler.
-    with gem5_scons.Configure(env) as conf:
-        flag = '-Wno-free-nonheap-object'
-        conf.CheckLinkFlag(flag)
+    flag = '-Wno-free-nonheap-object'
+    # Check whether the linker accepts the flag in an isolated environment so
+    # SCons does not build unrelated library targets during configuration.
+    flag_env = env.Clone()
+    flag_env.Replace(LIBS=[], LIBPATH=[])
+    with gem5_scons.Configure(flag_env) as conf:
+        if conf.CheckLinkFlag(flag, autoadd=False, set_for_shared=False):
+            env.Append(LINKFLAGS=[flag], SHLINKFLAGS=[flag])

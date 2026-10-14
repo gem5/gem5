@@ -43,8 +43,9 @@
 
 #include <sys/syscall.h>
 
-#include "arch/riscv/process.hh"
 #include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/process.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "base/loader/object_file.hh"
 #include "base/trace.hh"
@@ -297,44 +298,170 @@ hwprobe_one_pair(ThreadContext *tc, RiscvLinux::riscv_hwprobe *pair,
         break;
     case RiscvLinux::IMAExt0:
         {
-            MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
-            RiscvLinux::key_ima_ext_0_t *ext = (RiscvLinux::key_ima_ext_0_t *)&pair->value;
-            if (misa.rvf && misa.rvd) ext->FD = 1;
-            if (misa.rvc) ext->C = 1;
-            if (misa.rvv) ext->V = 1;
+        auto *isa = static_cast<RiscvISA::ISA *>(tc->getIsaPtr());
+        RiscvLinux::key_ima_ext_0_t *ext =
+            (RiscvLinux::key_ima_ext_0_t *)&pair->value;
+        if (isa->reportsAllExtensions({"F", "D"})) {
+            ext->FD = 1;
+        }
+        if (isa->reportsExtension("C")) {
+            ext->C = 1;
+        }
+        if (isa->reportsExtension("V")) {
+            ext->V = 1;
+        }
+        if (isa->reportsExtension("Zba")) {
             ext->ZBA = 1;
+        }
+        if (isa->reportsExtension("Zbb")) {
             ext->ZBB = 1;
+        }
+        if (isa->reportsExtension("Zbs")) {
             ext->ZBS = 1;
+        }
+        if (isa->reportsExtension("Zicboz")) {
             ext->ZICBOZ = 1;
+        }
+        if (isa->reportsExtension("Zbc")) {
             ext->ZBC = 1;
+        }
+        if (isa->reportsExtension("Zbkb")) {
             ext->ZBKB = 1;
+        }
+        if (isa->reportsExtension("Zbkc")) {
             ext->ZBKC = 1;
+        }
+        if (isa->reportsExtension("Zbkx")) {
             ext->ZBKX = 1;
+        }
+        if (isa->reportsExtension("Zknd")) {
             ext->ZKND = 1;
+        }
+        if (isa->reportsExtension("Zkne")) {
             ext->ZKNE = 1;
+        }
+        if (isa->reportsExtension("Zknh")) {
             ext->ZKNH = 1;
+        }
+        if (isa->reportsExtension("Zksed")) {
             ext->ZKSED = 1;
+        }
+        if (isa->reportsExtension("Zksh")) {
             ext->ZKSH = 1;
+        }
+        if (isa->reportsExtension("Zkt")) {
             ext->ZKT = 1;
+        }
+        if (isa->reportsExtension("Zvbb")) {
+            ext->ZVBB = 1;
+        }
+        if (isa->reportsExtension("Zvbc")) {
+            ext->ZVBC = 1;
+        }
+        if (isa->reportsExtension("Zvkb")) {
+            ext->ZVKB = 1;
+        }
+        if (isa->reportsExtension("Zvkg")) {
+            ext->ZVKG = 1;
+        }
+        if (isa->reportsExtension("Zvkned")) {
+            ext->ZVKNED = 1;
+        }
+        if (isa->reportsExtension("Zvknha")) {
+            ext->ZVKNHA = 1;
+        }
+        if (isa->reportsExtension("Zvknhb")) {
+            ext->ZVKNHB = 1;
+        }
+        if (isa->reportsExtension("Zvksed")) {
+            ext->ZVKSED = 1;
+        }
+        if (isa->reportsExtension("Zvksh")) {
+            ext->ZVKSH = 1;
+        }
+        if (isa->reportsExtension("Zvkt")) {
+            ext->ZVKT = 1;
+        }
+        if (isa->reportsExtension("Zfh")) {
             ext->ZFH = 1;
+        }
+        if (isa->reportsExtension("Zfhmin")) {
             ext->ZFHMIN = 1;
+        }
+        if (isa->reportsExtension("Zihintntl")) {
+            ext->ZIHINTNTL = 1;
+        }
+        if (isa->reportsExtension("Zvfh")) {
             ext->ZVFH = 1;
+        }
+        if (isa->reportsExtension("Zvfhmin")) {
             ext->ZVFHMIN = 1;
+        }
+        if (isa->reportsExtension("Zfa")) {
             ext->ZFA = 1;
+        }
+        if (isa->reportsExtension("Ztso")) {
+            ext->ZTSO = 1;
+        }
+        if (isa->reportsExtension("Zacas")) {
+            ext->ZACAS = 1;
+        }
+        if (isa->reportsExtension("Zicond")) {
             ext->ZICOND = 1;
+        }
+        if (isa->reportsExtension("Zihintpause")) {
+            ext->ZIHINTPAUSE = 1;
+        }
+        if (isa->reportsExtension("Zve32x") || isa->reportsExtension("V")) {
+            ext->ZVE32X = 1;
+        }
+        if (isa->reportsExtension("Zve32f") ||
+            isa->reportsAllExtensions({"V", "F"})) {
+            ext->ZVE32F = 1;
+        }
+        if (isa->reportsExtension("Zve64x") || isa->reportsExtension("V")) {
+            ext->ZVE64X = 1;
+        }
+        if (isa->reportsExtension("Zve64f") ||
+            isa->reportsAllExtensions({"V", "F"})) {
+            ext->ZVE64F = 1;
+        }
+        if (isa->reportsExtension("Zve64d") ||
+            isa->reportsAllExtensions({"V", "F", "D"})) {
             ext->ZVE64D = 1;
+        }
+        if (isa->reportsExtension("Zimop")) {
+            ext->ZIMOP = 1;
+        }
+        if (isa->reportsExtension("Zca")) {
+            ext->ZCA = 1;
+        }
+        if (isa->reportsExtension("Zcb")) {
             ext->ZCB = 1;
+        }
+        if (isa->reportsExtension("Zcd")) {
             ext->ZCD = 1;
+        }
+        if (isa->reportsExtension("Zcf")) {
             ext->ZCF = 1;
         }
-        break;
+        if (isa->reportsExtension("Zcmop")) {
+            ext->ZCMOP = 1;
+        }
+        if (isa->reportsExtension("Zawrs")) {
+            ext->ZAWRS = 1;
+        }
+    } break;
     case RiscvLinux::Cpuperf0:
     case RiscvLinux::MisalignedScalarPerf:
         pair->value = RiscvLinux::Slow;
         break;
-    case RiscvLinux::ZicbozBlockSize:
-        pair->value = tc->getSystemPtr()->cacheLineSize();
-        break;
+    case RiscvLinux::ZicbozBlockSize: {
+        auto *isa = static_cast<RiscvISA::ISA *>(tc->getIsaPtr());
+        pair->value = isa->reportsExtension("Zicboz")
+                          ? tc->getSystemPtr()->cacheLineSize()
+                          : 0;
+    } break;
     case RiscvLinux::HighestVirtAddress:
         pair->value = tc->getProcessPtr()->memState->getMmapEnd();
         break;
@@ -563,7 +690,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     {33, "mknodat", mknodatFunc<RiscvLinux64>},
     {34, "mkdirat", mkdiratFunc<RiscvLinux64>},
     {35, "unlinkat", unlinkatFunc<RiscvLinux64>},
-    {36, "symlinkat"},
+    {36, "symlinkat", symlinkatFunc<RiscvLinux64>},
     {37, "linkat"},
     {38, "renameat", renameatFunc<RiscvLinux64>},
     {39, "umount2"},
@@ -603,7 +730,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     {70, "pwritev"},
     {71, "sendfile", sendfileFunc<RiscvLinux64>},
     {72, "pselect6"},
-    {73, "ppoll"},
+    {73, "ppoll", ppollFunc<RiscvLinux64>},
     {74, "signalfd64"},
     {75, "vmsplice"},
     {76, "splice"},
@@ -843,7 +970,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     {1033, "access", accessFunc},
     {1034, "rename", renameFunc},
     {1035, "readlink", readlinkFunc<RiscvLinux64>},
-    {1036, "symlink", symlinkFunc},
+    {1036, "symlink", symlinkFunc<RiscvLinux64>},
     {1037, "utimes", utimesFunc<RiscvLinux64>},
     {1038, "stat", stat64Func<RiscvLinux64>},
     {1039, "lstat", lstat64Func<RiscvLinux64>},
@@ -930,7 +1057,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     {33, "mknodat", mknodatFunc<RiscvLinux32>},
     {34, "mkdirat", mkdiratFunc<RiscvLinux32>},
     {35, "unlinkat", unlinkatFunc<RiscvLinux32>},
-    {36, "symlinkat"},
+    {36, "symlinkat", symlinkatFunc<RiscvLinux32>},
     {37, "linkat"},
     {38, "renameat", renameatFunc<RiscvLinux32>},
     {39, "umount2"},
@@ -970,7 +1097,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     {70, "pwritev"},
     {71, "sendfile", sendfileFunc<RiscvLinux32>},
     {72, "pselect6"},
-    {73, "ppoll"},
+    {73, "ppoll", ppollFunc<RiscvLinux32>},
     {74, "signalfd64"},
     {75, "vmsplice"},
     {76, "splice"},
@@ -1182,7 +1309,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     {1033, "access", accessFunc},
     {1034, "rename", renameFunc},
     {1035, "readlink", readlinkFunc<RiscvLinux32>},
-    {1036, "symlink", symlinkFunc},
+    {1036, "symlink", symlinkFunc<RiscvLinux32>},
     {1037, "utimes", utimesFunc<RiscvLinux32>},
     {1038, "stat", statFunc<RiscvLinux32>},
     {1039, "lstat", lstatFunc<RiscvLinux32>},

@@ -218,11 +218,9 @@ stride_values = [burst_size, mid_stride, max_stride]
 bank_util_values = [1, int(nbr_banks / 2), nbr_banks]
 
 # Next we create the config file, but first a comment
-cfg_file.write(
-    """# STATE state# period mode=DRAM
+cfg_file.write("""# STATE state# period mode=DRAM
 # read_percent start_addr end_addr req_size min_itt max_itt data_limit
-# stride_size page_size #banks #banks_util addr_map #ranks\n"""
-)
+# stride_size page_size #banks #banks_util addr_map #ranks\n""")
 
 addr_map = m5.objects.AddrMap.map[args.addr_map]
 

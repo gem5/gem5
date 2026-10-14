@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024, 2026 The Regents of The University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from testlib import *
+
+gem5_verify_config(
+    name="pystats-single-root-test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystats_single_root_check.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
 
 gem5_verify_config(
     name="pystat-scaler-int-test",
