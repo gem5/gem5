@@ -29,10 +29,17 @@
 /**
  * @file
  * Implementation of the 'Multi-Lookahead Offset Prefetcher'
- * Reference:
+ * References:
  *   Shakerinava, M. et al. (2019, June). Multi-lookahead offset
  *   prefetching. In DPC3 (in conjunction with ISCA 2019).
  *   https://mshakerinava.github.io/papers/mlop-dpc3.pdf
+ *
+ *   The 4-page paper above omits some implementation details (e.g.
+ *   score_threshold). Where this port needed one not covered by the
+ *   paper, it was taken from the authors' DPC3 competition source
+ *   submission, available alongside the contest's slides at
+ *   https://dpc3.compas.cs.stonybrook.edu/?final_programs
+ *
  *
  * Scores every candidate offset at every lookahead level (1..N) against
  * an Access Map Table of recently-touched regions, then issues one

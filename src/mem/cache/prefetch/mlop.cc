@@ -135,6 +135,9 @@ MLOP::updateScoresWithAccess(Addr block)
             bits &= (bits - 1);
 
             const Offset k = int(idx) - int(j);
+
+            // k can exceed +-maxOffset when maxOffset < bitVectorSize - 1;
+            // bound it so the offsetTable index stays in range.
             if (k == 0 || k < -maxOffset || k > maxOffset) {
                 continue;
             }
