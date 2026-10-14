@@ -43,3 +43,4 @@ Source('thermal_model.cc')
 Source('thermal_node.cc')
 
 DebugFlag('ThermalDomain')
+DebugFlag('PwrIntervalEvent')
