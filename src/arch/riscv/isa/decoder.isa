@@ -5758,6 +5758,18 @@ decode QUADRANT default Unknown::unknown() {
                         0x1: ebreak({{
                             return executeEBreakOrSemihosting(xc);
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                        0x0d: wrs_nto({{
+                            if (RD != 0 || RS1 != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "wrs requires rd = rs1 = x0", machInst);
+                            }
+                        }}, IsNonSpeculative, No_OpClass);
+                        0x1d: wrs_sto({{
+                            if (RD != 0 || RS1 != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "wrs requires rd = rs1 = x0", machInst);
+                            }
+                        }}, IsNonSpeculative, No_OpClass);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
