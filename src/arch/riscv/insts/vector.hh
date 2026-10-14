@@ -397,6 +397,10 @@ class VleMicroInst : public VectorMicroInst
     mutable bool trimVl;
     mutable uint32_t faultIdx;
 
+    // Fault-only-first loads (vle*ff) suppress a fault on any element but
+    // the first and trim vl instead; see handleMemFault() in vector.cc.
+    Fault handleMemFault(const Fault &fault, Addr vaddr) const override;
+
   protected:
     Request::Flags memAccessFlags;
 
@@ -716,6 +720,11 @@ class VlSegMacroInst : public VectorMemMacroInst
 
 class VlSegMicroInst : public VectorMicroInst
 {
+  public:
+    // Segmented fault-only-first loads (vlseg*ff) share the fault-only-first
+    // trim behaviour of VleMicroInst; see handleMemFault() in vector.cc.
+    Fault handleMemFault(const Fault &fault, Addr vaddr) const override;
+
   protected:
     Request::Flags memAccessFlags;
     uint8_t regIdx;
