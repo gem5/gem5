@@ -459,10 +459,32 @@ decode QUADRANT default Unknown::unknown() {
                         NPC = rvSext(Rc1 & (~0x1));
                     }}, IsIndirectControl, IsUncondControl, IsCall);
                 }
-                default: CompressedROp::c_add({{
-                    // RC1 == 0 is HINT
-                    Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
-                }});
+                default: decode CNTLHINT {
+                    0x02: CompressedROp::c_ntl_p1({{
+                        // HINT: c.add x0, x2
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    0x03: CompressedROp::c_ntl_pall({{
+                        // HINT: c.add x0, x3
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    0x04: CompressedROp::c_ntl_s1({{
+                        // HINT: c.add x0, x4
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    0x05: CompressedROp::c_ntl_all({{
+                        // HINT: c.add x0, x5
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    default: CompressedROp::c_add({{
+                        // RC1 == 0 is HINT
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+                }
             }
         }
         format CompressedStore {
@@ -2285,10 +2307,33 @@ decode QUADRANT default Unknown::unknown() {
         0x0c: decode FUNCT3 {
             format ROp {
                 0x0: decode KFUNCT5 {
-                    0x00: decode BS {
-                        0x0: add({{
-                            Rd = rvSext(Rs1_sd + Rs2_sd);
-                        }});
+                    0x0: decode BS {
+                        0x0: decode NTLHINT {
+                            0x4000: ntl_p1({{
+                                // HINT: add x0, x0, x2
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            0x6000: ntl_pall({{
+                                // HINT: add x0, x0, x3
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            0x8000: ntl_s1({{
+                                // HINT: add x0, x0, x4
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            0xa000: ntl_all({{
+                                // HINT: add x0, x0, x5
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            default: add({{
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+                        }
+
                         0x1: sub({{
                             Rd = rvSext(Rs1_sd - Rs2_sd);
                         }});
