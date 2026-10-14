@@ -237,10 +237,14 @@ class AddrRange
                 "Modulo range size %d must be a multiple of granularity %d",
                 range_size, granularity);
             Addr num_blocks = range_size / granularity;
-            fatal_if(num_blocks % stripes != 0,
-                     "Modulo range size %d (in blocks) must be a multiple of "
-                     "stripes %d",
-                     num_blocks, stripes);
+            warn_if(num_blocks % stripes != 0,
+                    "Modulo range size %d (in blocks) must be a multiple of "
+                    "stripes %d to equally distribute memory across stripes",
+                    num_blocks, stripes);
+            fatal_if(
+                num_blocks < stripes,
+                "Modulo range size %d (in blocks) must >= than stripes %d",
+                num_blocks, stripes);
             _policy = std::make_shared<ModuloInterleavingPolicy>(
                 stripes, intlv_match, intlv_low_bit);
         }
@@ -378,10 +382,15 @@ class AddrRange
                          "granularity %d",
                          chunk_size, granularity);
                 Addr num_blocks = chunk_size / granularity;
-                fatal_if(num_blocks % stripes != 0,
-                         "Modulo chunk size %d (in blocks) must be a multiple "
-                         "of stripes %d",
-                         num_blocks, stripes);
+                warn_if(num_blocks % stripes != 0,
+                        "Modulo chunk size %d (in blocks) must be a multiple "
+                        "of stripes %d to equally distribute memory across "
+                        "stripes",
+                        num_blocks, stripes);
+                fatal_if(
+                    num_blocks < stripes,
+                    "Modulo range size %d (in blocks) must >= than stripes %d",
+                    num_blocks, stripes);
             }
             _policy = std::make_shared<ModuloInterleavingPolicy>(
                 stripes, intlv_match, intlv_low_bit);
