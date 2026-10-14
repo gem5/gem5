@@ -333,16 +333,16 @@ divScaleF32(float s0, float s1, float s2, bool &vcc)
         return f32DefaultNaN();
     }
 
-    const bool scaleDen = f32ToBits(s0) == f32ToBits(s1);
-    const bool scaleNum = f32ToBits(s0) == f32ToBits(s2);
+    const bool scale_den = f32ToBits(s0) == f32ToBits(s1);
+    const bool scale_num = f32ToBits(s0) == f32ToBits(s2);
     int scale = 0;
     if (diff >= 96) {
-        scale = scaleDen ? 64 : 0;
+        scale = scale_den ? 64 : 0;
     } else if (diff <= -96) {
         if (e1 >= 253) {
-            scale = scaleDen ? -64 : 0;
+            scale = scale_den ? -64 : 0;
         } else {
-            scale = scaleNum ? 64 : 0;
+            scale = scale_num ? 64 : 0;
         }
     } else if (std::fpclassify(s1) == FP_SUBNORMAL) {
         scale = 64;
@@ -375,17 +375,17 @@ fmaScaledF32(float s0, float s1, float s2, int scale)
         return f32QuietNaN(s2);
     }
 
-    const bool prodInf = std::isinf(s0) || std::isinf(s1);
-    if (prodInf && (s0 == 0.0f || s1 == 0.0f)) {
+    const bool prod_inf = std::isinf(s0) || std::isinf(s1);
+    if (prod_inf && (s0 == 0.0f || s1 == 0.0f)) {
         return f32DefaultNaN();
     }
-    if (prodInf || std::isinf(s2)) {
-        const bool prodNeg = std::signbit(s0) != std::signbit(s1);
-        if (prodInf && std::isinf(s2) && prodNeg != std::signbit(s2)) {
+    if (prod_inf || std::isinf(s2)) {
+        const bool prod_neg = std::signbit(s0) != std::signbit(s1);
+        if (prod_inf && std::isinf(s2) && prod_neg != std::signbit(s2)) {
             return f32DefaultNaN();
         }
-        if (prodInf) {
-            return prodNeg ? -INFINITY : INFINITY;
+        if (prod_inf) {
+            return prod_neg ? -INFINITY : INFINITY;
         }
         return s2;
     }
@@ -407,9 +407,9 @@ fmaScaledF32(float s0, float s1, float s2, int scale)
         return rounded; // exact zero: keep the IEEE sign rules
     }
     if (lo != 0.0) {
-        uint64_t hiBits;
-        std::memcpy(&hiBits, &hi, sizeof(hiBits));
-        if ((hiBits & 1) == 0) {
+        uint64_t hi_bits;
+        std::memcpy(&hi_bits, &hi, sizeof(hi_bits));
+        if ((hi_bits & 1) == 0) {
             hi = std::nextafter(hi, lo > 0.0 ? INFINITY : -INFINITY);
         }
     }
@@ -434,8 +434,7 @@ divFmasF32(float s0, float s1, float s2, bool vcc)
 inline float
 divFixupF32(float s0, float s1, float s2)
 {
-    const uint32_t signOut =
-        (f32ToBits(s1) ^ f32ToBits(s2)) & 0x80000000u;
+    const uint32_t sign_out = (f32ToBits(s1) ^ f32ToBits(s2)) & 0x80000000u;
     if (std::isnan(s2)) {
         return f32QuietNaN(s2);
     }
@@ -449,24 +448,24 @@ divFixupF32(float s0, float s1, float s2)
         return f32DefaultNaN();
     }
     if (s1 == 0.0f || std::isinf(s2)) {
-        return f32FromBits(signOut | 0x7f800000u);
+        return f32FromBits(sign_out | 0x7f800000u);
     }
     if (std::isinf(s1) || s2 == 0.0f) {
-        return f32FromBits(signOut);
+        return f32FromBits(sign_out);
     }
     if (f32Exponent(s2) - f32Exponent(s1) < -150) {
-        return f32FromBits(signOut);
+        return f32FromBits(sign_out);
     }
     if (f32Exponent(s1) == 255) {
-        return f32FromBits(signOut | 0x7f800000u);
+        return f32FromBits(sign_out | 0x7f800000u);
     }
     if (std::isnan(s0)) {
         // Measured on MI300X: a NaN quotient (inf - inf after an overflowing
         // step of the division macro) becomes a signed infinity, where the
         // pseudocode would return abs(S0).
-        return f32FromBits(signOut | 0x7f800000u);
+        return f32FromBits(sign_out | 0x7f800000u);
     }
-    return f32FromBits(signOut | (f32ToBits(s0) & 0x7fffffffu));
+    return f32FromBits(sign_out | (f32ToBits(s0) & 0x7fffffffu));
 }
 
 // v_rcp_f32. MI300X flushes subnormal inputs (giving +-inf) and subnormal

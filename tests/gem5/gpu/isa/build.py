@@ -86,7 +86,8 @@ def build(rocm_path, output_dir):
             "set -eu\n"
             "app_dir=$(mktemp -d)\n"
             "trap 'rm -rf \"$app_dir\"' EXIT\n"
-            f"base64 -d <<'GEM5_GPU_ISA_BINARY' | gzip -d > \"$app_dir/{program}\"\n"
+            "base64 -d <<'GEM5_GPU_ISA_BINARY' | gzip -d > "
+            f'"$app_dir/{program}"\n'
             f"{payload}\n"
             "GEM5_GPU_ISA_BINARY\n"
             f'chmod +x "$app_dir/{program}"\n'
@@ -102,7 +103,10 @@ def main():
         "--rocm-path",
         type=Path,
         default=Path(os.environ.get("ROCM_PATH", "/opt/rocm")),
-        help="ROCm toolchain compatible with the GPUFS guest (default: ROCM_PATH)",
+        help=(
+            "ROCm toolchain compatible with the GPUFS guest "
+            "(default: ROCM_PATH)"
+        ),
     )
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()

@@ -6809,10 +6809,10 @@ Inst_VOP3__V_DIV_SCALE_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            bool scaleQuotient = false;
+            bool scale_quotient = false;
             vdst[lane] = divScaleF32(src0[lane], src1[lane], src2[lane],
-                                     scaleQuotient);
-            vcc.setBit(lane, scaleQuotient ? 1 : 0);
+                                     scale_quotient);
+            vcc.setBit(lane, scale_quotient ? 1 : 0);
         }
     }
 
