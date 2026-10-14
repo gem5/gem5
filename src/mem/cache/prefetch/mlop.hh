@@ -116,7 +116,6 @@ class MLOP : public Queued
     const unsigned bitVectorSize = 0;
     const unsigned recentDepth = 0;
     const Addr regionMask = 0;
-    const unsigned regionShift = 0;
 
     AMTCache amt;
 
@@ -130,7 +129,7 @@ class MLOP : public Queued
     void resetScores();
     std::vector<std::pair<LookaheadLevel, Offset>> selectBestOffsets();
 
-    AMTEntry &findOrAllocAmtEntry(Addr region_index);
+    AMTEntry &findOrAllocAmtEntry(Addr block);
     void updateScoresWithAccess(Addr block);
 };
 

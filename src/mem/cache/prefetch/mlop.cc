@@ -63,7 +63,6 @@ MLOP::MLOP(const MLOPPrefetcherParams &p)
       bitVectorSize(p.bit_vector_size),
       recentDepth(lookaheadLevels > 0 ? lookaheadLevels - 1 : 0),
       regionMask(Addr(bitVectorSize - 1)),
-      regionShift(floorLog2(bitVectorSize)),
       amt("AMT", p.amt_entries, p.amt_assoc, p.amt_replacement_policy,
           p.amt_indexing_policy,
           AMTEntry(genTagExtractor(p.amt_indexing_policy))),
@@ -103,9 +102,12 @@ MLOP::resetScores()
 }
 
 MLOP::AMTEntry &
-MLOP::findOrAllocAmtEntry(Addr region_index)
+MLOP::findOrAllocAmtEntry(Addr block)
 {
-    const AMTEntry::KeyType key{region_index, false};
+    // amt_indexing_policy's entry_size == bit_vector_size, so the
+    // indexing policy itself extracts the region's set and tag from
+    // the raw block address; no manual region shift needed here.
+    const AMTEntry::KeyType key{block, false};
 
     AMTEntry *entry = amt.findEntry(key);
     if (entry != nullptr) {
@@ -122,7 +124,7 @@ MLOP::updateScoresWithAccess(Addr block)
 {
     const unsigned idx = unsigned(block & regionMask);
 
-    AMTEntry &entry = findOrAllocAmtEntry(block >> regionShift);
+    AMTEntry &entry = findOrAllocAmtEntry(block);
 
     // For each level L, credit every offset that would have predicted
     // this access after excluding the last (L-1) accesses.

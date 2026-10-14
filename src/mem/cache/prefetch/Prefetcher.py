@@ -820,7 +820,9 @@ class MLOPPrefetcher(QueuedPrefetcher):
     amt_assoc = Param.Unsigned(16, "Associativity of the Access Map Table.")
     amt_indexing_policy = Param.TaggedIndexingPolicy(
         TaggedSetAssociative(
-            entry_size=1, assoc=Parent.amt_assoc, size=Parent.amt_entries
+            entry_size=Parent.bit_vector_size,
+            assoc=Parent.amt_assoc,
+            size=Parent.amt_entries * Parent.bit_vector_size,
         ),
         "Indexing policy of the Access Map Table",
     )
