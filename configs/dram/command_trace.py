@@ -77,7 +77,7 @@ m5.instantiate()
 
 def traffic():
     yield system.generator.createRandom(
-        30000000, 0, 256 * 1024 * 1024, 64, 50, 10000, 10000, 0
+        30000000, 0, 256 * 1024 * 1024, 64, 10000, 10000, 50, 0
     )
     yield system.generator.createIdle(1000000)
     yield system.generator.createExit(0)
