@@ -299,6 +299,59 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
+    salam-link-test:
+        runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        needs: [pre-commit]
+        timeout-minutes: 90
+        steps:
+            - uses: actions/checkout@v7
+            - name: Install SALAM dependencies
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends llvm-dev python3-yaml
+                  llvm-config --version
+            - name: Build gem5 with SALAM
+              run: |
+                  scons build/ARM/gem5.opt --with-salam -j $(nproc)
+            - name: Build a complete ExtraUnit hardware profile
+              run: |
+                  dest="${RUNNER_TEMP}/salam-extra-unit"
+                  rm -rf "${dest}"
+                  cp -a src/salam/hw_profiles/default "${dest}"
+                  python3 - "${dest}" << 'PY'
+                  import sys
+                  from pathlib import Path
+                  import yaml
+                  dest = Path(sys.argv[1])
+                  unit = dest / "functional_units" / "extra_unit"
+                  unit.mkdir()
+                  reg = dest / "functional_units" / "bit_register"
+                  doc = yaml.safe_load((reg / "bit_register.yml").read_text())
+                  params = doc["functional_unit"]["parameters"]
+                  params["alias"] = "extra_unit"
+                  params["enum_value"] = 99
+                  params["instructions"] = ["none"]
+                  (unit / "extra_unit.yml").write_text(
+                      yaml.safe_dump(doc, sort_keys=False)
+                  )
+                  config_path = dest / "salam-hw-config.yml"
+                  config = yaml.safe_load(config_path.read_text())
+                  config["functional_unit_order"].append("extra_unit")
+                  config_path.write_text(yaml.safe_dump(config, sort_keys=False))
+                  PY
+                  scons build/ARM/gem5.opt --with-salam \
+                      --salam-hw-config="${dest}/salam-hw-config.yml" \
+                      -j $(nproc)
+                  cat > "${RUNNER_TEMP}/check_extra_unit.py" << 'PY'
+                  import m5.objects
+
+                  if not hasattr(m5.objects, "ExtraUnit"):
+                      raise SystemExit("ExtraUnit is not in m5.objects")
+                  PY
+                  ./build/ARM/gem5.opt "${RUNNER_TEMP}/check_extra_unit.py"
+
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
@@ -309,5 +362,6 @@ jobs:
             - unittests-all-fast-opt
             - macos-compilation
             - pre-commit
+            - salam-link-test
         steps:
             - run: echo "This job's status is ${{ job.status }}."
