@@ -41681,6 +41681,8 @@ class Inst_DS__DS_WRXCHG_RTN_B32 : public Inst_DS
     } // getOperandSize
 
     void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
 }; // Inst_DS__DS_WRXCHG_RTN_B32
 
 class Inst_DS__DS_WRXCHG2_RTN_B32 : public Inst_DS

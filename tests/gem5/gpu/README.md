@@ -1,6 +1,6 @@
 # GPU
 
-These tests execute the public
+The three GPUFS smoke tests execute the public
 `configs/example/gem5_library/x86-mi200-gpu.py` and
 `configs/example/gem5_library/x86-mi355x-gpu.py` full-system examples without
 requiring a ROCm installation on the host. The two Weekly tests boot the GPUFS
@@ -26,7 +26,7 @@ built for the paired kernel.
 The shared `configs/example/gem5_library/x86_gpu.py` helper also supports
 local `--image` and `--kernel` paths, KVM or Atomic CPUs, a reduced compute-unit
 count, additional kernel arguments, and local or resource checkpoints. The
-MI300X example uses the same helper even though it is not part of these tests.
+MI300X instruction suites below also use this helper.
 
 ## MI355X smoke checkpoint
 
@@ -84,3 +84,40 @@ After validation, publish the final checkpoint as
 `x86-mi355x-gpu-fs-smoke`. The Daily TestLib suite obtains the final
 checkpoint and passes only after the resumed loader prints
 `GPU checkpoint restore test passed` to the guest serial output.
+
+## MI300X instruction regressions
+
+The division suite checks the FP32 division instructions through the simulated
+instruction pipeline, including per-lane VCC, partial and empty EXEC masks, and
+the complete division sequence. The LDS exchange suite checks returned values,
+updated memory, byte offsets, EXEC masks, and contention between lanes. Each
+suite boots a separate GPUFS guest with KVM and four compute units.
+
+These suites require an x86-64 host with read/write access to `/dev/kvm` and a
+ROCm toolchain matching the guest's ROCm installation. Set `ROCM_PATH` to that
+installation (default `/opt/rocm`); the fixture compiles the HIP programs for
+`gfx942`. No physical host GPU is required. Tests are not collected when KVM
+access or the ROCm compiler is missing, and TestLib logs a prerequisite
+message.
+
+The MI300X example downloads its pinned image and kernel by default. Set
+`GEM5_GPU_TEST_IMAGE` and `GEM5_GPU_TEST_KERNEL` to use a compatible local
+image/kernel pair. From the repository root, after building
+`build/VEGA_X86/gem5.opt`:
+
+```sh
+export ROCM_PATH=/path/to/compatible/rocm
+python3 tests/main.py run tests/gem5/gpu --skip-build \
+    --isa VEGA_X86 --variant opt --host x86_64 --length long
+```
+
+Use `--isa ALL` for an optimized ALL build. The expected guest serial markers
+are:
+
+```text
+GPU ISA division passed: 768 checks
+GPU ISA lds-exchange passed: 769 checks
+```
+
+TestLib checks simulator execution and the success marker for each suite,
+giving four passing checks across two suites.
