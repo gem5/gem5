@@ -253,8 +253,8 @@ class Plic : public PlicBase
     std::vector<uint32_t> pendingPriority;
     // per-context, per-source pendingPriority * enable
     std::vector<std::vector<uint32_t>> effPriority;
-    // per-context last-claimed id
-    std::vector<uint32_t> lastID;
+
+    std::vector<uint32_t> claimedInt;
     PlicOutput output;
 
     /**

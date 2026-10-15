@@ -78,6 +78,10 @@ Plic::post(int src_id)
     // Sanity check
     assert(src_id < nSrc && src_id >= 0);
 
+    if (src_id == 0) {
+        return;
+    }
+
     Tick next_update = clockEdge(Cycles(outputLatency));
     inputQueue[next_update][src_id] = true;
 
@@ -103,7 +107,9 @@ Plic::postImpl(int src_id)
     pendingPriority[src_id] = registers.priority[src_id].get();
     for (int i = 0; i < contextConfigs.size(); i++) {
         bool enabled = bits(registers.enable[i][src_index].get(), src_offset);
-        effPriority[i][src_id] = enabled ? pendingPriority[src_id] : 0;
+        bool claimed = bits(claimedInt[src_index], src_offset);
+        effPriority[i][src_id] =
+            (enabled && !claimed) ? pendingPriority[src_id] : 0;
     }
     DPRINTF(Plic, "Int post request - source: %#x, current priority: %#x\n",
             src_id, pendingPriority[src_id]);
@@ -115,6 +121,10 @@ Plic::clear(int src_id)
     // Sanity check
     assert(src_id < nSrc);
     assert(src_id >= 0);
+
+    if (src_id == 0) {
+        return;
+    }
 
     Tick next_update = clockEdge(Cycles(outputLatency));
     inputQueue[next_update][src_id] = false;
@@ -136,13 +146,20 @@ Plic::clearImpl(int src_id)
     pending_bits[src_offset] = 0;
     pending = (uint32_t) pending_bits.to_ulong();
 
+    uint32_t &claimed = claimedInt[src_index];
+    std::bitset<32> claimed_bits(claimed);
+    claimed_bits[src_offset] = 0;
+    claimed = (uint32_t)claimed_bits.to_ulong();
+
     // Update states
     pendingPriority[src_id] = 0;
     for (int i = 0; i < contextConfigs.size(); i++) {
         effPriority[i][src_id] = 0;
     }
-    DPRINTF(Plic, "Int clear request - source: %#x, current priority: %#x\n",
-            src_id, pendingPriority[src_id]);
+    DPRINTF(Plic,
+            "Int clear request - source: %#x, current priority: %#x, claimed: "
+            "%d\n",
+            src_id, pendingPriority[src_id], claimed_bits[src_offset]);
 }
 
 Tick
@@ -200,7 +217,7 @@ Plic::init()
         std::vector<uint32_t> context_priority(nSrc, 0x0);
         effPriority.push_back(context_priority);
     }
-    lastID.resize(contextConfigs.size(), 0x0);
+    claimedInt.resize(nSrc32, 0);
 
     // Setup outputs
     output = PlicOutput{
@@ -314,6 +331,9 @@ Plic::PlicRegisters::init()
 void
 Plic::writePriority(Register32& reg, const uint32_t& data, const int src_id)
 {
+    if (src_id == 0) {
+        return;
+    }
     reg.update(data);
 
     // Calculate indices
@@ -324,9 +344,10 @@ Plic::writePriority(Register32& reg, const uint32_t& data, const int src_id)
     bool pending = bits(registers.pending[src_index].get(), src_offset);
     pendingPriority[src_id] = pending ? reg.get() : 0;
     for (int i = 0; i < contextConfigs.size(); i++) {
-        bool enabled = bits(
-            registers.enable[i][src_index].get(), src_offset);
-        effPriority[i][src_id] = enabled ? pendingPriority[src_id] : 0;
+        bool enabled = bits(registers.enable[i][src_index].get(), src_offset);
+        bool claimed = bits(claimedInt[src_index], src_offset);
+        effPriority[i][src_id] =
+            (enabled && !claimed) ? pendingPriority[src_id] : 0;
     }
 
     DPRINTF(Plic,
@@ -338,18 +359,30 @@ void
 Plic::writeEnable(Register32& reg, const uint32_t& data,
     const int src32_id, const int context_id)
 {
-    reg.update(data);
+    uint32_t old_enabled = reg.get();
+    uint32_t enabled = data;
+    if (src32_id == 0) {
+        enabled = (enabled & ~1);
+    }
+    reg.update(enabled);
 
-    for (int i = 0; i < 32; i ++) {
-        int src_id = (src32_id << 5) + i;
-        if (src_id < nSrc) {
-            effPriority[context_id][src_id] =
-                bits(reg.get(), i) ? pendingPriority[src_id] : 0;
+    claimedInt[src32_id] &= ~(old_enabled & ~reg.get());
+
+    for (int c = 0; c < contextConfigs.size(); c++) {
+        for (int i = 0; i < 32; i++) {
+            int src_id = (src32_id << 5) + i;
+            if (src_id < nSrc) {
+                bool is_enabled = bits(registers.enable[c][src32_id].get(), i);
+                bool is_claimed = bits(claimedInt[src32_id], i);
+                effPriority[c][src_id] =
+                    (is_enabled && !is_claimed) ? pendingPriority[src_id] : 0;
+            }
         }
     }
     DPRINTF(Plic,
-        "Enable updated - context: %d, src32: %d, val: %#x\n",
-        context_id, src32_id, reg.get());
+            "Enable updated - context: %d, src32: %d, val: %#x, claimed mask: "
+            "%#x\n",
+            context_id, src32_id, reg.get(), claimedInt[src32_id]);
 }
 
 void
@@ -366,33 +399,30 @@ Plic::writeThreshold(Register32& reg, const uint32_t& data,
 uint32_t
 Plic::readClaim(Register32& reg, const int context_id)
 {
-    if (lastID[context_id] == 0) {
-        // Calculate indices
-        uint32_t max_int_id = output.maxID[context_id];
-        int src_index = max_int_id >> 5;
-        int src_offset = max_int_id & 0x1F;
+    // Calculate indices
+    uint32_t max_int_id = output.maxID[context_id];
+    int src_index = max_int_id >> 5;
+    int src_offset = max_int_id & 0x1F;
 
-        // Check pending bits
-        if (bits(registers.pending[src_index].get(), src_offset)) {
-            lastID[context_id] = max_int_id;
-            DPRINTF(Plic, "Claim success - context: %d, interrupt ID: %d\n",
-                    context_id, max_int_id);
-            clearImpl(max_int_id);
-            updateOutput();
+    // Check pending bits
+    if (bits(registers.pending[src_index].get(), src_offset)) {
+        DPRINTF(Plic, "Claim success - context: %d, interrupt ID: %d\n",
+                context_id, max_int_id);
+        clearImpl(max_int_id);
+        uint32_t &claimed = claimedInt[src_index];
+        std::bitset<32> claimed_bits(claimed);
+        claimed_bits[src_offset] = 1;
+        claimed = (uint32_t)claimed_bits.to_ulong();
+        updateOutput();
 
-            reg.update(max_int_id);
-            return reg.get();
-        } else {
-            DPRINTF(Plic,
+        reg.update(max_int_id);
+        return reg.get();
+    } else {
+        DPRINTF(Plic,
                 "Claim already cleared - context: %d, interrupt ID: %d\n",
                 context_id, max_int_id);
-            updateInt();
-            return 0;
-        }
-    } else {
-        warn("PLIC claim repeated (not completed) - context: %d, last: %d",
-            context_id, lastID[context_id]);
-        return lastID[context_id];
+        updateInt();
+        return 0;
     }
 }
 
@@ -400,17 +430,35 @@ void
 Plic::writeClaim(Register32& reg, const uint32_t& data, const int context_id)
 {
     reg.update(data);
+    if (data == 0 || data >= nSrc) {
+        return;
+    }
 
-    /**
-     * Plic spec states that this error should be silently ignored.
-     * However, this is not supposed to happen.
-     */
-    assert(lastID[context_id] == reg.get());
-    lastID[context_id] = 0;
-    DPRINTF(Plic,
-        "Complete - context: %d, interrupt ID: %d\n",
-        context_id, reg.get());
-    updateInt();
+    int src_index = data >> 5;
+    int src_offset = data & 0x1F;
+
+    if (!bits(registers.enable[context_id][src_index].get(), src_offset)) {
+        DPRINTF(
+            Plic,
+            "Complete ignored (not enabled) - context: %d, interrupt ID: %d\n",
+            context_id, reg.get());
+        return;
+    }
+
+    uint32_t &claimed = claimedInt[src_index];
+    std::bitset<32> claimed_bits(claimed);
+    claimed_bits[src_offset] = 0;
+    claimed = (uint32_t)claimed_bits.to_ulong();
+
+    for (int i = 0; i < contextConfigs.size(); i++) {
+        bool enabled = bits(registers.enable[i][src_index].get(), src_offset);
+        bool is_claimed = bits(claimedInt[src_index], src_offset);
+        effPriority[i][data] =
+            (enabled && !is_claimed) ? pendingPriority[data] : 0;
+    }
+
+    DPRINTF(Plic, "Complete - context: %d, interrupt ID: %d\n", context_id,
+            reg.get());
 }
 
 void
@@ -497,7 +545,7 @@ Plic::updateInt()
         uint32_t max_id = output.maxID[i];
         uint32_t priority = output.maxPriority[i];
         uint32_t threshold = registers.threshold[i].get();
-        if (priority > threshold && max_id > 0 && lastID[i] == 0) {
+        if (priority > threshold && max_id > 0) {
             DPRINTF(Plic, "Int posted - thread: %d, int id: %d, ",
                     thread_id, int_id);
             DPRINTFR(Plic, "pri: %d, thres: %d\n", priority, threshold);
@@ -560,7 +608,7 @@ Plic::serialize(CheckpointOut &cp) const
         arrayParamOut(cp, std::string("effPriority") +
             std::to_string(i), effPriority[i]);
     }
-    SERIALIZE_CONTAINER(lastID);
+    SERIALIZE_CONTAINER(claimedInt);
 }
 
 void
@@ -609,7 +657,7 @@ Plic::unserialize(CheckpointIn &cp)
         arrayParamIn(cp, std::string("effPriority") +
             std::to_string(i), effPriority[i]);
     }
-    UNSERIALIZE_CONTAINER(lastID);
+    UNSERIALIZE_CONTAINER(claimedInt);
     updateInt();
 }
 
