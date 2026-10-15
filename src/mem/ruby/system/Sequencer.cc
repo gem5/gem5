@@ -44,6 +44,7 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
+#include "debug/FlushNT.hh"
 #include "debug/LLSC.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubyHitMiss.hh"
@@ -73,6 +74,29 @@ isCacheMaintenance(const PacketPtr pkt)
 {
     return pkt->isFlush() || pkt->isCleanInvalidateRequest() ||
            pkt->req->isCacheMaintenance();
+}
+
+// For the FlushNT debug flag: what kind of flush or non-temporal access this
+// is, or nullptr for any other request.
+const char *
+flushNTKind(const PacketPtr pkt)
+{
+    if (pkt->isFlush()) {
+        return "Flush";
+    }
+    if (pkt->req->isCacheMaintenance()) {
+        if (pkt->req->isCacheClean() && pkt->req->isCacheInvalidate()) {
+            return "CleanInvalid";
+        }
+        return pkt->req->isCacheClean() ? "Clean" : "Invalidate";
+    }
+    if (pkt->isCleanInvalidateRequest()) {
+        return "CleanInvalid";
+    }
+    if (pkt->req->isNonTemporal()) {
+        return pkt->isWrite() ? "NT-store" : "NT-load";
+    }
+    return nullptr;
 }
 
 } // anonymous namespace
@@ -775,6 +799,19 @@ Sequencer::hitCallback(SequencerRequest *srequest, DataBlock &data,
     Addr request_address(pkt->getAddr());
     RubyRequestType type = srequest->m_type;
 
+    if (debug::FlushNT) {
+        if (const char *kind = flushNTKind(pkt)) {
+            DPRINTF(FlushNT,
+                    "done  %-12s addr %#x line %#x size %d "
+                    "type %s latency %d cycles%s%s\n",
+                    kind, request_address, makeLineAddress(request_address),
+                    pkt->getSize(), RubyRequestType_to_string(type),
+                    curCycle() - srequest->issue_time,
+                    externalHit ? " (external)" : "",
+                    was_coalesced ? " (coalesced)" : "");
+        }
+    }
+
     if (was_coalesced) {
         // Notify the controller about a coalesced request so it can properly
         // account for it in its hit/miss stats and/or train prefetchers
@@ -1160,6 +1197,16 @@ Sequencer::makeRequest(PacketPtr pkt)
     // It is OK to receive RequestStatus_Aliased, it can be considered Issued
     if (status != RequestStatus_Ready && status != RequestStatus_Aliased)
         return status;
+    if (debug::FlushNT) {
+        if (const char *kind = flushNTKind(pkt)) {
+            DPRINTF(FlushNT,
+                    "issue %-12s addr %#x line %#x size %d "
+                    "type %s%s\n",
+                    kind, pkt->getAddr(), makeLineAddress(pkt->getAddr()),
+                    pkt->getSize(), RubyRequestType_to_string(secondary_type),
+                    status == RequestStatus_Aliased ? " (aliased)" : "");
+        }
+    }
     // non-aliased with any existing request in the request table, just issue
     // to the cache
     if (status != RequestStatus_Aliased)
