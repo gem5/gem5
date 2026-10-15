@@ -4463,16 +4463,10 @@ action(Profile_Miss, desc="") {
   }
   // notify prefetcher about this demand miss
   if (use_prefetcher && tbe.isSeqReqValid && (is_demand || is_remote_can_notify)) {
-    bool is_read := false;
-    if (isReadReqType(tbe.reqType)) {
-      is_read := true;
-    } else {
-      assert(isWriteReqType(tbe.reqType));
-    }
-
     // FIXME: this dataBlk is likely to have stale data. This should be fixed
     // if our prefetcher uses cached data to make prefetch decisions.
-    pfProxy.notifyPfMiss(tbe.seqReq, is_read, tbe.dataBlk);
+    pfProxy.notifyPfMiss(tbe.seqReq, isPrefetcherReadReqType(tbe.reqType),
+                         tbe.dataBlk);
   }
 }
 
@@ -4490,13 +4484,8 @@ action(Profile_Hit, desc="") {
   }
   // notify prefetcher about this demand hit
   if (use_prefetcher && tbe.isSeqReqValid && (is_demand || is_remote_can_notify)) {
-    bool is_read := false;
-    if (isReadReqType(tbe.reqType)) {
-      is_read := true;
-    } else {
-      assert(isWriteReqType(tbe.reqType));
-    }
-    pfProxy.notifyPfHit(tbe.seqReq, is_read, tbe.dataBlk);
+    pfProxy.notifyPfHit(tbe.seqReq, isPrefetcherReadReqType(tbe.reqType),
+                        tbe.dataBlk);
 
     cache_entry.HWPrefetched := false;
   }

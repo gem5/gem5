@@ -1291,6 +1291,17 @@ bool isWriteReqType(CHIRequestType type) {
   return false;
 }
 
+// Whether a demand request that trains the prefetcher reads the line.
+// Atomics both read and write it: those that return data train as reads, the
+// others as writes.
+bool isPrefetcherReadReqType(CHIRequestType type) {
+  if (isReadReqType(type) || (type == CHIRequestType:AtomicLoad)) {
+    return true;
+  }
+  assert(isWriteReqType(type) || (type == CHIRequestType:AtomicStore));
+  return false;
+}
+
 bool isStashReqType(CHIRequestType type) {
   if (type == CHIRequestType:StashOnceShared ||
       type == CHIRequestType:StashOnceUnique ||
