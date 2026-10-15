@@ -84,7 +84,8 @@ class Plic(PlicBase):
     )
     output_latency = Param.Int(
         3,
-        "Cycle latency from received interrupt signal to output",
+        "Cycle latency from an interrupt source signal change "
+        "(post/clear) to the PLIC pending state",
     )
 
     def generateDeviceTree(self, state):

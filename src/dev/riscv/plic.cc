@@ -40,11 +40,7 @@
 
 #include <algorithm>
 
-#include "config/use_kvm.hh"
 #include "cpu/base.hh"
-#if USE_KVM
-#include "cpu/kvm/base.hh"
-#endif
 #include "debug/Plic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -57,13 +53,13 @@ namespace gem5
 
 using namespace RiscvISA;
 
-Plic::Plic(const Params &params) :
-    PlicBase(params),
-    system(params.system),
-    nSrc(params.n_src),
-    outputLatency(params.output_latency),
-    registers(params.name, pioAddr, this),
-    update([this]{updateOutput();}, name() + ".update")
+Plic::Plic(const Params &params)
+    : PlicBase(params),
+      system(params.system),
+      nSrc(params.n_src),
+      outputLatency(params.output_latency),
+      registers(params.name, pioAddr, this),
+      update([this] { updateIntState(); }, name() + ".update")
 {
     fatal_if(params.hart_config != "" && params.n_contexts != 0,
              "the hart_config and n_contexts can't be set simultaneously");
@@ -82,6 +78,18 @@ Plic::post(int src_id)
     // Sanity check
     assert(src_id < nSrc && src_id >= 0);
 
+    Tick next_update = clockEdge(Cycles(outputLatency));
+    inputQueue[next_update][src_id] = true;
+
+    if (!update.scheduled()) {
+        DPRINTF(Plic, "Update scheduled - tick: %d\n", next_update);
+        schedule(update, next_update);
+    }
+}
+
+void
+Plic::postImpl(int src_id)
+{
     // Update pending bit
     int src_index = src_id >> 5;
     int src_offset = src_id & 0x1F;
@@ -97,12 +105,8 @@ Plic::post(int src_id)
         bool enabled = bits(registers.enable[i][src_index].get(), src_offset);
         effPriority[i][src_id] = enabled ? pendingPriority[src_id] : 0;
     }
-    DPRINTF(Plic,
-        "Int post request - source: %#x, current priority: %#x\n",
-        src_id, pendingPriority[src_id]);
-
-    // Propagate output changes
-    propagateOutput();
+    DPRINTF(Plic, "Int post request - source: %#x, current priority: %#x\n",
+            src_id, pendingPriority[src_id]);
 }
 
 void
@@ -112,6 +116,18 @@ Plic::clear(int src_id)
     assert(src_id < nSrc);
     assert(src_id >= 0);
 
+    Tick next_update = clockEdge(Cycles(outputLatency));
+    inputQueue[next_update][src_id] = false;
+
+    if (!update.scheduled()) {
+        DPRINTF(Plic, "Update scheduled - tick: %d\n", next_update);
+        schedule(update, next_update);
+    }
+}
+
+void
+Plic::clearImpl(int src_id)
+{
     // Update pending bit
     int src_index = src_id >> 5;
     int src_offset = src_id & 0x1F;
@@ -125,12 +141,8 @@ Plic::clear(int src_id)
     for (int i = 0; i < contextConfigs.size(); i++) {
         effPriority[i][src_id] = 0;
     }
-    DPRINTF(Plic,
-        "Int clear request - source: %#x, current priority: %#x\n",
-        src_id, pendingPriority[src_id]);
-
-    // Propagate output changes
-    propagateOutput();
+    DPRINTF(Plic, "Int clear request - source: %#x, current priority: %#x\n",
+            src_id, pendingPriority[src_id]);
 }
 
 Tick
@@ -165,11 +177,8 @@ Plic::write(PacketPtr pkt)
     // Perform register write
     registers.write(pkt->getAddr(), pkt->getPtr<void>(), pkt->getSize());
 
-    // Propagate output changes
-    propagateOutput();
-
-    // Apply threshold changes
-    updateInt();
+    // Update output and apply changes to xEIP lines
+    updateOutput();
 
     pkt->makeResponse();
     return pioDelay;
@@ -363,30 +372,13 @@ Plic::readClaim(Register32& reg, const int context_id)
         int src_index = max_int_id >> 5;
         int src_offset = max_int_id & 0x1F;
 
-#if USE_KVM
-        auto clear_kvm_line = [&]() {
-            // KVM can re-enter the guest before the normal delayed
-            // PLIC output update fires, so clear the injected line
-            // synchronously for KVM CPUs only.
-            auto [thread_id, int_id] = contextConfigs[context_id];
-            auto tc = system->threads[thread_id];
-            auto *cpu = tc->getCpuPtr();
-            if (dynamic_cast<BaseKvmCPU *>(cpu)) {
-                cpu->clearInterrupt(tc->threadId(), int_id, 0);
-            }
-        };
-#endif
-
         // Check pending bits
         if (bits(registers.pending[src_index].get(), src_offset)) {
             lastID[context_id] = max_int_id;
             DPRINTF(Plic, "Claim success - context: %d, interrupt ID: %d\n",
                     context_id, max_int_id);
-            clear(max_int_id);
-
-#if USE_KVM
-            clear_kvm_line();
-#endif
+            clearImpl(max_int_id);
+            updateOutput();
 
             reg.update(max_int_id);
             return reg.get();
@@ -394,9 +386,7 @@ Plic::readClaim(Register32& reg, const int context_id)
             DPRINTF(Plic,
                 "Claim already cleared - context: %d, interrupt ID: %d\n",
                 context_id, max_int_id);
-#if USE_KVM
-            clear_kvm_line();
-#endif
+            updateInt();
             return 0;
         }
     } else {
@@ -424,35 +414,27 @@ Plic::writeClaim(Register32& reg, const uint32_t& data, const int context_id)
 }
 
 void
-Plic::propagateOutput()
+Plic::updateIntState()
 {
-    // Calculate new output
-    PlicOutput new_output{
-        std::vector<uint32_t>(contextConfigs.size(), 0x0),
-        std::vector<uint32_t>(contextConfigs.size(), 0x0)};
-    uint32_t max_id;
-    uint32_t max_priority;
-    for (int i = 0; i < contextConfigs.size(); i++) {
-        max_id = max_element(effPriority[i].begin(),
-            effPriority[i].end()) - effPriority[i].begin();
-        max_priority = effPriority[i][max_id];
-        new_output.maxID[i] = max_id;
-        new_output.maxPriority[i] = max_priority;
+    DPRINTF(Plic, "Update triggered\n");
+    auto it = inputQueue.begin();
+    for (const auto &[src_id, is_post] : it->second) {
+        if (is_post) {
+            postImpl(src_id);
+        } else {
+            clearImpl(src_id);
+        }
+    }
+    inputQueue.erase(it);
+
+    // Schedule next update event (if any)
+    if (!inputQueue.empty()) {
+        DPRINTF(Plic, "Update scheduled - tick: %d\n",
+                inputQueue.begin()->first);
+        schedule(update, inputQueue.begin()->first);
     }
 
-    // Add new output to outputQueue
-    Tick next_update = clockEdge(Cycles(outputLatency));
-    if (outputQueue.find(next_update) != outputQueue.end()) {
-        outputQueue[next_update] = new_output;
-    } else {
-        outputQueue.insert({next_update, new_output});
-    }
-
-    // Schedule next update event
-    if (!update.scheduled()) {
-        DPRINTF(Plic, "Update scheduled - tick: %d\n", next_update);
-        schedule(update, next_update);
-    }
+    updateOutput();
 }
 
 void
@@ -491,16 +473,14 @@ Plic::initContextFromHartConfig(const std::string& hart_config)
 void
 Plic::updateOutput()
 {
-    DPRINTF(Plic, "Update triggered\n");
-    // Set current output to new output
-    output = outputQueue.begin()->second;
-    outputQueue.erase(outputQueue.begin()->first);
-
-    // Schedule next update event (if any)
-    if (!outputQueue.empty()) {
-        DPRINTF(Plic, "Update scheduled - tick: %d\n",
-            outputQueue.begin()->first);
-        schedule(update, outputQueue.begin()->first);
+    // Calculate new output
+    for (int i = 0; i < contextConfigs.size(); i++) {
+        uint32_t max_id =
+            max_element(effPriority[i].begin(), effPriority[i].end()) -
+            effPriority[i].begin();
+        uint32_t max_priority = effPriority[i][max_id];
+        output.maxID[i] = max_id;
+        output.maxPriority[i] = max_priority;
     }
 
     updateInt();
@@ -536,7 +516,7 @@ Plic::updateInt()
 void
 Plic::serialize(CheckpointOut &cp) const
 {
-    int n_outputs = 0;
+    int n_inputs = 0;
 
     for (auto const &reg: registers.pending) {
         paramOut(cp, reg.name(), reg);
@@ -555,16 +535,24 @@ Plic::serialize(CheckpointOut &cp) const
     for (auto const &reg: registers.claim) {
         paramOut(cp, reg.name(), reg);
     }
-    for (auto const & it : outputQueue) {
-        paramOut(cp, std::string("output_tick") +
-            std::to_string(n_outputs), it.first);
-        arrayParamOut(cp, std::string("output_id") +
-            std::to_string(n_outputs), it.second.maxID);
-        arrayParamOut(cp, std::string("output_pri") +
-            std::to_string(n_outputs), it.second.maxPriority);
-        n_outputs++;
+    for (auto const &it : inputQueue) {
+        std::vector<int> src_ids;
+        std::vector<bool> is_posts;
+        for (auto const &[src_id, is_post] : it.second) {
+            src_ids.push_back(src_id);
+            is_posts.push_back(is_post);
+        }
+        paramOut(cp, std::string("input_tick") + std::to_string(n_inputs),
+                 it.first);
+        arrayParamOut(cp,
+                      std::string("input_src_id") + std::to_string(n_inputs),
+                      src_ids);
+        arrayParamOut(cp,
+                      std::string("input_is_post") + std::to_string(n_inputs),
+                      is_posts);
+        n_inputs++;
     }
-    SERIALIZE_SCALAR(n_outputs);
+    SERIALIZE_SCALAR(n_inputs);
     SERIALIZE_CONTAINER(output.maxID);
     SERIALIZE_CONTAINER(output.maxPriority);
     SERIALIZE_CONTAINER(pendingPriority);
@@ -578,8 +566,8 @@ Plic::serialize(CheckpointOut &cp) const
 void
 Plic::unserialize(CheckpointIn &cp)
 {
-    int n_outputs;
-    UNSERIALIZE_SCALAR(n_outputs);
+    int n_inputs;
+    UNSERIALIZE_SCALAR(n_inputs);
 
     for (auto &reg: registers.pending) {
         paramIn(cp, reg.name(), reg);
@@ -598,20 +586,21 @@ Plic::unserialize(CheckpointIn &cp)
     for (auto &reg: registers.claim) {
         paramIn(cp, reg.name(), reg);
     }
-    for (int i = 0; i < n_outputs; i++) {
-        Tick output_tick;
-        std::vector<uint32_t> output_id;
-        std::vector<uint32_t> output_pri;
-        paramIn(cp, std::string("output_tick") +
-            std::to_string(i), output_tick);
-        arrayParamIn(cp, std::string("output_id") +
-            std::to_string(i), output_id);
-        arrayParamIn(cp, std::string("output_pri") +
-            std::to_string(i), output_pri);
-        outputQueue[output_tick] = PlicOutput{output_id, output_pri};
+    for (int i = 0; i < n_inputs; i++) {
+        Tick input_tick;
+        std::vector<int> src_ids;
+        std::vector<bool> is_posts;
+        paramIn(cp, std::string("input_tick") + std::to_string(i), input_tick);
+        arrayParamIn(cp, std::string("input_src_id") + std::to_string(i),
+                     src_ids);
+        arrayParamIn(cp, std::string("input_is_post") + std::to_string(i),
+                     is_posts);
+        for (size_t j = 0; j < src_ids.size(); j++) {
+            inputQueue[input_tick][src_ids[j]] = is_posts[j];
+        }
     }
-    if (!outputQueue.empty()) {
-        schedule(update, outputQueue.begin()->first);
+    if (!inputQueue.empty()) {
+        schedule(update, inputQueue.begin()->first);
     }
     UNSERIALIZE_CONTAINER(output.maxID);
     UNSERIALIZE_CONTAINER(output.maxPriority);
