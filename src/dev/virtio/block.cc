@@ -45,14 +45,15 @@ namespace gem5
 {
 
 VirtIOBlock::VirtIOBlock(const Params &params)
-    : VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), 0),
-      qRequests(params.system->physProxy, byteOrder,
-                params.queueSize, *this),
+    : VirtIODeviceBase(params, ID_BLOCK, sizeof(Config), F_SEG_MAX),
+      qRequests(params.system->physProxy, byteOrder, params.queueSize, *this),
       image(*params.image)
 {
     registerQueue(qRequests);
 
     config.capacity = image.size();
+    config.size_max = 0;
+    config.seg_max = params.queueSize - 2;
 }
 
 
@@ -65,6 +66,8 @@ VirtIOBlock::readConfig(PacketPtr pkt, Addr cfgOffset)
 {
     Config cfg_out;
     cfg_out.capacity = htog(config.capacity, byteOrder);
+    cfg_out.size_max = htog(config.size_max, byteOrder);
+    cfg_out.seg_max = htog(config.seg_max, byteOrder);
 
     readConfigBlob(pkt, cfgOffset, (uint8_t *)&cfg_out);
 }
