@@ -128,7 +128,9 @@ void
 SimpleMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
         MemBackdoorPtr &_backdoor)
 {
-    getBackdoor(_backdoor);
+    if (enableBackdoor) {
+        getBackdoor(_backdoor);
+    }
 }
 
 bool
