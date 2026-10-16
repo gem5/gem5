@@ -6155,7 +6155,7 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        return decodeSveContigStoreSSInsts<SveContigStoreSS>(
+        return decodeSveContigStoreSSInsts<SveContigNtStoreSS>(
             dtype, machInst, zt, pg, rn, rm, true);
     }  // decodeSveContigNTStoreSS
 
@@ -6389,7 +6389,7 @@ namespace Aarch64
         RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t dtype = (bits(machInst, 24, 23) << 2) | bits(machInst, 24, 23);
 
-        return decodeSveContigStoreSIInsts<SveContigStoreSI>(
+        return decodeSveContigStoreSIInsts<SveContigNtStoreSI>(
             dtype, machInst, zt, pg, rn, imm, true);
     }  // decodeSveContigNTStoreSI
 

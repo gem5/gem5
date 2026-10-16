@@ -90,6 +90,7 @@ class RubyRequest : public Message
     bool m_isGLCSet;
     bool m_isSLCSet;
     bool m_isSecure;
+    bool m_isNonTemporal;
 
     RubyRequest(Tick curTime, int block_size, RubySystem *rs, uint64_t _paddr,
                 int _len, uint64_t _pc, RubyRequestType _type,
@@ -115,7 +116,8 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt ? m_pkt->req->isSecure() : false)
+          m_isSecure(m_pkt ? m_pkt->req->isSecure() : false),
+          m_isNonTemporal(m_pkt ? m_pkt->req->isNonTemporal() : false)
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -151,7 +153,8 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt->req->isSecure()),
+          m_isNonTemporal(m_pkt->req->isNonTemporal())
     {
         assert(m_pkt->req->isMemMgmt());
         if (_pkt) {
@@ -190,7 +193,8 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt->req->isSecure()),
+          m_isNonTemporal(m_pkt->req->isNonTemporal())
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -231,7 +235,8 @@ class RubyRequest : public Message
           m_htmTransactionUid(0),
           m_isTlbi(false),
           m_tlbiTransactionUid(0),
-          m_isSecure(m_pkt->req->isSecure())
+          m_isSecure(m_pkt->req->isSecure()),
+          m_isNonTemporal(m_pkt->req->isNonTemporal())
     {
         int block_size_bits = floorLog2(block_size);
         m_LineAddress = makeLineAddress(m_PhysicalAddress, block_size_bits);
@@ -248,7 +253,8 @@ class RubyRequest : public Message
     RubyRequest(Tick curTime, int block_size, RubySystem *rs)
         : Message(curTime, block_size, rs),
           m_writeMask(block_size),
-          m_WTData(block_size)
+          m_WTData(block_size),
+          m_isNonTemporal(false)
     {
     }
     MsgPtr clone() const

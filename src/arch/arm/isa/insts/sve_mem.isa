@@ -1584,6 +1584,10 @@ let {{
              'ea_code' : (sveEnabledCheckCode + eaCode),
              'fa_code' : store_fa_code},
             ['IsStore'])
+        # Non-temporal accesses hint the memory system not to allocate
+        ntFlagCode = '\nmemAccessFlags.set(Request::NON_TEMPORAL);'
+        loadNtIop.constructor += ntFlagCode
+        storeNtIop.constructor += ntFlagCode
         faultIop = ArmInstObjParams('ldff1' if firstFaulting else 'ldnf1',
             'SveContigFFLoadSS' if firstFaulting else 'SveContigNFLoadSI',
             'SveContigMemSS' if firstFaulting else 'SveContigMemSI',
