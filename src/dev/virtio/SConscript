@@ -42,6 +42,7 @@ SimObject('VirtIO.py', sim_objects=[
 SimObject('VirtIOConsole.py', sim_objects=['VirtIOConsole'])
 SimObject('VirtIOBlock.py', sim_objects=['VirtIOBlock'])
 SimObject('VirtIORng.py', sim_objects=['VirtIORng'])
+SimObject('VirtIORtc.py', sim_objects=['VirtIORtc'])
 SimObject('VirtIO9P.py', sim_objects=[
     'VirtIO9PBase', 'VirtIO9PProxy', 'VirtIO9PDiod', 'VirtIO9PSocket'])
 
@@ -51,9 +52,11 @@ Source('console.cc')
 Source('block.cc')
 Source('fs9p.cc')
 Source('rng.cc')
+Source('rtc.cc')
 
 DebugFlag('VIO', 'VirtIO base functionality')
 DebugFlag('VIORng', 'VirtIO entropy source device ')
+DebugFlag('VIORtc', 'VirtIO real time clock device')
 DebugFlag('VIOIface', 'VirtIO transport')
 DebugFlag('VIOConsole', 'VirtIO console device')
 DebugFlag('VIOBlock', 'VirtIO block device')
