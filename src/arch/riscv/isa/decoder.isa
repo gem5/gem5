@@ -4501,6 +4501,60 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPMVV, SimdMiscOp);
                 }
                 0x12: decode VS1 {
+                    0x08: VectorUnaryFormat::vbrev8_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint64_t result = 0;
+                        for (uint32_t j = 0; j < sew; j += 8) {
+                            uint64_t byte = (x >> j) & 0xff;
+                            for (uint32_t k = 0; k < 8; ++k) {
+                                result |= ((byte >> k) & 1ULL) << (j + 7 - k);
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdAluOp);
+                    0x09: VectorUnaryFormat::vrev8_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint64_t result = 0;
+                        for (uint32_t j = 0; j < sew; j += 8) {
+                            result |= ((x >> j) & 0xff) << (sew - 8 - j);
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdAluOp);
+                    0x0a: VectorUnaryFormat::vbrev_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint64_t result = 0;
+                        for (uint32_t j = 0; j < sew; ++j) {
+                            result |= ((x >> j) & 1ULL) << (sew - 1 - j);
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdAluOp);
+                    0x0c: VectorUnaryFormat::vclz_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint32_t count = 0;
+                        for (int32_t j = sew - 1; j >= 0; --j) {
+                            if ((x >> j) & 1)
+                                break;
+                            ++count;
+                        }
+                        Vd_vu[i] = count;
+                    }}, OPMVV, SimdAluOp);
+                    0x0d: VectorUnaryFormat::vctz_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint32_t count = 0;
+                        for (uint32_t j = 0; j < sew; ++j) {
+                            if ((x >> j) & 1)
+                                break;
+                            ++count;
+                        }
+                        Vd_vu[i] = count;
+                    }}, OPMVV, SimdAluOp);
+                    0x0e: VectorUnaryFormat::vcpop_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint32_t count = 0;
+                        for (uint32_t j = 0; j < sew; ++j)
+                            count += (x >> j) & 1;
+                        Vd_vu[i] = count;
+                    }}, OPMVV, SimdAluOp);
                     format VectorIntExtFormat {
                         0x02: vzext_vf8({{
                             auto offset = (vlen / SEW) * index;
