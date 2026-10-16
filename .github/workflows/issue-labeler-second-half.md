@@ -12,6 +12,7 @@ on:
 concurrency:
   group: "test-failure-doctor-second-half"
   job-discriminator: ${{ github.event.inputs.issue_number }}
+  queue: max
 
 permissions:
   issues: read
