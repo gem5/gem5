@@ -27,6 +27,7 @@ config HAVE_CAPSTONE
     def_bool $(HAVE_CAPSTONE)
 
 rsource "kvm/Kconfig"
+rsource "apple_virt/Kconfig"
 
 config USE_CAPSTONE
     depends on HAVE_CAPSTONE
