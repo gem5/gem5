@@ -136,9 +136,10 @@ class SimPoint:
         instruction starts and a list of weights.
         """
         simpoint = []
-        with open(simpoint_path) as simpoint_file, open(
-            weight_path
-        ) as weight_file:
+        with (
+            open(simpoint_path) as simpoint_file,
+            open(weight_path) as weight_file,
+        ):
             while True:
                 line = simpoint_file.readline()
                 if not line:

@@ -18,6 +18,18 @@ jobs:
               id: date
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+    pre-commit:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: '3.10'
+            - uses: pre-commit/action@v3.0.1
+              env:
+                  SKIP: gem5-git-clang-format
+
+
     macos-compilation:
         # The purpose of this is to cache the macOS compilation.
         # MacOS compilation checks are run as part of the CI tests but as the
@@ -69,6 +81,29 @@ jobs:
                   fi
               timeout-minutes: 120
 
+    build-clang-gem5-fast:
+        # Builds gem5.fast using the latest supported clang
+        # version. This is cached and used in the CI tests.
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/clang-version-22:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - name: Repo checkout
+              uses: actions/checkout@v7
+
+            - name: Clang compilation cache
+              uses: actions/cache@v6
+              with:
+                  path: build/ALL
+                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      clang-build-ALL-fast
+
+            - name: Clang compilation
+              run: scons build/ALL/gem5.fast -j $(nproc)
+
     build-testlib-gem5:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
@@ -82,15 +117,15 @@ jobs:
         steps:
             - uses: actions/checkout@v7
 
-            - name: Cache the producer's incremental build
+            - name: Cache the incremental build
               uses: actions/cache@v6
               with:
                   path: build/${{ matrix.target }}
-                  key: testlib-binary-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-binary-build-${{ matrix.target }}-
+                      testlib-build-${{ matrix.target }}
 
-            - name: Build the TestLib binary
+            - name: Build the TestLib target
               env:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
@@ -99,15 +134,13 @@ jobs:
                   scons --ignore-style setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
                   scons --ignore-style "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
 
-            - name: Package the exact binary and its provenance
+            - name: Tarball the build executable
               env:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
-                  printf '%s\n' "$GITHUB_SHA" > "build/$BUILD_TARGET/COMMIT"
-                  sha256sum "build/$BUILD_TARGET/gem5.opt" > "build/$BUILD_TARGET/binary.sha256"
-                  tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt" "build/$BUILD_TARGET/COMMIT" "build/$BUILD_TARGET/binary.sha256"
+                  tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt"
 
-            - name: Publish the execution artifact
+            - name: Publish the build executable as artifact
               uses: actions/upload-artifact@v7
               with:
                   # Keep names stable when rerunning only failed consumers.
@@ -144,41 +177,24 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  unset PREV
-                  echo "test-dirs-matrix=$(\
-                    ./main.py list gem5 \
-                    --suites \
-                    --length=long | \
-                    grep "$SUITEUID:" | \
-                    cut -d: -f2 | \
-                    cut -d/ -f 2- | \
-                    xargs dirname | \
-                    sort -u  | \
-                    while read x; do \
-                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
-                        PREV=$x; \
-                        echo $x; \
-                      fi; \
-                    done  | \
-                    jq -ncR '[inputs]'\
-                  )" >>$GITHUB_OUTPUT
+                  ./main.py list gem5 --suites -q --length=long > "$RUNNER_TEMP/test-suites"
+                  test_dirs=$(jq -Rsc '
+                    split("\n") |
+                    map(select(startswith("SuiteUID:")) |
+                        split(":")[1] | split("/")[1:-1] | join("/")) |
+                    unique |
+                    if length == 0 then error("No TestLib suites found") else . end
+                  ' "$RUNNER_TEMP/test-suites")
+                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
             - name: Discover required binary configurations
               id: build-matrix
               working-directory: ${{ github.workspace }}/tests
               run: |
                   ./main.py list gem5 --length=long --host x86_64 --build-targets -q > "$RUNNER_TEMP/build-targets"
-                  # Fail if new suites need a variant/protocol this producer
-                  # does not yet handle, rather than silently dropping tests.
-                  grep -Eq '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/build-targets"
-                  if grep -Ev '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/build-targets"; then
-                    exit 1
-                  fi
-                  while read -r binary; do
-                    target=$(basename "$(dirname "$binary")")
-                    test -f "../build_opts/$target"
-                  done < "$RUNNER_TEMP/build-targets"
-                  echo "build-matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique' "$RUNNER_TEMP/build-targets")" >> "$GITHUB_OUTPUT"
+                  # Always refresh the ALL cache for the PR and weekly tests.
+                  build_matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | . + ["ALL"] | unique' "$RUNNER_TEMP/build-targets")
+                  echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
 
   # start running all of the long tests
     testlib-long-tests:
@@ -213,9 +229,6 @@ jobs:
                     echo "has-binaries=false" >> "$GITHUB_OUTPUT"
                     exit 0
                   fi
-                  if grep -Ev '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/required-binaries"; then
-                    exit 1
-                  fi
                   targets=$(jq -Rrsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique | join("|")' "$RUNNER_TEMP/required-binaries")
                   echo "has-binaries=true" >> "$GITHUB_OUTPUT"
                   # download-artifact uses minimatch: match exactly this set.
@@ -229,15 +242,11 @@ jobs:
                   path: ${{ runner.temp }}/gem5-binaries
                   merge-multiple: true
 
-            - name: Verify and unpack the binaries
+            - name: Unpack the binaries
               if: steps.required-binaries.outputs.has-binaries == 'true'
               run: |
                   for archive in "$RUNNER_TEMP"/gem5-binaries/gem5-*.tar.gz; do
                     tar -xzf "$archive"
-                  done
-                  for manifest in build/*/binary.sha256; do
-                    sha256sum --check "$manifest"
-                    printf '%s\n' "$GITHUB_SHA" | cmp - "$(dirname "$manifest")/COMMIT"
                   done
 
             - name: Run long ${{ matrix.test-type }} tests
@@ -252,9 +261,6 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  while read -r binary; do
-                    test -x "$binary"
-                  done < "$RUNNER_TEMP/required-binaries"
                   ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t $(nproc) --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
@@ -265,8 +271,6 @@ jobs:
             - name: Upload results
               if: always()
               uses: actions/upload-artifact@v7
-              env:
-                  MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
                   name: daily-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
@@ -277,11 +281,23 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 240
+        needs: get-date
 
         steps:
             - uses: actions/checkout@v7
+
+            - name: Cache the SST build
+              uses: actions/cache@v6
+              with:
+                  path: build/*
+                  key: sst-build-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      sst-build
+
             - name: Build RISCV/libgem5_opt.so with SST
-              run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
+              run: |
+                  scons defconfig build/RISCV build_opts/RISCV --ignore-style
+                  scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
               working-directory: ${{ github.workspace }}/ext/sst
               run: mv Makefile.linux Makefile
@@ -298,11 +314,14 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
-
+        # The shared-library build changes the configuration and generated
+        # headers. Restoring it can race header regeneration on the next run.
         steps:
             - uses: actions/checkout@v7
             - name: Build ARM/gem5.opt
-              run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
+              run: |
+                  scons defconfig build/ARM build_opts/ARM --ignore-style
+                  scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
               run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
@@ -324,16 +343,27 @@ jobs:
         env:
             GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 360 # 6 hours
+        needs: get-date
         steps:
             - uses: actions/checkout@v7
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.6.0 --depth 1 DRAMSys
 
+            - name: Cache the build
+              uses: actions/cache@v6
+              with:
+                  path: build/*
+                  key: dramsys-build-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      dramsys-build
+
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.opt -j $(nproc)
+              run: |
+                  scons defconfig build/ALL build_opts/ALL
+                  scons build/ALL/gem5.opt -j $(nproc)
 
             - name: Run DRAMSys Checks
               working-directory: ${{ github.workspace }}

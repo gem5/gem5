@@ -1151,7 +1151,7 @@ class SimObject(metaclass=MetaSimObject):
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
-                    if isSimObjectVector(match_obj):
+                    if isinstance(pdesc, VectorParamDesc):
                         for item in match_obj:
                             if not isNullPointer(item):
                                 all[item] = True

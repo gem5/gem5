@@ -89,6 +89,17 @@ def create_parser(description):
         help="directory used for resources obtained by gem5",
     )
     parser.add_argument(
+        "--skip-cache-hash-check",
+        action="store_true",
+        help="trust existing cached resources without hashing; emits warnings",
+    )
+    parser.add_argument(
+        "--resource-lock-timeout",
+        type=float,
+        default=3600,
+        help="seconds to wait for a resource lock (default: 3600)",
+    )
+    parser.add_argument(
         "--disk-resource-version",
         default=GPUFS_DISK_RESOURCE_VERSION,
         help="version of the GPUFS disk image resource",
@@ -138,7 +149,11 @@ def create_parser(description):
 
 
 def _resource_kwargs(args, resource_version):
-    kwargs = {"resource_version": resource_version}
+    kwargs = {
+        "resource_version": resource_version,
+        "skip_cache_hash_check": args.skip_cache_hash_check,
+        "lock_timeout": args.resource_lock_timeout,
+    }
     if args.resource_directory:
         args.resource_directory.mkdir(parents=True, exist_ok=True)
         kwargs["resource_directory"] = str(args.resource_directory)

@@ -155,12 +155,14 @@ for name in arm_fs_long_tests:
         ),
         config.base_dir,
     ]
+    if name.endswith("-ruby"):
+        args.append("--protocol=CHI")
     gem5_verify_config(
         name=name,
         verifiers=verifier_list(name),  # TODO: Add basic stat verifiers
         config=joinpath(filepath, "run.py"),
         config_args=args,
-        valid_isas=(constants.arm_x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         length=constants.long_tag,
         uses_kvm=name in arm_fs_kvm_tests,
     )

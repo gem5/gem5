@@ -512,7 +512,13 @@ def config_embedded_python(env):
         prefixes = ('-l', '-L', '-I')
         is_useful = lambda x: any(x.startswith(prefix) for prefix in prefixes)
         useful_flags = list(filter(is_useful, flags))
-        env.MergeFlags(' '.join(useful_flags))
+        parsed_flags = env.ParseFlags(' '.join(useful_flags))
+        env.MergeFlags(parsed_flags)
+        # Keep CPPPATH for dependency scanning, but classify Python's
+        # external headers as system headers for compiler diagnostics.
+        env.AppendUnique(CCFLAGS=[
+            ('-isystem', path) for path in parsed_flags['CPPPATH']
+        ])
 
     env.ParseConfig(cmd, flag_filter)
 
@@ -671,9 +677,10 @@ for variant_path in variant_paths:
         # Treat warnings as errors but white list some warnings that we
         # want to allow (e.g., deprecation warnings).
         env.Append(CCFLAGS=['-Werror',
-                             '-Wno-error=deprecated-declarations',
-                             '-Wno-error=deprecated',
-                            ])
+                            '-Wno-error=deprecated-declarations',
+                            '-Wno-error=deprecated',
+                           ])
+
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",

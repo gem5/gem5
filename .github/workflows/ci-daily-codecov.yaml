@@ -54,25 +54,15 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  unset PREV
-                  echo "test-dirs-matrix-${{ matrix.type }}=$(\
-                    ./main.py list gem5 \
-                    --suites \
-                    --length ${{ matrix.type }} \
-                    --gcov=test-only | \
-                    grep "$SUITEUID:" | \
-                    cut -d: -f2 | \
-                    cut -d/ -f 2- | \
-                    xargs dirname | \
-                    sort -u  | \
-                    while read x; do \
-                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
-                        PREV=$x; \
-                        echo $x; \
-                      fi; \
-                    done  | \
-                    jq -ncR '[inputs]'\
-                  )" >>$GITHUB_OUTPUT
+                  ./main.py list gem5 --suites -q --length=${{ matrix.type }} --gcov=test-only > "$RUNNER_TEMP/test-suites"
+                  test_dirs=$(jq -Rsc '
+                    split("\n") |
+                    map(select(startswith("SuiteUID:")) |
+                        split(":")[1] | split("/")[1:-1] | join("/")) |
+                    unique |
+                    if length == 0 then error("No TestLib suites found") else . end
+                  ' "$RUNNER_TEMP/test-suites")
+                  echo "test-dirs-matrix-${{ matrix.type }}=$test_dirs" >> "$GITHUB_OUTPUT"
 
     flatten-length-and-testdir-matrices:
         name: flatten-length-and-testdir-matrices
@@ -198,7 +188,7 @@ jobs:
             - name: disable systemc
               run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
-              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
+              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc --gcov -j$(nproc) --duplicate-sources
             - name: Compile gem5 within SystemC
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make
@@ -226,7 +216,7 @@ jobs:
             - uses: actions/checkout@v7
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
-              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys
+              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.6.0 --depth 1 DRAMSys
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5

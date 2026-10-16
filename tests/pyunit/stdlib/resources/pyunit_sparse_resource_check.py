@@ -80,12 +80,15 @@ class SparseResourceTestSuite(unittest.TestCase):
         self.directory.cleanup()
 
     def _obtain(self, destination: Path, **resource_args) -> str:
-        with patch(
-            "gem5.resources.resource.get_resource_json_obj",
-            return_value=self.resource_json,
-        ), patch(
-            "gem5.resources.downloader.get_resource_json_obj",
-            return_value=self.resource_json,
+        with (
+            patch(
+                "gem5.resources.resource.get_resource_json_obj",
+                return_value=self.resource_json,
+            ),
+            patch(
+                "gem5.resources.downloader.get_resource_json_obj",
+                return_value=self.resource_json,
+            ),
         ):
             resource = obtain_resource(
                 resource_id=self.resource_json["id"],
@@ -173,13 +176,16 @@ class SparseResourceTestSuite(unittest.TestCase):
         """A packaged image remains an archive when unzip is disabled."""
 
         destination = self.directory_path / "image.raw.gz.copy"
-        with patch(
-            "gem5.resources.downloader.get_resource_json_obj",
-            return_value=self.resource_json,
-        ), patch(
-            "gem5.resources.downloader._write_sparse_file",
-            wraps=_write_sparse_file,
-        ) as sparse_writer:
+        with (
+            patch(
+                "gem5.resources.downloader.get_resource_json_obj",
+                return_value=self.resource_json,
+            ),
+            patch(
+                "gem5.resources.downloader._write_sparse_file",
+                wraps=_write_sparse_file,
+            ) as sparse_writer,
+        ):
             get_resource(
                 resource_name=self.resource_json["id"],
                 to_path=str(destination),
@@ -209,13 +215,16 @@ class SparseResourceTestSuite(unittest.TestCase):
                 "is_tar_archive": True,
             }
         )
-        with patch(
-            "gem5.resources.downloader.get_resource_json_obj",
-            return_value=self.resource_json,
-        ), patch(
-            "gem5.resources.downloader._write_sparse_file",
-            wraps=_write_sparse_file,
-        ) as sparse_writer:
+        with (
+            patch(
+                "gem5.resources.downloader.get_resource_json_obj",
+                return_value=self.resource_json,
+            ),
+            patch(
+                "gem5.resources.downloader._write_sparse_file",
+                wraps=_write_sparse_file,
+            ) as sparse_writer,
+        ):
             get_resource(
                 resource_name=self.resource_json["id"],
                 to_path=str(destination),
@@ -245,13 +254,16 @@ class SparseResourceTestSuite(unittest.TestCase):
                 "is_tar_archive": True,
             }
         )
-        with patch(
-            "gem5.resources.downloader.get_resource_json_obj",
-            return_value=self.resource_json,
-        ), patch(
-            "gem5.resources.downloader._write_sparse_file",
-            wraps=_write_sparse_file,
-        ) as sparse_writer:
+        with (
+            patch(
+                "gem5.resources.downloader.get_resource_json_obj",
+                return_value=self.resource_json,
+            ),
+            patch(
+                "gem5.resources.downloader._write_sparse_file",
+                wraps=_write_sparse_file,
+            ) as sparse_writer,
+        ):
             get_resource(
                 resource_name=self.resource_json["id"],
                 to_path=str(destination),
@@ -285,13 +297,16 @@ class SparseResourceTestSuite(unittest.TestCase):
         with open(destination, "wb") as output:
             _copy_to_sparse_file(io.BytesIO(self.contents), output)
 
-        with patch(
-            "gem5.resources.downloader._file_has_holes",
-            return_value=True,
-        ), patch(
-            "gem5.resources.downloader._densify_file",
-            wraps=_densify_file,
-        ) as densifier:
+        with (
+            patch(
+                "gem5.resources.downloader._file_has_holes",
+                return_value=True,
+            ),
+            patch(
+                "gem5.resources.downloader._densify_file",
+                wraps=_densify_file,
+            ) as densifier,
+        ):
             self._obtain(destination, sparse=False)
 
         densifier.assert_called_once()
@@ -307,13 +322,16 @@ class SparseResourceTestSuite(unittest.TestCase):
                 "root_partition": "1",
             }
         )
-        with patch(
-            "gem5.resources.downloader.get_resource_json_obj",
-            return_value=self.resource_json,
-        ), patch(
-            "gem5.resources.downloader._write_sparse_file",
-            wraps=_write_sparse_file,
-        ) as sparse_writer:
+        with (
+            patch(
+                "gem5.resources.downloader.get_resource_json_obj",
+                return_value=self.resource_json,
+            ),
+            patch(
+                "gem5.resources.downloader._write_sparse_file",
+                wraps=_write_sparse_file,
+            ) as sparse_writer,
+        ):
             get_resource(
                 resource_name=self.resource_json["id"],
                 to_path=str(destination),
@@ -416,13 +434,16 @@ class SparseResourceTestSuite(unittest.TestCase):
             "function": "set_kernel_disk_workload",
             "parameters": {},
         }
-        with patch(
-            "gem5.resources.resource.get_multiple_resource_json_obj",
-            return_value=[workload],
-        ), patch(
-            "gem5.resources.resource._get_workload",
-            return_value=workload,
-        ) as get_workload:
+        with (
+            patch(
+                "gem5.resources.resource.get_multiple_resource_json_obj",
+                return_value=[workload],
+            ),
+            patch(
+                "gem5.resources.resource._get_workload",
+                return_value=workload,
+            ) as get_workload,
+        ):
             _get_suite(
                 suite=suite,
                 local_path=str(self.directory_path),
@@ -476,10 +497,13 @@ class SparseResourceTestSuite(unittest.TestCase):
         successful_response.headers = {"Content-Length": str(len(compressed))}
         destination = self.directory_path / "retried.raw"
 
-        with patch(
-            "gem5.resources.downloader.urllib.request.urlopen",
-            side_effect=[ResetResponse(), successful_response],
-        ) as urlopen, patch("gem5.resources.downloader.time.sleep"):
+        with (
+            patch(
+                "gem5.resources.downloader.urllib.request.urlopen",
+                side_effect=[ResetResponse(), successful_response],
+            ) as urlopen,
+            patch("gem5.resources.downloader.time.sleep"),
+        ):
             _download_to_sparse_file(
                 url="https://example.com/image.raw.gz",
                 to_path=str(destination),
@@ -503,10 +527,13 @@ class SparseResourceTestSuite(unittest.TestCase):
         successful_response.headers = {"Content-Length": str(len(compressed))}
         destination = self.directory_path / "retried-truncated.raw"
 
-        with patch(
-            "gem5.resources.downloader.urllib.request.urlopen",
-            side_effect=[truncated_response, successful_response],
-        ) as urlopen, patch("gem5.resources.downloader.time.sleep"):
+        with (
+            patch(
+                "gem5.resources.downloader.urllib.request.urlopen",
+                side_effect=[truncated_response, successful_response],
+            ) as urlopen,
+            patch("gem5.resources.downloader.time.sleep"),
+        ):
             _download_to_sparse_file(
                 url="https://example.com/image.raw.gz",
                 to_path=str(destination),

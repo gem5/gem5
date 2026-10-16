@@ -71,6 +71,17 @@ if __name__ == "__m5_main__":
         help="Suppress output.",
     )
 
+    parser.add_argument(
+        "--skip-cache-hash-check",
+        action="store_true",
+        help="Trust an existing cache path without hashing; emits a warning.",
+    )
+    parser.add_argument(
+        "--lock-timeout",
+        type=float,
+        default=900,
+        help="Seconds to wait for the resource lock (default: 900).",
+    )
     sparse_group = parser.add_mutually_exclusive_group()
     sparse_group.add_argument(
         "--sparse",
@@ -93,10 +104,15 @@ if __name__ == "__m5_main__":
         quiet=args.quiet,
         to_path=args.path,
         sparse=args.sparse,
+        skip_cache_hash_check=args.skip_cache_hash_check,
+        lock_timeout=args.lock_timeout,
     )
 
+    # Acquisition is lazy; quiet mode suppresses the path print, not the
+    # download, locking, or cache-trust warning.
+    local_path = resource.get_local_path()
     if not args.quiet:
-        print(f"Resource at: '" + str(resource.get_local_path()) + "'")
+        print(f"Resource at: '{local_path}'")
 
     exit(0)
 

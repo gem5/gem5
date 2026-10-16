@@ -30,18 +30,9 @@ isa_map = {
     "sparc": constants.sparc_tag,
     "mips": constants.mips_tag,
     "arm": constants.arm_tag,
-    "x86": constants.vega_x86_tag,
+    "x86": constants.x86_tag,
     "power": constants.power_tag,
     "riscv": constants.riscv_tag,
-}
-
-length_map = {
-    "sparc": constants.very_long_tag,
-    "mips": constants.very_long_tag,
-    "arm": constants.long_tag,
-    "x86": constants.long_tag,
-    "power": constants.very_long_tag,
-    "riscv": constants.long_tag,
 }
 
 for isa in isa_map.keys():
@@ -60,7 +51,7 @@ for isa in isa_map.keys():
         config_args=["-i", isa],
         valid_isas=(isa_map[isa],),
         valid_hosts=constants.supported_hosts,
-        length=length_map[isa],
+        length=constants.very_long_tag,
     )
 
     gem5_verify_config(
@@ -78,5 +69,5 @@ for isa in isa_map.keys():
         config_args=["-i", isa],
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
-        length=constants.quick_tag,
+        length=constants.very_long_tag,
     )

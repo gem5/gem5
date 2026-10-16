@@ -43,6 +43,7 @@
 #include "sim/simulate.hh"
 
 #include <atomic>
+#include <barrier>
 #include <thread>
 
 #include "base/logging.hh"
@@ -113,7 +114,7 @@ class SimulatorThreads
         // threads should be waiting on the barrier when the function
         // is called. The arrival of the main thread here will satisfy
         // the barrier and start another iteration in the thread loop.
-        barrier.wait();
+        barrier.arrive_and_wait();
     }
 
     void
@@ -129,7 +130,7 @@ class SimulatorThreads
          * barrier. Tell the helper threads to exit and release them from
          * their barrier. */
         terminate = true;
-        barrier.wait();
+        barrier.arrive_and_wait();
 
         /* Wait for all of the threads to terminate */
         for (auto &t : threads) {
@@ -153,18 +154,18 @@ class SimulatorThreads
     thread_main(EventQueue *queue)
     {
         /* Wait for all initialisation to complete */
-        barrier.wait();
+        barrier.arrive_and_wait();
 
         while (!terminate) {
             doSimLoop(queue);
-            barrier.wait();
+            barrier.arrive_and_wait();
         }
     }
 
     std::atomic<bool> terminate;
     uint32_t numQueues;
     std::vector<std::thread> threads;
-    Barrier barrier;
+    std::barrier<> barrier;
 };
 
 static std::unique_ptr<SimulatorThreads> simulatorThreads;
