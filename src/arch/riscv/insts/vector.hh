@@ -393,10 +393,6 @@ class VseMacroInst : public VectorMemMacroInst
 
 class VleMicroInst : public VectorMicroInst
 {
-  public:
-    mutable bool trimVl;
-    mutable uint32_t faultIdx;
-
   protected:
     Request::Flags memAccessFlags;
 
@@ -405,7 +401,6 @@ class VleMicroInst : public VectorMicroInst
                  uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
                           _elen, _vlen)
-        , trimVl(false), faultIdx(_microVl)
     {
         this->flags[IsLoad] = true;
     }
@@ -695,7 +690,7 @@ class VlFFTrimVlMicroOp : public VectorMicroInst
     VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
                       uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
                       std::vector<StaticInstPtr>& _microops);
-    uint32_t calcVl() const;
+    uint32_t calcVl(ExecContext *xc) const;
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     std::unique_ptr<PCStateBase> branchTarget(ThreadContext *) const override;
     std::string generateDisassembly(Addr, const loader::SymbolTable *)
@@ -719,8 +714,6 @@ class VlSegMicroInst : public VectorMicroInst
   protected:
     Request::Flags memAccessFlags;
     uint8_t regIdx;
-    mutable bool trimVl;
-    mutable uint32_t faultIdx;
 
     VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
                    OpClass __opClass, uint32_t _microVl,
@@ -729,7 +722,6 @@ class VlSegMicroInst : public VectorMicroInst
                    uint32_t _elen, uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
                           _microIdx, _elen, _vlen)
-        , trimVl(false), faultIdx(_microVl)
     {
       this->flags[IsLoad] = true;
     }

@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "arch/generic/isa.hh"
+#include "arch/riscv/fof.hh"
 #include "arch/riscv/pcstate.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/types.hh"
@@ -116,8 +117,20 @@ class ISA : public BaseISA
     */
     const bool _wfiResumeOnPending;
 
+    /** Per-thread FoF trim results (see arch/riscv/fof.hh). */
+    FoFTable fofTable;
+
   public:
     using Params = RiscvISAParams;
+
+    FoFTable &fof() { return fofTable; }
+    const FoFTable &fof() const { return fofTable; }
+
+    void
+    clearTransientInstState(InstSeqNum sn) override
+    {
+        fofTable.clearSeq(sn);
+    }
 
     void clear() override;
 

@@ -31,6 +31,7 @@
 #include <sstream>
 #include <string>
 
+#include "arch/riscv/fof.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/misc.hh"
@@ -588,17 +589,11 @@ VlFFTrimVlMicroOp::VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
 }
 
 uint32_t
-VlFFTrimVlMicroOp::calcVl() const
+VlFFTrimVlMicroOp::calcVl(ExecContext *xc) const
 {
-    uint32_t vl = 0;
-    for (uint8_t i=0; i<microIdx; i++) {
-        VleMicroInst& micro = static_cast<VleMicroInst&>(*microops[i]);
-        vl += micro.faultIdx;
-
-        if (micro.trimVl)
-            break;
-    }
-    return vl;
+    // microIdx is the number of FoF load micros that precede this trim micro
+    // in the macro (see Vle/VlSeg constructors). Results live on RiscvISA.
+    return RiscvISA::reduceFoFVl(xc, microops, microIdx);
 }
 
 Fault
@@ -613,7 +608,7 @@ VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
     PCState pc;
     set(pc, xc->pcState());
 
-    uint32_t new_vl = calcVl();
+    uint32_t new_vl = calcVl(xc);
 
     tc->setMiscReg(MISCREG_VSTART, 0);
 
@@ -634,9 +629,10 @@ VlFFTrimVlMicroOp::branchTarget(ThreadContext *tc) const
 {
     PCStateBase *pc_ptr = tc->pcState().clone();
 
-    uint32_t new_vl = calcVl();
-
-    pc_ptr->as<PCState>().vl(new_vl);
+    // No ExecContext here (prediction / indirect target). Do not read
+    // StaticInst mutable FoF state. execute() installs the trimmed vl;
+    // keep the current architectural vl for the predicted PC.
+    pc_ptr->as<PCState>().vl(pc_ptr->as<PCState>().vl());
     return std::unique_ptr<PCStateBase>{pc_ptr};
 }
 

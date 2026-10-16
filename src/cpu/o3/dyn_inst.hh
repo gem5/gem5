@@ -132,6 +132,12 @@ class DynInst : public ExecContext, public RefCounted
     /** The sequence number of the instruction. */
     InstSeqNum seqNum = 0;
 
+    InstSeqNum
+    getSeqNum() const override
+    {
+        return seqNum;
+    }
+
     /** The StaticInst used by this BaseDynInst. */
     const StaticInstPtr staticInst;
 
