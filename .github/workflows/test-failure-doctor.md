@@ -12,8 +12,8 @@ on:
   roles: all
 
 concurrency:
-  group: "test-failure-doctor"
-  job-discriminator: ${{ github.event.inputs.failed_workflow_id }}
+  group: "test-failure-doctor-${{ github.event.inputs.failed_workflow_id }}"
+  job-discriminator: "test-failure-doctor-${{ github.event.inputs.failed_workflow_id }}"
 
 permissions: read-all
 

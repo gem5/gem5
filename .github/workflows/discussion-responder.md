@@ -14,8 +14,8 @@ on:
         type: string
 
 concurrency:
-  group: "discussion-responder"
-  job-discriminator: ${{ github.event.inputs.discussion_number }}
+  group: "discussion-responder-${{ github.event.inputs.discussion_number }}"
+  job-discriminator: "discussion-responder-${{ github.event.inputs.discussion_number }}"
 
 permissions:
   discussions: read
