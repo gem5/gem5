@@ -42,7 +42,9 @@ namespace prefetch
 {
 
 MLOP::AMTEntry::AMTEntry(TagExtractor ext)
-{ registerTagExtractor(ext); }
+{
+    registerTagExtractor(ext);
+}
 
 void
 MLOP::AMTEntry::invalidate()
@@ -102,12 +104,12 @@ MLOP::resetScores()
 }
 
 MLOP::AMTEntry &
-MLOP::findOrAllocAmtEntry(Addr block)
+MLOP::findOrAllocAmtEntry(Addr block, bool is_secure)
 {
     // amt_indexing_policy's entry_size == bit_vector_size, so the
     // indexing policy itself extracts the region's set and tag from
     // the raw block address; no manual region shift needed here.
-    const AMTEntry::KeyType key{block, false};
+    const AMTEntry::KeyType key{block, is_secure};
 
     AMTEntry *entry = amt.findEntry(key);
     if (entry != nullptr) {
@@ -120,11 +122,11 @@ MLOP::findOrAllocAmtEntry(Addr block)
 }
 
 void
-MLOP::updateScoresWithAccess(Addr block)
+MLOP::updateScoresWithAccess(Addr block, bool is_secure)
 {
     const unsigned idx = unsigned(block & regionMask);
 
-    AMTEntry &entry = findOrAllocAmtEntry(block);
+    AMTEntry &entry = findOrAllocAmtEntry(block, is_secure);
 
     // For each level L, credit every offset that would have predicted
     // this access after excluding the last (L-1) accesses.
@@ -217,7 +219,7 @@ MLOP::calculatePrefetch(const PrefetchInfo &pfi,
     const Addr addr = pfi.getAddr();
     const Addr block = addr >> lBlkSize;
 
-    updateScoresWithAccess(block);
+    updateScoresWithAccess(block, pfi.isSecure());
     accessCounter++;
 
     if (accessCounter >= evalPeriod) {

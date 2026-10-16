@@ -129,8 +129,8 @@ class MLOP : public Queued
     void resetScores();
     std::vector<std::pair<LookaheadLevel, Offset>> selectBestOffsets();
 
-    AMTEntry &findOrAllocAmtEntry(Addr block);
-    void updateScoresWithAccess(Addr block);
+    AMTEntry &findOrAllocAmtEntry(Addr block, bool is_secure);
+    void updateScoresWithAccess(Addr block, bool is_secure);
 };
 
 } // namespace prefetch
