@@ -31,5 +31,5 @@ jobs:
 
             - name: Run Discussion Responder
               run: |
-                  gh aw run discussion-responder --ref develop --raw-field discussion_number=${{ github.event.discussion.number }} --raw-field discussion_category=${{ github.event.discussion.category.name }}
+                  gh aw run discussion-responder --ref develop --raw-field "discussion_number=${{ github.event.discussion.number }}" --raw-field "discussion_category=${{ github.event.discussion.category.name }}"
                   echo "Discussion responder scheduled to run on develop branch"
