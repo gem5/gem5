@@ -173,6 +173,12 @@ class Queued : public Base
     /** Tag prefetch with PC of generating access? */
     const bool tagPrefetch;
 
+    /**
+     * Candidates from calculatePrefetch() are absolute addresses (typically
+     * PAs), not a stride applied to the triggering access. Allows queuing
+     * A[B[i]] which lives on a different page than the B[] load.
+     */
+    const bool absoluteAddr;
     /** Percentage of requests that can be throttled */
     const unsigned int throttleControlPct;
 
