@@ -1,3 +1,4 @@
+# Copyright (c) 2026 The Regents of The University of California
 # Copyright (c) 2020 ARM Limited
 # All rights reserved
 #
@@ -46,8 +47,6 @@ import difflib
 import errno
 import os
 import re
-import shutil
-import stat
 import subprocess
 import sys
 import tempfile
@@ -485,64 +484,49 @@ def _filter_file(fname, filters):
                 yield line
 
 
-def _copy_file_keep_perms(source, target):
-    """Copy a file keeping the original permisions of the target."""
-    st = os.stat(target)
-    shutil.copy2(source, target)
-    os.chown(target, st[stat.ST_UID], st[stat.ST_GID])
-
-
-def _filter_file_inplace(fname, dir, filters):
-    """
-    Filter the given file writing filtered lines out to a temporary file, then
-    copy that tempfile back into the original file.
-    """
-    _, tfname = tempfile.mkstemp(dir=dir, text=True)
-    with open(tfname, "w") as tempfile_:
-        for line in _filter_file(fname, filters):
-            tempfile_.write(line)
-
-    # Now filtered output is into tempfile_
-    _copy_file_keep_perms(tfname, fname)
-
-
 def diff_out_file(ref_file, out_file, logger, ignore_regexes=tuple()):
-    """Diff two files returning the diff as a string."""
+    """Compare filtered copies without modifying either input file."""
 
     if not os.path.exists(ref_file):
         raise OSError("%s doesn't exist in reference directory" % ref_file)
     if not os.path.exists(out_file):
         raise OSError("%s doesn't exist in output directory" % out_file)
 
-    _filter_file_inplace(out_file, os.path.dirname(out_file), ignore_regexes)
-    _filter_file_inplace(ref_file, os.path.dirname(out_file), ignore_regexes)
+    # Several suites can share a reference file. Filtering it in place can
+    # truncate it while another comparison is reading it.
+    with tempfile.TemporaryDirectory(dir=os.path.dirname(out_file)) as tempdir:
+        filtered_ref = os.path.join(tempdir, "reference")
+        filtered_out = os.path.join(tempdir, "output")
+        for source, target in (
+            (ref_file, filtered_ref),
+            (out_file, filtered_out),
+        ):
+            with open(target, "w") as filtered:
+                filtered.writelines(_filter_file(source, ignore_regexes))
 
-    # try :
-    _, tfname = tempfile.mkstemp(dir=os.path.dirname(out_file), text=True)
-    with open(tfname, "r+") as tempfile_:
-        try:
-            log_call(
-                logger,
-                ["diff", out_file, ref_file],
-                time=None,
-                stdout=tempfile_,
-            )
-        except OSError:
-            # Likely signals that diff does not exist on this system. fallback
-            # to difflib
-            with open(out_file) as outf, open(ref_file) as reff:
-                diff = difflib.unified_diff(
-                    iter(reff.readline, ""),
-                    iter(outf.readline, ""),
-                    fromfile=ref_file,
-                    tofile=out_file,
+        with tempfile.TemporaryFile(mode="w+", dir=tempdir) as diff_output:
+            try:
+                log_call(
+                    logger,
+                    ["diff", filtered_out, filtered_ref],
+                    time=None,
+                    stdout=diff_output,
                 )
-                return "".join(diff)
-        except subprocess.CalledProcessError:
-            tempfile_.seek(0)
-            return "".join(tempfile_.readlines())
-        else:
-            return None
+            except OSError:
+                # Fall back to difflib when the diff command is unavailable.
+                with open(filtered_out) as outf, open(filtered_ref) as reff:
+                    diff = difflib.unified_diff(
+                        reff.readlines(),
+                        outf.readlines(),
+                        fromfile=ref_file,
+                        tofile=out_file,
+                    )
+                    return "".join(diff) or None
+            except subprocess.CalledProcessError:
+                diff_output.seek(0)
+                return diff_output.read()
+            else:
+                return None
 
 
 class Timer:
