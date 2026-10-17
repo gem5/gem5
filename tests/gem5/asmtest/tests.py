@@ -398,3 +398,12 @@ for cpu_type in cpu_types:
             valid_isas=(constants.all_compiled_tag,),
             valid_hosts=constants.supported_hosts,
         )
+
+gem5_verify_config(
+    name="asm-riscv-viota-o3",
+    verifiers=(verifier.MatchRegex("^viota: pass$"),),
+    config=joinpath(absdirpath(__file__), "configs", "riscv_viota.py"),
+    config_args=[],
+    gem5_args=("--listener-mode=off",),
+    valid_isas=(constants.riscv_tag, constants.all_compiled_tag),
+)

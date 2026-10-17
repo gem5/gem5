@@ -4530,10 +4530,18 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }}, OPMVV, SimdAluOp);
                     0x10: ViotaFormat::viota_m({{
-                        if (this->vm || elem_mask(v0, ei)) {
-                            Vd_vu[i] = *cnt;
-                            if (elem_mask(Vs2_vu, ei)) {
-                                *cnt = *cnt+1;
+                        // Count from the source so micro-ops are independent.
+                        const uint32_t start =
+                            vtype_VLMAX(vtype, vlen, true) * this->microIdx;
+                        // Recompute the prefix so pieces can execute in
+                        // any order without sharing mutable state.
+                        uint32_t cnt = 0;
+                        for (uint32_t ei = 0; ei < start + microVl; ei++) {
+                            if (this->vm || elem_mask(v0, ei)) {
+                                if (ei >= start) {
+                                    Vd_vu[ei - start] = cnt;
+                                }
+                                cnt += elem_mask(Vs2_vu, ei);
                             }
                         }
                     }}, OPMVV, SimdAluOp);
