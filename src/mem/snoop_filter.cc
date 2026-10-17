@@ -77,9 +77,11 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
     if (cpkt->isSecure()) {
         line_addr |= LineSecure;
     }
+    reqLookupResults.emplace_back(line_addr);
+    auto &req_lookup = reqLookupResults.back();
     SnoopMask req_port = portToMask(cpu_side_port);
-    reqLookupResult.it = cachedLocations.find(line_addr);
-    bool is_hit = (reqLookupResult.it != cachedLocations.end());
+    auto sf_it = cachedLocations.find(line_addr);
+    bool is_hit = (sf_it != cachedLocations.end());
 
     // If the snoop filter has no entry, and we should not allocate,
     // do not create a new snoop filter entry, simply return a NULL
@@ -89,16 +91,16 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
 
     // If no hit in snoop filter create a new element and update iterator
     if (!is_hit) {
-        reqLookupResult.it =
-            cachedLocations.emplace(line_addr, SnoopItem()).first;
+        sf_it = cachedLocations.emplace(line_addr, SnoopItem()).first;
     }
-    SnoopItem& sf_item = reqLookupResult.it->second;
+    req_lookup.hasEntry = true;
+    SnoopItem &sf_item = sf_it->second;
     SnoopMask interested = sf_item.holder | sf_item.requested;
 
     // Store unmodified value of snoop filter item in temp storage in
     // case we need to revert because of a send retry in
     // updateRequest.
-    reqLookupResult.retryItem = sf_item;
+    req_lookup.retryItem = sf_item;
 
     stats.totRequests++;
     if (is_hit) {
@@ -159,24 +161,27 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
 void
 SnoopFilter::finishRequest(bool will_retry, Addr addr, bool is_secure)
 {
-    if (reqLookupResult.it != cachedLocations.end()) {
-        // since we rely on the caller, do a basic check to ensure
-        // that finishRequest is being called following lookupRequest
-        assert(reqLookupResult.it->first == \
-                (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure) : \
-                 (addr & ~(Addr(linesize - 1)))));
+    assert(!reqLookupResults.empty());
+    ReqLookupResult req_lookup = reqLookupResults.back();
+    reqLookupResults.pop_back();
+    assert(req_lookup.lineAddr ==
+           (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure)
+                      : (addr & ~(Addr(linesize - 1)))));
+    if (req_lookup.hasEntry) {
+        auto sf_it = cachedLocations.find(req_lookup.lineAddr);
+        assert(sf_it != cachedLocations.end());
         if (will_retry) {
-            SnoopItem retry_item = reqLookupResult.retryItem;
+            SnoopItem retry_item = req_lookup.retryItem;
             // Undo any changes made in lookupRequest to the snoop filter
             // entry if the request will come again. retryItem holds
             // the previous value of the snoopfilter entry.
-            reqLookupResult.it->second = retry_item;
+            sf_it->second = retry_item;
 
             DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n",
                     __func__,  retry_item.requested, retry_item.holder);
         }
 
-        eraseIfNullEntry(reqLookupResult.it);
+        eraseIfNullEntry(sf_it);
     }
 }
 
