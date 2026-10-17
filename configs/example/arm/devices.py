@@ -499,7 +499,15 @@ class SimpleSystem(BaseSimpleSystem):
 
         if hasattr(self.realview.gic, "cpu_addr"):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
-        self.realview.attachOnChipIO(self.membus, self.iobridge)
+        # Route on-chip DMA through the same I/O path as off-chip DMA:
+        # IOCache with caches enabled, or dmabridge otherwise. Keep PIO
+        # on the memory bus.
+        on_chip_dma_ports = []
+        self.realview.attachOnChipIO(
+            self.membus, self.iobridge, dma_ports=on_chip_dma_ports
+        )
+        for dma_port in on_chip_dma_ports:
+            dma_port.connect(self.iobus.cpu_side_ports)
         self.realview.attachIO(self.iobus)
         self.system_port = self.membus.cpu_side_ports
 
