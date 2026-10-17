@@ -398,3 +398,21 @@ for cpu_type in cpu_types:
             valid_isas=(constants.all_compiled_tag,),
             valid_hosts=constants.supported_hosts,
         )
+
+for cpu_type in cpu_types:
+    gem5_verify_config(
+        name=f"asm-riscv-vfredosum-rounding-{cpu_type}",
+        verifiers=(),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "asmtest",
+            "configs",
+            "vfredosum_rounding.py",
+        ),
+        config_args=[cpu_type],
+        gem5_args=["--listener-mode=off"],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+    )
