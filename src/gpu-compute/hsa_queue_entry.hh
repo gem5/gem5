@@ -213,6 +213,16 @@ class HSAQueueEntry
         return _completionSignal;
     }
 
+    /**
+     * True if this task is a blit kernel (same rule the command processor
+     * uses: a completion signal means blit).
+     */
+    bool
+    isBlitKernel() const
+    {
+        return _completionSignal != 0;
+    }
+
     Addr
     codeAddr() const
     {
