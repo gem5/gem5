@@ -894,7 +894,6 @@ def template ViotaMacroDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    int cnt = 0;
     %(reg_idx_arr_decl)s;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _elen, uint32_t _vlen);
@@ -931,7 +930,7 @@ template<typename ElemType>
     // Allow one empty micro op to hold IsLastMicroop flag
     for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
-                                                    &cnt, _elen, _vlen);
+                                                    _elen, _vlen);
         microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
@@ -954,11 +953,9 @@ private:
     RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
-    int* cnt;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint32_t _microIdx, int* cnt, uint32_t _elen,
-                   uint32_t _vlen);
+                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const override
@@ -977,13 +974,12 @@ def template ViotaMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-    uint32_t _microVl, uint32_t _microIdx, int* cnt, uint32_t _elen,
+    uint32_t _microVl, uint32_t _microIdx, uint32_t _elen,
     uint32_t _vlen)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx, _elen, _vlen)
 {
     this->vm = _machInst.vm;
-    this->cnt = cnt;
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
     _numDestRegs = 0;
@@ -1002,8 +998,6 @@ Fault
 %(class_name)s<ElemType>::execute(ExecContext* xc,
                                   trace::InstRecord* traceData) const
 {
-    if (isFirstMicroop())
-        *cnt = 0;
     using vu [[maybe_unused]] = std::make_unsigned_t<ElemType>;
     using vi [[maybe_unused]] = std::make_signed_t<ElemType>;
 

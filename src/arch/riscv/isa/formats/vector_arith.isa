@@ -1118,9 +1118,6 @@ def format ViotaFormat(code, category, *flags){{
     set_vm_idx = setSrcVm()
     set_vlenb = setVlenb()
 
-    code = eiDeclarePrefix(code)
-    code = loopWrapper(code)
-
     microiop = InstObjParams(name+"_micro",
         Name+"Micro",
         'VectorArithMicroInst',
