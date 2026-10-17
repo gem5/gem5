@@ -2975,7 +2975,7 @@ decode QUADRANT default Unknown::unknown() {
                             Fd_bits = freg(f32(defaultNaNF32UI)).v;
                         }
                         else {
-                            Fd_bits = less ? fs1.v : fs2.v;
+                            Fd_bits = freg(less ? fs1 : fs2).v;
                         }
                         }}, FloatCmpOp);
                     0x3: fmaxm_s({{
@@ -2987,7 +2987,7 @@ decode QUADRANT default Unknown::unknown() {
                             Fd_bits = freg(f32(defaultNaNF32UI)).v;
                         }
                         else {
-                            Fd_bits = greater ? fs1.v : fs2.v;
+                            Fd_bits = freg(greater ? fs1 : fs2).v;
                         }
                         }}, FloatCmpOp);
                 }
