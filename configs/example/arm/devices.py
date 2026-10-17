@@ -499,7 +499,16 @@ class SimpleSystem(BaseSimpleSystem):
 
         if hasattr(self.realview.gic, "cpu_addr"):
             self.gic_cpu_addr = self.realview.gic.cpu_addr
-        self.realview.attachOnChipIO(self.membus, self.iobridge)
+        # On-chip DMA must observe dirty CPU cache lines just like off-chip
+        # DMA. Keep device PIO on the memory bus, but route its DMA ports
+        # through the I/O bus and its coherent cache (or DMA bridge when
+        # caches are disabled).
+        on_chip_dma_ports = []
+        self.realview.attachOnChipIO(
+            self.membus, self.iobridge, dma_ports=on_chip_dma_ports
+        )
+        for dma_port in on_chip_dma_ports:
+            dma_port.connect(self.iobus.cpu_side_ports)
         self.realview.attachIO(self.iobus)
         self.system_port = self.membus.cpu_side_ports
 
