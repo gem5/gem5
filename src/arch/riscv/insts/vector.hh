@@ -205,7 +205,10 @@ public:
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)
         const override
     {
-        return fault;
+        if (fault != NoFault) {
+            return fault;
+        }
+        return updateVPUStatus(xc, machInst, false, true);
     }
 
     std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
