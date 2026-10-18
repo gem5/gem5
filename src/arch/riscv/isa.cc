@@ -1131,8 +1131,14 @@ ISA::handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
         return;
     Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
     DPRINTF(LLSC, "Locked snoop on address %x.\n", snoop_addr);
-    if ((load_reservation_addr & cacheBlockMask) == snoop_addr)
+    if ((load_reservation_addr & cacheBlockMask) == snoop_addr) {
         load_reservation_addr = INVALID_RESERVATION_ADDR;
+        // Zawrs: a store to the reservation set wakes a hart stalled in wrs
+        if (_wrsWaiting) {
+            _wrsWaiting = false;
+            tc->getCpuPtr()->wakeup(tc->threadId());
+        }
+    }
 }
 
 

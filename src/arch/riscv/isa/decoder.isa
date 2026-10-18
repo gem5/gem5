@@ -5763,13 +5763,43 @@ decode QUADRANT default Unknown::unknown() {
                                 return std::make_shared<IllegalInstFault>(
                                     "wrs requires rd = rs1 = x0", machInst);
                             }
-                        }}, IsNonSpeculative, No_OpClass);
+                            auto tc = xc->tcBase();
+                            auto cpu = tc->getCpuPtr();
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
+                            auto ic = dynamic_cast<RiscvISA::Interrupts*>(
+                                cpu->getInterruptController(tc->threadId()));
+                            // Stall only with a valid reservation and no
+                            // pending interrupt; early return is allowed.
+                            if (isa->hasLoadReservation(tc->contextId()) &&
+                                !(ic && ic->readIP())) {
+                                isa->setWrsWaiting(true);
+                                tc->quiesceTick(curTick() +
+                                    cpu->cyclesToTicks(Cycles(1000)));
+                            }
+                        }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
+                            IsSquashAfter, No_OpClass);
                         0x1d: wrs_sto({{
                             if (RD != 0 || RS1 != 0) {
                                 return std::make_shared<IllegalInstFault>(
                                     "wrs requires rd = rs1 = x0", machInst);
                             }
-                        }}, IsNonSpeculative, No_OpClass);
+                            auto tc = xc->tcBase();
+                            auto cpu = tc->getCpuPtr();
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
+                            auto ic = dynamic_cast<RiscvISA::Interrupts*>(
+                                cpu->getInterruptController(tc->threadId()));
+                            // Stall only with a valid reservation and no
+                            // pending interrupt; early return is allowed.
+                            if (isa->hasLoadReservation(tc->contextId()) &&
+                                !(ic && ic->readIP())) {
+                                isa->setWrsWaiting(true);
+                                tc->quiesceTick(curTick() +
+                                    cpu->cyclesToTicks(Cycles(1000)));
+                            }
+                        }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
+                            IsSquashAfter, No_OpClass);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
