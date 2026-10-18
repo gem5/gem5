@@ -85,6 +85,36 @@
  * and the RTL's T_guard = T_sweep + line_budget needs guard_sweeps 1 and
  * margin 0. line_budget (refresh_line_budget_cycles) can exceed the
  * bank occupancy (refresh_line_cycles).
+ *
+ * Refresh-all (refresh_mode = all_strict or all_opp): no policy at all.
+ * Every period of P = DRT - W cycles (W = refresh_all_window_cycles)
+ * each bank's sweep refreshes its rows in order (sets bank, bank + B,
+ * ..., way inner, as the line scanner), banks in parallel, each row
+ * occupying its bank for
+ * refresh_line_cycles, whether the row holds a valid line or not; then
+ * the controller idles until the next period. all_strict issues the
+ * rows back to back from the period start. all_opp issues each row in
+ * the next idle bank cycle (no demand access to the bank in that cycle,
+ * decided after the CPU tick), and once waiting another cycle could
+ * miss W, issues the rest back to back. Back-to-back refreshes run
+ * before the CPU tick and win a same-cycle conflict; a demand hit waits
+ * for the refresh in progress. A row is refreshed again within P + W - rows *
+ * line cycles < DRT (rows/bank), so no valid line ever expires; there are no
+ * stamps, reference bits, invalidations or deadline writebacks.
+ *
+ * Subarrays (refresh_subarrays G, line scanner or refresh-all even
+ * only): each bank has G subarrays refreshed in parallel, so one bank
+ * operation (refresh_line_cycles) covers G consecutive rows of the bank,
+ * one per subarray. The line scanner reads the G rows' metadata in one
+ * step and serves every refresh and writeback read of the group in one
+ * operation (an opportunistic-only group waits in the slot as one); the
+ * rows per sweep become rows / G operations, so T_sweep = (numSets / B)
+ * * assoc / G * (scan + line_budget). Refresh-all even issues one
+ * operation of G rows every P / (rows / G) cycles.
+ *
+ * Writebacks from above (a cache below another): a writeback writes the
+ * whole line, so it recharges the line, and it counts as a use (the
+ * reference bit); a CleanEvict is not a use.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
@@ -131,8 +161,17 @@ class RetentionManager
      */
     void expireOnAccess(PacketPtr pkt, PacketList &writebacks);
 
-    /** Bookkeeping for a block returned by the tag access. */
-    void onAccessHit(CacheBlk *blk);
+    /**
+     * Bookkeeping for a block returned by the tag access. A CleanEvict
+     * from above does not use the line.
+     */
+    void onAccessHit(PacketPtr pkt, CacheBlk *blk);
+
+    /**
+     * A writeback from above wrote the whole line of blk (hit or
+     * allocation): it is fully charged again and used.
+     */
+    void onWritebackData(CacheBlk *blk);
 
     /**
      * Extra hit latency: waiting for a refresh that occupies the data
@@ -174,6 +213,46 @@ class RetentionManager
   private:
     /** One daemon step: visit set refreshSetIdx, then the next set. */
     void processRefreshEvent();
+
+    /**
+     * Refresh-all: one step of bank's sweep (see refresh_mode). opp_step:
+     * an all_opp step, run after the CPU tick so it sees this cycle's
+     * demand accesses; otherwise a period start or a forced step, run
+     * before the CPU tick so the refresh wins a same-cycle conflict.
+     */
+    void processRaStep(unsigned bank, bool opp_step);
+
+    /**
+     * Refresh-all strict with even spacing (refresh_all_even): one row of
+     * bank every P / rows cycles; the row starts on the next cycle, ahead
+     * of the waiting accesses.
+     */
+    void processRaEven(unsigned bank);
+
+    /** Tick of the current row's slot (refresh_all_even). */
+    Tick raEvenSlot(unsigned bank) const;
+
+    /**
+     * Refresh-all with bank ports (bursts): a forced row pre-empts the
+     * waiting accesses from the next cycle; an all_opp row waits for an
+     * idle bank, then starts on the next cycle.
+     */
+    void processRaPorts(unsigned bank, bool opp_step);
+
+    /**
+     * Book bank for one refresh-all row from earliest (forced: ahead of
+     * the waiting accesses). @return The tick it starts at.
+     */
+    Tick raBlock(unsigned bank, Tick earliest, bool forced);
+
+    /** Refresh-all: the current row of bank, starting at start. */
+    void raRefreshRow(unsigned bank, Tick start);
+
+    /**
+     * Stats: a refresh of row (set * assoc + way) starting at start, the
+     * line charge_age ticks old then.
+     */
+    void noteRowRefresh(unsigned row, Tick start, Tick charge_age);
 
     /**
      * Stats and check: the interval since the last visit of a set (set
@@ -245,6 +324,23 @@ class RetentionManager
     /** Line scanner: one step of the scanner of bank. */
     void processLineStep(unsigned bank);
 
+    /**
+     * Line scanner with subarrays: one step decides a group of G rows
+     * and serves it with at most one bank operation.
+     */
+    void processGroupStep(unsigned bank);
+
+    /**
+     * Subarrays: the bank operations booked between beginGroupOp and
+     * endGroupOp are one operation (the first books the bank, the rest
+     * share its start).
+     */
+    void beginGroupOp() { groupOpen = true; groupStarted = false; }
+    void endGroupOp() { groupOpen = false; }
+
+    /** The current charge of blk came from a writeback from above. */
+    bool chargedByWriteback(const CacheBlk *blk) const;
+
     /** Line scanner: the decision for one line, no side effects. */
     LineDecision decideLine(CacheBlk *blk) const;
 
@@ -275,7 +371,7 @@ class RetentionManager
      * line read of a writeback (refresh = false). Returns the tick the
      * operation starts at.
      */
-    Tick occupyBank(unsigned bank, bool refresh = true);
+    Tick occupyBank(unsigned bank, bool refresh = true, bool force = true);
 
     /** Whether an access of this kind triggers inline refreshes. */
     bool inlineApplies(PacketPtr pkt) const;
@@ -285,6 +381,18 @@ class RetentionManager
 
     /** No demand access to the bank this cycle and no refresh in it. */
     bool bankIdle(unsigned bank) const;
+
+    /**
+     * The tick bank is free from: its refreshes are done and, with bank
+     * ports, so are the accesses waiting for it.
+     */
+    Tick bankFreeAt(unsigned bank) const;
+
+    /**
+     * Stats and check: a refresh of blk that starts at start, after the
+     * bank ports delayed it, finds the line expired.
+     */
+    void lateStartCheck(CacheBlk *blk, Tick start);
 
     /** Ticks since blk was last fully written. */
     Tick age(const CacheBlk *blk) const;
@@ -352,11 +460,35 @@ class RetentionManager
     /** Number of data-array banks. */
     const unsigned banks;
 
+    /** Subarrays per bank refreshed by one bank operation. */
+    const unsigned subarrays;
+
+    /** Subarrays: a group operation is open / has booked the bank, at
+     *  groupStart. */
+    bool groupOpen;
+    bool groupStarted;
+    Tick groupStart;
+    /** Subarrays: the open group's operation counted as a refresh. */
+    bool groupRefreshCounted;
+
     /** Cycles one bank operation is budgeted for in T_sweep / T_guard. */
     const Cycles lineBudget;
 
     /** One scanner per bank, one line per step (refresh_scan = line). */
     const bool lineScan;
+
+    /** Daemon policy, or refresh every row once per period. */
+    enum class RefreshMode { Policy, AllStrict, AllOpp };
+    const RefreshMode refreshMode;
+
+    /** Refresh-all: sweep completion window W. */
+    const Cycles raWindow;
+
+    /** Refresh-all, test only: refreshes take no bank time. */
+    const bool raFree;
+
+    /** Refresh-all strict: rows evenly spaced over P. */
+    const bool raEven;
 
     /** Age (fraction of DRT) from which idle-time refreshes start. */
     const double oppAge;
@@ -471,17 +603,80 @@ class RetentionManager
     };
     std::vector<PendingOpp> pendingOpp;
 
+    /** Line scanner with subarrays, per bank: an opportunistic group
+     *  in the slot. */
+    std::vector<std::vector<PendingOpp>> pendingOppGroup;
+
+    /** Line scanner with subarrays: scratch for one group step. */
+    std::vector<CacheBlk *> groupBlks;
+    std::vector<LineDecision> groupDecisions;
+
+    /** Subarrays, speed only: equal consecutive visit intervals not yet
+     *  sampled into setVisitInterval (flushVisitBatch). */
+    uint64_t visitBatchVal = 0;
+    int visitBatchCount = 0;
+    void flushVisitBatch();
+
+    /** Speed only: epochOf(curTick()), cached for the current tick. */
+    uint64_t nowEpoch() const;
+    mutable Tick nowEpochTick = MaxTick;
+    mutable uint64_t nowEpochVal = 0;
+
     /** Line scanner, per bank: tick the current sweep started at. */
     std::vector<Tick> bankSweepStart;
 
     /** Line scanner: one event per bank. */
     std::vector<std::unique_ptr<EventFunctionWrapper>> lineEvents;
 
+    /** Stats only: longest single hit stall behind a refresh. */
+    Cycles maxStall;
+
+    /** Stats only (SRC refreshes): tick of each row's last refresh, the
+     *  longest gap between two, and the oldest line at its refresh. */
+    std::vector<Tick> rowLastRefresh;
+    Tick maxRowGap;
+    Tick maxChargeAgeAtRefresh;
+
+    /** Stats only: the oldest line at an SRC drop (bank operation start
+     *  for a writeback read). */
+    Tick maxChargeAgeAtDrop;
+
+    /** Refresh-all: rows per bank (sets * assoc / banks) and the
+     *  period P in ticks. */
+    unsigned raRows;
+    Tick raPeriod;
+
+    /** Refresh-all, per bank: next row of its sweep (raRows: done). */
+    std::vector<unsigned> raRow;
+
+    /** Refresh-all, per bank: tick its current period started at. */
+    std::vector<Tick> raPeriodStart;
+
+    /** Refresh-all, per bank: the rest of its sweep issues back to
+     *  back. */
+    std::vector<char> raForced;
+
+    /** Refresh-all, stats only: tick of each row's last refresh. */
+    std::vector<Tick> raLastRefresh;
+
+    /** Refresh-all, stats only: longest interval between two refreshes
+     *  of a row, and the oldest valid line at its refresh, in ticks. */
+    Tick raMaxRowInterval;
+    Tick raMaxChargeAge;
+
+    /** Refresh-all, per bank: period starts and forced steps (before
+     *  the CPU tick), and all_opp steps (after it). */
+    std::vector<std::unique_ptr<EventFunctionWrapper>> raEvents;
+    std::vector<std::unique_ptr<EventFunctionWrapper>> raOppEvents;
+
     struct RetentionStats : public statistics::Group
     {
         RetentionStats(RetentionManager &mgr, BaseCache &cache);
 
         void regStats() override;
+
+        /** Flushes the batched visit-interval samples. */
+        void preDumpStats() override;
 
         /** Also restarts every refresh chain (stats only). */
         void resetStats() override;
@@ -631,6 +826,42 @@ class RetentionManager
         statistics::Scalar scanSlotWaits;
         /** Line scanner: cycles the scanners waited for the slot. */
         statistics::Scalar scanSlotWaitCycles;
+        /** Cycles each bank is busy with refreshes and writeback reads. */
+        statistics::Vector bankBusyCycles;
+        /** Longest single hit stall behind a refresh, in cycles. */
+        statistics::Value maxRefreshStallCycles;
+        /** Refresh-all: sweeps completed. */
+        statistics::Scalar raSweeps;
+        /** Refresh-all: rows refreshed, valid or not. */
+        statistics::Scalar raRowRefreshes;
+        /** Refresh-all: rows refreshed while holding a valid line. */
+        statistics::Scalar raValidRefreshes;
+        /** Refresh-all: refreshes issued in an idle bank cycle. */
+        statistics::Scalar raOppRefreshes;
+        /** Refresh-all: refreshes issued back to back (forced). */
+        statistics::Scalar raForcedRefreshes;
+        /** Refresh-all: longest interval between two refreshes of a
+         *  row, in cycles (must stay below DRT). */
+        statistics::Value raMaxRowIntervalCycles;
+        /** Refresh-all: oldest valid line at its refresh, in cycles. */
+        statistics::Value raMaxChargeAgeCycles;
+        /** Refresh-all: valid lines found expired at their refresh
+         *  (should be 0). */
+        statistics::Scalar raLate;
+        /** Refreshes that started after their valid line expired (the
+         *  bank ports delayed them; should be 0), and of those, dirty
+         *  lines (data lost). */
+        statistics::Scalar lateRefreshStarts;
+        statistics::Scalar lateRefreshStartsDirty;
+        /** Longest gap between two refreshes of a row, and the oldest
+         *  line at its refresh, in cycles (every refresh mode). */
+        statistics::Value maxRowRefreshGapCycles;
+        statistics::Value maxChargeAgeAtRefreshCycles;
+        /** Oldest line at a deadline drop (writeback or CleanEvict). */
+        statistics::Value maxChargeAgeAtDropCycles;
+        /** Refresh-all: the period P and the window W, in cycles. */
+        statistics::Value raPeriodCycles;
+        statistics::Value raWindowCycles;
     } stats;
 };
 

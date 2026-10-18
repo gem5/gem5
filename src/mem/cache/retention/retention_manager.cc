@@ -11,6 +11,8 @@
 #include "debug/Cache.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/retention/bank_ports.hh"
+#include "mem/cache/retention/reuse_tracker.hh"
 #include "mem/cache/tags/base.hh"
 #include "params/BaseCache.hh"
 
@@ -28,9 +30,20 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       lineCycles(p.refresh_line_cycles > 0 ? p.refresh_line_cycles :
                  Cycles(2 * p.data_latency)),
       banks(std::max(p.refresh_banks, 1u)),
+      subarrays(std::max(p.refresh_subarrays, 1u)),
+      groupOpen(false),
+      groupStarted(false),
+      groupStart(0),
+      groupRefreshCounted(false),
       lineBudget(p.refresh_line_budget_cycles > 0 ?
                  p.refresh_line_budget_cycles : lineCycles),
       lineScan(p.refresh_scan == "line"),
+      refreshMode(p.refresh_mode == "all_strict" ? RefreshMode::AllStrict :
+                  p.refresh_mode == "all_opp" ? RefreshMode::AllOpp :
+                  RefreshMode::Policy),
+      raWindow(p.refresh_all_window_cycles),
+      raFree(p.refresh_all_free),
+      raEven(p.refresh_all_even),
       oppAge(p.refresh_opp_age),
       margin(p.retention_margin),
       guardSweeps(p.retention_guard_sweeps),
@@ -64,6 +77,15 @@ RetentionManager::RetentionManager(BaseCache &_cache,
       maxVisitInterval(0),
       refreshEvent([this] { processRefreshEvent(); },
                    _cache.name() + ".refreshDaemon"),
+      maxStall(0),
+      rowLastRefresh(_cache.tags->getNumSets() * assoc, MaxTick),
+      maxRowGap(0),
+      maxChargeAgeAtRefresh(0),
+      maxChargeAgeAtDrop(0),
+      raRows(0),
+      raPeriod(0),
+      raMaxRowInterval(0),
+      raMaxChargeAge(0),
       stats(*this, _cache)
 {
     fatal_if(!cache.tags->isForgetting(),
@@ -111,6 +133,61 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              "%s: quantized_age needs inline refresh off", cache.name());
     fatal_if(p.refresh_scan != "set" && p.refresh_scan != "line",
              "%s: refresh_scan must be set or line", cache.name());
+    fatal_if(p.refresh_mode != "policy" && p.refresh_mode != "all_strict" &&
+             p.refresh_mode != "all_opp",
+             "%s: refresh_mode must be policy, all_strict or all_opp",
+             cache.name());
+    fatal_if(raFree && refreshMode == RefreshMode::Policy,
+             "%s: refresh_all_free needs a refresh-all refresh_mode",
+             cache.name());
+
+    if (refreshMode != RefreshMode::Policy) {
+        // Refresh-all has no policy: no daemon, no inline refresh, no
+        // stamps or reference bits
+        fatal_if(topMRU > 0 || refreshDirtyDaemon || activeInvalidate ||
+                 keepTouched || quantizedAge || silentCleanDrop ||
+                 inlineOnWrite || inlineOnRead || lineScan,
+                 "%s: refresh_mode=%s needs top_mru 0, no refresh_dirty, "
+                 "active_invalidate, keep_touched, quantized_age, "
+                 "silent_clean_drop or inline refresh, and "
+                 "refresh_scan=set", cache.name(), p.refresh_mode);
+        const unsigned num_sets = cache.tags->getNumSets();
+        fatal_if(num_sets % banks != 0,
+                 "%s: refresh_mode=%s needs numSets (%u) to be a multiple "
+                 "of refresh_banks (%u)", cache.name(), p.refresh_mode,
+                 num_sets, banks);
+        raRows = num_sets / banks * assoc;
+        raLastRefresh.assign(num_sets * assoc, MaxTick);
+        raRow.assign(banks, raRows);
+        raPeriodStart.assign(banks, 0);
+        raForced.assign(banks, 0);
+        for (unsigned b = 0; b < banks; b++) {
+            const std::string sfx = banks == 1 ? "" : std::to_string(b);
+            raEvents.push_back(std::make_unique<EventFunctionWrapper>(
+                [this, b] { processRaStep(b, false); },
+                cache.name() + ".refreshAll" + sfx));
+            raOppEvents.push_back(std::make_unique<EventFunctionWrapper>(
+                [this, b] { processRaStep(b, true); },
+                cache.name() + ".refreshAllOpp" + sfx, false,
+                Event::CPU_Tick_Pri + 1));
+        }
+    }
+
+    if (subarrays > 1) {
+        const unsigned num_sets = cache.tags->getNumSets();
+        fatal_if(cache.bankPorts,
+                 "%s: refresh_subarrays > 1 needs bank ports off",
+                 cache.name());
+        fatal_if(!lineScan && !(refreshMode == RefreshMode::AllStrict &&
+                                raEven),
+                 "%s: refresh_subarrays > 1 needs refresh_scan=line or "
+                 "refresh-all strict with refresh_all_even", cache.name());
+        fatal_if(num_sets % banks != 0 ||
+                 (num_sets / banks * assoc) % subarrays != 0,
+                 "%s: refresh_subarrays (%u) must divide the rows per bank "
+                 "(numSets %u / banks %u x assoc %u)", cache.name(),
+                 subarrays, num_sets, banks, assoc);
+    }
 
     if (lineScan) {
         const unsigned num_sets = cache.tags->getNumSets();
@@ -129,6 +206,7 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         scanRow.assign(banks, 0);
         slotFreeAt.assign(banks, 0);
         pendingOpp.assign(banks, PendingOpp());
+        pendingOppGroup.assign(banks, std::vector<PendingOpp>());
         bankSweepStart.assign(banks, 0);
         for (unsigned b = 0; b < banks; b++) {
             lineEvents.push_back(std::make_unique<EventFunctionWrapper>(
@@ -143,6 +221,63 @@ RetentionManager::startup()
 {
     const Tick drt = cache.tags->getDRT();
     const bool daemon = topMRU > 0 || refreshDirtyDaemon;
+
+    if (refreshMode != RefreshMode::Policy) {
+        // P = DRT - W from sweep start to sweep start; a sweep ends
+        // within W, so a row waits at most P + W - rows * line < DRT
+        const uint64_t drt_cyc = drt / cache.clockPeriod();
+        // One bank operation refreshes one row of each subarray
+        const unsigned ops = raRows / subarrays;
+        const uint64_t sweep_cyc = uint64_t(ops) * lineCycles;
+        // all_opp decides a cycle ahead: 2 cycles of slack
+        const uint64_t slack =
+            refreshMode == RefreshMode::AllOpp ? 2 : 0;
+        fatal_if(sweep_cyc + slack > raWindow,
+                 "%s: refresh-all sweep of %u rows x %u cycles = %lu "
+                 "(+%lu) > W = %u cycles", cache.name(), raRows,
+                 (unsigned)lineCycles, sweep_cyc, slack,
+                 (unsigned)raWindow);
+        fatal_if(raWindow >= drt_cyc,
+                 "%s: refresh-all window W = %u cycles >= DRT = %lu cycles",
+                 cache.name(), (unsigned)raWindow, drt_cyc);
+        raPeriod = cache.cyclesToTicks(Cycles(drt_cyc - raWindow));
+        tSweep = cache.cyclesToTicks(Cycles(sweep_cyc));
+        const uint64_t bound_cyc = refreshMode == RefreshMode::AllStrict ?
+            drt_cyc - raWindow : drt_cyc - sweep_cyc;
+        inform("%s: retention DRT %lu ticks (%lu cycles), refresh-all %s%s, "
+               "%u bank(s): %u rows per bank / %u subarray(s) = %u "
+               "operations x %u cycles = sweep %lu cycles, "
+               "window W %u, period P %lu cycles, max row interval <= %lu "
+               "cycles (%.1f%% of DRT)", cache.name(), drt, drt_cyc,
+               refreshMode == RefreshMode::AllStrict ? "strict" : "opp",
+               raFree ? " (free: no bank time)" : "", banks, raRows,
+               subarrays, ops, (unsigned)lineCycles, sweep_cyc,
+               (unsigned)raWindow,
+               drt_cyc - raWindow, bound_cyc,
+               100.0 * double(bound_cyc) / double(drt_cyc));
+        if (raEven) {
+            // One row every P / rows cycles: a row is refreshed every P
+            const uint64_t p_cyc = drt_cyc - raWindow;
+            fatal_if(refreshMode != RefreshMode::AllStrict,
+                     "%s: refresh_all_even needs refresh_mode=all_strict",
+                     cache.name());
+            fatal_if(p_cyc / ops < lineCycles,
+                     "%s: refresh_all_even: P / operations = %lu / %u < %u "
+                     "cycles per refresh", cache.name(), p_cyc, ops,
+                     (unsigned)lineCycles);
+            inform("%s: refresh-all even spacing: one operation (%u "
+                   "row(s), one per subarray) of each bank every %.2f "
+                   "cycles (P %lu / %u operations); row interval P (%.1f%% "
+                   "of DRT)", cache.name(), subarrays, double(p_cyc) / ops,
+                   p_cyc, ops, 100.0 * double(p_cyc) / double(drt_cyc));
+        }
+        for (unsigned b = 0; b < banks; b++) {
+            raRow[b] = raEven ? 0 : raRows;
+            raPeriodStart[b] = cache.clockEdge(Cycles(1));
+            cache.schedule(*raEvents[b], raPeriodStart[b]);
+        }
+        return;
+    }
 
     fatal_if(quantizedAge && !daemon,
              "%s: quantized_age needs the refresh daemon", cache.name());
@@ -166,7 +301,8 @@ RetentionManager::startup()
     if (lineScan) {
         // Each bank's scanner: every row of the bank, each scanned and
         // at worst waiting for one operation
-        tSweep = Tick(num_sets / banks) * assoc *
+        // With subarrays a step covers a group of rows
+        tSweep = Tick(num_sets / banks * assoc / subarrays) *
             cache.cyclesToTicks(Cycles(scanCycles + lineBudget));
         warn_if(guardSweeps != 1.0 || margin != 0.0,
                 "%s: refresh_scan=line with guard_sweeps %f and margin %f: "
@@ -279,9 +415,20 @@ RetentionManager::epochOf(Tick t) const
 }
 
 uint64_t
+RetentionManager::nowEpoch() const
+{
+    // Speed only: the same value, computed once per tick
+    if (nowEpochTick != curTick()) {
+        nowEpochTick = curTick();
+        nowEpochVal = epochOf(nowEpochTick);
+    }
+    return nowEpochVal;
+}
+
+uint64_t
 RetentionManager::epochAgeExact(const CacheBlk *blk) const
 {
-    return epochOf(curTick()) - epochOf(blk->getFullChargeTick());
+    return nowEpoch() - epochOf(blk->getFullChargeTick());
 }
 
 unsigned
@@ -289,7 +436,7 @@ RetentionManager::epochAge(const CacheBlk *blk) const
 {
     // The stamp holds the charge epoch mod 2^age_bits
     const uint64_t mask = (uint64_t(1) << ageBits) - 1;
-    return ((epochOf(curTick()) & mask) -
+    return ((nowEpoch() & mask) -
             (epochOf(blk->getFullChargeTick()) & mask)) & mask;
 }
 
@@ -418,7 +565,11 @@ RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
         }
     }
 
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Drop);
     cache.invalidateBlock(blk);
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Other);
 }
 
 bool
@@ -429,8 +580,12 @@ RetentionManager::inFlight(Addr blk_addr, bool is_secure) const
 }
 
 void
-RetentionManager::onAccessHit(CacheBlk *blk)
+RetentionManager::onAccessHit(PacketPtr pkt, CacheBlk *blk)
 {
+    // A clean line leaving the cache above does not use this one
+    if (pkt->cmd == MemCmd::CleanEvict) {
+        return;
+    }
     blk->setLastTouchTick(curTick());
     closeRefreshChain(blk, true);
 
@@ -452,13 +607,15 @@ RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
     Cycles delay(0);
     const unsigned bank = bankOf(blk->getSet());
 
-    // A refresh occupies the block's bank: wait for it
-    if (bankBusyUntil[bank] > curTick()) {
+    // A refresh occupies the block's bank: wait for it (with bank ports,
+    // the hit already waited for its slot)
+    if (!cache.bankPorts && bankBusyUntil[bank] > curTick()) {
         delay = cache.ticksToCycles(bankBusyUntil[bank] - curTick());
         stats.refreshStalledHits++;
         stats.refreshStallCycles += delay;
         stats.bankStalledHits[bank]++;
         stats.bankStallCycles[bank] += delay;
+        maxStall = std::max(maxStall, delay);
     }
 
     if (!inlineApplies(pkt)) {
@@ -494,13 +651,33 @@ RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
 }
 
 Tick
-RetentionManager::occupyBank(unsigned bank, bool refresh)
+RetentionManager::occupyBank(unsigned bank, bool refresh, bool force)
 {
-    // Full-line read + write; refreshes are serialized within a bank
-    Tick start = std::max(curTick(), bankBusyUntil[bank]);
+    // Full-line read + write; refreshes are serialized within a bank.
+    // With bank ports a refresh blocks every slot of its bank: a forced
+    // one from the next cycle, ahead of the waiting accesses; an
+    // opportunistic one now (it is issued only with the bank idle).
+    // Subarrays: later lines of an open group share its operation
+    if (groupOpen && groupStarted) {
+        if (refresh && !groupRefreshCounted) {
+            stats.bankRefreshes[bank]++;
+            groupRefreshCounted = true;
+        }
+        return groupStart;
+    }
+    Tick start = cache.bankPorts ?
+        cache.bankPorts->block(bank, force ? cache.clockEdge(Cycles(1)) :
+                               curTick(), lineCycles, force) :
+        std::max(curTick(), bankBusyUntil[bank]);
     bankBusyUntil[bank] = start + cache.cyclesToTicks(lineCycles);
+    stats.bankBusyCycles[bank] += lineCycles;
     if (refresh) {
         stats.bankRefreshes[bank]++;
+    }
+    if (groupOpen) {
+        groupStarted = true;
+        groupStart = start;
+        groupRefreshCounted = refresh;
     }
     return start;
 }
@@ -515,6 +692,28 @@ RetentionManager::onFullLineWrite(CacheBlk *blk)
     if (activeInvalidate) {
         invalidatedAddrs.erase(cache.regenerateBlkAddr(blk));
     }
+}
+
+void
+RetentionManager::onWritebackData(CacheBlk *blk)
+{
+    // A full-line write: charged now and used (the reference bit is set
+    // at the charge, so it is recorded with it)
+    blk->setFullChargeTick(curTick());
+    blk->setLastTouchTick(curTick());
+    blk->setWbChargeTick(curTick());
+
+    if (activeInvalidate) {
+        invalidatedAddrs.erase(cache.regenerateBlkAddr(blk));
+    }
+}
+
+bool
+RetentionManager::chargedByWriteback(const CacheBlk *blk) const
+{
+    return blk->getWbChargeTick() != MaxTick &&
+        blk->getWbChargeTick() == blk->getFullChargeTick() &&
+        blk->getRefClearTick() < blk->getFullChargeTick();
 }
 
 void
@@ -563,7 +762,11 @@ RetentionManager::expireForPrefetch(CacheBlk *blk)
     }
 
     stats.expiredPrefetchRefills++;
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Drop);
     cache.invalidateBlock(blk);
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Other);
     return true;
 }
 
@@ -625,8 +828,31 @@ RetentionManager::onSnoop(CacheBlk *blk)
 bool
 RetentionManager::bankIdle(unsigned bank) const
 {
-    return bankBusyUntil[bank] <= curTick() &&
+    return bankFreeAt(bank) <= curTick() &&
         curTick() >= bankLastAccess[bank] + cache.clockPeriod();
+}
+
+Tick
+RetentionManager::bankFreeAt(unsigned bank) const
+{
+    return cache.bankPorts ?
+        std::max(bankBusyUntil[bank], cache.bankPorts->freeAt(bank)) :
+        bankBusyUntil[bank];
+}
+
+void
+RetentionManager::lateStartCheck(CacheBlk *blk, Tick start)
+{
+    const Tick now = curTick();
+    if (start <= now || !blk->isValid() || cache.tags->isExpired(blk) ||
+        age(blk) + (start - now) < cache.tags->getDRT()) {
+        return;
+    }
+    stats.lateRefreshStarts++;
+    if (blk->isSet(CacheBlk::DirtyBit)) {
+        stats.lateRefreshStartsDirty++;
+        violation(blk, "late refresh start");
+    }
 }
 
 std::vector<CacheBlk *>
@@ -680,7 +906,10 @@ RetentionManager::refresh(CacheBlk *blk, bool force)
         chain.clean++;
     }
 
-    const Tick start = occupyBank(bankOf(blk->getSet()));
+    const Tick start = occupyBank(bankOf(blk->getSet()), true, force);
+    lateStartCheck(blk, start);
+    noteRowRefresh(blk->getSet() * assoc + blk->getWay(), start,
+                   age(blk) + (start - curTick()));
 
     blk->setFullChargeTick(curTick());
     blk->setWasOppRefreshed(true);
@@ -716,6 +945,16 @@ RetentionManager::maybeRefresh(CacheBlk *blk)
 }
 
 void
+RetentionManager::flushVisitBatch()
+{
+    if (visitBatchCount) {
+        stats.setVisitInterval.sample(double(visitBatchVal),
+                                      visitBatchCount);
+        visitBatchCount = 0;
+    }
+}
+
+void
 RetentionManager::recordVisit(unsigned idx)
 {
     const Tick last = lastVisit[idx];
@@ -726,7 +965,20 @@ RetentionManager::recordVisit(unsigned idx)
 
     // The guarantee assumes the daemon comes back within T_sweep
     const Tick interval = curTick() - last;
-    stats.setVisitInterval.sample(cache.ticksToCycles(interval));
+    const Cycles c = cache.ticksToCycles(interval);
+    if (subarrays > 1) {
+        // Speed only: equal consecutive samples go to the histogram as one
+        // (bucket counts, samples, mean and stdev are the same; gmean can
+        // differ in its last digits, its log-sum is added in another order)
+        if (visitBatchCount &&
+            (uint64_t(c) != visitBatchVal || visitBatchCount == 1 << 30)) {
+            flushVisitBatch();
+        }
+        visitBatchVal = c;
+        visitBatchCount++;
+    } else {
+        stats.setVisitInterval.sample(c);
+    }
     maxVisitInterval = std::max(maxVisitInterval, interval);
     if (interval > tSweep) {
         stats.visitIntervalOverruns++;
@@ -742,7 +994,8 @@ RetentionManager::touched(const CacheBlk *blk) const
     // A fill sets both ticks, a refresh only the charge, a hit only the
     // touch; the daemon may clear the bit in between
     return blk->getLastTouchTick() >
-        std::max(blk->getFullChargeTick(), blk->getRefClearTick());
+        std::max(blk->getFullChargeTick(), blk->getRefClearTick()) ||
+        chargedByWriteback(blk);
 }
 
 bool
@@ -759,7 +1012,8 @@ RetentionManager::isColdDirty(const CacheBlk *blk,
         return std::find(mru.begin(), mru.end(), blk) == mru.end();
       case ColdDirty::Touched:
         // Not hit since its last fill or refresh (a fill sets both)
-        return blk->getLastTouchTick() <= blk->getFullChargeTick();
+        return blk->getLastTouchTick() <= blk->getFullChargeTick() &&
+            !chargedByWriteback(blk);
       default:
         return false;
     }
@@ -861,7 +1115,15 @@ RetentionManager::applyDrop(CacheBlk *blk, LineOp op, DropKeep keep)
     Tick start = curTick();
     if (dirty) {
         stats.coldDirtyWritebacks++;
-        start = occupyBank(bank, false);
+        // With bank ports the line read takes the next read slot,
+        // ahead of the waiting reads (the eviction below books no other)
+        if (cache.bankPorts) {
+            start = cache.bankPorts->priorityRead(
+                bank, cache.clockEdge(Cycles(1)));
+            cache.bankPortsWbBooked = true;
+        } else {
+            start = occupyBank(bank, false);
+        }
     } else {
         stats.activeInvalidations++;
     }
@@ -872,8 +1134,13 @@ RetentionManager::applyDrop(CacheBlk *blk, LineOp op, DropKeep keep)
         }
     }
     stats.ageAtActiveInvalidate.sample(double(age(blk)) / double(drt));
+    maxChargeAgeAtDrop = std::max(maxChargeAgeAtDrop,
+                                  age(blk) + (start - curTick()));
     invalidatedAddrs[cache.regenerateBlkAddr(blk)] =
         {blk->getFullChargeTick() + drt, dirty};
+
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Drop);
 
     // Silent drop: invalidate without telling the level below (no
     // CleanEvict); it keeps a stale holder bit and answers later
@@ -889,6 +1156,8 @@ RetentionManager::applyDrop(CacheBlk *blk, LineOp op, DropKeep keep)
         cache.doWritebacks(writebacks,
                            cache.clockEdge(cache.forwardLatency));
     }
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Other);
 
     panic_if(!dirty && bankBusyUntil[bank] != busy,
              "%s: a clean drop occupied bank %u", cache.name(), bank);
@@ -1082,6 +1351,11 @@ RetentionManager::decideLine(CacheBlk *blk) const
 void
 RetentionManager::processLineStep(unsigned bank)
 {
+    if (subarrays > 1) {
+        processGroupStep(bank);
+        return;
+    }
+
     const Tick now = curTick();
     const unsigned rows = cache.tags->getNumSets() / banks * assoc;
 
@@ -1173,6 +1447,396 @@ RetentionManager::processLineStep(unsigned bank)
     }
     cache.schedule(*lineEvents[bank], cache.clockEdge(scanCycles));
 }
+
+void
+RetentionManager::processGroupStep(unsigned bank)
+{
+    const Tick now = curTick();
+    const unsigned rows = cache.tags->getNumSets() / banks * assoc;
+
+    // The slot's opportunistic group issues in a step with the bank idle:
+    // one operation restores each of its lines whose row is unchanged
+    std::vector<PendingOpp> &opp = pendingOppGroup[bank];
+    if (!opp.empty() && bankIdle(bank)) {
+        beginGroupOp();
+        for (const PendingOpp &p : opp) {
+            if (p.blk->isValid() &&
+                cache.regenerateBlkAddr(p.blk) == p.addr) {
+                if (keepTouched && !p.blk->isSet(CacheBlk::DirtyBit)) {
+                    stats.refreshTouched++;
+                }
+                refresh(p.blk, false);
+            } else {
+                stats.oppStale++;
+            }
+        }
+        endGroupOp();
+        opp.clear();
+    }
+
+    // The group: subarrays consecutive rows of the bank (set_hi outer,
+    // way inner), one in each subarray
+    const unsigned row0 = scanRow[bank];
+    std::vector<CacheBlk *> &blks = groupBlks;
+    std::vector<LineDecision> &d = groupDecisions;
+    blks.resize(subarrays);
+    d.resize(subarrays);
+    bool needs_bank = false;
+    bool forced = false;
+    for (unsigned g = 0; g < subarrays; g++) {
+        const unsigned row = row0 + g;
+        const int set = bank + banks * (row / assoc);
+        // The block of (set, way) without copying the set (getSetBlks)
+        blks[g] = static_cast<CacheBlk *>(
+            cache.tags->findBlockBySetAndWay(set, row % assoc));
+        clearRefBit(blks[g]);
+        d[g] = decideLine(blks[g]);
+        const bool f = d[g].op == LineOp::Force || d[g].op == LineOp::Wb;
+        forced = forced || f;
+        needs_bank = needs_bank || f || d[g].op == LineOp::Opp;
+    }
+
+    // As one line: a group needing the bank waits while the slot holds
+    // an unissued forced operation
+    if (needs_bank && slotFreeAt[bank] > now) {
+        stats.scanSlotWaits++;
+        stats.scanSlotWaitCycles +=
+            cache.ticksToCycles(slotFreeAt[bank] - now);
+        cache.schedule(*lineEvents[bank], slotFreeAt[bank]);
+        return;
+    }
+
+    for (unsigned g = 0; g < subarrays; g++) {
+        recordVisit(blks[g]->getSet() * assoc + blks[g]->getWay());
+        if (quantizedAge) {
+            checkQuantizedAge(blks[g]);
+        }
+    }
+
+    if (needs_bank && !opp.empty()) {
+        stats.oppReplaced += opp.size();
+        opp.clear();
+    }
+
+    // A forced group: one operation serves its refreshes (opportunistic
+    // ones too) and writeback reads; CleanEvicts need no bank
+    if (forced) {
+        beginGroupOp();
+    }
+    for (unsigned g = 0; g < subarrays; g++) {
+        CacheBlk *blk = blks[g];
+        if (d[g].revived) {
+            stats.daemonRevivedDirty++;
+            violation(blk, "daemon visit");
+            refresh(blk, true);
+        } else if (d[g].drop) {
+            if (quantizedAge) {
+                stats.epochAgeAtDeadline.sample(epochAge(blk));
+            }
+            applyDrop(blk, d[g].op, d[g].keep);
+        } else if (d[g].op == LineOp::Force) {
+            if (quantizedAge) {
+                stats.epochAgeAtDeadline.sample(epochAge(blk));
+            }
+            if (keepTouched && !blk->isSet(CacheBlk::DirtyBit)) {
+                stats.refreshTouched++;
+            }
+            refresh(blk, true);
+        } else if (d[g].op == LineOp::Opp) {
+            if (forced) {
+                if (keepTouched && !blk->isSet(CacheBlk::DirtyBit)) {
+                    stats.refreshTouched++;
+                }
+                refresh(blk, false);
+            } else {
+                opp.push_back({blk, cache.regenerateBlkAddr(blk)});
+            }
+        }
+    }
+    if (forced) {
+        // The operation holds the slot until it starts
+        slotFreeAt[bank] = groupStarted ? groupStart : now;
+        endGroupOp();
+    }
+
+    scanRow[bank] = (row0 + subarrays) % rows;
+    if (scanRow[bank] == 0) {
+        stats.daemonSweepCycles.sample(
+            cache.ticksToCycles(now - bankSweepStart[bank]));
+        bankSweepStart[bank] = now;
+    }
+    cache.schedule(*lineEvents[bank], cache.clockEdge(scanCycles));
+}
+
+void
+RetentionManager::processRaStep(unsigned bank, bool opp_step)
+{
+    if (raEven) {
+        processRaEven(bank);
+        return;
+    }
+    if (cache.bankPorts) {
+        processRaPorts(bank, opp_step);
+        return;
+    }
+
+    const Tick now = curTick();
+    const Tick period = cache.clockPeriod();
+    const Tick line = cache.cyclesToTicks(lineCycles);
+    EventFunctionWrapper &ev = *raEvents[bank];
+    EventFunctionWrapper &opp_ev = *raOppEvents[bank];
+
+    if (raRow[bank] == raRows) {
+        // Period start (the pre-CPU event at raPeriodStart)
+        raRow[bank] = 0;
+        raForced[bank] = refreshMode == RefreshMode::AllStrict;
+        if (!raForced[bank]) {
+            // all_opp: decide after this cycle's demand accesses
+            cache.schedule(opp_ev, now);
+            return;
+        }
+    }
+
+    if (opp_step) {
+        // After the CPU tick: the bank is idle this cycle if no demand
+        // access used it and no refresh is in progress. Invariant: from
+        // the next cycle, the remaining rows still fit before the end of
+        // W back to back.
+        const Tick end = raPeriodStart[bank] +
+            cache.cyclesToTicks(raWindow);
+        const Tick rest = Tick(raRows - raRow[bank]) * line;
+        const bool idle = bankFreeAt(bank) <= now &&
+            bankLastAccess[bank] != now;
+        if (!idle) {
+            if (now + 2 * period + rest > end) {
+                // Waiting another cycle could miss W: the rest back to
+                // back from the next cycle, preempting demand
+                raForced[bank] = true;
+                cache.schedule(ev, now + period);
+            } else {
+                cache.schedule(opp_ev, now + period);
+            }
+            return;
+        }
+    }
+
+    // Row of the bank: set_hi outer, way inner (as the line scanner)
+    const unsigned r = raRow[bank];
+    const unsigned set = bank + banks * (r / assoc);
+    const unsigned way = r % assoc;
+    const unsigned row = set * assoc + way;
+    CacheBlk *blk = cache.tags->getSetBlks(set)[way];
+
+    if (raForced[bank]) {
+        stats.raForcedRefreshes++;
+    } else {
+        stats.raOppRefreshes++;
+    }
+    stats.raRowRefreshes++;
+    // Without bank ports nothing else uses the bank and the refresh
+    // starts now; with them it starts after the accesses already waiting
+    const Tick start = raFree ? now : occupyBank(bank);
+
+    if (raLastRefresh[row] != MaxTick) {
+        raMaxRowInterval = std::max(raMaxRowInterval,
+                                    start - raLastRefresh[row]);
+    }
+    raLastRefresh[row] = start;
+
+    if (blk->isValid()) {
+        stats.raValidRefreshes++;
+        // The charge is recorded now, before a late start: ages read
+        // later are an upper bound
+        const Tick drt = cache.tags->getDRT();
+        if (cache.tags->isExpired(blk) ||
+            (start > now && age(blk) + (start - now) >= drt)) {
+            stats.raLate++;
+            panic_if(strict, "%s: refresh-all reached row %u (block %#lx) "
+                     "after it expired (age %lu >= drt %lu)", cache.name(),
+                     row, blk->getTag(), age(blk), cache.tags->getDRT());
+            if (blk->isSet(CacheBlk::DirtyBit)) {
+                violation(blk, "refresh-all");
+            }
+        }
+        raMaxChargeAge = std::max(raMaxChargeAge, age(blk) + (start - now));
+        blk->setFullChargeTick(now);
+    }
+
+    if (++raRow[bank] < raRows) {
+        cache.schedule(raForced[bank] ? ev : opp_ev, start + line);
+        return;
+    }
+
+    // Sweep done: idle until the next period (a sweep the bank ports
+    // stretched past it starts the next one late)
+    stats.raSweeps++;
+    stats.daemonSweepCycles.sample(
+        cache.ticksToCycles(start + line - raPeriodStart[bank]));
+    raPeriodStart[bank] += raPeriod;
+    cache.schedule(ev, std::max(raPeriodStart[bank], start + line));
+}
+
+void
+RetentionManager::noteRowRefresh(unsigned row, Tick start, Tick charge_age)
+{
+    if (rowLastRefresh[row] != MaxTick) {
+        maxRowGap = std::max(maxRowGap, start - rowLastRefresh[row]);
+    }
+    rowLastRefresh[row] = start;
+    maxChargeAgeAtRefresh = std::max(maxChargeAgeAtRefresh, charge_age);
+}
+
+Tick
+RetentionManager::raBlock(unsigned bank, Tick earliest, bool forced)
+{
+    Tick start;
+    if (raFree) {
+        start = earliest;
+    } else if (cache.bankPorts) {
+        start = cache.bankPorts->block(bank, earliest, lineCycles, forced);
+    } else {
+        start = std::max(earliest, bankBusyUntil[bank]);
+    }
+    if (!raFree) {
+        bankBusyUntil[bank] = start + cache.cyclesToTicks(lineCycles);
+        stats.bankBusyCycles[bank] += lineCycles;
+        stats.bankRefreshes[bank]++;
+    }
+    return start;
+}
+
+void
+RetentionManager::raRefreshRow(unsigned bank, Tick start)
+{
+    const Tick now = curTick();
+    const unsigned r = raRow[bank];
+    const unsigned set = bank + banks * (r / assoc);
+    const unsigned way = r % assoc;
+    const unsigned row = set * assoc + way;
+    CacheBlk *blk = cache.tags->getSetBlks(set)[way];
+
+    stats.raRowRefreshes++;
+    if (raLastRefresh[row] != MaxTick) {
+        raMaxRowInterval = std::max(raMaxRowInterval,
+                                    start - raLastRefresh[row]);
+    }
+    raLastRefresh[row] = start;
+
+    if (blk->isValid()) {
+        stats.raValidRefreshes++;
+        // The charge is recorded now, before a later start: ages read
+        // later are an upper bound
+        const Tick drt = cache.tags->getDRT();
+        const Tick age_at_start = age(blk) + (start - now);
+        if (cache.tags->isExpired(blk) || age_at_start >= drt) {
+            stats.raLate++;
+            panic_if(strict, "%s: refresh-all reached row %u (block %#lx) "
+                     "after it expired (age %lu >= drt %lu)", cache.name(),
+                     row, blk->getTag(), age_at_start, drt);
+            if (blk->isSet(CacheBlk::DirtyBit)) {
+                violation(blk, "refresh-all");
+            }
+        }
+        raMaxChargeAge = std::max(raMaxChargeAge, age_at_start);
+        blk->setFullChargeTick(now);
+    }
+    raRow[bank]++;
+}
+
+Tick
+RetentionManager::raEvenSlot(unsigned bank) const
+{
+    const uint64_t p_cyc = raPeriod / cache.clockPeriod();
+    return raPeriodStart[bank] + cache.cyclesToTicks(
+        Cycles(uint64_t(raRow[bank] / subarrays) * p_cyc /
+               (raRows / subarrays)));
+}
+
+void
+RetentionManager::processRaEven(unsigned bank)
+{
+    // The row's slot: the refresh starts on the next cycle, ahead of
+    // the waiting accesses
+    // One operation: a row of each subarray
+    const Tick start = raBlock(bank, cache.clockEdge(Cycles(1)), true);
+    for (unsigned g = 0; g < subarrays; g++) {
+        stats.raForcedRefreshes++;
+        raRefreshRow(bank, start);
+    }
+
+    if (raRow[bank] == raRows) {
+        stats.raSweeps++;
+        stats.daemonSweepCycles.sample(cache.ticksToCycles(
+            start + cache.cyclesToTicks(lineCycles) - raPeriodStart[bank]));
+        raRow[bank] = 0;
+        raPeriodStart[bank] += raPeriod;
+    }
+    cache.schedule(*raEvents[bank], raEvenSlot(bank));
+}
+
+void
+RetentionManager::processRaPorts(unsigned bank, bool opp_step)
+{
+    const Tick now = curTick();
+    const Tick period = cache.clockPeriod();
+    const Tick line = cache.cyclesToTicks(lineCycles);
+    EventFunctionWrapper &ev = *raEvents[bank];
+    EventFunctionWrapper &opp_ev = *raOppEvents[bank];
+
+    if (raRow[bank] == raRows) {
+        // Period start (the pre-CPU event at raPeriodStart)
+        raRow[bank] = 0;
+        raForced[bank] = refreshMode == RefreshMode::AllStrict;
+        if (!raForced[bank]) {
+            cache.schedule(opp_ev, now);
+            return;
+        }
+    }
+
+    if (opp_step) {
+        // After the CPU tick: idle if no access waits or used the bank
+        // this cycle and no refresh is booked. Invariant: from the next
+        // cycle, the remaining rows still fit before the end of W.
+        const Tick end = raPeriodStart[bank] +
+            cache.cyclesToTicks(raWindow);
+        const Tick rest = Tick(raRows - raRow[bank]) * line;
+        const bool idle = bankFreeAt(bank) <= now &&
+            bankLastAccess[bank] != now;
+        if (!idle) {
+            if (now + 2 * period + rest > end) {
+                // Waiting another cycle could miss W: the rest back to
+                // back from the next cycle, ahead of the waiting accesses
+                raForced[bank] = true;
+            } else {
+                cache.schedule(opp_ev, now + period);
+                return;
+            }
+        }
+    }
+
+    // Both kinds start on the next cycle: a forced row pre-empts the
+    // waiting accesses, an opportunistic one found the bank idle
+    const Tick start = raBlock(bank, now + period, raForced[bank]);
+    if (raForced[bank]) {
+        stats.raForcedRefreshes++;
+    } else {
+        stats.raOppRefreshes++;
+    }
+    raRefreshRow(bank, start);
+
+    if (raRow[bank] < raRows) {
+        // Decide the next row in the row's last cycle
+        cache.schedule(raForced[bank] ? ev : opp_ev, start + line - period);
+        return;
+    }
+
+    stats.raSweeps++;
+    stats.daemonSweepCycles.sample(
+        cache.ticksToCycles(start + line - raPeriodStart[bank]));
+    raPeriodStart[bank] += raPeriod;
+    cache.schedule(ev, std::max(raPeriodStart[bank], start + line));
+}
+
 
 RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                                                  BaseCache &cache)
@@ -1329,7 +1993,44 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
       ADD_STAT(scanSlotWaits, statistics::units::Count::get(),
                "line scanner: rows that waited for the bank's slot"),
       ADD_STAT(scanSlotWaitCycles, statistics::units::Cycle::get(),
-               "line scanner: cycles the scanners waited for the slot")
+               "line scanner: cycles the scanners waited for the slot"),
+      ADD_STAT(bankBusyCycles, statistics::units::Cycle::get(),
+               "cycles each bank is busy with refreshes and writeback "
+               "reads"),
+      ADD_STAT(maxRefreshStallCycles, statistics::units::Cycle::get(),
+               "longest single hit stall behind a refresh"),
+      ADD_STAT(raSweeps, statistics::units::Count::get(),
+               "refresh-all: bank sweeps completed (banks per period)"),
+      ADD_STAT(raRowRefreshes, statistics::units::Count::get(),
+               "refresh-all: rows refreshed, valid or not"),
+      ADD_STAT(raValidRefreshes, statistics::units::Count::get(),
+               "refresh-all: rows refreshed while holding a valid line"),
+      ADD_STAT(raOppRefreshes, statistics::units::Count::get(),
+               "refresh-all: refreshes issued in an idle bank cycle"),
+      ADD_STAT(raForcedRefreshes, statistics::units::Count::get(),
+               "refresh-all: refreshes issued back to back"),
+      ADD_STAT(raMaxRowIntervalCycles, statistics::units::Cycle::get(),
+               "refresh-all: longest interval between two refreshes of a "
+               "row"),
+      ADD_STAT(raMaxChargeAgeCycles, statistics::units::Cycle::get(),
+               "refresh-all: oldest valid line at its refresh"),
+      ADD_STAT(raLate, statistics::units::Count::get(),
+               "refresh-all: valid lines expired at their refresh"),
+      ADD_STAT(lateRefreshStarts, statistics::units::Count::get(),
+               "refreshes that started after their valid line expired"),
+      ADD_STAT(lateRefreshStartsDirty, statistics::units::Count::get(),
+               "of those, dirty lines (data lost)"),
+      ADD_STAT(maxRowRefreshGapCycles, statistics::units::Cycle::get(),
+               "longest gap between two refreshes of a row"),
+      ADD_STAT(maxChargeAgeAtRefreshCycles, statistics::units::Cycle::get(),
+               "oldest line at its refresh, since its last full write"),
+      ADD_STAT(maxChargeAgeAtDropCycles, statistics::units::Cycle::get(),
+               "oldest line at a deadline drop (writeback read start or "
+               "CleanEvict), since its last full write"),
+      ADD_STAT(raPeriodCycles, statistics::units::Cycle::get(),
+               "refresh-all: period P"),
+      ADD_STAT(raWindowCycles, statistics::units::Cycle::get(),
+               "refresh-all: sweep window W")
 {
 }
 
@@ -1363,6 +2064,38 @@ RetentionManager::RetentionStats::regStats()
     bankRefreshes.init(mgr.banks);
     bankStalledHits.init(mgr.banks);
     bankStallCycles.init(mgr.banks);
+    bankBusyCycles.init(mgr.banks);
+    maxRefreshStallCycles.functor([this] {
+        return double(mgr.maxStall);
+    });
+    maxRowRefreshGapCycles.functor([this] {
+        return double(std::max(mgr.maxRowGap, mgr.raMaxRowInterval)) /
+            double(mgr.cache.clockPeriod());
+    });
+    maxChargeAgeAtRefreshCycles.functor([this] {
+        return double(std::max(mgr.maxChargeAgeAtRefresh,
+                               mgr.raMaxChargeAge)) /
+            double(mgr.cache.clockPeriod());
+    });
+    maxChargeAgeAtDropCycles.functor([this] {
+        return double(mgr.maxChargeAgeAtDrop) /
+            double(mgr.cache.clockPeriod());
+    });
+    raMaxRowIntervalCycles.functor([this] {
+        return double(mgr.raMaxRowInterval) /
+            double(mgr.cache.clockPeriod());
+    });
+    raMaxChargeAgeCycles.functor([this] {
+        return double(mgr.raMaxChargeAge) /
+            double(mgr.cache.clockPeriod());
+    });
+    raPeriodCycles.functor([this] {
+        return double(mgr.raPeriod) / double(mgr.cache.clockPeriod());
+    });
+    raWindowCycles.functor([this] {
+        return mgr.refreshMode == RefreshMode::Policy ? 0.0 :
+            double(mgr.raWindow);
+    });
     tSweepCycles.functor([this] {
         return double(mgr.tSweep) / double(mgr.cache.clockPeriod());
     });
@@ -1378,11 +2111,26 @@ RetentionManager::RetentionStats::regStats()
 }
 
 void
+RetentionManager::RetentionStats::preDumpStats()
+{
+    mgr.flushVisitBatch();
+    statistics::Group::preDumpStats();
+}
+
+void
 RetentionManager::RetentionStats::resetStats()
 {
+    // Samples not yet in the histogram are reset with it
+    mgr.visitBatchCount = 0;
     statistics::Group::resetStats();
 
     mgr.maxVisitInterval = 0;
+    mgr.maxStall = Cycles(0);
+    mgr.raMaxRowInterval = 0;
+    mgr.raMaxChargeAge = 0;
+    mgr.maxRowGap = 0;
+    mgr.maxChargeAgeAtRefresh = 0;
+    mgr.maxChargeAgeAtDrop = 0;
 
     // Chains opened before the reset would be counted without their
     // refreshes: restart them all

@@ -94,7 +94,9 @@ class MSHR;
 class MSHRQueue;
 class RequestPort;
 class QueueEntry;
+class BankPorts;
 class RetentionManager;
+class ReuseTracker;
 class WriteQueueEntry;
 struct BaseCacheParams;
 
@@ -363,6 +365,30 @@ class BaseCache : public ClockedObject
      */
     friend class RetentionManager;
     std::unique_ptr<RetentionManager> retention;
+
+    /** Reuse statistics (reuse_stats), simulator-only; none if off. */
+    friend class ReuseTracker;
+    std::unique_ptr<ReuseTracker> reuse;
+
+    /**
+     * Data-array bank ports. Only exists when data_read_ports and
+     * data_write_ports are set; otherwise the data array is unlimited.
+     */
+    std::unique_ptr<BankPorts> bankPorts;
+
+    /** Bank ports: the hit access() just served needs a data slot. */
+    struct
+    {
+        bool pending = false;
+        bool write = false;
+        unsigned set = 0;
+    } bankPortsHit;
+
+    /** Bank ports: the fill response that has its write slot. */
+    PacketPtr bankPortsFill = nullptr;
+
+    /** Bank ports: the next eviction's writeback read is booked. */
+    bool bankPortsWbBooked = false;
 
     /** Compression method being used. */
     compression::Base* compressor;

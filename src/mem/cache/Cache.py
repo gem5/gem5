@@ -105,6 +105,37 @@ class BaseCache(ClockedObject):
         "its bank and banks refresh in parallel",
     )
 
+    refresh_subarrays = Param.Unsigned(
+        1,
+        "Subarrays per bank refreshed in parallel: one bank operation "
+        "(refresh_line_cycles) covers this many consecutive rows of the "
+        "bank, one per subarray (refresh_scan=line or refresh_all_even "
+        "only)",
+    )
+
+    reuse_stats = Param.Bool(
+        False,
+        "Stats only: time since each line's last access at a demand hit, "
+        "lines leaving with no hit, and misses to lines the SRC dropped "
+        "that an SRAM of the same geometry would still hold (shadow LRU "
+        "tags). Works with drt 0 too; changes no timing",
+    )
+
+    data_read_ports = Param.Unsigned(
+        0,
+        "Data-array reads (load hits, writeback reads) each bank serves "
+        "per cycle (bank = set mod refresh_banks), in arrival order; 0 "
+        "with data_write_ports 0 means unlimited, as stock gem5. A "
+        "refresh blocks its bank's reads and writes for "
+        "refresh_line_cycles; a forced one pre-empts the waiting accesses",
+    )
+
+    data_write_ports = Param.Unsigned(
+        0,
+        "Data-array writes (store hits, fills) each bank serves per "
+        "cycle; 0 with data_read_ports 0 means unlimited",
+    )
+
     refresh_line_cycles = Param.Cycles(
         0,
         "Data-array cycles of one full-line refresh (read + write); "
@@ -124,6 +155,35 @@ class BaseCache(ClockedObject):
         "or line (one scanner per bank, one line per step, a single "
         "pending operation per bank, as the RTL controller does); line "
         "needs active_invalidate and top_mru = 0",
+    )
+
+    refresh_mode = Param.String(
+        "policy",
+        "policy (the daemon's keep and refresh rules), or refresh-all: "
+        "every period of DRT - refresh_all_window_cycles each bank's sweep "
+        "refreshes its rows in order, back to back from the period start "
+        "(all_strict) or in idle bank cycles with a forced tail that ends "
+        "within the window (all_opp); banks sweep in parallel (numSets a "
+        "multiple of refresh_banks); needs no daemon and no inline refresh",
+    )
+
+    refresh_all_window_cycles = Param.Cycles(
+        4096,
+        "Refresh-all: the window W a sweep completes in; the period is "
+        "DRT - W",
+    )
+
+    refresh_all_even = Param.Bool(
+        False,
+        "Refresh-all strict: one row of each bank every P / rows cycles "
+        "(row interval P), starting on the next cycle ahead of the waiting "
+        "accesses, instead of back-to-back sweeps",
+    )
+
+    refresh_all_free = Param.Bool(
+        False,
+        "Refresh-all, test only: refreshes take no bank time (the sweep "
+        "still recharges every row on its schedule)",
     )
 
     refresh_opp_age = Param.Float(

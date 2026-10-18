@@ -58,7 +58,9 @@
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/cache/retention/bank_ports.hh"
 #include "mem/cache/retention/retention_manager.hh"
+#include "mem/cache/retention/reuse_tracker.hh"
 #include "mem/cache/tags/compressed_tags.hh"
 #include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/cache/tags/super_blk.hh"
@@ -143,8 +145,15 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (compressor)
         compressor->setCache(this);
 
+    if (p.data_read_ports > 0 || p.data_write_ports > 0)
+        bankPorts = std::make_unique<BankPorts>(*this, p.refresh_banks,
+            p.data_read_ports, p.data_write_ports);
+
     if (p.drt > 0)
         retention = std::make_unique<RetentionManager>(*this, p);
+
+    if (p.reuse_stats)
+        reuse = std::make_unique<ReuseTracker>(*this);
 }
 
 BaseCache::~BaseCache()
@@ -352,8 +361,27 @@ BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
         // lat, neglecting responseLatency, modelling hit latency
         // just as the value of lat overriden by access(), which calls
         // the calculateAccessLatency() function.
-        cpuSidePort.schedTimingResp(pkt, request_time);
+        if (bankPortsHit.pending) {
+            // Bank ports: the response leaves as much later as the hit
+            // waits for its slot
+            bankPortsHit.pending = false;
+            const Tick arrival = clockEdge();
+            bankPorts->request(bankPortsHit.set, bankPortsHit.write ?
+                BankPorts::StoreHit : BankPorts::LoadHit,
+                [this, pkt, request_time, arrival](Tick served) {
+                    cpuSidePort.schedTimingResp(
+                        pkt, request_time + (served - arrival));
+                });
+        } else {
+            cpuSidePort.schedTimingResp(pkt, request_time);
+        }
     } else {
+        // Bank ports: a hit without a response still takes its slot
+        if (bankPortsHit.pending) {
+            bankPortsHit.pending = false;
+            bankPorts->request(bankPortsHit.set, bankPortsHit.write ?
+                BankPorts::StoreHit : BankPorts::LoadHit, nullptr);
+        }
         DPRINTF(Cache, "%s satisfied %s, no response needed\n", __func__,
                 pkt->print());
 
@@ -552,6 +580,21 @@ void
 BaseCache::recvTimingResp(PacketPtr pkt)
 {
     assert(pkt->isResponse());
+
+    // Bank ports: a fill is processed (line written, targets answered)
+    // once it has a write slot of its bank
+    if (bankPorts && system->isTimingMode() && pkt != bankPortsFill &&
+        pkt->isRead() && pkt->hasData() && !pkt->isError() &&
+        !pkt->req->isUncacheable()) {
+        const unsigned set =
+            tags->getSetIndex({pkt->getAddr(), pkt->isSecure()});
+        bankPorts->request(set, BankPorts::Fill, [this, pkt](Tick) {
+            bankPortsFill = pkt;
+            recvTimingResp(pkt);
+        });
+        return;
+    }
+    bankPortsFill = nullptr;
 
     // all header delay should be paid for by the crossbar, unless
     // this is a prefetch response from above
@@ -1039,11 +1082,15 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
         stats.replacements++;
 
         // Evict valid blocks associated to this victim block
+        if (reuse)
+            reuse->setReason(ReuseTracker::Reason::Replacement);
         for (auto& blk : evict_blks) {
             if (blk->isValid()) {
                 evictBlock(blk, writebacks);
             }
         }
+        if (reuse)
+            reuse->setReason(ReuseTracker::Reason::Other);
     }
 
     return true;
@@ -1324,7 +1371,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         retention->expireOnAccess(pkt, writebacks);
     blk = tags->accessBlock(pkt, tag_latency);
     if (retention && blk)
-        retention->onAccessHit(blk);
+        retention->onAccessHit(pkt, blk);
+    if (reuse)
+        reuse->onAccess(pkt, blk);
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
@@ -1455,6 +1504,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
 
+        // A writeback writes the whole line
+        if (retention)
+            retention->onWritebackData(blk);
+        if (reuse)
+            reuse->onWriteback(blk);
+
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
@@ -1531,6 +1586,11 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         incHitCount(pkt);
 
+        if (retention)
+            retention->onWritebackData(blk);
+        if (reuse)
+            reuse->onWriteback(blk);
+
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
@@ -1558,9 +1618,21 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
 
+        // Bank ports: the response waits for a read or write slot of
+        // the block's bank (handleTimingReqHit)
+        if (bankPorts && system->isTimingMode() &&
+            (pkt->isRead() || pkt->isWrite())) {
+            bankPortsHit.pending = true;
+            bankPortsHit.write = pkt->isWrite();
+            bankPortsHit.set = blk->getSet();
+        }
+
         // Retention: wait for a refresh in progress, refresh near expiry
         if (retention)
             lat += retention->hitDelay(pkt, blk);
+
+        if (reuse && pkt->needsResponse())
+            reuse->onDemandHit(blk);
 
         satisfyRequest(pkt, blk);
         maintainClusivity(pkt->fromCache(), blk);
@@ -1748,6 +1820,8 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     if (retention)
         retention->onFullLineWrite(victim);
+    if (reuse)
+        reuse->onAllocate(victim);
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.
@@ -1764,6 +1838,8 @@ BaseCache::invalidateBlock(CacheBlk *blk)
 {
     if (retention)
         retention->onInvalidate(blk);
+    if (reuse)
+        reuse->onRemove(blk);
 
     // If block is still marked as prefetched, then it hasn't been used
     if (blk->wasPrefetched()) {
@@ -1788,8 +1864,16 @@ BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
     if (retention)
         retention->onEvict(blk);
 
+    const unsigned set = blk->getSet();
     PacketPtr pkt = evictBlock(blk);
+    const bool wb_booked = bankPortsWbBooked;
+    bankPortsWbBooked = false;
     if (pkt) {
+        // Bank ports: a writeback reads the line from its bank (an SRC
+        // deadline writeback booked its read already)
+        if (bankPorts && blk != tempBlock && pkt->hasData() &&
+            system->isTimingMode() && !wb_booked)
+            bankPorts->request(set, BankPorts::WbRead, nullptr);
         writebacks.push_back(pkt);
     }
 }

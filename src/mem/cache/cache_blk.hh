@@ -171,6 +171,13 @@ class CacheBlk : public TaggedEntry
      */
     Tick refClearTick;
 
+    /**
+     * When a writeback from above last wrote the whole line (it is
+     * charged and used at once: equal to fullChargeTick while that charge
+     * holds).
+     */
+    Tick wbChargeTick;
+
   public:
     /**
      * Stats only: the daemon refreshes of this block since its last hit
@@ -232,6 +239,7 @@ class CacheBlk : public TaggedEntry
         setLastTouchTick(other.getLastTouchTick());
         setWasOppRefreshed(other.getWasOppRefreshed());
         setRefClearTick(other.getRefClearTick());
+        setWbChargeTick(other.getWbChargeTick());
         refreshChain = other.refreshChain;
 
         other.invalidate();
@@ -280,6 +288,10 @@ class CacheBlk : public TaggedEntry
 
     Tick getRefClearTick() const { return refClearTick; }
 
+    void setWbChargeTick(Tick const tick) { wbChargeTick = tick; }
+
+    Tick getWbChargeTick() const { return wbChargeTick; }
+
     RefreshChain &getRefreshChain() { return refreshChain; }
 
     /**
@@ -302,6 +314,7 @@ class CacheBlk : public TaggedEntry
         setLastTouchTick(0);
         setWasOppRefreshed(false);
         setRefClearTick(0);
+        setWbChargeTick(MaxTick);
         refreshChain = RefreshChain();
     }
 
