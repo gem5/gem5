@@ -3801,7 +3801,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x21: vsadd_vv({{
-                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Vs1_vu[i],
+                        Vd_vi[i] = sat_add<vi>(Vs2_vi[i], Vs1_vi[i],
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x22: vssubu_vv({{
@@ -3809,7 +3809,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x23: vssub_vv({{
-                        Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Vs1_vu[i],
+                        Vd_vi[i] = sat_sub<vi>(Vs2_vi[i], Vs1_vi[i],
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x27: vsmul_vv({{
@@ -4404,8 +4404,8 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPMVV, SimdAddOp);
 
                     0x9: vaadd_vv({{
-                        __uint128_t res = (__uint128_t)Vs2_vi[i] + Vs1_vi[i];
-                        res = int_rounding<__uint128_t>(
+                        __int128_t res = (__int128_t)Vs2_vi[i] + Vs1_vi[i];
+                        res = int_rounding<__int128_t>(
                             res,
                             xc->readMiscReg(MISCREG_VXRM),
                             1
@@ -4424,8 +4424,8 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPMVV, SimdAddOp);
 
                     0xb: vasub_vv({{
-                        __uint128_t res = (__uint128_t)Vs2_vi[i] - Vs1_vi[i];
-                        res = int_rounding<__uint128_t>(
+                        __int128_t res = (__int128_t)Vs2_vi[i] - Vs1_vi[i];
+                        res = int_rounding<__int128_t>(
                             res,
                             xc->readMiscReg(MISCREG_VXRM),
                             1
@@ -5040,7 +5040,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x21: vsadd_vx({{
-                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Rs1_vu,
+                        Vd_vi[i] = sat_add<vi>(Vs2_vi[i], Rs1_vi,
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x22: vssubu_vx({{
@@ -5048,7 +5048,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x23: vssub_vx({{
-                        Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Rs1_vu,
+                        Vd_vi[i] = sat_sub<vi>(Vs2_vi[i], Rs1_vi,
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x27: vsmul_vx({{
