@@ -205,7 +205,12 @@ public:
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)
         const override
     {
-        return fault;
+        if (fault != NoFault) {
+            return fault;
+        }
+        // This micro-op does not modify vector state, so set_dirty is false.
+        // The vector specification allows VS to remain unchanged in this case.
+        return updateVPUStatus(xc, machInst, false, true);
     }
 
     std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
