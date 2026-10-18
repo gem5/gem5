@@ -195,6 +195,86 @@ class BaseCache(ClockedObject):
         "still recharges every row on its schedule)",
     )
 
+    window_mode = Param.String(
+        "off",
+        "Adaptive-window drops on top of refresh-all strict with even "
+        "spacing (same sweep and bank occupancy): off, fixed, tcp or amc. "
+        "The cache is split into window_groups groups (set mod groups); a "
+        "group decides at a frame (one sweep) at least N frames after its "
+        "last decision, and its unused lines are dropped then",
+    )
+
+    window_n_fixed = Param.Unsigned(
+        8,
+        "Window mode fixed: N; above window_group_counter_max + 1 no "
+        "group is ever due (nothing drops)",
+    )
+
+    window_tcp_n_init = Param.Unsigned(1, "Window mode tcp: initial N")
+
+    window_amc_n_init = Param.Unsigned(8, "Window mode amc: initial N")
+
+    window_ssthresh_init = Param.Unsigned(
+        8, "Window mode tcp: initial ssthresh"
+    )
+
+    window_n_max = Param.Unsigned(64, "Window modes tcp and amc: largest N")
+
+    window_up_shift = Param.Unsigned(
+        7,
+        "Window mode tcp: N grows at a frame end when the retention misses "
+        "exceed the demand accesses >> window_up_shift",
+    )
+
+    window_down_shift = Param.Unsigned(
+        9,
+        "Window mode tcp: a shrink check is calm when the retention misses "
+        "are below the demand accesses >> window_down_shift",
+    )
+
+    window_min_accesses = Param.Unsigned(
+        512,
+        "Window mode tcp: a shrink check is judged only with at least this "
+        "many demand accesses since the last reset",
+    )
+
+    window_streak_len = Param.Unsigned(
+        3,
+        "Window mode tcp: calm decrements of N before shrinks halve it",
+    )
+
+    window_calm_len = Param.Unsigned(
+        2, "Window mode tcp: calm checks in a row that shrink N"
+    )
+
+    window_amc_interval_cycles = Param.Cycles(
+        1000000, "Window mode amc: decision interval"
+    )
+
+    window_amc_target_frac = Param.Float(
+        0.5,
+        "Window mode amc: target retention misses as a fraction of the "
+        "interval's demand misses that are not retention misses",
+    )
+
+    window_amc_hi = Param.Float(
+        1.5, "Window mode amc: N doubles when misses > hi x target"
+    )
+
+    window_amc_lo = Param.Float(
+        0.5, "Window mode amc: N halves when misses < lo x target"
+    )
+
+    window_groups = Param.Unsigned(
+        64,
+        "Window modes: groups (set mod groups); at most "
+        "max(1, groups >> floor(log2 N)) due groups decide per frame",
+    )
+
+    window_group_counter_max = Param.Unsigned(
+        127, "Window modes: saturation of the per-group frame counters"
+    )
+
     refresh_opp_age = Param.Float(
         0.8,
         "Age, as a fraction of DRT, from which the daemon refreshes a "

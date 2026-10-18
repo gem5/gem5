@@ -1266,11 +1266,17 @@ class BaseCache : public ClockedObject
         uint8_t flag = 1 << cause;
         blocked &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
+        // Retention stats only (drop writebacks that filled the buffer)
+        if (retention)
+            retentionClearBlocked(cause);
         if (blocked == 0) {
             stats.blockedCycles[cause] += curCycle() - blockedCycle;
             cpuSidePort.clearBlocked();
         }
     }
+
+    /** Tells the retention manager about clearBlocked (stats only). */
+    void retentionClearBlocked(BlockedCause cause);
 
     /**
      * Schedule a send event for the memory-side port. If already

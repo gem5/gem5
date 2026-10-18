@@ -115,6 +115,24 @@
  * Writebacks from above (a cache below another): a writeback writes the
  * whole line, so it recharges the line, and it counts as a use (the
  * reference bit); a CleanEvict is not a use.
+ *
+ * Window mode (window_mode, on top of refresh-all strict with even
+ * spacing; the sweep and the bank occupancy are unchanged): per line a
+ * used bit U (set by demand hits and writebacks from above) and a
+ * pending-drop bit D. The cache is split into groups (set mod groups)
+ * that the WindowController grants a decision at most once every N
+ * frames (one frame = one sweep). At a line's slot in a deciding group a
+ * used line is kept (U cleared) and an unused one is dropped: a clean
+ * line is invalidated at once; a dirty one is written back first, and if
+ * the write buffer is full (or a request for it is in flight) it gets
+ * D = 1, stays refreshed, and is retried at its slot in every later frame
+ * while U = 0. A dropped line leaves an expired tag (a gem5-invalid block
+ * plus a remembered address): a demand access that matches it is a
+ * retention miss; victims are an expired way matching the address, then
+ * truly invalid ways, then expired ways, then the replacement policy. A
+ * clean drop sends no CleanEvict, so the level below still lists the
+ * line until the expired tag is replaced, which sends the CleanEvict an
+ * SRAM cache would send when the line is evicted.
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
@@ -126,6 +144,7 @@
 
 #include "base/statistics.hh"
 #include "base/types.hh"
+#include "mem/cache/retention/window_controller.hh"
 #include "mem/packet.hh"
 #include "sim/eventq.hh"
 
@@ -134,6 +153,7 @@ namespace gem5
 
 class BaseCache;
 class CacheBlk;
+class OutputStream;
 struct BaseCacheParams;
 
 class RetentionManager
@@ -209,6 +229,26 @@ class RetentionManager
 
     /** blk is being invalidated (evicted, expired, snooped away). */
     void onInvalidate(CacheBlk *blk);
+
+    /** Window mode: a demand hit on blk uses the line. */
+    void onDemandHit(PacketPtr pkt, CacheBlk *blk);
+
+    /** Window mode: blk was allocated (its U follows its group). */
+    void onAllocate(CacheBlk *blk);
+
+    /**
+     * Window mode: the victim for an allocation of addr when its set
+     * holds an expired tag (see the window mode above), pushed into
+     * evict_blks; replacing an expired tag the level below still lists
+     * appends its CleanEvict to writebacks. nullptr: no expired tag in
+     * the set, use the tags' victim.
+     */
+    CacheBlk *windowVictim(Addr addr, bool is_secure,
+                           std::vector<CacheBlk *> &evict_blks,
+                           PacketList &writebacks);
+
+    /** Stats only: the cache unblocked for cause. */
+    void onClearBlocked(int cause);
 
   private:
     /** One daemon step: visit set refreshSetIdx, then the next set. */
@@ -436,6 +476,45 @@ class RetentionManager
      * expired, so its data is lost. Panics if drt_strict is set.
      */
     void violation(const CacheBlk *blk, const char *where);
+
+    /** Window mode: the decision for row raRow[bank] (before its
+     *  refresh-all refresh). */
+    void windowRow(unsigned bank);
+
+    /** Window mode: every bank finished its sweep (a frame ended). */
+    void windowFrameEnd();
+
+    /** Window mode: bookkeeping for a request, before the tag access. */
+    void windowOnAccess(PacketPtr pkt);
+
+    /** Window mode: drop blk (dirty: write back first). */
+    void windowDrop(CacheBlk *blk, unsigned row, bool dirty);
+
+    /** Window mode: clear the expired tag of row. */
+    void windowClearExpired(unsigned row);
+
+    /** Window mode: the expired row of set matching addr, or -1. */
+    int windowExpiredMatch(unsigned set, Addr blk_addr,
+                           bool is_secure) const;
+
+    /** Window mode: add the cycles at the current N up to now. */
+    void windowAccountN();
+
+    /** Window mode: a controller event (N change, decision, ...). */
+    void windowEvent(WindowController::Event e, unsigned old_val,
+                     unsigned new_val);
+
+    /** Window mode: one row of the N log. */
+    void windowLog(const char *event);
+
+    /** Window mode amc: one decision interval. */
+    void processWindowAmc();
+
+    /** Window mode: stats of the grant just made for the next frame. */
+    void windowGranted();
+
+    /** Window mode: row was used (U = 1, D cleared). */
+    void windowUse(unsigned row);
 
     BaseCache &cache;
 
@@ -668,6 +747,123 @@ class RetentionManager
      *  the CPU tick), and all_opp steps (after it). */
     std::vector<std::unique_ptr<EventFunctionWrapper>> raEvents;
     std::vector<std::unique_ptr<EventFunctionWrapper>> raOppEvents;
+
+    /** Window mode: the controller (nullptr: window mode off). */
+    std::unique_ptr<WindowController> window;
+
+    /** Window mode, per row: U, D, and the expired tag (MaxAddr:
+     *  none) with its secure bit, task id, and whether the level below
+     *  still lists the line (simulator only). */
+    std::vector<uint8_t> winUsed;
+    std::vector<uint8_t> winPend;
+    std::vector<Addr> winExpAddr;
+    std::vector<uint8_t> winExpSecure;
+    std::vector<uint32_t> winExpTaskId;
+    std::vector<uint8_t> winExpInFilter;
+
+    /** Window mode, per set: expired tags. */
+    std::vector<uint16_t> winSetExpired;
+
+    /** Window mode: expired tags and lines with D = 1, now. */
+    uint64_t winExpLive = 0;
+    uint64_t winPendLive = 0;
+    uint64_t winPendPeak = 0;
+
+    /** Window mode: a drop is invalidating its line. */
+    bool winDropping = false;
+
+    /** Window mode: banks done with the current sweep, drops in the
+     *  current frame. */
+    unsigned winBanksDone = 0;
+    uint64_t winFrameDrops = 0;
+
+    /** Window mode: N whose time is being accounted, since this tick. */
+    unsigned winTimeN = 0;
+    Tick winTimeSince = 0;
+
+    /** Window mode: an episode of the write buffer full because of a
+     *  drop writeback is open since this tick. */
+    bool winBlockOpen = false;
+    Tick winBlockSince = 0;
+
+    /** Window mode amc: the decision event and its interval. */
+    std::unique_ptr<EventFunctionWrapper> winAmcEvent;
+    Cycles winAmcInterval = Cycles(0);
+
+    /** Window mode: the N log (nullptr: none). */
+    OutputStream *winLog = nullptr;
+
+    struct WindowStats : public statistics::Group
+    {
+        WindowStats(RetentionManager &mgr, statistics::Group *parent);
+
+        void regStats() override;
+
+        /** Adds the time at the current N (and an open blocking
+         *  episode) up to the dump. */
+        void preDumpStats() override;
+
+        /** Restarts the time accounting and the peaks. */
+        void resetStats() override;
+
+        RetentionManager &mgr;
+
+        statistics::Scalar retentionMisses;
+        statistics::Scalar dropsClean;
+        statistics::Scalar dropsDirty;
+        statistics::Scalar deadlineWritebacks;
+        statistics::Scalar linesRefreshed;
+        statistics::Scalar usedRefreshes;
+        statistics::Scalar slotsSkipped;
+        statistics::Scalar slotsSkippedExpired;
+        statistics::Vector nCycles;
+        statistics::Scalar nCyclesTotal;
+        statistics::Scalar nCyclesTimesN;
+        statistics::Formula avgN;
+        statistics::Histogram dropsPerFrame;
+        statistics::Scalar dirtyDropsDeferred;
+        statistics::Scalar deferredWbFull;
+        statistics::Scalar deferredInflight;
+        statistics::Scalar deferredCleanInflight;
+        statistics::Scalar deferredFrames;
+        statistics::Value deferredPeak;
+        statistics::Value deferredLive;
+        statistics::Scalar deferredDropped;
+        statistics::Scalar deferredCleared;
+        statistics::Scalar deferredEvicted;
+        statistics::Distribution ageAtDrop;
+        statistics::Distribution dueWaitedPerFrame;
+        statistics::Scalar dueWaitedTotal;
+        statistics::Distribution grantsPerFrame;
+        statistics::Scalar groupDecisions;
+        statistics::Scalar frames;
+        statistics::Scalar checks;
+        statistics::Scalar nChanges;
+        statistics::Scalar nGrows;
+        statistics::Scalar nGrowCapped;
+        statistics::Scalar nShrinks;
+        statistics::Scalar amcIntervals;
+        statistics::Value finalN;
+        statistics::Value finalSsthresh;
+        statistics::Scalar victimsInvalid;
+        statistics::Scalar victimsExpired;
+        statistics::Scalar expiredCreated;
+        statistics::Scalar expiredMissed;
+        statistics::Scalar expiredOverwritten;
+        statistics::Scalar expiredSameAddrCleared;
+        statistics::Scalar expiredInvalidated;
+        statistics::Scalar expiredWbCleared;
+        statistics::Scalar expiredCleanEvicts;
+        statistics::Scalar expiredFilterCleared;
+        statistics::Value expiredLive;
+        statistics::Scalar expiredLiveAtReset;
+        statistics::Formula expiredBalance;
+        statistics::Scalar demandAccesses;
+        statistics::Scalar demandHits;
+        statistics::Scalar dropWbBlockedCycles;
+        statistics::Scalar dropWbBlockEpisodes;
+    };
+    std::unique_ptr<WindowStats> winStats;
 
     struct RetentionStats : public statistics::Group
     {

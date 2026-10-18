@@ -1628,8 +1628,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
 
         // Retention: wait for a refresh in progress, refresh near expiry
-        if (retention)
+        if (retention) {
             lat += retention->hitDelay(pkt, blk);
+            retention->onDemandHit(pkt, blk);
+        }
 
         if (reuse && pkt->needsResponse())
             reuse->onDemandHit(blk);
@@ -1800,8 +1802,14 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         partitionManager->readPacketPartitionID(pkt) : 0;
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
-    CacheBlk *victim = tags->findVictim({addr, is_secure}, blk_size_bits,
-                                        evict_blks, partition_id);
+    // Retention window mode: expired tags in the set change the order
+    CacheBlk *victim = retention ?
+        retention->windowVictim(addr, is_secure, evict_blks, writebacks) :
+        nullptr;
+    if (!victim) {
+        victim = tags->findVictim({addr, is_secure}, blk_size_bits,
+                                  evict_blks, partition_id);
+    }
 
     // It is valid to return nullptr if there is no victim
     if (!victim)
@@ -1818,8 +1826,10 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Insert new block at victimized entry
     tags->insertBlock(pkt, victim);
 
-    if (retention)
+    if (retention) {
         retention->onFullLineWrite(victim);
+        retention->onAllocate(victim);
+    }
     if (reuse)
         reuse->onAllocate(victim);
 
@@ -1831,6 +1841,12 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     }
 
     return victim;
+}
+
+void
+BaseCache::retentionClearBlocked(BlockedCause cause)
+{
+    retention->onClearBlocked(cause);
 }
 
 void

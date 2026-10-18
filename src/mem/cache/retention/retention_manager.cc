@@ -5,8 +5,10 @@
 #include <string>
 #include <vector>
 
+#include "base/cprintf.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
+#include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/Cache.hh"
 #include "mem/cache/base.hh"
@@ -14,6 +16,7 @@
 #include "mem/cache/retention/bank_ports.hh"
 #include "mem/cache/retention/reuse_tracker.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/cache/tags/base_set_assoc.hh"
 #include "params/BaseCache.hh"
 
 namespace gem5
@@ -214,6 +217,75 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                 cache.name() + ".refreshScanner" + std::to_string(b)));
         }
     }
+
+    fatal_if(p.window_mode != "off" && p.window_mode != "fixed" &&
+             p.window_mode != "tcp" && p.window_mode != "amc",
+             "%s: window_mode must be off, fixed, tcp or amc",
+             cache.name());
+    if (p.window_mode != "off") {
+        const unsigned num_sets = cache.tags->getNumSets();
+        // The window mode decides at the refresh-all slots, so it keeps
+        // the even sweep and its bank occupancy
+        fatal_if(refreshMode != RefreshMode::AllStrict || !raEven,
+                 "%s: window_mode needs refresh_mode=all_strict and "
+                 "refresh_all_even", cache.name());
+        fatal_if(cache.bankPorts || cache.compressor ||
+                 cache.partitionManager ||
+                 !dynamic_cast<BaseSetAssoc *>(cache.tags),
+                 "%s: window_mode needs BaseSetAssoc tags and no bank "
+                 "ports, compressor or partition manager", cache.name());
+        WindowController::Params wp;
+        wp.mode = p.window_mode == "fixed" ? WindowController::Mode::Fixed :
+            p.window_mode == "tcp" ? WindowController::Mode::Tcp :
+            WindowController::Mode::Amc;
+        wp.nFixed = p.window_n_fixed;
+        wp.tcpNInit = p.window_tcp_n_init;
+        wp.amcNInit = p.window_amc_n_init;
+        wp.ssthreshInit = p.window_ssthresh_init;
+        wp.nMax = p.window_n_max;
+        wp.upShift = p.window_up_shift;
+        wp.downShift = p.window_down_shift;
+        wp.minAccesses = p.window_min_accesses;
+        wp.streakLen = p.window_streak_len;
+        wp.calmLen = p.window_calm_len;
+        wp.amcTargetFrac = p.window_amc_target_frac;
+        wp.amcHi = p.window_amc_hi;
+        wp.amcLo = p.window_amc_lo;
+        wp.groups = p.window_groups;
+        wp.counterMax = p.window_group_counter_max;
+        const std::string err = WindowController::check(wp);
+        fatal_if(!err.empty(), "%s: window_mode: %s", cache.name(), err);
+        fatal_if(num_sets % wp.groups != 0,
+                 "%s: window_groups (%u) must divide numSets (%u)",
+                 cache.name(), wp.groups, num_sets);
+        fatal_if(wp.mode == WindowController::Mode::Amc &&
+                 p.window_amc_interval_cycles == 0,
+                 "%s: window_amc_interval_cycles must be > 0",
+                 cache.name());
+
+        window = std::make_unique<WindowController>(wp);
+        winTimeN = window->nValue();
+        window->setListener([this](WindowController::Event e,
+                                   unsigned old_val, unsigned new_val) {
+            windowEvent(e, old_val, new_val);
+        });
+        const size_t rows = size_t(num_sets) * assoc;
+        winUsed.assign(rows, 0);
+        winPend.assign(rows, 0);
+        winExpAddr.assign(rows, MaxAddr);
+        winExpSecure.assign(rows, 0);
+        winExpTaskId.assign(rows, 0);
+        winExpInFilter.assign(rows, 0);
+        winSetExpired.assign(num_sets, 0);
+        winStats = std::make_unique<WindowStats>(*this, &stats);
+        if (wp.mode == WindowController::Mode::Amc) {
+            winAmcInterval = p.window_amc_interval_cycles;
+            // After the refresh-all events of its tick, before the CPU
+            winAmcEvent = std::make_unique<EventFunctionWrapper>(
+                [this] { processWindowAmc(); }, cache.name() + ".windowAmc",
+                false, Event::Default_Pri + 1);
+        }
+    }
 }
 
 void
@@ -275,6 +347,32 @@ RetentionManager::startup()
             raRow[b] = raEven ? 0 : raRows;
             raPeriodStart[b] = cache.clockEdge(Cycles(1));
             cache.schedule(*raEvents[b], raPeriodStart[b]);
+        }
+        if (window) {
+            const auto &wp = window->params();
+            const uint64_t p_cyc = drt_cyc - raWindow;
+            winTimeN = window->nValue();
+            winTimeSince = curTick();
+            winLog = simout.create(cache.name() + ".window_n.csv", false,
+                                   true);
+            ccprintf(*winLog->stream(),
+                     "tick,cycle,event,N,ssthresh,R,A,pend\n");
+            window->start();
+            windowGranted();
+            windowLog("init");
+            if (winAmcEvent) {
+                cache.schedule(*winAmcEvent,
+                               cache.clockEdge(winAmcInterval));
+            }
+            inform("%s: window mode %s: %u groups (set mod %u), N %u (K "
+                   "%u per frame), group counters saturate at %u%s; frame "
+                   "= one sweep, P %lu cycles", cache.name(),
+                   wp.mode == WindowController::Mode::Fixed ? "fixed" :
+                   wp.mode == WindowController::Mode::Tcp ? "tcp" : "amc",
+                   wp.groups, wp.groups, window->nValue(), window->k(),
+                   wp.counterMax,
+                   window->nValue() > wp.counterMax + 1 ?
+                   " (N above it: no group is ever due)" : "", p_cyc);
         }
         return;
     }
@@ -483,6 +581,11 @@ RetentionManager::violation(const CacheBlk *blk, const char *where)
 void
 RetentionManager::expireOnAccess(PacketPtr pkt, PacketList &writebacks)
 {
+    // Before the read/write filter: it also sees InvalidateReq and
+    // CleanEvict
+    if (window)
+        windowOnAccess(pkt);
+
     // Only requests that use the stored data. Writebacks carry a full
     // line and replace it.
     if (!(pkt->isRead() || pkt->isWrite()) || pkt->isEviction() ||
@@ -706,6 +809,9 @@ RetentionManager::onWritebackData(CacheBlk *blk)
     if (activeInvalidate) {
         invalidatedAddrs.erase(cache.regenerateBlkAddr(blk));
     }
+    // Window mode: a writeback from above uses the line
+    if (window && blk != cache.tempBlock)
+        windowUse(blk->getSet() * assoc + blk->getWay());
 }
 
 bool
@@ -775,6 +881,17 @@ RetentionManager::onInvalidate(CacheBlk *blk)
 {
     if (blk != cache.tempBlock && blk->isValid()) {
         closeRefreshChain(blk, false);
+        if (window) {
+            const unsigned row = blk->getSet() * assoc + blk->getWay();
+            winUsed[row] = 0;
+            if (winPend[row]) {
+                winPend[row] = 0;
+                winPendLive--;
+                // A drop of a deferred line counts in deferredDropped
+                if (!winDropping)
+                    winStats->deferredEvicted++;
+            }
+        }
     }
 }
 
@@ -1761,6 +1878,8 @@ RetentionManager::processRaEven(unsigned bank)
     const Tick start = raBlock(bank, cache.clockEdge(Cycles(1)), true);
     for (unsigned g = 0; g < subarrays; g++) {
         stats.raForcedRefreshes++;
+        if (window)
+            windowRow(bank);
         raRefreshRow(bank, start);
     }
 
@@ -1770,6 +1889,10 @@ RetentionManager::processRaEven(unsigned bank)
             start + cache.cyclesToTicks(lineCycles) - raPeriodStart[bank]));
         raRow[bank] = 0;
         raPeriodStart[bank] += raPeriod;
+        // Every bank ends its sweep in this tick: the frame ends with
+        // the last one
+        if (window && ++winBanksDone == banks)
+            windowFrameEnd();
     }
     cache.schedule(*raEvents[bank], raEvenSlot(bank));
 }
@@ -1835,6 +1958,427 @@ RetentionManager::processRaPorts(unsigned bank, bool opp_step)
         cache.ticksToCycles(start + line - raPeriodStart[bank]));
     raPeriodStart[bank] += raPeriod;
     cache.schedule(ev, std::max(raPeriodStart[bank], start + line));
+}
+
+
+void
+RetentionManager::windowUse(unsigned row)
+{
+    winUsed[row] = 1;
+    if (winPend[row]) {
+        winPend[row] = 0;
+        winPendLive--;
+        winStats->deferredCleared++;
+    }
+}
+
+void
+RetentionManager::onDemandHit(PacketPtr pkt, CacheBlk *blk)
+{
+    if (!window || !pkt->isDemand())
+        return;
+    windowUse(blk->getSet() * assoc + blk->getWay());
+}
+
+void
+RetentionManager::onAllocate(CacheBlk *blk)
+{
+    if (!window || blk == cache.tempBlock)
+        return;
+    const unsigned set = blk->getSet();
+    const unsigned row = set * assoc + blk->getWay();
+    // windowVictim clears an expired victim's tag; these are backstops
+    if (winExpAddr[row] != MaxAddr) {
+        winStats->expiredOverwritten++;
+        windowClearExpired(row);
+    }
+    if (winSetExpired[set]) {
+        const int m = windowExpiredMatch(set, cache.regenerateBlkAddr(blk),
+                                         blk->isSecure());
+        if (m >= 0) {
+            winStats->expiredSameAddrCleared++;
+            windowClearExpired(m);
+        }
+    }
+    // A fill is used if its group decides this frame (U = decide_g)
+    winUsed[row] = window->decide(set % window->groups()) ? 1 : 0;
+}
+
+int
+RetentionManager::windowExpiredMatch(unsigned set, Addr blk_addr,
+                                     bool is_secure) const
+{
+    for (unsigned w = 0; w < assoc; w++) {
+        const unsigned row = set * assoc + w;
+        if (winExpAddr[row] == blk_addr &&
+            bool(winExpSecure[row]) == is_secure) {
+            return int(row);
+        }
+    }
+    return -1;
+}
+
+void
+RetentionManager::windowClearExpired(unsigned row)
+{
+    panic_if(winExpAddr[row] == MaxAddr, "%s: row %u has no expired tag",
+             cache.name(), row);
+    winExpAddr[row] = MaxAddr;
+    winExpInFilter[row] = 0;
+    winSetExpired[row / assoc]--;
+    winExpLive--;
+}
+
+CacheBlk *
+RetentionManager::windowVictim(Addr addr, bool is_secure,
+                               std::vector<CacheBlk *> &evict_blks,
+                               PacketList &writebacks)
+{
+    if (!window)
+        return nullptr;
+    const Addr blk_addr = addr & ~Addr(cache.blkSize - 1);
+    const unsigned set = cache.tags->getSetIndex({blk_addr, is_secure});
+    if (winSetExpired[set] == 0)
+        return nullptr;
+
+    // An expired way of this address (refill in place), then the first
+    // truly invalid way, then the first expired way
+    int row = windowExpiredMatch(set, blk_addr, is_secure);
+    const bool same = row >= 0;
+    if (row < 0) {
+        for (unsigned w = 0; w < assoc && row < 0; w++) {
+            const unsigned r = set * assoc + w;
+            CacheBlk *b = static_cast<CacheBlk *>(
+                cache.tags->findBlockBySetAndWay(set, w));
+            if (!b->isValid() && winExpAddr[r] == MaxAddr)
+                row = int(r);
+        }
+    }
+    bool expired = same;
+    if (row < 0) {
+        for (unsigned w = 0; w < assoc && row < 0; w++) {
+            if (winExpAddr[set * assoc + w] != MaxAddr)
+                row = int(set * assoc + w);
+        }
+        expired = true;
+    }
+    panic_if(row < 0, "%s: set %u counts expired tags but has none",
+             cache.name(), set);
+
+    CacheBlk *victim = static_cast<CacheBlk *>(
+        cache.tags->findBlockBySetAndWay(set, unsigned(row) % assoc));
+    panic_if(victim->isValid() && expired, "%s: expired row %d holds a "
+             "valid block", cache.name(), row);
+    WindowStats &ws = *winStats;
+    if (!expired) {
+        ws.victimsInvalid++;
+    } else {
+        ws.victimsExpired++;
+        if (same) {
+            ws.expiredWbCleared++;
+        } else {
+            ws.expiredOverwritten++;
+            // The level below still lists a clean-dropped line: send the
+            // CleanEvict an SRAM cache sends when it evicts the line
+            if (winExpInFilter[row]) {
+                RequestPtr req = std::make_shared<Request>(
+                    winExpAddr[row], cache.blkSize, 0,
+                    Request::wbRequestorId);
+                if (winExpSecure[row])
+                    req->setFlags(Request::SECURE);
+                req->taskId(winExpTaskId[row]);
+                PacketPtr pkt = new Packet(req, MemCmd::CleanEvict);
+                pkt->allocate();
+                writebacks.push_back(pkt);
+                ws.expiredCleanEvicts++;
+            }
+        }
+        windowClearExpired(unsigned(row));
+    }
+    evict_blks.push_back(victim);
+    return victim;
+}
+
+void
+RetentionManager::windowOnAccess(PacketPtr pkt)
+{
+    const bool demand = pkt->isDemand();
+    // An invalidating cache maintenance request (clflush) invalidates
+    // an SRAM copy too, and takes the line off the level below's list
+    const bool inval = pkt->cmd == MemCmd::InvalidateReq ||
+        (pkt->req->isCacheMaintenance() && pkt->isInvalidate());
+    const bool clean_evict = pkt->cmd == MemCmd::CleanEvict;
+    // A prefetch refills the line (no prefetcher in the window configs)
+    const bool prefetch = pkt->cmd.isPrefetch();
+    if (!demand && !inval && !clean_evict && !prefetch)
+        return;
+
+    const Addr blk_addr = pkt->getBlockAddr(cache.blkSize);
+    const bool secure = pkt->isSecure();
+    CacheBlk *blk = cache.tags->findBlock({blk_addr, secure});
+    if (demand) {
+        // The hit test of BaseCache::access
+        const bool hit = blk && (pkt->needsWritable() ?
+            blk->isSet(CacheBlk::WritableBit) :
+            blk->isSet(CacheBlk::ReadableBit));
+        window->demandAccess(hit);
+        winStats->demandAccesses++;
+        if (hit)
+            winStats->demandHits++;
+    }
+    if (blk)
+        return;
+
+    const unsigned set = cache.tags->getSetIndex({blk_addr, secure});
+    if (winSetExpired[set] == 0)
+        return;
+    const int row = windowExpiredMatch(set, blk_addr, secure);
+    if (row < 0)
+        return;
+    if (demand) {
+        // A retention miss, counted once: the tag goes now
+        winStats->retentionMisses++;
+        winStats->expiredMissed++;
+        window->retentionMiss();
+        windowClearExpired(unsigned(row));
+    } else if (inval) {
+        // An SRAM cache would invalidate the line too
+        winStats->expiredInvalidated++;
+        windowClearExpired(unsigned(row));
+    } else if (prefetch) {
+        winStats->expiredSameAddrCleared++;
+        windowClearExpired(unsigned(row));
+    } else if (winExpInFilter[row] && !inFlight(blk_addr, secure)) {
+        // The CleanEvict goes on below (no block, nothing in flight that
+        // would sink it) and removes the line from the level below
+        winExpInFilter[row] = 0;
+        winStats->expiredFilterCleared++;
+    }
+}
+
+void
+RetentionManager::windowRow(unsigned bank)
+{
+    const unsigned r = raRow[bank];
+    const unsigned set = bank + banks * (r / assoc);
+    const unsigned way = r % assoc;
+    const unsigned row = set * assoc + way;
+    CacheBlk *blk = static_cast<CacheBlk *>(
+        cache.tags->findBlockBySetAndWay(set, way));
+    WindowStats &ws = *winStats;
+
+    if (!blk->isValid()) {
+        ws.slotsSkipped++;
+        if (winExpAddr[row] != MaxAddr)
+            ws.slotsSkippedExpired++;
+        return;
+    }
+
+    const bool decide = window->decide(set % window->groups());
+    const bool pend = winPend[row];
+    if (pend)
+        ws.deferredFrames++;
+    if (!winUsed[row] && (decide || pend)) {
+        const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+        const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
+                                       blk->isSecure());
+        // A clean drop needs no write-buffer entry; a dirty one does
+        const bool wb_full = dirty && cache.writeBuffer.isFull();
+        if (!inflight && !wb_full) {
+            windowDrop(blk, row, dirty);
+            return;
+        }
+        // Kept for a later frame: refreshed now (the only copy)
+        if (!pend) {
+            winPend[row] = 1;
+            winPendLive++;
+            winPendPeak = std::max(winPendPeak, winPendLive);
+            if (!dirty) {
+                ws.deferredCleanInflight++;
+            } else {
+                ws.dirtyDropsDeferred++;
+                if (inflight)
+                    ws.deferredInflight++;
+                else
+                    ws.deferredWbFull++;
+            }
+        }
+        ws.linesRefreshed++;
+        return;
+    }
+    if (decide && winUsed[row]) {
+        winUsed[row] = 0;
+        ws.usedRefreshes++;
+    }
+    ws.linesRefreshed++;
+}
+
+void
+RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty)
+{
+    // Read before the invalidation, which clears the tag and the bits
+    const Addr blk_addr = cache.regenerateBlkAddr(blk);
+    const bool secure = blk->isSecure();
+    const uint32_t task_id = blk->getTaskId();
+    const unsigned set = blk->getSet();
+    const bool was_pend = winPend[row];
+    const uint8_t wb_flag = 1 << BaseCache::Blocked_NoWBBuffers;
+    const bool blocked_before = cache.blocked & wb_flag;
+    WindowStats &ws = *winStats;
+
+    maxChargeAgeAtDrop = std::max(maxChargeAgeAtDrop, age(blk));
+
+    ws.ageAtDrop.sample(double(age(blk)) /
+                        double(cache.tags->getDRT()));
+
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Drop);
+    winDropping = true;
+    if (dirty) {
+        // The existing deadline-writeback path (as applyDrop); the line
+        // read is part of the refresh-all operation already booked
+        PacketList writebacks;
+        cache.evictBlock(blk, writebacks);
+        if (cache.system->isTimingMode()) {
+            cache.doWritebacks(writebacks,
+                               cache.clockEdge(cache.forwardLatency));
+        } else {
+            cache.doWritebacksAtomic(writebacks);
+        }
+    } else {
+        // No write-buffer entry: the level below keeps listing the line
+        // until its expired tag is replaced (windowVictim)
+        cache.invalidateBlock(blk);
+    }
+    winDropping = false;
+    if (cache.reuse)
+        cache.reuse->setReason(ReuseTracker::Reason::Other);
+
+    if (dirty) {
+        ws.dropsDirty++;
+        ws.deadlineWritebacks++;
+        if (!blocked_before && (cache.blocked & wb_flag) && !winBlockOpen) {
+            winBlockOpen = true;
+            winBlockSince = curTick();
+            ws.dropWbBlockEpisodes++;
+        }
+    } else {
+        ws.dropsClean++;
+    }
+    if (was_pend)
+        ws.deferredDropped++;
+    winFrameDrops++;
+
+    panic_if(winExpAddr[row] != MaxAddr, "%s: row %u already expired",
+             cache.name(), row);
+    winExpAddr[row] = blk_addr;
+    winExpSecure[row] = secure;
+    winExpTaskId[row] = task_id;
+    // A dirty drop's WritebackDirty already took the line off the level
+    // below's list
+    winExpInFilter[row] = !dirty;
+    winSetExpired[set]++;
+    winExpLive++;
+    ws.expiredCreated++;
+}
+
+void
+RetentionManager::windowGranted()
+{
+    WindowStats &ws = *winStats;
+    ws.grantsPerFrame.sample(window->lastPicked());
+    ws.groupDecisions += window->lastPicked();
+    ws.dueWaitedPerFrame.sample(window->lastWaited());
+    ws.dueWaitedTotal += window->lastWaited();
+}
+
+void
+RetentionManager::windowFrameEnd()
+{
+    WindowStats &ws = *winStats;
+    winBanksDone = 0;
+    ws.frames++;
+    ws.dropsPerFrame.sample(winFrameDrops);
+    winFrameDrops = 0;
+    window->frameEnd();
+    if (window->lastCheck())
+        ws.checks++;
+    windowGranted();
+}
+
+void
+RetentionManager::processWindowAmc()
+{
+    window->amcInterval();
+    cache.schedule(*winAmcEvent, curTick() +
+                   cache.cyclesToTicks(winAmcInterval));
+}
+
+void
+RetentionManager::windowAccountN()
+{
+    const double cycles = double(curTick() - winTimeSince) /
+        double(cache.clockPeriod());
+    WindowStats &ws = *winStats;
+    ws.nCycles[std::min(winTimeN, 65u) - 1] += cycles;
+    ws.nCyclesTotal += cycles;
+    ws.nCyclesTimesN += double(winTimeN) * cycles;
+    winTimeSince = curTick();
+}
+
+void
+RetentionManager::windowEvent(WindowController::Event e, unsigned old_val,
+                              unsigned new_val)
+{
+    using E = WindowController::Event;
+    WindowStats &ws = *winStats;
+    const char *name = "";
+    switch (e) {
+      case E::Grow: name = "grow"; break;
+      case E::GrowCapped: name = "grow_capped"; ws.nGrowCapped++; break;
+      case E::Dec: name = "dec"; break;
+      case E::Halve: name = "halve"; break;
+      case E::Ssthresh: name = "ssthresh"; break;
+      case E::AmcDecide: name = "amc_decide"; ws.amcIntervals++; break;
+      case E::AmcGrow: name = "amc_grow"; break;
+      case E::AmcShrink: name = "amc_shrink"; break;
+    }
+    const bool n_event = e == E::Grow || e == E::Dec || e == E::Halve ||
+        e == E::AmcGrow || e == E::AmcShrink;
+    if (n_event && old_val != new_val) {
+        // The time at the old N ends here
+        windowAccountN();
+        winTimeN = new_val;
+        ws.nChanges++;
+        if (new_val > old_val)
+            ws.nGrows++;
+        else
+            ws.nShrinks++;
+    }
+    windowLog(name);
+}
+
+void
+RetentionManager::windowLog(const char *event)
+{
+    if (!winLog)
+        return;
+    std::ostream &os = *winLog->stream();
+    ccprintf(os, "%d,%d,%s,%d,%d,%d,%d,%d\n", curTick(),
+             curTick() / cache.clockPeriod(), event, window->nValue(),
+             window->ssthresh(), window->rCount(), window->aCount(),
+             window->pending());
+    os.flush();
+}
+
+void
+RetentionManager::onClearBlocked(int cause)
+{
+    if (!window || !winBlockOpen || cause != BaseCache::Blocked_NoWBBuffers)
+        return;
+    winStats->dropWbBlockedCycles += double(curTick() - winBlockSince) /
+        double(cache.clockPeriod());
+    winBlockOpen = false;
 }
 
 
@@ -2137,6 +2681,177 @@ RetentionManager::RetentionStats::resetStats()
     mgr.cache.tags->forEachBlk([](CacheBlk &blk) {
         blk.getRefreshChain() = CacheBlk::RefreshChain();
     });
+}
+
+RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
+                                           statistics::Group *parent)
+    : statistics::Group(parent, "window"),
+      mgr(_mgr),
+      ADD_STAT(retentionMisses, statistics::units::Count::get(),
+               "demand accesses that matched an expired tag"),
+      ADD_STAT(dropsClean, statistics::units::Count::get(),
+               "unused clean lines dropped at their slot (no write buffer)"),
+      ADD_STAT(dropsDirty, statistics::units::Count::get(),
+               "unused dirty lines written back and dropped at their slot"),
+      ADD_STAT(deadlineWritebacks, statistics::units::Count::get(),
+               "WritebackDirty packets queued by drops"),
+      ADD_STAT(linesRefreshed, statistics::units::Count::get(),
+               "valid lines refreshed at their slot (kept ones included)"),
+      ADD_STAT(usedRefreshes, statistics::units::Count::get(),
+               "lines kept by their used bit at a decision (bit cleared)"),
+      ADD_STAT(slotsSkipped, statistics::units::Count::get(),
+               "slots with no valid line (no refresh needed)"),
+      ADD_STAT(slotsSkippedExpired, statistics::units::Count::get(),
+               "of those, slots holding an expired tag"),
+      ADD_STAT(nCycles, statistics::units::Cycle::get(),
+               "cycles spent at each N (1..64, gt64)"),
+      ADD_STAT(nCyclesTotal, statistics::units::Cycle::get(),
+               "cycles accounted in nCycles"),
+      ADD_STAT(nCyclesTimesN, statistics::units::Cycle::get(),
+               "sum of N x cycles at N"),
+      ADD_STAT(avgN, statistics::units::Count::get(),
+               "time-weighted average N"),
+      ADD_STAT(dropsPerFrame, statistics::units::Count::get(),
+               "drops (clean + dirty) per frame"),
+      ADD_STAT(dirtyDropsDeferred, statistics::units::Count::get(),
+               "dirty lines whose drop was deferred (D set)"),
+      ADD_STAT(deferredWbFull, statistics::units::Count::get(),
+               "dirty lines that got D because the write buffer was full"),
+      ADD_STAT(deferredInflight, statistics::units::Count::get(),
+               "dirty lines that got D because a request was in flight"),
+      ADD_STAT(deferredCleanInflight, statistics::units::Count::get(),
+               "clean lines that got D because a request was in flight"),
+      ADD_STAT(deferredFrames, statistics::units::Count::get(),
+               "frames spent deferred: slot visits that found D = 1 (the "
+               "visit that drops the line included)"),
+      ADD_STAT(deferredPeak, statistics::units::Count::get(),
+               "peak number of lines with D = 1"),
+      ADD_STAT(deferredLive, statistics::units::Count::get(),
+               "lines with D = 1 now"),
+      ADD_STAT(deferredDropped, statistics::units::Count::get(),
+               "deferred lines dropped on a retry"),
+      ADD_STAT(deferredCleared, statistics::units::Count::get(),
+               "deferred lines whose D a use cleared"),
+      ADD_STAT(deferredEvicted, statistics::units::Count::get(),
+               "deferred lines evicted or invalidated otherwise"),
+      ADD_STAT(ageAtDrop, statistics::units::Ratio::get(),
+               "line age at a drop, as a fraction of DRT"),
+      ADD_STAT(dueWaitedPerFrame, statistics::units::Count::get(),
+               "due groups that waited, per frame"),
+      ADD_STAT(dueWaitedTotal, statistics::units::Count::get(),
+               "due groups that waited, summed over frames"),
+      ADD_STAT(grantsPerFrame, statistics::units::Count::get(),
+               "groups granted a decision, per frame"),
+      ADD_STAT(groupDecisions, statistics::units::Count::get(),
+               "group decisions granted"),
+      ADD_STAT(frames, statistics::units::Count::get(),
+               "frames (sweeps of every bank) completed"),
+      ADD_STAT(checks, statistics::units::Count::get(),
+               "global checks (every N frames)"),
+      ADD_STAT(nChanges, statistics::units::Count::get(),
+               "changes of N"),
+      ADD_STAT(nGrows, statistics::units::Count::get(),
+               "increases of N"),
+      ADD_STAT(nGrowCapped, statistics::units::Count::get(),
+               "tcp growth tests that fired at N_max"),
+      ADD_STAT(nShrinks, statistics::units::Count::get(),
+               "decreases of N"),
+      ADD_STAT(amcIntervals, statistics::units::Count::get(),
+               "amc decisions"),
+      ADD_STAT(finalN, statistics::units::Count::get(), "N now"),
+      ADD_STAT(finalSsthresh, statistics::units::Count::get(),
+               "ssthresh now (tcp)"),
+      ADD_STAT(victimsInvalid, statistics::units::Count::get(),
+               "victims in a set with expired tags: truly invalid ways"),
+      ADD_STAT(victimsExpired, statistics::units::Count::get(),
+               "victims in a set with expired tags: expired ways"),
+      ADD_STAT(expiredCreated, statistics::units::Count::get(),
+               "expired tags made by drops"),
+      ADD_STAT(expiredMissed, statistics::units::Count::get(),
+               "expired tags cleared by a retention miss"),
+      ADD_STAT(expiredOverwritten, statistics::units::Count::get(),
+               "expired tags replaced by another address"),
+      ADD_STAT(expiredSameAddrCleared, statistics::units::Count::get(),
+               "expired tags cleared because their address was allocated "
+               "in another way (should be 0)"),
+      ADD_STAT(expiredInvalidated, statistics::units::Count::get(),
+               "expired tags cleared by an InvalidateReq"),
+      ADD_STAT(expiredWbCleared, statistics::units::Count::get(),
+               "expired tags refilled in place by an allocation of their "
+               "address (a writeback from above)"),
+      ADD_STAT(expiredCleanEvicts, statistics::units::Count::get(),
+               "CleanEvicts sent when a clean-dropped expired tag was "
+               "replaced"),
+      ADD_STAT(expiredFilterCleared, statistics::units::Count::get(),
+               "clean-dropped expired tags whose line a CleanEvict from "
+               "above removed from the level below"),
+      ADD_STAT(expiredLive, statistics::units::Count::get(),
+               "expired tags now"),
+      ADD_STAT(expiredLiveAtReset, statistics::units::Count::get(),
+               "expired tags at the last stats reset"),
+      ADD_STAT(expiredBalance, statistics::units::Count::get(),
+               "created + liveAtReset - every clear - live (must be 0)"),
+      ADD_STAT(demandAccesses, statistics::units::Count::get(),
+               "demand accesses (A), as gem5's demandAccesses"),
+      ADD_STAT(demandHits, statistics::units::Count::get(),
+               "demand hits, as gem5's demandHits"),
+      ADD_STAT(dropWbBlockedCycles, statistics::units::Cycle::get(),
+               "cycles the cache was blocked on a full write buffer that "
+               "a drop writeback filled"),
+      ADD_STAT(dropWbBlockEpisodes, statistics::units::Count::get(),
+               "drop writebacks that filled the write buffer")
+{
+}
+
+void
+RetentionManager::WindowStats::regStats()
+{
+    statistics::Group::regStats();
+
+    nCycles.init(65);
+    for (unsigned i = 0; i < 64; i++)
+        nCycles.subname(i, std::to_string(i + 1));
+    nCycles.subname(64, "gt64");
+    avgN = nCyclesTimesN / nCyclesTotal;
+    dropsPerFrame.init(20);
+    ageAtDrop.init(0.0, 1.0, 0.02);
+    dueWaitedPerFrame.init(0, 64, 1);
+    grantsPerFrame.init(0, 64, 1);
+    deferredPeak.functor([this] { return double(mgr.winPendPeak); });
+    deferredLive.functor([this] { return double(mgr.winPendLive); });
+    finalN.functor([this] { return double(mgr.window->nValue()); });
+    finalSsthresh.functor([this] {
+        return double(mgr.window->ssthresh());
+    });
+    expiredLive.functor([this] { return double(mgr.winExpLive); });
+    expiredBalance = expiredCreated + expiredLiveAtReset - expiredMissed -
+        expiredOverwritten - expiredSameAddrCleared - expiredInvalidated -
+        expiredWbCleared - expiredLive;
+}
+
+void
+RetentionManager::WindowStats::preDumpStats()
+{
+    mgr.windowAccountN();
+    if (mgr.winBlockOpen) {
+        dropWbBlockedCycles += double(curTick() - mgr.winBlockSince) /
+            double(mgr.cache.clockPeriod());
+        mgr.winBlockSince = curTick();
+    }
+    mgr.windowLog("dump");
+    statistics::Group::preDumpStats();
+}
+
+void
+RetentionManager::WindowStats::resetStats()
+{
+    statistics::Group::resetStats();
+    mgr.winTimeSince = curTick();
+    mgr.winPendPeak = mgr.winPendLive;
+    if (mgr.winBlockOpen)
+        mgr.winBlockSince = curTick();
+    expiredLiveAtReset = double(mgr.winExpLive);
+    mgr.windowLog("reset");
 }
 
 } // namespace gem5
