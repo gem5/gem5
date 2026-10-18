@@ -772,6 +772,11 @@ class RetentionManager
     /** Window mode: a drop is invalidating its line. */
     bool winDropping = false;
 
+    /** Window mode: a fill sets U = 1; a CleanEvict from above uses a
+     *  valid line. */
+    bool winFillUAlways = false;
+    bool winCleanEvictUse = false;
+
     /** Window mode: banks done with the current sweep, drops in the
      *  current frame. */
     unsigned winBanksDone = 0;
@@ -862,6 +867,7 @@ class RetentionManager
         statistics::Scalar demandHits;
         statistics::Scalar dropWbBlockedCycles;
         statistics::Scalar dropWbBlockEpisodes;
+        statistics::Scalar cleanEvictUses;
     };
     std::unique_ptr<WindowStats> winStats;
 

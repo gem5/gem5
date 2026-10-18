@@ -265,6 +265,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
 
         window = std::make_unique<WindowController>(wp);
         winTimeN = window->nValue();
+        winFillUAlways = p.window_fill_u_always;
+        winCleanEvictUse = p.window_cleanevict_sets_u;
         window->setListener([this](WindowController::Event e,
                                    unsigned old_val, unsigned new_val) {
             windowEvent(e, old_val, new_val);
@@ -366,13 +368,16 @@ RetentionManager::startup()
             }
             inform("%s: window mode %s: %u groups (set mod %u), N %u (K "
                    "%u per frame), group counters saturate at %u%s; frame "
-                   "= one sweep, P %lu cycles", cache.name(),
+                   "= one sweep, P %lu cycles; a fill sets U %s; a "
+                   "CleanEvict from above %s", cache.name(),
                    wp.mode == WindowController::Mode::Fixed ? "fixed" :
                    wp.mode == WindowController::Mode::Tcp ? "tcp" : "amc",
                    wp.groups, wp.groups, window->nValue(), window->k(),
                    wp.counterMax,
                    window->nValue() > wp.counterMax + 1 ?
-                   " (N above it: no group is ever due)" : "", p_cyc);
+                   " (N above it: no group is ever due)" : "", p_cyc,
+                   winFillUAlways ? "= 1" : "= decide of its group",
+                   winCleanEvictUse ? "sets U" : "does not set U");
         }
         return;
     }
@@ -2000,8 +2005,10 @@ RetentionManager::onAllocate(CacheBlk *blk)
             windowClearExpired(m);
         }
     }
-    // A fill is used if its group decides this frame (U = decide_g)
-    winUsed[row] = window->decide(set % window->groups()) ? 1 : 0;
+    // A fill is used if its group decides this frame (U = decide_g), or
+    // always (window_fill_u_always)
+    winUsed[row] = winFillUAlways ||
+        window->decide(set % window->groups()) ? 1 : 0;
 }
 
 int
@@ -2126,8 +2133,15 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
         if (hit)
             winStats->demandHits++;
     }
-    if (blk)
+    if (blk) {
+        // window_cleanevict_sets_u: a clean line leaving the cache above
+        // uses this one
+        if (clean_evict && winCleanEvictUse) {
+            windowUse(blk->getSet() * assoc + blk->getWay());
+            winStats->cleanEvictUses++;
+        }
         return;
+    }
 
     const unsigned set = cache.tags->getSetIndex({blk_addr, secure});
     if (winSetExpired[set] == 0)
@@ -2799,7 +2813,10 @@ RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
                "cycles the cache was blocked on a full write buffer that "
                "a drop writeback filled"),
       ADD_STAT(dropWbBlockEpisodes, statistics::units::Count::get(),
-               "drop writebacks that filled the write buffer")
+               "drop writebacks that filled the write buffer"),
+      ADD_STAT(cleanEvictUses, statistics::units::Count::get(),
+               "CleanEvicts from above that used a valid line "
+               "(window_cleanevict_sets_u)")
 {
 }
 

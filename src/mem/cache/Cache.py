@@ -275,6 +275,18 @@ class BaseCache(ClockedObject):
         127, "Window modes: saturation of the per-group frame counters"
     )
 
+    window_fill_u_always = Param.Bool(
+        False,
+        "Window modes: a fill sets U = 1 (instead of U = decide of its "
+        "group)",
+    )
+
+    window_cleanevict_sets_u = Param.Bool(
+        False,
+        "Window modes: a CleanEvict from above that finds a valid line "
+        "uses it (U = 1, D = 0)",
+    )
+
     refresh_opp_age = Param.Float(
         0.8,
         "Age, as a fraction of DRT, from which the daemon refreshes a "
