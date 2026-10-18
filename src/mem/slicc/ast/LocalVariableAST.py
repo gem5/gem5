@@ -27,8 +27,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-from slicc.ast.StatementAST import StatementAST
-from slicc.symbols import Var
+from ..symbols import Var
+from .StatementAST import StatementAST
 
 
 class LocalVariableAST(StatementAST):

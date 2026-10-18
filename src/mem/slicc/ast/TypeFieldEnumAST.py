@@ -25,12 +25,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from slicc.ast.TypeFieldAST import TypeFieldAST
-from slicc.symbols import (
+from ..symbols import (
     Event,
     RequestType,
     State,
 )
+from .TypeFieldAST import TypeFieldAST
 
 
 class TypeFieldEnumAST(TypeFieldAST):
