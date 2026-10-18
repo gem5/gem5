@@ -152,8 +152,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (p.drt > 0)
         retention = std::make_unique<RetentionManager>(*this, p);
 
-    if (p.reuse_stats)
-        reuse = std::make_unique<ReuseTracker>(*this);
+    if (p.reuse_stats || p.reuse_idle_gaps)
+        reuse = std::make_unique<ReuseTracker>(*this, p.reuse_idle_gaps);
 }
 
 BaseCache::~BaseCache()

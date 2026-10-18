@@ -17,7 +17,13 @@
  * would have hit); the time since the drop is sampled. A miss to a dead
  * ghost would have missed in the SRAM too.
  *
- * Time bins (both histograms): 1 us bins [0,1) ... [63,64) us, then
+ * Idle gaps (reuse_idle_gaps): per line, the tick of its last access of
+ * any kind (fill, demand hit, writeback from above, CleanEvict). Each
+ * access that finds the line samples the time since that tick
+ * (idleGapAtAccess, counted by kind), and each replacement eviction samples
+ * the time since its last access (idleGapAtEviction).
+ *
+ * Time bins (all histograms): 1 us bins [0,1) ... [63,64) us, then
  * [64,128) ... [2048,4096) us, then >= 4096 us.
  */
 
@@ -45,7 +51,7 @@ class ReuseTracker
     /** Why the lines removed from now on leave the cache. */
     enum class Reason { Other, Replacement, Drop };
 
-    ReuseTracker(BaseCache &cache);
+    ReuseTracker(BaseCache &cache, bool idle_gaps = false);
 
     /**
      * An access after its tag lookup (blk: the line found, or nullptr):
@@ -94,6 +100,10 @@ class ReuseTracker
     /** Per line (set * assoc + way): last access and demand hits. */
     std::vector<Tick> lastAccess;
     std::vector<uint32_t> hits;
+
+    /** reuse_idle_gaps: per line, the last access of any kind. */
+    const bool idleGaps;
+    std::vector<Tick> lastAny;
 
     /** Shadow tags, set * assoc + way. */
     struct ShadowWay
@@ -150,6 +160,15 @@ class ReuseTracker
         /** Live ghosts now, and at the last stats reset. */
         statistics::Value ghostsLive;
         statistics::Value ghostsLiveAtReset;
+        /** reuse_idle_gaps: time since the line's previous access, at
+         *  every access that finds it, and its samples by access kind. */
+        statistics::Vector idleGapAtAccess;
+        statistics::Scalar idleGapSamplesDemand;
+        statistics::Scalar idleGapSamplesWriteback;
+        statistics::Scalar idleGapSamplesCleanEvict;
+        /** reuse_idle_gaps: time since the last access, at every
+         *  replacement eviction. */
+        statistics::Vector idleGapAtEviction;
     } stats;
 };
 

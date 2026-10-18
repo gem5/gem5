@@ -121,6 +121,15 @@ class BaseCache(ClockedObject):
         "tags). Works with drt 0 too; changes no timing",
     )
 
+    reuse_idle_gaps = Param.Bool(
+        False,
+        "Stats only: per-line idle gaps. At every access that finds a line "
+        "(demand hit, writeback from above, CleanEvict) the time since its "
+        "previous access (a fill starts the clock), and at every replacement "
+        "eviction the time since its last access (reuse.idleGapAtAccess, "
+        "reuse.idleGapAtEviction). Changes no timing",
+    )
+
     data_read_ports = Param.Unsigned(
         0,
         "Data-array reads (load hits, writeback reads) each bank serves "

@@ -11,12 +11,14 @@
 namespace gem5
 {
 
-ReuseTracker::ReuseTracker(BaseCache &_cache)
+ReuseTracker::ReuseTracker(BaseCache &_cache, bool idle_gaps)
     : cache(_cache),
       numSets(_cache.tags->getNumSets()),
       assoc(_cache.tags->getSetBlks(0).size()),
       lastAccess(numSets * assoc, 0),
       hits(numSets * assoc, 0),
+      idleGaps(idle_gaps),
+      lastAny(idle_gaps ? numSets * assoc : 0, 0),
       shadow(numSets * assoc),
       stats(*this, _cache)
 {
@@ -99,6 +101,20 @@ ReuseTracker::onAccess(PacketPtr pkt, CacheBlk *blk)
     const unsigned set = cache.tags->getSetIndex({addr, pkt->isSecure()});
     const bool demand = pkt->needsResponse();
 
+    // Idle gap of a line this access finds (any kind of access)
+    if (idleGaps && blk && blk != cache.tempBlock && blk->isValid()) {
+        const unsigned i = lineIdx(blk);
+        stats.idleGapAtAccess[bin(curTick() - lastAny[i])]++;
+        lastAny[i] = curTick();
+        if (pkt->cmd == MemCmd::CleanEvict) {
+            stats.idleGapSamplesCleanEvict++;
+        } else if (demand) {
+            stats.idleGapSamplesDemand++;
+        } else {
+            stats.idleGapSamplesWriteback++;
+        }
+    }
+
     if (demand && !blk) {
         auto it = liveGhosts.find(addr);
         if (it != liveGhosts.end()) {
@@ -138,6 +154,9 @@ ReuseTracker::onAllocate(CacheBlk *blk)
     const unsigned i = lineIdx(blk);
     lastAccess[i] = curTick();
     hits[i] = 0;
+    if (idleGaps) {
+        lastAny[i] = curTick();
+    }
 
     const Addr addr = cache.regenerateBlkAddr(blk);
     if (liveGhosts.erase(addr)) {
@@ -157,6 +176,10 @@ ReuseTracker::onRemove(CacheBlk *blk)
     switch (reason) {
       case Reason::Replacement:
         stats.linesEvicted++;
+        if (idleGaps) {
+            stats.idleGapAtEviction[
+                bin(curTick() - lastAny[lineIdx(blk)])]++;
+        }
         if (zero) {
             stats.zeroHitEvictions++;
         }
@@ -228,7 +251,20 @@ ReuseTracker::ReuseStats::ReuseStats(ReuseTracker &_tracker,
       ADD_STAT(ghostsLive, statistics::units::Count::get(),
                "dropped lines the shadow tags still hold, now"),
       ADD_STAT(ghostsLiveAtReset, statistics::units::Count::get(),
-               "the same, at the last stats reset")
+               "the same, at the last stats reset"),
+      ADD_STAT(idleGapAtAccess, statistics::units::Count::get(),
+               "accesses that find the line (demand, writeback, CleanEvict) "
+               "by time since the line's previous access of any kind (a "
+               "fill starts it); bins as timeSinceLastAccess"),
+      ADD_STAT(idleGapSamplesDemand, statistics::units::Count::get(),
+               "idleGapAtAccess samples from demand accesses"),
+      ADD_STAT(idleGapSamplesWriteback, statistics::units::Count::get(),
+               "idleGapAtAccess samples from writebacks from above"),
+      ADD_STAT(idleGapSamplesCleanEvict, statistics::units::Count::get(),
+               "idleGapAtAccess samples from CleanEvicts from above"),
+      ADD_STAT(idleGapAtEviction, statistics::units::Count::get(),
+               "replacement evictions by time since the line's last access "
+               "of any kind; bins as timeSinceLastAccess")
 {
 }
 
@@ -238,7 +274,8 @@ ReuseTracker::ReuseStats::regStats()
     statistics::Group::regStats();
 
     for (statistics::Vector *v : {&timeSinceLastAccess,
-                                  &timeSinceDropAtMiss}) {
+                                  &timeSinceDropAtMiss, &idleGapAtAccess,
+                                  &idleGapAtEviction}) {
         v->init(NumBins);
         for (unsigned b = 0; b < 64; b++) {
             v->subname(b, std::to_string(b) + "us");
