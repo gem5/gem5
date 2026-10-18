@@ -208,6 +208,8 @@ public:
         if (fault != NoFault) {
             return fault;
         }
+        // This micro-op does not modify vector state, so set_dirty is false.
+        // The vector specification allows VS to remain unchanged in this case.
         return updateVPUStatus(xc, machInst, false, true);
     }
 
