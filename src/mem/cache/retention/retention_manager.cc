@@ -218,6 +218,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         }
     }
 
+    fatal_if(p.window_probation_frames > 0 && p.window_mode == "off",
+             "%s: window_probation_frames needs window_mode", cache.name());
     fatal_if(p.window_mode != "off" && p.window_mode != "fixed" &&
              p.window_mode != "tcp" && p.window_mode != "amc",
              "%s: window_mode must be off, fixed, tcp or amc",
@@ -267,6 +269,10 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         winTimeN = window->nValue();
         winFillUAlways = p.window_fill_u_always;
         winCleanEvictUse = p.window_cleanevict_sets_u;
+        // Probation: a 2-bit counter per line (0..M-1 in probation, 3 out)
+        winProbM = p.window_probation_frames;
+        fatal_if(winProbM > 3, "%s: window_probation_frames must be 0..3 "
+                 "(a 2-bit counter)", cache.name());
         window->setListener([this](WindowController::Event e,
                                    unsigned old_val, unsigned new_val) {
             windowEvent(e, old_val, new_val);
@@ -279,6 +285,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         winExpTaskId.assign(rows, 0);
         winExpInFilter.assign(rows, 0);
         winSetExpired.assign(num_sets, 0);
+        winProbIn.assign(rows, 0);
+        winProbCnt.assign(rows, 0);
+        winExpProb.assign(rows, 0);
         winStats = std::make_unique<WindowStats>(*this, &stats);
         if (wp.mode == WindowController::Mode::Amc) {
             winAmcInterval = p.window_amc_interval_cycles;
@@ -369,7 +378,7 @@ RetentionManager::startup()
             inform("%s: window mode %s: %u groups (set mod %u), N %u (K "
                    "%u per frame), group counters saturate at %u%s; frame "
                    "= one sweep, P %lu cycles; a fill sets U %s; a "
-                   "CleanEvict from above %s", cache.name(),
+                   "CleanEvict from above %s; %s", cache.name(),
                    wp.mode == WindowController::Mode::Fixed ? "fixed" :
                    wp.mode == WindowController::Mode::Tcp ? "tcp" : "amc",
                    wp.groups, wp.groups, window->nValue(), window->k(),
@@ -377,7 +386,13 @@ RetentionManager::startup()
                    window->nValue() > wp.counterMax + 1 ?
                    " (N above it: no group is ever due)" : "", p_cyc,
                    winFillUAlways ? "= 1" : "= decide of its group",
-                   winCleanEvictUse ? "sets U" : "does not set U");
+                   winCleanEvictUse ? "sets U" : "does not set U",
+                   winProbM ? csprintf("fresh lines on probation, dropped "
+                                       "unused at their %u%s slot after "
+                                       "the fill", winProbM,
+                                       winProbM == 1 ? "st" :
+                                       winProbM == 2 ? "nd" : "rd").c_str()
+                   : "no probation");
         }
         return;
     }
@@ -895,6 +910,12 @@ RetentionManager::onInvalidate(CacheBlk *blk)
                 // A drop of a deferred line counts in deferredDropped
                 if (!winDropping)
                     winStats->deferredEvicted++;
+            }
+            if (winProbIn[row]) {
+                winProbIn[row] = 0;
+                winProbLive--;
+                if (!winProbDropping)
+                    winStats->probationRemovedOther++;
             }
         }
     }
@@ -1975,6 +1996,13 @@ RetentionManager::windowUse(unsigned row)
         winPendLive--;
         winStats->deferredCleared++;
     }
+    // Any use ends probation; the normal U rules apply from now on
+    if (winProbIn[row]) {
+        winProbIn[row] = 0;
+        winProbLive--;
+        winStats->probationEndedByUse++;
+        winStats->probationUseAtP[winProbCnt[row]]++;
+    }
 }
 
 void
@@ -1986,7 +2014,7 @@ RetentionManager::onDemandHit(PacketPtr pkt, CacheBlk *blk)
 }
 
 void
-RetentionManager::onAllocate(CacheBlk *blk)
+RetentionManager::onAllocate(CacheBlk *blk, bool fill)
 {
     if (!window || blk == cache.tempBlock)
         return;
@@ -2009,6 +2037,16 @@ RetentionManager::onAllocate(CacheBlk *blk)
     // always (window_fill_u_always)
     winUsed[row] = winFillUAlways ||
         window->decide(set % window->groups()) ? 1 : 0;
+    // Probation: a demand fill (not a writeback that allocates, which is
+    // a use) starts it, p = 0
+    if (winProbM && fill) {
+        panic_if(winProbIn[row], "%s: row %u already in probation",
+                 cache.name(), row);
+        winProbIn[row] = 1;
+        winProbCnt[row] = 0;
+        winProbLive++;
+        winStats->probationStarted++;
+    }
 }
 
 int
@@ -2032,6 +2070,7 @@ RetentionManager::windowClearExpired(unsigned row)
              cache.name(), row);
     winExpAddr[row] = MaxAddr;
     winExpInFilter[row] = 0;
+    winExpProb[row] = 0;
     winSetExpired[row / assoc]--;
     winExpLive--;
 }
@@ -2149,7 +2188,12 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
     const int row = windowExpiredMatch(set, blk_addr, secure);
     if (row < 0)
         return;
-    if (demand) {
+    if (demand && winExpProb[row]) {
+        // A miss on a line probation dropped: counted apart, not in R
+        winStats->probationRetentionMisses++;
+        winStats->expiredMissed++;
+        windowClearExpired(unsigned(row));
+    } else if (demand) {
         // A retention miss, counted once: the tag goes now
         winStats->retentionMisses++;
         winStats->expiredMissed++;
@@ -2192,6 +2236,33 @@ RetentionManager::windowRow(unsigned bank)
     const bool pend = winPend[row];
     if (pend)
         ws.deferredFrames++;
+    if (winProbIn[row]) {
+        // Probation: exempt from the group's decision (U untouched);
+        // unused at its M-th slot after the fill, the line is dropped
+        if (++winProbCnt[row] < winProbM) {
+            ws.linesRefreshed++;
+            return;
+        }
+        const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+        const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
+                                       blk->isSecure());
+        const bool wb_full = dirty && cache.writeBuffer.isFull();
+        if (!inflight && !wb_full) {
+            windowDrop(blk, row, dirty, true);
+            return;
+        }
+        // Kept (the only copy) and retried at the next slot: p stays
+        // M - 1 (2 bits)
+        winProbCnt[row] = winProbM - 1;
+        if (!pend) {
+            winPend[row] = 1;
+            winPendLive++;
+            winPendPeak = std::max(winPendPeak, winPendLive);
+            ws.probationDeferred++;
+        }
+        ws.linesRefreshed++;
+        return;
+    }
     if (!winUsed[row] && (decide || pend)) {
         const bool dirty = blk->isSet(CacheBlk::DirtyBit);
         const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
@@ -2228,7 +2299,8 @@ RetentionManager::windowRow(unsigned bank)
 }
 
 void
-RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty)
+RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
+                             bool probation)
 {
     // Read before the invalidation, which clears the tag and the bits
     const Addr blk_addr = cache.regenerateBlkAddr(blk);
@@ -2248,6 +2320,7 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty)
     if (cache.reuse)
         cache.reuse->setReason(ReuseTracker::Reason::Drop);
     winDropping = true;
+    winProbDropping = probation;
     if (dirty) {
         // The existing deadline-writeback path (as applyDrop); the line
         // read is part of the refresh-all operation already booked
@@ -2265,8 +2338,15 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty)
         cache.invalidateBlock(blk);
     }
     winDropping = false;
+    winProbDropping = false;
     if (cache.reuse)
         cache.reuse->setReason(ReuseTracker::Reason::Other);
+    if (probation) {
+        if (dirty)
+            ws.probationDropsDirty++;
+        else
+            ws.probationDropsClean++;
+    }
 
     if (dirty) {
         ws.dropsDirty++;
@@ -2291,6 +2371,7 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty)
     // A dirty drop's WritebackDirty already took the line off the level
     // below's list
     winExpInFilter[row] = !dirty;
+    winExpProb[row] = probation;
     winSetExpired[set]++;
     winExpLive++;
     ws.expiredCreated++;
@@ -2816,7 +2897,36 @@ RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
                "drop writebacks that filled the write buffer"),
       ADD_STAT(cleanEvictUses, statistics::units::Count::get(),
                "CleanEvicts from above that used a valid line "
-               "(window_cleanevict_sets_u)")
+               "(window_cleanevict_sets_u)"),
+      ADD_STAT(probationStarted, statistics::units::Count::get(),
+               "demand fills that started probation "
+               "(window_probation_frames)"),
+      ADD_STAT(probationEndedByUse, statistics::units::Count::get(),
+               "lines whose probation a use ended"),
+      ADD_STAT(probationUseAtP, statistics::units::Count::get(),
+               "those, by their frame counter p at the use"),
+      ADD_STAT(probationDropsClean, statistics::units::Count::get(),
+               "clean lines dropped unused at the end of probation (also "
+               "in dropsClean)"),
+      ADD_STAT(probationDropsDirty, statistics::units::Count::get(),
+               "dirty lines dropped unused at the end of probation (also "
+               "in dropsDirty)"),
+      ADD_STAT(probationDeferred, statistics::units::Count::get(),
+               "probation drops deferred (write buffer full or in "
+               "flight; D = 1, retried at the next slot)"),
+      ADD_STAT(probationRemovedOther, statistics::units::Count::get(),
+               "lines evicted or invalidated in probation, not by a "
+               "probation drop"),
+      ADD_STAT(probationRetentionMisses, statistics::units::Count::get(),
+               "demand misses to an expired tag a probation drop left (not "
+               "in retentionMisses; not fed to the controller)"),
+      ADD_STAT(probationLive, statistics::units::Count::get(),
+               "lines in probation, now"),
+      ADD_STAT(probationLiveAtReset, statistics::units::Count::get(),
+               "lines in probation at the last stats reset"),
+      ADD_STAT(probationBalance, statistics::units::Count::get(),
+               "started + live at reset - ended by use - drops - removed "
+               "other - live (0)")
 {
 }
 
@@ -2841,6 +2951,11 @@ RetentionManager::WindowStats::regStats()
         return double(mgr.window->ssthresh());
     });
     expiredLive.functor([this] { return double(mgr.winExpLive); });
+    probationUseAtP.init(4);
+    probationLive.functor([this] { return double(mgr.winProbLive); });
+    probationBalance = probationStarted + probationLiveAtReset -
+        probationEndedByUse - probationDropsClean - probationDropsDirty -
+        probationRemovedOther - probationLive;
     expiredBalance = expiredCreated + expiredLiveAtReset - expiredMissed -
         expiredOverwritten - expiredSameAddrCleared - expiredInvalidated -
         expiredWbCleared - expiredLive;
@@ -2868,6 +2983,7 @@ RetentionManager::WindowStats::resetStats()
     if (mgr.winBlockOpen)
         mgr.winBlockSince = curTick();
     expiredLiveAtReset = double(mgr.winExpLive);
+    probationLiveAtReset = double(mgr.winProbLive);
     mgr.windowLog("reset");
 }
 

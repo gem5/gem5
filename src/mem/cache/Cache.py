@@ -296,6 +296,16 @@ class BaseCache(ClockedObject):
         "uses it (U = 1, D = 0)",
     )
 
+    window_probation_frames = Param.Unsigned(
+        0,
+        "Window mode: a line filled by a demand miss is on probation, "
+        "exempt from its group's decisions, and is dropped if still unused "
+        "at its M-th sweep slot after the fill (clean: invalidated; dirty: "
+        "written back or deferred as other drops). Any use ends probation. "
+        "Misses on lines probation dropped are counted apart and do not "
+        "feed the controller. 0 = off; at most 3 (2-bit counter)",
+    )
+
     refresh_opp_age = Param.Float(
         0.8,
         "Age, as a fraction of DRT, from which the daemon refreshes a "

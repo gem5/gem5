@@ -133,6 +133,17 @@
  * clean drop sends no CleanEvict, so the level below still lists the
  * line until the expired tag is replaced, which sends the CleanEvict an
  * SRAM cache would send when the line is evicted.
+ *
+ * Window options: window_fill_u_always (a fill sets U = 1) and
+ * window_cleanevict_sets_u (a CleanEvict from above uses the line).
+ * Probation (window_probation_frames = M > 0): a line filled by a demand
+ * miss is on probation, exempt from its group's decisions; a 2-bit
+ * counter p counts its slots after the fill, and if it is still unused
+ * at the M-th one it is dropped like any line (clean: invalidated; dirty:
+ * written back, or D = 1 and retried at the next slot). Any use (as U)
+ * ends probation. Its expired tag is marked: a demand access matching it
+ * counts in probationRetentionMisses and not in R (the controller does
+ * not see it).
  */
 
 #ifndef __MEM_CACHE_RETENTION_RETENTION_MANAGER_HH__
@@ -233,8 +244,9 @@ class RetentionManager
     /** Window mode: a demand hit on blk uses the line. */
     void onDemandHit(PacketPtr pkt, CacheBlk *blk);
 
-    /** Window mode: blk was allocated (its U follows its group). */
-    void onAllocate(CacheBlk *blk);
+    /** Window mode: blk was allocated (its U follows its group); fill:
+     *  by a fill response (starts probation), not a writeback. */
+    void onAllocate(CacheBlk *blk, bool fill = false);
 
     /**
      * Window mode: the victim for an allocation of addr when its set
@@ -488,7 +500,8 @@ class RetentionManager
     void windowOnAccess(PacketPtr pkt);
 
     /** Window mode: drop blk (dirty: write back first). */
-    void windowDrop(CacheBlk *blk, unsigned row, bool dirty);
+    void windowDrop(CacheBlk *blk, unsigned row, bool dirty,
+                    bool probation = false);
 
     /** Window mode: clear the expired tag of row. */
     void windowClearExpired(unsigned row);
@@ -772,6 +785,17 @@ class RetentionManager
     /** Window mode: a drop is invalidating its line. */
     bool winDropping = false;
 
+    /** Window mode probation (window_probation_frames = M, 0 = off), per
+     *  row: in probation, its frame counter p, and whether the expired
+     *  tag came from a probation drop; lines in probation now; a
+     *  probation drop is invalidating its line. */
+    unsigned winProbM = 0;
+    std::vector<uint8_t> winProbIn;
+    std::vector<uint8_t> winProbCnt;
+    std::vector<uint8_t> winExpProb;
+    uint64_t winProbLive = 0;
+    bool winProbDropping = false;
+
     /** Window mode: a fill sets U = 1; a CleanEvict from above uses a
      *  valid line. */
     bool winFillUAlways = false;
@@ -868,6 +892,17 @@ class RetentionManager
         statistics::Scalar dropWbBlockedCycles;
         statistics::Scalar dropWbBlockEpisodes;
         statistics::Scalar cleanEvictUses;
+        statistics::Scalar probationStarted;
+        statistics::Scalar probationEndedByUse;
+        statistics::Vector probationUseAtP;
+        statistics::Scalar probationDropsClean;
+        statistics::Scalar probationDropsDirty;
+        statistics::Scalar probationDeferred;
+        statistics::Scalar probationRemovedOther;
+        statistics::Scalar probationRetentionMisses;
+        statistics::Value probationLive;
+        statistics::Scalar probationLiveAtReset;
+        statistics::Formula probationBalance;
     };
     std::unique_ptr<WindowStats> winStats;
 

@@ -1829,7 +1829,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     if (retention) {
         retention->onFullLineWrite(victim);
-        retention->onAllocate(victim);
+        retention->onAllocate(victim, pkt->isResponse());
     }
     if (reuse)
         reuse->onAllocate(victim, pkt->isResponse());
