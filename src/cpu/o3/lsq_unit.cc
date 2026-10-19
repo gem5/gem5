@@ -197,6 +197,16 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
             // This is a regular store (i.e., not store conditionals and
             // atomics), so it can complete without writing back
             completeStore(request->instruction()->sqIt);
+        } else if ((inst->isDataPrefetch() || inst->isInstPrefetch()) &&
+                   !inst->isExecuted()) {
+            // executeLoad() retires a prefetch early only when it sends
+            // the request without a fault. A split prefetch with a
+            // partial fault waits for this response instead. A prefetch
+            // has no writeback, so send it to commit here.
+            iewStage->wakeCPU();
+            inst->setExecuted();
+            iewStage->instToCommit(inst);
+            iewStage->activityThisCycle();
         }
     }
 }
