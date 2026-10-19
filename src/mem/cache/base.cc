@@ -152,8 +152,9 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (p.drt > 0)
         retention = std::make_unique<RetentionManager>(*this, p);
 
-    if (p.reuse_stats || p.reuse_idle_gaps)
-        reuse = std::make_unique<ReuseTracker>(*this, p.reuse_idle_gaps);
+    if (p.reuse_stats || p.reuse_idle_gaps || p.reuse_fill_stats)
+        reuse = std::make_unique<ReuseTracker>(*this, p.reuse_idle_gaps,
+                                               p.reuse_fill_stats);
 }
 
 BaseCache::~BaseCache()
@@ -1831,7 +1832,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         retention->onAllocate(victim);
     }
     if (reuse)
-        reuse->onAllocate(victim);
+        reuse->onAllocate(victim, pkt->isResponse());
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.

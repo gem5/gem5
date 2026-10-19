@@ -23,6 +23,14 @@
  * (idleGapAtAccess, counted by kind), and each replacement eviction samples
  * the time since its last access (idleGapAtEviction).
  *
+ * Fill stats (reuse_fill_stats, group reuse.fill, built only when on): per
+ * line the tick of its demand fill (an allocation by a fill response, not a
+ * writeback that allocates). At the first demand hit after that fill the
+ * time since the fill is sampled (fillToFirstHit), and at the first use
+ * (demand hit, writeback from above, CleanEvict from above: what ends the
+ * window mode's probation) likewise (fillToFirstUse). A demand-filled line
+ * that leaves by replacement is counted, and whether it had a hit or a use.
+ *
  * Time bins (all histograms): 1 us bins [0,1) ... [63,64) us, then
  * [64,128) ... [2048,4096) us, then >= 4096 us.
  */
@@ -31,6 +39,7 @@
 #define __MEM_CACHE_RETENTION_REUSE_TRACKER_HH__
 
 #include <cstdint>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -51,7 +60,8 @@ class ReuseTracker
     /** Why the lines removed from now on leave the cache. */
     enum class Reason { Other, Replacement, Drop };
 
-    ReuseTracker(BaseCache &cache, bool idle_gaps = false);
+    ReuseTracker(BaseCache &cache, bool idle_gaps = false,
+                 bool fill_stats = false);
 
     /**
      * An access after its tag lookup (blk: the line found, or nullptr):
@@ -65,8 +75,8 @@ class ReuseTracker
     /** A writeback from above wrote blk (after onAllocate if new). */
     void onWriteback(CacheBlk *blk);
 
-    /** blk was just allocated (a fill or a writeback). */
-    void onAllocate(CacheBlk *blk);
+    /** blk was just allocated: by a fill response (fill) or a writeback. */
+    void onAllocate(CacheBlk *blk, bool fill = false);
 
     /** blk is about to be invalidated, for the current reason. */
     void onRemove(CacheBlk *blk);
@@ -104,6 +114,15 @@ class ReuseTracker
     /** reuse_idle_gaps: per line, the last access of any kind. */
     const bool idleGaps;
     std::vector<Tick> lastAny;
+
+    /** reuse_fill_stats: per line, the demand fill tick and flags. */
+    const bool fillStats;
+    std::vector<Tick> fillTick;
+    std::vector<uint8_t> fillFlags;
+    enum : uint8_t { FillDemand = 1, FillHit = 2, FillUsed = 4 };
+
+    /** reuse_fill_stats: the first use of a demand-filled line. */
+    void fillUse(unsigned i);
 
     /** Shadow tags, set * assoc + way. */
     struct ShadowWay
@@ -170,6 +189,29 @@ class ReuseTracker
          *  replacement eviction. */
         statistics::Vector idleGapAtEviction;
     } stats;
+
+    struct FillStats : public statistics::Group
+    {
+        FillStats(statistics::Group *parent);
+
+        void regStats() override;
+
+        /** Allocations by a fill response / by a writeback from above. */
+        statistics::Scalar demandFills;
+        statistics::Scalar wbAllocs;
+        /** Time from a demand fill to its first demand hit / first use
+         *  (demand hit, writeback from above, CleanEvict from above). */
+        statistics::Vector fillToFirstHit;
+        statistics::Vector fillToFirstUse;
+        /** Demand-filled lines that left by replacement, those with no
+         *  demand hit and those with no use since the fill. */
+        statistics::Scalar fillsEvicted;
+        statistics::Scalar fillsEvictedNeverHit;
+        statistics::Scalar fillsEvictedNeverUsed;
+        /** Demand-filled lines removed for any other reason. */
+        statistics::Scalar fillsRemovedOther;
+    };
+    std::unique_ptr<FillStats> fillStatsGroup;
 };
 
 } // namespace gem5

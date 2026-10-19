@@ -130,6 +130,15 @@ class BaseCache(ClockedObject):
         "reuse.idleGapAtEviction). Changes no timing",
     )
 
+    reuse_fill_stats = Param.Bool(
+        False,
+        "Stats only (group reuse.fill): per line the tick of its demand "
+        "fill; the time from that fill to its first demand hit and to its "
+        "first use (demand hit, writeback or CleanEvict from above), and how "
+        "many demand-filled lines leave by replacement with no hit or no "
+        "use. Changes no timing",
+    )
+
     data_read_ports = Param.Unsigned(
         0,
         "Data-array reads (load hits, writeback reads) each bank serves "
