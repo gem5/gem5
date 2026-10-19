@@ -69,7 +69,7 @@ repos:
           - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/PyCQA/isort
-      rev: 9.0.2
+      rev: 10.0.0b1
       hooks:
           - id: isort
             exclude: ^util/gem5art/
@@ -84,7 +84,7 @@ repos:
             exclude: ^util/gem5art/
     - repo: https://github.com/asottile/pyupgrade
       # v3.22.0 requires Python 3.11; keep hooks usable with Python 3.10.
-      rev: v3.21.2
+      rev: v3.22.0
       hooks:
           - id: pyupgrade
             exclude: ^util/gem5art/
