@@ -47,6 +47,14 @@ from m5.objects import (
     PowerModel,
 )
 
+# Example L2 dynamic energy per access, in joules. Illustrative only, not
+# a calibration: it keeps the scale of the original example expression,
+# which charged 0.000018 W per access in a stats-dump interval, at the
+# 0.1 ms dump period used in main() (0.000018 W * 0.1e-3 s = 1.8e-9 J).
+# Published estimates for a ~1 MiB SRAM L2 are of the order of
+# 0.1-1 nJ per access.
+L2_DYN_ENERGY_PER_ACCESS = 1.8e-9
+
 
 class CpuPowerOn(MathExprPowerModel):
     def __init__(self, cpu_path, **kwargs):
@@ -82,7 +90,17 @@ class L2PowerOn(MathExprPowerModel):
         # Example to report l2 Cache overallAccesses
         # The estimated power is converted to Watt and will vary based
         # on the size of the cache
-        self.dyn = f"{l2_path}.overallAccesses * 0.000018000 / simSeconds"
+        # J/access * accesses / s = W. overallAccesses and simSeconds are
+        # both reset at every stats reset (each periodic stats dump), so
+        # this is the average L2 dynamic power since the last reset and its
+        # time average does not depend on the dump period. MathExpr silently
+        # misparses signed exponents (the '-' in 1.8e-09 is parsed as a
+        # subtraction), so the constant is formatted as fixed-point.
+        # It has 15 decimals: keep the value >= 1e-12 or raise the precision.
+        self.dyn = (
+            f"{l2_path}.overallAccesses * "
+            f"{L2_DYN_ENERGY_PER_ACCESS:.15f} / simSeconds"
+        )
         self.st = "(voltage * 3)/10"
 
 
