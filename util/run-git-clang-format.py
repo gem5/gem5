@@ -60,6 +60,11 @@ This wrapper script adds the following functionality over calling
 The script can also be used without the `--pre-commit` option on the
 command line to manually re-format staged files.
 
+In `--pre-commit` mode, only the filenames supplied by pre-commit are
+formatted, respecting its inclusion and exclusion rules. An empty file
+list skips formatting. Manual invocations may also supply filenames;
+without them, all changed files are considered.
+
 To support in-place checking of a PR in GitHub Actions, the
 `--ci-pr-base-commit` option and `GEM5_CI_PR_BASE_COMMIT` environment
 variable are also supported. If either of these are set to the
@@ -239,7 +244,7 @@ if __name__ == "__main__":
         "-i",
         action="append",
         default=list(),
-        help="Ignore this file.",
+        help="Ignore this file or directory.",
     )
     parser.add_argument(
         "--dry-run",
@@ -258,7 +263,15 @@ if __name__ == "__main__":
         action="store_true",
         help="Output verbose debugging messages to stderr.",
     )
+    parser.add_argument(
+        "files",
+        nargs="*",
+        help="Restrict formatting to these files.",
+    )
     args = parser.parse_args()
+
+    if args.pre_commit and not args.files:
+        sys.exit(0)
 
     # Set up logging
     #
@@ -291,10 +304,9 @@ if __name__ == "__main__":
     #
     # The list combines ignored files specified on the command line
     # and via the environment variable. Missing files are removed.
-    # Finally, `git` is queried to get a list of staged files, and
-    # ignored files are removed to generate a git pathspec for the
-    # operation. This is necessary because `git-clang-format` does not
-    # support an ignored file list directly.
+    # Filter the supplied filenames, or discover changed files for a
+    # manual invocation. CI discovery must compare against the PR base;
+    # a clean CI checkout has no staged changes.
     #
     # Also check the environment variable for a global disable.
     #
@@ -334,37 +346,31 @@ if __name__ == "__main__":
     else:
         logger.debug("No disabled files.")
 
-    pathspecs: list[str] = []
+    pathspecs: list[str] = args.files
     if disabled_files:
-        res = run_silent_exit(
-            "git",
-            "diff",
-            "--staged",
-            "--name-only",
-            silent_exit=args.pre_commit,
-            cwd=repo_root,
-        )
-        if res is not None and res.returncode == 0:
-            changed_files: set[Path | None] = {
-                make_ignore_path(path) for path in res.stdout.split("\n")
-            }
-            changed_files.discard(None)
-            if changed_files:
-                logger.debug(
-                    "Found list of changed files:\n%s",
-                    "\n".join(f"'{path}'" for path in changed_files),
-                )
-            else:
-                logger.debug("No changed files.")
-            changed_files = changed_files.difference(disabled_files)
-            pathspecs = [str(path) for path in changed_files]
-            if pathspecs:
-                logger.debug(
-                    "Generated pathspec:\n%s",
-                    "\n".join(f"'{path}'" for path in pathspecs),
-                )
-            else:
-                logger.debug("Pathspecs empty.")
+        if not pathspecs:
+            res = run_silent_exit(
+                "git",
+                "diff",
+                "--name-only",
+                "-z",
+                "--diff-filter=ACMR",
+                ci_pr_base_commit or "--staged",
+                silent_exit=args.pre_commit,
+                cwd=repo_root,
+            )
+            if res is None:
+                sys.exit(2)
+            pathspecs = [path for path in res.stdout.split("\0") if path]
+        pathspecs = [
+            name
+            for name in pathspecs
+            if (path := make_ignore_path(name)) is not None
+            and not any(
+                path == ignored or ignored in path.parents
+                for ignored in disabled_files
+            )
+        ]
 
     if disabled_files and not pathspecs:
         logger.warning("All changed files have been ignored. Doing nothing.")

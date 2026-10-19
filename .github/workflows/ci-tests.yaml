@@ -57,7 +57,10 @@ jobs:
             - name: Run clang-format check
               uses: pre-commit/action@v3.0.1
               with:
-                  extra_args: gem5-git-clang-format --all-files
+                  extra_args: >-
+                      gem5-git-clang-format
+                      --from-ref ${{ steps.get-base-commit.outputs.base_commit }}
+                      --to-ref ${{ github.event.pull_request.head.sha }}
               env:
                   GEM5_CI_PR_BASE_COMMIT: ${{ steps.get-base-commit.outputs.base_commit }}
 
