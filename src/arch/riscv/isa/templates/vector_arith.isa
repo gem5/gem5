@@ -1849,6 +1849,8 @@ Fault
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
+    VRM_REQUIRED;
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
