@@ -68,6 +68,8 @@ class FwCfgItem
     {}
 
   public:
+    virtual ~FwCfgItem() = default;
+
     uint16_t index() const { return _index; }
     void index(uint16_t new_index) { _index = new_index; }
 
