@@ -258,6 +258,8 @@ class MultiperspectivePerceptron : public ConditionalPredictor
         mpp(_mpp)
         {}
 
+        virtual ~HistorySpec() = default;
+
         /**
          * Gets the hash to index the table, using the pc of the branch,
          * and the index of the table.
