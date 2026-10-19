@@ -66,5 +66,6 @@ TEST(VecMemPack, SplitGrain)
     EXPECT_EQ(vecMemSplitGrain(16, 16, SimdUnitStrideLoadOp), 16u);
     EXPECT_EQ(vecMemSplitGrain(64, 64, SimdUnitStrideLoadOp), 64u);
     EXPECT_EQ(vecMemSplitGrain(128, 64, SimdUnitStrideLoadOp), 64u);
-    EXPECT_EQ(vecMemSplitGrain(16, 0, SimdUnitStrideLoadOp), 0u);
+    // 0 is pack_width, the first argument. 0 < 64, so the grain is 0.
+    EXPECT_EQ(vecMemSplitGrain(0, 64, SimdUnitStrideLoadOp), 0u);
 }
