@@ -42,12 +42,18 @@
  *
  *
  * Scores every candidate offset at every lookahead level (1..N) against
- * an Access Map Table of recently-touched regions, then issues one
- * prefetch per lookahead level using its best-scoring offset, ordered by
- * increasing lookahead so the soonest-needed prefetches are serviced
- * first. The paper places MLOP at the L1 data cache, trained only by
- * L1-D miss streams (see the on_miss/prefetch_on_access params in
- * Prefetcher.py).
+ * an Access Map Table of recently-touched regions. Each evaluation epoch,
+ * every offset tied for the top score at a level is kept (ties are not
+ * broken), with longer lookaheads claiming their offsets first so a
+ * shorter lookahead cannot reclaim one already won by a longer one. This
+ * mirrors the reference DPC3 submission's own `best_offsets` handling
+ * (see References above). Prefetches are then issued in
+ * increasing-lookahead order, soonest-needed first, up to the `degree`
+ * param's cap on prefetches issued per access. So if enough offsets tie
+ * at a short lookahead, that cap can be reached before longer-lookahead
+ * offsets from the same epoch get issued. The paper places MLOP at the
+ * L1 data cache, trained only by L1-D miss streams (see the
+ * on_miss/prefetch_on_access params in Prefetcher.py).
  */
 
 #ifndef __MEM_CACHE_PREFETCH_MLOP_HH__
