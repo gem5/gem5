@@ -72,7 +72,7 @@ class X86ISA(BaseISA):
     #     https://sandpile.org/x86/cpuid.htm
     # 0000_0001h
     FamilyModelStepping = VectorParam.UInt32(
-        [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x00000209],
+        [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x04000209],
         "type/family/model/stepping and feature flags",
     )
     # 0000_0004h
@@ -82,17 +82,59 @@ class X86ISA(BaseISA):
     )
     # 0000_0007h
     ExtendedFeatures = VectorParam.UInt32(
-        [0x00000000, 0x01800001, 0x00000000, 0x00000000], "feature flags"
+        [0x00004000, 0x01800001, 0x00000000, 0x00000018], "feature flags"
     )
     # 0000_000Dh - This uses ECX index, so the last entry must be all zeros
     ExtendedState = VectorParam.UInt32(
         [
+            ##0
+            0x00000203,
+            0x00000248,
+            0x00000000,
+            0x00000248,
+            ##1
             0x00000000,
             0x00000000,
             0x00000000,
             0x00000000,
+            ##2
             0x00000000,
             0x00000000,
+            0x00000000,
+            0x00000000,
+            ##3
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            ##4
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            ##5
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            ##6
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            ##7
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            ##8
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            ##9
+            0x00000008,
+            0x00000240,
             0x00000000,
             0x00000000,
         ],
