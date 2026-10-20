@@ -41,23 +41,23 @@ inline bool
 isVecMemPackable(OpClass op)
 {
     switch (op) {
-      case SimdUnitStrideLoadOp:
-      case SimdUnitStrideStoreOp:
-      case SimdUnitStrideMaskLoadOp:
-      case SimdUnitStrideMaskStoreOp:
-      case SimdWholeRegisterLoadOp:
-      case SimdWholeRegisterStoreOp:
-        return true;
-      default:
-        return false;
+        case SimdUnitStrideLoadOp:
+        case SimdUnitStrideStoreOp:
+        case SimdUnitStrideMaskLoadOp:
+        case SimdUnitStrideMaskStoreOp:
+        case SimdWholeRegisterLoadOp:
+        case SimdWholeRegisterStoreOp:
+            return true;
+        default:
+            return false;
     }
 }
 
 /**
  * Split grain for SplitDataRequest / transferNeedsBurst.
- * Non-packable ops use cache_line; packable ops use min(pack_width, cache_line).
- * pack_width is the resolved grain (LSQ maps an unspecified param to the
- * cache-line size); 0 is not a default sentinel.
+ * Non-packable ops use cache_line; packable ops use min(pack_width,
+ * cache_line). pack_width is the resolved grain (LSQ maps an unspecified param
+ * to the cache-line size); 0 is not a default sentinel.
  */
 inline unsigned
 vecMemSplitGrain(unsigned pack_width, unsigned cache_line, OpClass op)

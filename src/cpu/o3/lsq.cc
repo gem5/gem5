@@ -127,10 +127,13 @@ LSQ::DcachePort::DcachePortStats::DcachePortStats(CPU* _cpu)
 }
 
 LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
-    : cpu(cpu_ptr), iewStage(iew_ptr),
+    : cpu(cpu_ptr),
+      iewStage(iew_ptr),
       _cacheBlocked(false),
-      cacheStorePorts(params.cacheStorePorts), usedStorePorts(0),
-      cacheLoadPorts(params.cacheLoadPorts), usedLoadPorts(0),
+      cacheStorePorts(params.cacheStorePorts),
+      usedStorePorts(0),
+      cacheLoadPorts(params.cacheLoadPorts),
+      usedLoadPorts(0),
       waitingForStaleTranslation(false),
       staleTranslationWaitTxnId(0),
       lsqPolicy(params.smtLSQPolicy),
@@ -138,9 +141,9 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
       SQEntries(params.SQEntries),
       vecMemPackWidth(params.vecMemPackWidth),
       maxLQEntries(maxLSQAllocation(lsqPolicy, LQEntries, params.numThreads,
-                  params.smtLSQThreshold)),
+                                    params.smtLSQThreshold)),
       maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params.numThreads,
-                  params.smtLSQThreshold)),
+                                    params.smtLSQThreshold)),
       dcachePort(this, cpu_ptr),
       numThreads(params.numThreads),
       recvRespThrottling(params.recvRespThrottling),
@@ -150,7 +153,7 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
       recvRespCachelines(0),
       recvRespLastCachelineAddr(0),
       recvRespLastActiveCycle(0),
-      retryRespEvent([this]{ sendRetryResp(); }, name())
+      retryRespEvent([this] { sendRetryResp(); }, name())
 {
     assert(numThreads > 0 && numThreads <= MaxThreads);
 
@@ -205,9 +208,8 @@ LSQ::name() const
 unsigned
 LSQ::splitGrain(const DynInstPtr &inst) const
 {
-    return vecMemSplitGrain(
-        vecMemPackWidth.value_or(cpu->cacheLineSize()),
-        cpu->cacheLineSize(), inst->opClass());
+    return vecMemSplitGrain(vecMemPackWidth.value_or(cpu->cacheLineSize()),
+                            cpu->cacheLineSize(), inst->opClass());
 }
 
 void
@@ -831,8 +833,7 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
 
         request->initiateTranslation();
 
-        if (vecMemPackWidth.has_value() &&
-            isVecMemPackable(inst->opClass())) {
+        if (vecMemPackWidth.has_value() && isVecMemPackable(inst->opClass())) {
             thread[tid]->recordVecMemPack(request->_reqs.size());
         }
     }
@@ -1023,8 +1024,7 @@ SplitDataRequest::initiateTranslation()
     while (base_addr != final_addr) {
         auto it_start = _byteEnable.begin() + size_so_far;
         auto it_end = _byteEnable.begin() + size_so_far + grain;
-        addReq(base_addr, grain,
-                         std::vector<bool>(it_start, it_end));
+        addReq(base_addr, grain, std::vector<bool>(it_start, it_end));
         size_so_far += grain;
         base_addr += grain;
     }

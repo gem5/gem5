@@ -30,8 +30,6 @@
 
 #include "cpu/o3/vec_mem_pack.hh"
 
-using gem5::o3::isVecMemPackable;
-using gem5::o3::vecMemSplitGrain;
 using gem5::SimdIndexedLoadOp;
 using gem5::SimdIndexedStoreOp;
 using gem5::SimdStridedLoadOp;
@@ -43,6 +41,8 @@ using gem5::SimdUnitStrideSegmentedLoadOp;
 using gem5::SimdUnitStrideStoreOp;
 using gem5::SimdWholeRegisterLoadOp;
 using gem5::SimdWholeRegisterStoreOp;
+using gem5::o3::isVecMemPackable;
+using gem5::o3::vecMemSplitGrain;
 
 TEST(VecMemPack, PackableOps)
 {
