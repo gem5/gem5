@@ -207,7 +207,8 @@ class BaseCache(ClockedObject):
     window_mode = Param.String(
         "off",
         "Adaptive-window drops on top of refresh-all strict with even "
-        "spacing (same sweep and bank occupancy): off, fixed, tcp or amc. "
+        "spacing (same sweep and bank occupancy): off, fixed, tcp, amc or "
+        "wb (Refrint WB(n,m): per-line countdowns, see wb_n / wb_m). "
         "The cache is split into window_groups groups (set mod groups); a "
         "group decides at a frame (one sweep) at least N frames after its "
         "last decision, and its unused lines are dropped then",
@@ -304,6 +305,21 @@ class BaseCache(ClockedObject):
         "written back or deferred as other drops). Any use ends probation. "
         "Misses on lines probation dropped are counted apart and do not "
         "feed the controller. 0 = off; at most 3 (2-bit counter)",
+    )
+
+    wb_n = Param.Int(
+        -1,
+        "window_mode=wb (Refrint WB(n,m)): idle frames a dirty line is "
+        "kept; at its slot with the count at 0 it is written back (it stays "
+        "valid and clean, count = wb_m). -1 = infinity",
+    )
+
+    wb_m = Param.Int(
+        -1,
+        "window_mode=wb: idle frames a clean line is kept; at its slot with "
+        "the count at 0 it is invalidated (expired tag as the window "
+        "drops). Every use reloads the count (wb_n if dirty, wb_m if "
+        "clean) at the line's next slot. -1 = infinity",
     )
 
     refresh_opp_age = Param.Float(

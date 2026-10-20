@@ -529,6 +529,15 @@ class RetentionManager
     /** Window mode: row was used (U = 1, D cleared). */
     void windowUse(unsigned row);
 
+    /** window_mode=wb: the slot of valid row (instead of the group
+     *  decision): reload the count if used, then refresh, write back
+     *  (count 0, dirty) or drop (count 0, clean). */
+    void wbRow(CacheBlk *blk, unsigned row);
+
+    /** window_mode=wb: write dirty blk back (WriteClean); it stays valid
+     *  and clean, and keeps its write permission. */
+    void wbCountWriteback(CacheBlk *blk);
+
     BaseCache &cache;
 
     /** Number of top MRU blocks per set the daemon keeps alive. */
@@ -801,6 +810,15 @@ class RetentionManager
     bool winFillUAlways = false;
     bool winCleanEvictUse = false;
 
+    /** window_mode=wb (Refrint WB(n,m)): on, n and m (-1 = infinity),
+     *  and per row the countdown (-1 = infinity) and the frames since
+     *  the last use (stats only). */
+    bool wbMode = false;
+    int wbN = -1;
+    int wbM = -1;
+    std::vector<int16_t> wbCount;
+    std::vector<uint32_t> wbIdle;
+
     /** Window mode: banks done with the current sweep, drops in the
      *  current frame. */
     unsigned winBanksDone = 0;
@@ -905,6 +923,29 @@ class RetentionManager
         statistics::Formula probationBalance;
     };
     std::unique_ptr<WindowStats> winStats;
+
+    struct WbStats : public statistics::Group
+    {
+        WbStats(RetentionManager &mgr, statistics::Group *parent);
+
+        void regStats() override;
+
+        RetentionManager &mgr;
+
+        statistics::Scalar linesRefreshed;
+        statistics::Scalar slotsSkipped;
+        statistics::Scalar countWritebacks;
+        statistics::Scalar wbDeferred;
+        statistics::Scalar cleanDeferred;
+        statistics::Scalar dropsClean;
+        statistics::Scalar retentionMisses;
+        statistics::Scalar usesCountReload;
+        statistics::Scalar slotReloads;
+        statistics::Distribution idleFramesAtDrop;
+        statistics::Formula avgValidLines;
+        statistics::Formula slotBalance;
+    };
+    std::unique_ptr<WbStats> wbStats;
 
     struct RetentionStats : public statistics::Group
     {

@@ -221,8 +221,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
     fatal_if(p.window_probation_frames > 0 && p.window_mode == "off",
              "%s: window_probation_frames needs window_mode", cache.name());
     fatal_if(p.window_mode != "off" && p.window_mode != "fixed" &&
-             p.window_mode != "tcp" && p.window_mode != "amc",
-             "%s: window_mode must be off, fixed, tcp or amc",
+             p.window_mode != "tcp" && p.window_mode != "amc" &&
+             p.window_mode != "wb",
+             "%s: window_mode must be off, fixed, tcp, amc or wb",
              cache.name());
     if (p.window_mode != "off") {
         const unsigned num_sets = cache.tags->getNumSets();
@@ -237,10 +238,14 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                  "%s: window_mode needs BaseSetAssoc tags and no bank "
                  "ports, compressor or partition manager", cache.name());
         WindowController::Params wp;
-        wp.mode = p.window_mode == "fixed" ? WindowController::Mode::Fixed :
+        wbMode = p.window_mode == "wb";
+        wp.mode = p.window_mode == "fixed" || wbMode ?
+            WindowController::Mode::Fixed :
             p.window_mode == "tcp" ? WindowController::Mode::Tcp :
             WindowController::Mode::Amc;
-        wp.nFixed = p.window_n_fixed;
+        // wb: the controller stays as fixed N = 2^20 (no group is ever
+        // due); the per-line counts decide instead
+        wp.nFixed = wbMode ? 1u << 20 : p.window_n_fixed;
         wp.tcpNInit = p.window_tcp_n_init;
         wp.amcNInit = p.window_amc_n_init;
         wp.ssthreshInit = p.window_ssthresh_init;
@@ -273,6 +278,18 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         winProbM = p.window_probation_frames;
         fatal_if(winProbM > 3, "%s: window_probation_frames must be 0..3 "
                  "(a 2-bit counter)", cache.name());
+        if (wbMode) {
+            wbN = p.wb_n;
+            wbM = p.wb_m;
+            fatal_if(wbN < -1 || wbM < -1 || wbN > 32767 || wbM > 32767,
+                     "%s: wb_n and wb_m must be in -1..32767",
+                     cache.name());
+            // Every fill and writeback allocation is a use (U = 1)
+            fatal_if(!winFillUAlways, "%s: window_mode=wb needs "
+                     "window_fill_u_always", cache.name());
+            fatal_if(winProbM > 0, "%s: window_mode=wb has no probation",
+                     cache.name());
+        }
         window->setListener([this](WindowController::Event e,
                                    unsigned old_val, unsigned new_val) {
             windowEvent(e, old_val, new_val);
@@ -289,6 +306,11 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         winProbCnt.assign(rows, 0);
         winExpProb.assign(rows, 0);
         winStats = std::make_unique<WindowStats>(*this, &stats);
+        if (wbMode) {
+            wbCount.assign(rows, 0);
+            wbIdle.assign(rows, 0);
+            wbStats = std::make_unique<WbStats>(*this, &stats);
+        }
         if (wp.mode == WindowController::Mode::Amc) {
             winAmcInterval = p.window_amc_interval_cycles;
             // After the refresh-all events of its tick, before the CPU
@@ -393,6 +415,14 @@ RetentionManager::startup()
                                        winProbM == 1 ? "st" :
                                        winProbM == 2 ? "nd" : "rd").c_str()
                    : "no probation");
+            if (wbMode) {
+                inform("%s: window mode wb (Refrint WB(n,m)): n %d, m %d "
+                       "(-1 = infinity); a use reloads the count at the "
+                       "line's next slot (dirty: n, clean: m); count 0 at "
+                       "a slot: dirty -> written back (stays valid, clean, "
+                       "count m), clean -> dropped", cache.name(), wbN,
+                       wbM);
+            }
         }
         return;
     }
@@ -1991,6 +2021,8 @@ void
 RetentionManager::windowUse(unsigned row)
 {
     winUsed[row] = 1;
+    if (wbStats)
+        wbStats->usesCountReload++;
     if (winPend[row]) {
         winPend[row] = 0;
         winPendLive--;
@@ -2037,6 +2069,8 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
     // always (window_fill_u_always)
     winUsed[row] = winFillUAlways ||
         window->decide(set % window->groups()) ? 1 : 0;
+    if (wbStats)
+        wbStats->usesCountReload++;
     // Probation: a demand fill (not a writeback that allocates, which is
     // a use) starts it, p = 0
     if (winProbM && fill) {
@@ -2197,6 +2231,8 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
         // A retention miss, counted once: the tag goes now
         winStats->retentionMisses++;
         winStats->expiredMissed++;
+        if (wbStats)
+            wbStats->retentionMisses++;
         window->retentionMiss();
         windowClearExpired(unsigned(row));
     } else if (inval) {
@@ -2229,6 +2265,12 @@ RetentionManager::windowRow(unsigned bank)
         ws.slotsSkipped++;
         if (winExpAddr[row] != MaxAddr)
             ws.slotsSkippedExpired++;
+        if (wbStats)
+            wbStats->slotsSkipped++;
+        return;
+    }
+    if (wbMode) {
+        wbRow(blk, row);
         return;
     }
 
@@ -2296,6 +2338,90 @@ RetentionManager::windowRow(unsigned bank)
         ws.usedRefreshes++;
     }
     ws.linesRefreshed++;
+}
+
+void
+RetentionManager::wbRow(CacheBlk *blk, unsigned row)
+{
+    WindowStats &ws = *winStats;
+    WbStats &st = *wbStats;
+    const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+    // A use since the last slot reloads the count with the line's state
+    // now, which is its state after its last use (only a use, this
+    // slot's write back or an invalidation changes it); the slot rule
+    // then applies in this same slot
+    if (winUsed[row]) {
+        winUsed[row] = 0;
+        wbCount[row] = int16_t(dirty ? wbN : wbM);
+        wbIdle[row] = 0;
+        st.slotReloads++;
+    }
+    wbIdle[row]++;
+    if (wbCount[row] != 0) {
+        if (wbCount[row] > 0)
+            wbCount[row]--;
+        ws.linesRefreshed++;
+        st.linesRefreshed++;
+        return;
+    }
+    const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
+                                   blk->isSecure());
+    const bool blocked = inflight ||
+        (dirty && cache.writeBuffer.isFull());
+    if (blocked) {
+        // Refreshed only (the only copy); count stays 0, retried at the
+        // next slot
+        if (!winPend[row]) {
+            winPend[row] = 1;
+            winPendLive++;
+            winPendPeak = std::max(winPendPeak, winPendLive);
+        }
+        if (dirty)
+            st.wbDeferred++;
+        else
+            st.cleanDeferred++;
+        ws.linesRefreshed++;
+        st.linesRefreshed++;
+        return;
+    }
+    if (winPend[row]) {
+        winPend[row] = 0;
+        winPendLive--;
+    }
+    if (dirty) {
+        // Refreshed and written back; clean from now on
+        wbCountWriteback(blk);
+        wbCount[row] = int16_t(wbM);
+        st.countWritebacks++;
+        ws.linesRefreshed++;
+        st.linesRefreshed++;
+        return;
+    }
+    panic_if(blk->isSet(CacheBlk::DirtyBit), "%s: wb drop of a dirty "
+             "line (row %u)", cache.name(), row);
+    st.dropsClean++;
+    st.idleFramesAtDrop.sample(wbIdle[row]);
+    windowDrop(blk, row, false);
+}
+
+void
+RetentionManager::wbCountWriteback(CacheBlk *blk)
+{
+    // writecleanBlk hands the write permission down with the data; here
+    // the level below is the memory, so the line keeps it (M -> E) and a
+    // later store from above needs no upgrade
+    const bool writable = blk->isSet(CacheBlk::WritableBit);
+    PacketList writebacks;
+    writebacks.push_back(cache.writecleanBlk(blk, 0, 0));
+    if (writable)
+        blk->setCoherenceBits(CacheBlk::WritableBit);
+    // The line read is part of the refresh-all operation already booked
+    if (cache.system->isTimingMode()) {
+        cache.doWritebacks(writebacks,
+                           cache.clockEdge(cache.forwardLatency));
+    } else {
+        cache.doWritebacksAtomic(writebacks);
+    }
 }
 
 void
@@ -2985,6 +3111,58 @@ RetentionManager::WindowStats::resetStats()
     expiredLiveAtReset = double(mgr.winExpLive);
     probationLiveAtReset = double(mgr.winProbLive);
     mgr.windowLog("reset");
+}
+
+RetentionManager::WbStats::WbStats(RetentionManager &_mgr,
+                                  statistics::Group *parent)
+    : statistics::Group(parent, "wb"),
+      mgr(_mgr),
+      ADD_STAT(linesRefreshed, statistics::units::Count::get(),
+               "valid lines refreshed at their slot (count >= 1 or "
+               "infinite, a count write back, or a deferral)"),
+      ADD_STAT(slotsSkipped, statistics::units::Count::get(),
+               "slots of invalid lines (skipped)"),
+      ADD_STAT(countWritebacks, statistics::units::Count::get(),
+               "dirty lines written back at count 0 (WriteClean; the line "
+               "stays valid and clean, count = m)"),
+      ADD_STAT(wbDeferred, statistics::units::Count::get(),
+               "slots where a count-0 dirty line was only refreshed (write "
+               "buffer full or a request to it in flight)"),
+      ADD_STAT(cleanDeferred, statistics::units::Count::get(),
+               "slots where a count-0 clean line was only refreshed (a "
+               "request to it in flight)"),
+      ADD_STAT(dropsClean, statistics::units::Count::get(),
+               "clean lines invalidated at count 0 (expired tag kept)"),
+      ADD_STAT(retentionMisses, statistics::units::Count::get(),
+               "demand misses that matched an expired tag"),
+      ADD_STAT(usesCountReload, statistics::units::Count::get(),
+               "uses (fills, writeback allocations, demand hits, "
+               "writebacks and CleanEvicts from above), each reloading "
+               "the count"),
+      ADD_STAT(slotReloads, statistics::units::Count::get(),
+               "slots that reloaded the count after a use"),
+      ADD_STAT(idleFramesAtDrop, statistics::units::Count::get(),
+               "frames from the last use to the drop (slots, the drop's "
+               "included)"),
+      ADD_STAT(avgValidLines, statistics::units::Count::get(),
+               "valid lines per frame ((linesRefreshed + dropsClean) / "
+               "window.frames)"),
+      ADD_STAT(slotBalance, statistics::units::Count::get(),
+               "linesRefreshed + dropsClean + slotsSkipped - "
+               "raRowRefreshes (0)")
+{
+}
+
+void
+RetentionManager::WbStats::regStats()
+{
+    statistics::Group::regStats();
+
+    idleFramesAtDrop.init(0, 1023, 1);
+    idleFramesAtDrop.flags(statistics::nozero);
+    avgValidLines = (linesRefreshed + dropsClean) / mgr.winStats->frames;
+    slotBalance = linesRefreshed + dropsClean + slotsSkipped -
+        mgr.stats.raRowRefreshes;
 }
 
 } // namespace gem5
