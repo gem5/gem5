@@ -840,6 +840,14 @@ class RetentionManager
     /** Window mode: the N log (nullptr: none). */
     OutputStream *winLog = nullptr;
 
+    /** window_frame_log: one row per frame (stats only), and this
+     *  frame's counters. */
+    bool winFrameLogOn = false;
+    OutputStream *winFrameLog = nullptr;
+    uint64_t winFrameNo = 0;
+    uint64_t winFrR = 0, winFrRp = 0, winFrA = 0;
+    uint64_t winFrDc = 0, winFrDd = 0, winFrCwb = 0;
+
     struct WindowStats : public statistics::Group
     {
         WindowStats(RetentionManager &mgr, statistics::Group *parent);

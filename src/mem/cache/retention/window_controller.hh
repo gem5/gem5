@@ -80,6 +80,7 @@ class WindowController
         unsigned amcNInit = 8;
         unsigned ssthreshInit = 8;
         unsigned nMax = 64;
+        unsigned nMin = 1;
         unsigned upShift = 7;
         unsigned downShift = 9;
         uint64_t minAccesses = 512;
@@ -106,6 +107,12 @@ class WindowController
             return "the group counter maximum must be > 0";
         if (p.nMax == 0 || p.nMax > p.counterMax)
             return "N_max must be in [1, group counter maximum]";
+        if (p.nMin == 0 || p.nMin > p.nMax)
+            return "N_min must be in [1, N_max]";
+        if (p.mode == Mode::Tcp && p.tcpNInit < p.nMin)
+            return "tcp N_init must be >= N_min";
+        if (p.mode == Mode::Amc && p.amcNInit < p.nMin)
+            return "amc N_init must be >= N_min";
         if (p.mode == Mode::Fixed && p.nFixed == 0)
             return "N_fixed must be >= 1";
         if (p.mode == Mode::Tcp &&
@@ -216,12 +223,12 @@ class WindowController
             if (calm >= p.calmLen) {
                 const unsigned old_n = n;
                 if (streak < p.streakLen) {
-                    n = std::max(n - 1, 1u);
+                    n = std::max(n - 1, p.nMin);
                     streak++;
                     notify(Event::Dec, old_n, n);
                 } else {
                     setSsthresh(n);
-                    n = std::max(n >> 1, 1u);
+                    n = std::max(n >> 1, p.nMin);
                     notify(Event::Halve, old_n, n);
                 }
                 calm = 0;
@@ -258,7 +265,7 @@ class WindowController
         if (double(rI) > p.amcHi * target) {
             pend = std::min(2 * n, p.nMax);
         } else if (double(rI) < p.amcLo * target) {
-            pend = std::max(n / 2, 1u);
+            pend = std::max(n / 2, p.nMin);
         } else {
             pend = n;
         }

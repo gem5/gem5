@@ -242,6 +242,19 @@ class BaseCache(ClockedObject):
         "are below the demand accesses >> window_down_shift",
     )
 
+    window_n_min = Param.Unsigned(
+        1,
+        "Window mode tcp / amc: smallest N (shrinks stop there); the tcp "
+        "initial N must be >= it",
+    )
+
+    window_frame_log = Param.Bool(
+        False,
+        "Window modes (wb too): write <cache>.window_frames.csv, one row "
+        "per frame (N, retention misses, demand accesses, drops, count "
+        "write backs); stats only",
+    )
+
     window_min_accesses = Param.Unsigned(
         512,
         "Window mode tcp: a shrink check is judged only with at least this "

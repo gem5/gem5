@@ -253,6 +253,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         wp.upShift = p.window_up_shift;
         wp.downShift = p.window_down_shift;
         wp.minAccesses = p.window_min_accesses;
+        wp.nMin = p.window_n_min;
+        winFrameLogOn = p.window_frame_log;
         wp.streakLen = p.window_streak_len;
         wp.calmLen = p.window_calm_len;
         wp.amcTargetFrac = p.window_amc_target_frac;
@@ -390,6 +392,13 @@ RetentionManager::startup()
                                    true);
             ccprintf(*winLog->stream(),
                      "tick,cycle,event,N,ssthresh,R,A,pend\n");
+            if (winFrameLogOn) {
+                winFrameLog = simout.create(
+                    cache.name() + ".window_frames.csv", false, true);
+                ccprintf(*winFrameLog->stream(),
+                         "tick,cycle,frame,N,R,Rprob,A,dropsClean,"
+                         "dropsDirty,countWritebacks\n");
+            }
             window->start();
             windowGranted();
             windowLog("init");
@@ -2203,6 +2212,7 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             blk->isSet(CacheBlk::ReadableBit));
         window->demandAccess(hit);
         winStats->demandAccesses++;
+        winFrA++;
         if (hit)
             winStats->demandHits++;
     }
@@ -2226,11 +2236,13 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
         // A miss on a line probation dropped: counted apart, not in R
         winStats->probationRetentionMisses++;
         winStats->expiredMissed++;
+        winFrRp++;
         windowClearExpired(unsigned(row));
     } else if (demand) {
         // A retention miss, counted once: the tag goes now
         winStats->retentionMisses++;
         winStats->expiredMissed++;
+        winFrR++;
         if (wbStats)
             wbStats->retentionMisses++;
         window->retentionMiss();
@@ -2393,6 +2405,7 @@ RetentionManager::wbRow(CacheBlk *blk, unsigned row)
         wbCountWriteback(blk);
         wbCount[row] = int16_t(wbM);
         st.countWritebacks++;
+        winFrCwb++;
         ws.linesRefreshed++;
         st.linesRefreshed++;
         return;
@@ -2475,6 +2488,7 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
     }
 
     if (dirty) {
+        winFrDd++;
         ws.dropsDirty++;
         ws.deadlineWritebacks++;
         if (!blocked_before && (cache.blocked & wb_flag) && !winBlockOpen) {
@@ -2483,6 +2497,7 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
             ws.dropWbBlockEpisodes++;
         }
     } else {
+        winFrDc++;
         ws.dropsClean++;
     }
     if (was_pend)
@@ -2521,6 +2536,15 @@ RetentionManager::windowFrameEnd()
     ws.frames++;
     ws.dropsPerFrame.sample(winFrameDrops);
     winFrameDrops = 0;
+    // window_frame_log: this frame's row (N in effect during the frame)
+    if (winFrameLog) {
+        ccprintf(*winFrameLog->stream(), "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+                 curTick(), curTick() / cache.clockPeriod(), winFrameNo,
+                 window->nValue(), winFrR, winFrRp, winFrA, winFrDc,
+                 winFrDd, winFrCwb);
+    }
+    winFrameNo++;
+    winFrR = winFrRp = winFrA = winFrDc = winFrDd = winFrCwb = 0;
     window->frameEnd();
     if (window->lastCheck())
         ws.checks++;
