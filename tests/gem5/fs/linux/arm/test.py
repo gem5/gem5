@@ -76,10 +76,8 @@ arm_fs_long_tests = [
     "realview64-simple-timing-ruby",
     "realview64-simple-timing-dual-ruby",
     "realview64-o3-dual-ruby",
-    # The following tests fail. These are recorded in the GEM5-640
-    # Jira issue.
-    #
-    # https://gem5.atlassian.net/browse/GEM5-640
+    # The following tests fail while bringing up secondary CPUs.
+    # https://github.com/gem5/gem5/issues/3448
     #'realview-simple-atomic-dual',
     #'realview-simple-timing-dual',
     #'realview-o3-dual',
@@ -157,12 +155,14 @@ for name in arm_fs_long_tests:
         ),
         config.base_dir,
     ]
+    if name.endswith("-ruby"):
+        args.append("--protocol=CHI")
     gem5_verify_config(
         name=name,
         verifiers=verifier_list(name),  # TODO: Add basic stat verifiers
         config=joinpath(filepath, "run.py"),
         config_args=args,
-        valid_isas=(constants.arm_x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         length=constants.long_tag,
         uses_kvm=name in arm_fs_kvm_tests,
     )

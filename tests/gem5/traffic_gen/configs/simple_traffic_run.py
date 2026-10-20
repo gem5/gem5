@@ -283,4 +283,4 @@ exit_event = m5.simulate()
 print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}.")
 
 json_visitor = JsonOutputVistor(Path(m5.options.outdir) / "output.json")
-json_visitor.dump([core.generator for core in generator.get_cores()])
+json_visitor.dump(generator)

@@ -26,6 +26,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+# Custom hypercall ID used by the matching Python exit handler in
+# gem5-bridge-driver-validate.py. It is intentionally outside gem5
+# built-in ExitHypercall enum so the test validates that arbitrary m5
+# hypercalls can be delivered through the gem5 bridge driver.
+GEM5_BRIDGE_TEST_HYPERCALL_ID=1234
+
 # Create the test.c file that
 # maps m5 mem and calls m5 exit
 # if the test passes that means that the gem5 bridge driver is working
@@ -35,7 +41,7 @@ cat << EOF > test.c
 void map_m5_mem();
 int main() {
     map_m5_mem();
-    m5_hypercall_addr(1234);
+    m5_hypercall_addr(${GEM5_BRIDGE_TEST_HYPERCALL_ID});
     return 0;
 }
 EOF

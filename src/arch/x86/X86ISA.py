@@ -48,9 +48,8 @@ class X86ISA(BaseISA):
     # genuine CPUID, an error is returned. This change
     # https://gem5-review.googlesource.com/c/public/gem5/+/64831 changed this
     # to "GenuineAMD" but due to issues with booting the Linux Kernel using
-    # this vector string (highlighted here:
-    # https://gem5.atlassian.net/browse/GEM5-1300) we opted to use
-    # "HygonGenuine" instead.
+    # this vector string, we opted to use "HygonGenuine" instead. See
+    # https://github.com/gem5/gem5/issues/3445.
     vendor_string = Param.String(
         "HygonGenuine", "Vendor string for CPUID instruction"
     )

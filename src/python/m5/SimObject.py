@@ -700,7 +700,8 @@ class SimObject(metaclass=MetaSimObject):
     # generated as command line options for this simobject instance
     # by tracing all reachable params in the top level instance and
     # any children it contains.
-    def enumerateParams(self, flags_dict={}, cmd_line_str="", access_str=""):
+    def enumerateParams(self, flags_dict=None, cmd_line_str="", access_str=""):
+        flags_dict = {} if flags_dict is None else flags_dict
         if hasattr(self, "_paramEnumed"):
             print("Cycle detected enumerating params")
         else:
@@ -1150,7 +1151,7 @@ class SimObject(metaclass=MetaSimObject):
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
-                    if isSimObjectVector(match_obj):
+                    if isinstance(pdesc, VectorParamDesc):
                         for item in match_obj:
                             if not isNullPointer(item):
                                 all[item] = True

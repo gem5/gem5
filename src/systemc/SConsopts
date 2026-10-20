@@ -31,7 +31,6 @@ def use_systemc_check(env, warn=False):
     import platform
     host_isa = platform.machine()
     # Disallow compiling systemc if the host ISA is RISC-V.
-    # The error is described here: https://gem5.atlassian.net/browse/GEM5-1027
     if host_isa.startswith("riscv"):
         if warn:
             warning('Warning: Systemc may not work on RISC-V.')

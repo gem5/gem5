@@ -102,7 +102,7 @@ class MessageBufferConsumerTest : public ClockedObject, Consumer
             scheduleEvent(Cycles(1));
         }
         if (num_msgs >= max_msgs) {
-            exitSimLoop("max number of operations reached");
+            exitSimulationLoopClassic("max number of operations reached");
         }
     }
 

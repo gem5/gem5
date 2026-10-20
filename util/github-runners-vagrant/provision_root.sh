@@ -26,69 +26,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# fail on unset variables and command errors
-set -eu -o pipefail # -x: is for debugging
+# All privileged operations here run inside the guest, never on the host.
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get upgrade -y
-apt-get install -y \
-  software-properties-common \
-  bash \
-  build-essential \
-  clang-format \
-  git \
-  git-lfs \
-  jq \
-  libffi-dev \
-  libssl-dev \
-  nkf \
-  python3 \
-  python3-dev \
-  python3-pip \
-  python3-venv \
-  shellcheck \
-  tree \
-  wget \
-  yamllint \
-  zstd \
-  jq \
-  apt-transport-https ca-certificates \
-  curl \
-  gnupg \
-  lsb-release \
-  cpu-checker
+# Include new kernel dependencies when updating the base box.
+apt-get --with-new-pkgs upgrade -y
+apt-get install -y linux-generic bash build-essential clang-format git git-lfs \
+    jq libffi-dev libssl-dev nkf python3 python3-dev python3-pip python3-venv \
+    shellcheck tree wget yamllint zstd ca-certificates curl gnupg lsb-release \
+    cpu-checker
 
-# Install docker
-apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io
-
-# Add the Vagrant user to the docker group.
-# Note: The VM needs rebooted for this to take effect. `newgrp docker` doesn't
-# work.
+install -m 0755 -d /etc/apt/keyrings
+curl --fail --show-error --silent --retry 3 \
+    https://download.docker.com/linux/ubuntu/gpg \
+    -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+# Replace the previous version of this provisioner's source definition.
+rm -f /etc/apt/sources.list.d/docker.list
+cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release; echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io \
+    docker-buildx-plugin docker-compose-plugin
 usermod -aG docker vagrant
+systemctl enable --now docker
 
-kvm-ok
-kvm_ok_status=$?
-
-# `kvm-ok` will return a exit zero if the machine supports KVM, and non-zero
-# otherwise. If the machine support KVM, let's enable it.
-if [[ ${kvm_ok_status} == 0 ]]; then
-    apt install -y qemu-kvm \
-                   virt-manager \
-                  libvirt-daemon-system virtinst \
-                  libvirt-clients bridge-utils && \
-    sudo systemctl enable --now libvirtd && \
-    sudo systemctl start libvirtd && \
-    usermod -aG kvm vagrant && \
-    usermod -aG libvirt vagrant
+# Re-provisioning a disk which already fills its volume group is harmless.
+root_device=$(findmnt -n -o SOURCE /)
+if lvs "$root_device" >/dev/null 2>&1; then
+    volume_group=$(lvs --noheadings -o vg_name "$root_device" | xargs)
+    free_extents=$(vgs --noheadings -o vg_free_count "$volume_group" | xargs)
+    if (( free_extents > 0 )); then
+        lvextend --resizefs -l +100%FREE "$root_device"
+    fi
 fi
-
-# Cleanup
-apt-get autoremove -y
-
-# Resize the root partition to fill up all the free size on the disk
-lvextend -l +100%FREE $(df / --output=source | sed 1d)
-resize2fs $(df / --output=source | sed 1d)
+apt-get clean

@@ -391,6 +391,7 @@ class PM4Queue
     Addr _offset;
     bool _processing;
     bool _ib;
+    bool _deviceBacked;
     PM4MapQueues _pkt;
 
   public:
@@ -401,6 +402,7 @@ class PM4Queue
           _offset(0),
           _processing(false),
           _ib(false),
+          _deviceBacked(false),
           _pkt()
     {}
     PM4Queue(int id, QueueDesc *queue, Addr offset)
@@ -411,6 +413,7 @@ class PM4Queue
           _offset(offset),
           _processing(false),
           _ib(false),
+          _deviceBacked(false),
           _pkt()
     {}
     PM4Queue(int id, QueueDesc *queue, Addr offset, PM4MapQueues *pkt)
@@ -421,6 +424,7 @@ class PM4Queue
           _offset(offset),
           _processing(false),
           _ib(false),
+          _deviceBacked(false),
           _pkt(*pkt)
     {}
 
@@ -438,6 +442,21 @@ class PM4Queue
     mqdBase()
     {
         return q->mqdBase;
+    }
+    Addr
+    mqdPktAddr()
+    {
+        return _pkt.mqdAddr;
+    }
+    void
+    setDeviceBacked(bool val)
+    {
+        _deviceBacked = val;
+    }
+    bool
+    isDeviceBacked()
+    {
+        return _deviceBacked;
     }
     Addr
     base()

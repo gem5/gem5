@@ -50,7 +50,7 @@ class LooppointRegionPC:
         and restore Simpoint data.
     """
 
-    def __init__(self, pc: int, globl: int, relative: Optional[int] = None):
+    def __init__(self, pc: int, globl: int, relative: int | None = None):
         """
         :param pc: The Program Counter value of this region.
         :param globl: The global value of this region.
@@ -68,7 +68,7 @@ class LooppointRegionPC:
         """Returns the global value."""
         return self._global
 
-    def get_relative(self) -> Optional[int]:
+    def get_relative(self) -> int | None:
         """If specified, returns the relative Program counter value, otherwise
         returns None."""
         return self._relative
@@ -83,7 +83,7 @@ class LooppointRegionPC:
             self.get_global() - manager.getPcCount(self.get_pc())
         )
 
-    def to_json(self) -> Dict[str, int]:
+    def to_json(self) -> dict[str, int]:
         """Returns this class in a JSON structure which can then be serialized
         and later be restored from."""
         to_return = {
@@ -122,11 +122,11 @@ class LooppointRegionWarmup:
         """Returns the PcCountPair for the end of the region warmup."""
         return self._end
 
-    def get_pc_count_pairs(self) -> List[PcCountPair]:
+    def get_pc_count_pairs(self) -> list[PcCountPair]:
         """Returns the start and end PC count pairs."""
         return [self.get_start(), self.get_end()]
 
-    def to_json(self) -> Dict[str, Dict[str, int]]:
+    def to_json(self) -> dict[str, dict[str, int]]:
         """Returns this class in a JSON structure which can then be
         serialized."""
         return {
@@ -167,7 +167,7 @@ class LooppointSimulation:
         """Returns the ending LooppointRegionPC data structure."""
         return self._end
 
-    def get_pc_count_pairs(self) -> List[PcCountPair]:
+    def get_pc_count_pairs(self) -> list[PcCountPair]:
         """Returns the PC count pairs for the start and end
         LoopointRegionPCs."""
         return [
@@ -187,7 +187,7 @@ class LooppointSimulation:
 
         self.get_end().update_relative_count(manager=manager)
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """Returns this class in a JSON structure which can then be serialized
         and later be restored from."""
         return {
@@ -210,7 +210,7 @@ class LooppointRegion:
         self,
         simulation: LooppointSimulation,
         multiplier: float,
-        warmup: Optional[LooppointRegionWarmup] = None,
+        warmup: LooppointRegionWarmup | None = None,
     ):
         """
         :param simulation: The simulation information for this LoopPoint
@@ -231,11 +231,11 @@ class LooppointRegion:
         """Returns the multiplier."""
         return self._multiplier
 
-    def get_warmup(self) -> Optional[LooppointRegionWarmup]:
+    def get_warmup(self) -> LooppointRegionWarmup | None:
         """If set, returns the warmup region information. Otherwise ``None``."""
         return self._warmup
 
-    def get_pc_count_pairs(self) -> List[PcCountPair]:
+    def get_pc_count_pairs(self) -> list[PcCountPair]:
         """Returns the PC count pairs for this LoopPoint region."""
         pc_count_pairs = self.get_simulation().get_pc_count_pairs()
         if self.get_warmup():
@@ -255,7 +255,7 @@ class LooppointRegion:
             return self.get_warmup().get_start()
         return self.get_simulation().get_start().get_pc_count_pair()
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         """Returns this class in a JSON structure which can then be serialized
         and later be restored from."""
         to_return = {
@@ -270,7 +270,7 @@ class LooppointRegion:
 class Looppoint:
     """Stores all the LoopPoint information for a gem5 workload."""
 
-    def __init__(self, regions: Dict[Union[str, int], LooppointRegion]):
+    def __init__(self, regions: dict[str | int, LooppointRegion]):
         """
         :param regions: A dictionary mapping the ``region_ids`` with the
                         LoopPointRegions.
@@ -279,7 +279,7 @@ class Looppoint:
         self._manager = PcCountTrackerManager()
         self._manager.targets = self.get_targets()
 
-    def set_target_region_id(self, region_id: Union[str, int]) -> None:
+    def set_target_region_id(self, region_id: str | int) -> None:
         """There are use-cases where we want to obtain a LoopPoint data
         structure containing a single target region via its ID. This function
         will remove all irrelevant regions."""
@@ -298,7 +298,7 @@ class Looppoint:
         structure."""
         return self._manager
 
-    def get_regions(self) -> Dict[Union[int, str], LooppointRegion]:
+    def get_regions(self) -> dict[int | str, LooppointRegion]:
         """Returns the regions for this Looppoint data structure."""
         return self._regions
 
@@ -329,7 +329,7 @@ class Looppoint:
                 manager=self.get_manager()
             )
 
-    def get_current_region(self) -> Optional[Union[str, int]]:
+    def get_current_region(self) -> str | int | None:
         """Returns the region id if the current PC Count pair if significant
         (e.g. beginning of the checkpoint), otherwise, it returns ``None`` to
         indicate the current PC Count pair is not significant.
@@ -344,7 +344,7 @@ class Looppoint:
         """This function returns the current PC Count pair."""
         return self.get_manager().getCurrentPcCountPair()
 
-    def get_region_start_id_map(self) -> Dict[PcCountPair, Union[int, str]]:
+    def get_region_start_id_map(self) -> dict[PcCountPair, int | str]:
         """Returns the starting PcCountPairs mapped to the corresponding region
         IDs. This is a helper function for quick mapping of PcCountPairs to
         region IDs."""
@@ -355,7 +355,7 @@ class Looppoint:
 
         return regions
 
-    def get_targets(self) -> List[PcCountPair]:
+    def get_targets(self) -> list[PcCountPair]:
         """Returns the complete list of target PcCountPairs. That is, the
         PcCountPairs each region starts with as well as the relevant warmup
         intervals."""
@@ -365,7 +365,7 @@ class Looppoint:
 
         return targets
 
-    def to_json(self) -> Dict[Union[int, str], Dict]:
+    def to_json(self) -> dict[int | str, dict]:
         """Returns this data-structure as a dictionary for serialization via
         the ``output_json_file`` function."""
         to_return = {}
@@ -376,8 +376,8 @@ class Looppoint:
     def output_json_file(
         self,
         input_indent: int = 4,
-        filepath: Optional[str] = None,
-    ) -> Dict[int, Dict]:
+        filepath: str | None = None,
+    ) -> dict[int, dict]:
         """
         This function is used to output the ``_json_file`` into a json file.
 
@@ -396,8 +396,8 @@ class LooppointCsvLoader(Looppoint):
 
     def __init__(
         self,
-        pinpoints_file: Union[Path, str],
-        region_id: Optional[Union[str, int]] = None,
+        pinpoints_file: Path | str,
+        region_id: str | int | None = None,
     ):
         """
         :params pinpoints_file: The pinpoints file in which the data is to be
@@ -485,8 +485,8 @@ class LooppointJsonLoader(Looppoint):
 
     def __init__(
         self,
-        looppoint_file: Union[str, Path],
-        region_id: Optional[Union[str, int]] = None,
+        looppoint_file: str | Path,
+        region_id: str | int | None = None,
     ) -> None:
         """
         :param looppoint_file: A json file generated by gem5 that has all the

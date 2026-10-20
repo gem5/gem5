@@ -7,9 +7,9 @@ changes reviewable and mechanical.
 
 `ci-tests.yaml` runs for non-draft pull-request updates. `daily-tests.yaml`,
 `weekly-tests.yaml`, and `compiler-tests.yaml` expose `workflow_dispatch`; the
-hourly `scheduler.yaml` dispatches them on their daily or weekly cadence. Keep
-related changes aligned across workflows, Docker images, bake targets, and
-documentation.
+cron-driven `scheduler.yaml` dispatches them on their daily or weekly cadence.
+Keep related changes aligned across workflows, Docker images, bake targets,
+and documentation.
 
 The aggregate `ci-tests` job does not depend on `clang-format-check`, so the
 workflow dependency graph does not make formatting a prerequisite for that
@@ -33,5 +33,5 @@ selection; the container alone does not determine the selected gem5 build.
 Docker containers define the intended CI environment. When reproducing a
 failure, inspect the relevant workflow revision and use the same image digest
 where available; a mutable `:latest` tag may no longer match an older run. This
-especially matters for Ubuntu all-dependency jobs and GPU SE-mode jobs using
-the `gcn-gpu` image.
+especially matters for Ubuntu all-dependency jobs. GPU full-system suites use
+that general dependency environment and run with the `ALL` TestLib build.

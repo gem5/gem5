@@ -54,7 +54,7 @@ def parse_args():
     return args
 
 
-def write_cc_file(sim_object: Type, cxx_config_cc: str):
+def write_cc_file(sim_object: type, cxx_config_cc: str):
     """
     Generates the C++ source file for the C++ configuration of a SimObject.
 
@@ -295,7 +295,7 @@ ${param_class}::setParamVector(const std::string &name,
             if not is_simobj and is_vector:
                 code('} else if (name == "${{param.name}}") {')
                 code.indent()
-                code("${{param.name}}.clear();")
+                code("this->${{param.name}}.clear();")
                 code(
                     "for (auto i = values.begin(); ret && i != values.end(); i ++)"
                 )
@@ -333,7 +333,7 @@ ${param_class}::setParamDict(const std::string &name,
         if is_dict:
             code('} else if (name == "${{param.name}}") {')
             code.indent()
-            code("${{param.name}}.clear();")
+            code("this->${{param.name}}.clear();")
             code(
                 "for (auto i = values.begin(); ret && i != values.end(); i ++)"
             )

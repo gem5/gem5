@@ -113,9 +113,8 @@ static void
 exitFutexWake(ThreadContext *tc, VPtr<> addr, uint64_t tgid)
 {
     // Clear value at address pointed to by thread's childClearTID field.
-    BufferArg ctidBuf(addr, sizeof(long));
-    long *ctid = (long *)ctidBuf.bufferPtr();
-    *ctid = 0;
+    TypedBufferArg<uint32_t> ctidBuf(addr);
+    *ctidBuf = 0;
     ctidBuf.copyOut(SETranslatingPortProxy(tc));
 
     FutexMap &futex_map = tc->getSystemPtr()->futexMap;
@@ -257,7 +256,8 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status,
             return status;
         }
 
-        exitSimLoop("exiting with last active thread context", status & 0xff);
+        exitSimulationLoopClassic("exiting with last active thread context",
+                                  status & 0xff);
         return status;
     }
 

@@ -10,7 +10,7 @@ system software changes, and compile-time and run-time system optimizations.
 
 The main website can be found at <http://www.gem5.org>.
 
-## Testing status
+## Testing and code coverage status
 
 **Note**: These regard tests run on the develop branch of gem5:
 <https://github.com/gem5/gem5/tree/develop>.
@@ -18,6 +18,7 @@ The main website can be found at <http://www.gem5.org>.
 [![Daily Tests](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml)
 [![Weekly Tests](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml)
 [![Compiler Tests](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml)
+[![codecov](https://codecov.io/gh/gem5/gem5/branch/develop/graph/badge.svg)](https://app.codecov.io/gh/gem5/gem5/tree/develop)
 
 ## Getting started
 
@@ -29,8 +30,9 @@ please see <http://www.gem5.org/documentation> and
 ## Building gem5
 
 To build gem5, you will need the following software: g++ or clang,
-Python (gem5 links in the Python interpreter), SCons, zlib, m4, and lastly
-protobuf if you want trace capture and playback support. Please see
+Python (gem5 links in the Python interpreter), SCons, zlib 1.2+, GNU m4
+1.4+, and lastly protobuf if you want trace capture and playback support.
+Please see
 <http://www.gem5.org/documentation/general_docs/building> for more details
 concerning the minimum versions of these tools.
 
@@ -80,11 +82,6 @@ discussions or ask questions. Available at
 <https://github.com/orgs/gem5/discussions>.
 * **GitHub Issues**: A GitHub Issues page for reporting bugs or requesting
 features. Available at <https://github.com/gem5/gem5/issues>.
-* **Jira Issue Tracker**: A Jira Issue Tracker for reporting bugs or requesting
-features. Available at <https://gem5.atlassian.net/>.
-* **Slack**: A Slack server with a variety of channels for the gem5 community
-to engage in a variety of discussions. Please visit
-<https://www.gem5.org/join-slack> to join.
 * **gem5-users@gem5.org**: A mailing list for users of gem5 to ask questions
 or start discussions. To join the mailing list please visit
 <https://www.gem5.org/mailing_lists>.

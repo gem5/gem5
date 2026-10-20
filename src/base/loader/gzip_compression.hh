@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,51 +35,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_BARRIER_HH__
-#define __BASE_BARRIER_HH__
+#ifndef __BASE_LOADER_GZIP_COMPRESSION_HH__
+#define __BASE_LOADER_GZIP_COMPRESSION_HH__
 
-#include <condition_variable>
+#include "base/loader/compression_file_format.hh"
 
 namespace gem5
 {
 
-class Barrier
+namespace loader
 {
-  private:
-    /// Mutex to protect access to numLeft and generation
-    std::mutex bMutex;
-    /// Condition variable for waiting on barrier
-    std::condition_variable bCond;
-    /// Number of threads we should be waiting for before completing the barrier
-    unsigned numWaiting;
-    /// Generation of this barrier
-    unsigned generation;
-    /// Number of threads remaining for the current generation
-    unsigned numLeft;
 
+class GzipCompressionFormat : public CompressionFileFormat
+{
   public:
-    Barrier(unsigned _numWaiting)
-        : numWaiting(_numWaiting), generation(0), numLeft(_numWaiting)
-    {}
+    GzipCompressionFormat();
 
-    bool
-    wait()
-    {
-        std::unique_lock<std::mutex> lock(bMutex);
-        unsigned int gen = generation;
-
-        if (--numLeft == 0) {
-            generation++;
-            numLeft = numWaiting;
-            bCond.notify_all();
-            return true;
-        }
-        while (gen == generation)
-            bCond.wait(lock);
-        return false;
-    }
+    bool matches(int fd) const override;
+    int decompress(int fd) const override;
+    const char *name() const override;
 };
 
+void registerGzipCompressionFormat();
+
+} // namespace loader
 } // namespace gem5
 
-#endif // __BASE_BARRIER_HH__
+#endif // __BASE_LOADER_GZIP_COMPRESSION_HH__

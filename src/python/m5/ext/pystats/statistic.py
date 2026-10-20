@@ -37,11 +37,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABC
+from collections.abc import (
+    Callable,
+    Iterable,
+)
 from typing import (
     Any,
-    Callable,
     Dict,
-    Iterable,
     List,
     Optional,
     Union,
@@ -57,14 +59,14 @@ class Statistic(ABC, AbstractStat):
     """
 
     value: Any
-    type: Optional[str]
-    description: Optional[str]
+    type: str | None
+    description: str | None
 
     def __init__(
         self,
         value: Any,
-        type: Optional[str] = None,
-        description: Optional[str] = None,
+        type: str | None = None,
+        description: str | None = None,
     ):
         self.value = value
         self.type = type
@@ -79,16 +81,16 @@ class Scalar(Statistic):
     A scalar Python statistic type.
     """
 
-    value: Union[float, int]
-    unit: Optional[str]
-    datatype: Optional[StorageType]
+    value: float | int
+    unit: str | None
+    datatype: StorageType | None
 
     def __init__(
         self,
-        value: Union[float, int],
-        unit: Optional[str] = None,
-        description: Optional[str] = None,
-        datatype: Optional[StorageType] = None,
+        value: float | int,
+        unit: str | None = None,
+        description: str | None = None,
+        datatype: StorageType | None = None,
     ):
         super().__init__(
             value=value,
@@ -109,9 +111,9 @@ class Vector(Statistic):
 
     def __init__(
         self,
-        value: Dict[Union[str, int, float], Scalar],
-        type: Optional[str] = None,
-        description: Optional[str] = None,
+        value: dict[str | int | float, Scalar],
+        type: str | None = None,
+        description: str | None = None,
     ):
         super().__init__(
             value=value,
@@ -119,7 +121,7 @@ class Vector(Statistic):
             description=description,
         )
 
-    def __getitem__(self, item: Union[int, str, float]) -> Scalar:
+    def __getitem__(self, item: int | str | float) -> Scalar:
         assert self.value != None
         # In the case of string, we cast strings to integers of floats if they
         # are numeric. This avoids users having to cast strings to integers.
@@ -176,9 +178,9 @@ class Vector(Statistic):
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         to_return = []
         for attr in self.value.keys():
             obj = self.value[attr]
@@ -203,13 +205,13 @@ class Vector2d(Statistic):
     A 2D vector of scalar values.
     """
 
-    value: Dict[Union[str, int, float], Vector]
+    value: dict[str | int | float, Vector]
 
     def __init__(
         self,
-        value: Dict[Union[str, int, float], Vector],
-        type: Optional[str] = None,
-        description: Optional[str] = None,
+        value: dict[str | int | float, Vector],
+        type: str | None = None,
+        description: str | None = None,
     ):
         assert (
             len({vector.size() for vector in value.values()}) == 1
@@ -250,7 +252,7 @@ class Vector2d(Statistic):
                 total += scalar.value
         return total
 
-    def __getitem__(self, index: Union[str, int, float]) -> Vector:
+    def __getitem__(self, index: str | int | float) -> Vector:
         assert self.value is not None
         # In the case of string, we cast strings to integers of floats if they
         # are numeric. This avoids users having to cast strings to integers.
@@ -263,9 +265,9 @@ class Vector2d(Statistic):
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         to_return = []
         for attr in self.value.keys():
             obj = self.value[attr]
@@ -303,29 +305,29 @@ class Distribution(Vector):
     It is assumed each bucket is of equal size.
     """
 
-    min: Union[float, int]
-    max: Union[float, int]
+    min: float | int
+    max: float | int
     num_bins: int
-    bin_size: Union[float, int]
-    sum: Optional[int]
-    sum_squared: Optional[int]
-    underflow: Optional[int]
-    overflow: Optional[int]
-    logs: Optional[float]
+    bin_size: float | int
+    sum: int | None
+    sum_squared: int | None
+    underflow: int | None
+    overflow: int | None
+    logs: float | None
 
     def __init__(
         self,
-        value: Dict[Union[int, float], Scalar],
-        min: Union[float, int],
-        max: Union[float, int],
+        value: dict[int | float, Scalar],
+        min: float | int,
+        max: float | int,
         num_bins: int,
-        bin_size: Union[float, int],
-        sum: Optional[int] = None,
-        sum_squared: Optional[int] = None,
-        underflow: Optional[int] = None,
-        overflow: Optional[int] = None,
-        logs: Optional[float] = None,
-        description: Optional[str] = None,
+        bin_size: float | int,
+        sum: int | None = None,
+        sum_squared: int | None = None,
+        underflow: int | None = None,
+        overflow: int | None = None,
+        logs: float | None = None,
+        description: str | None = None,
     ):
         super().__init__(
             value=value,
@@ -358,8 +360,8 @@ class SparseHist(Vector):
 
     def __init__(
         self,
-        value: Dict[float, Scalar],
-        description: Optional[str] = None,
+        value: dict[float, Scalar],
+        description: str | None = None,
     ):
         super().__init__(
             value=value,

@@ -52,7 +52,7 @@ class L2Cache(Cache):
         tgts_per_mshr: int = 12,
         writeback_clean: bool = False,
         clusivity: Clusivity = "mostly_incl",
-        PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
+        PrefetcherCls: type[BasePrefetcher] = StridePrefetcher,
     ):
         super().__init__()
         self.size = size

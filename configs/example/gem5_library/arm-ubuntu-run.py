@@ -57,6 +57,7 @@ from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_handler import (
     ExitHandler,
+    ExitHypercall,
     KernelBootedExitHandler,
 )
 from gem5.simulate.simulator import Simulator
@@ -107,7 +108,7 @@ board.set_workload(workload)
 # want to modify/override their default behaviors.
 
 # You can inherit from either the class that handles a certain hypercall by
-# default, or inherit directly from ExitHandler and specify a hypercall number.
+# default, or inherit directly from ExitHandler and specify an ExitHypercall.
 # See src/python/gem5/simulate/exit_handler.py for more information on which
 # handlers map to which hypercalls, and what the default behaviors are.
 
@@ -122,7 +123,9 @@ class CustomKernelBootedExitHandler(KernelBootedExitHandler):
         return False
 
 
-class CustomAfterBootExitHandler(ExitHandler, hypercall_num=2):
+class CustomAfterBootExitHandler(
+    ExitHandler, hypercall=ExitHypercall.AFTER_BOOT
+):
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         print("Second exit: Started `after_boot.sh` script")
@@ -132,7 +135,9 @@ class CustomAfterBootExitHandler(ExitHandler, hypercall_num=2):
         return False
 
 
-class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
+class AfterBootScriptExitHandler(
+    ExitHandler, hypercall=ExitHypercall.AFTER_BOOT_SCRIPT
+):
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         print(f"Third exit: {self.get_handler_description()}")

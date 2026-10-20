@@ -248,6 +248,10 @@ class SparcLinux : public Linux, public OpenFlagTable<SparcLinux>
         if (stack)
             ctc->setReg(SparcISA::StackPointerReg, stack);
 
+        if (flags & TGT_CLONE_SETTLS) {
+            ctc->setReg(SparcISA::int_reg::G7, tls);
+        }
+
         // Set these extra values. Since "clone" doesn't return two values,
         // we can set these and they won't be clobbered by the syscall ABI.
         ptc->setReg(SparcISA::SyscallPseudoReturnReg, (RegVal)0);

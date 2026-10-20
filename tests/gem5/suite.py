@@ -64,7 +64,7 @@ def gem5_verify_config(
     config_args,
     verifiers,
     gem5_args=tuple(),
-    fixtures=[],
+    fixtures=None,
     valid_isas=constants.supported_isas,
     valid_variants=constants.supported_variants,
     length=constants.supported_lengths[0],
@@ -100,6 +100,7 @@ def gem5_verify_config(
     :param uses_kvm: States if this verifier uses KVM. If so, the "kvm" tag
         will be included.
     """
+    fixtures = [] if fixtures is None else fixtures
     fixtures = list(fixtures)
     testsuites = []
 

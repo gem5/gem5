@@ -225,10 +225,11 @@ def create_system(
     full_system,
     system,
     piobus=None,
-    dma_ports=[],
+    dma_ports=None,
     bootmem=None,
     cpus=None,
 ):
+    dma_ports = [] if dma_ports is None else dma_ports
     system.ruby = RubySystem()
     ruby = system.ruby
 

@@ -59,7 +59,7 @@ def parse_args():
 
 
 def write_header_file(
-    hh: str, name: str, desc: str, fmt: bool, components: List[str]
+    hh: str, name: str, desc: str, fmt: bool, components: list[str]
 ):
     """
     Generates the C++ header file for a debug flag.

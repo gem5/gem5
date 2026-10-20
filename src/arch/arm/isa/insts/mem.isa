@@ -59,7 +59,7 @@ let {{
             memFlagsCasted = map(
                 lambda x: f'static_cast<unsigned>({x})', memFlags
             )
-            eaCode += '\n    unsigned memAccessFlags = '
+            eaCode += '\n    Request::Flags memAccessFlags = '
             eaCode += ('|'.join(memFlagsCasted) + ';')
 
             codeBlobs["ea_code"] = eaCode

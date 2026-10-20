@@ -83,3 +83,25 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
 )
+
+gem5_verify_config(
+    name="chi-tlm-snp-shared",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
+    config_args=[
+        joinpath(
+            absdirpath(__file__),
+            "configs",
+            "suites",
+            "snp_shared_unit.py",
+        ),
+        "--num-cpus",
+        "2",
+        "--abs-max-tick",
+        "1000000",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)

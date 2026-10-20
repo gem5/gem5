@@ -77,7 +77,7 @@ class BaseCPUProcessor(AbstractProcessor):
 
     def __init__(
         self,
-        cores: List[BaseCPUCore],
+        cores: list[BaseCPUCore],
         clk_freq: str,
     ):
         """

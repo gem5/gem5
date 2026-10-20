@@ -45,7 +45,7 @@ from typing import Type
 from code_formatter import code_formatter
 
 
-def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
+def write_cc_file(sim_object: type, use_python: bool, param_cc: str):
     """Write the parameter C++ source file for a SimObject.
 
     This function generates a C++ source file that defines the
@@ -58,7 +58,7 @@ def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
     """
 
     # Need to import after the importer is installed
-    from m5.objects.SimObject import PyBindProperty
+    from m5.SimObject import PyBindProperty
 
     code = code_formatter()
 

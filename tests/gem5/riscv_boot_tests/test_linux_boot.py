@@ -41,7 +41,7 @@ def test_boot(
     cache_type: str,
     memory_class: str,
     length: str,
-    to_tick: Optional[int] = None,
+    to_tick: int | None = None,
 ):
     name = "{}-cpu_{}-cores_{}_{}_riscv-boot-test".format(
         cpu, str(num_cpus), cache_type, memory_class
@@ -184,9 +184,9 @@ test_boot(
 
 #### The long (Nightly) tests ####
 
-# Due to Nightly test timeout issues, outlined here:
-# https://gem5.atlassian.net/browse/GEM5-1120, these tests have been disabled
-# until the exact error causing the Nightly tests to timeout is established.
+# Due to Nightly test timeout issues, these tests have been disabled until the
+# exact error causing the Nightly tests to timeout is established.
+# https://github.com/gem5/gem5/issues/3440
 
 # test_boot(
 #     cpu="atomic",

@@ -31,7 +31,7 @@ from typing import Optional
 _gem5_ssl_context = None
 
 
-def get_proxy_context() -> Optional[ssl.SSLContext]:
+def get_proxy_context() -> ssl.SSLContext | None:
     """
     This function returns a SSL context for https connection with SOCKS proxy
     support. It uses the environment variable GEM5_USE_PROXY to determine

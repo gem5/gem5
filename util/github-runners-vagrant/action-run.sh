@@ -26,70 +26,104 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-set -x
+# This loop owns one dedicated VM. A drain finishes the current job first.
+set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")"
+pat="${PERSONAL_ACCESS_TOKEN:-${1:-}}"
+unset PERSONAL_ACCESS_TOKEN
+export GITHUB_ORG="${GITHUB_ORG:-${2:-}}"
+LABELS="${RUNNER_LABELS:-${3:-}}"
+state_dir="$PWD/runner-state"
+mkdir -p "$state_dir"
+exec 9>"$state_dir/lock"
+flock -n 9 || exit 0
 
-# No argument checking here, this is run directly in the Vagrantfile.
-PERSONAL_ACCESS_TOKEN="$1"
-GITHUB_ORG="$2"
-LABELS="$3"
-WORK_DIR="_work"
-
-# This checks there isn't another instance of this script running.
-# If this script is run twice then more than one runner can be active in the
-# VM and this causes problems.
-if [[ `pgrep -f $0` != "$$" ]]; then
-    echo "Another instance of shell already exist! Exiting"
-    exit
+state() {
+    printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee "$state_dir/status.tmp"
+    mv "$state_dir/status.tmp" "$state_dir/status"
+}
+quarantine() {
+    state "quarantined: $*"
+    touch "$state_dir/quarantine"
+    exit 78
+}
+trap 'quarantine "controller failed at line $LINENO"' ERR
+if [[ -e "$state_dir/quarantine" ]]; then
+    state "quarantined: clear runner-state/quarantine after repair"
+    exit 78
 fi
+[[ -n "$pat" && -n "$GITHUB_ORG" ]] || \
+    quarantine "missing registration configuration"
+[[ -x ./config.sh && -x ./run.sh ]] || \
+    quarantine "runner package missing; run provision_runner.sh"
 
-# If the tarball isn't here then download it and extract it.
-# Note: we don't delete the tarball, we use it to check if we've already
-# downloaded it and extracted it.
-if [ ! -f "actions-runner-linux-x64-2.304.0.tar.gz" ]; then
-    wget https://github.com/actions/runner/releases/download/v2.304.0/actions-runner-linux-x64-2.304.0.tar.gz
-    tar xzf ./actions-runner-linux-x64-2.304.0.tar.gz
-fi
+api_token() {
+    curl --fail --silent --show-error --retry 3 --connect-timeout 15 \
+        --max-time 90 -X POST \
+        -H "Accept: application/vnd.github+json" \
+        -H "Authorization: Bearer $pat" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "https://api.github.com/orgs/$GITHUB_ORG/actions/runners/$1-token" |
+        jq -er '.token | select(type == "string" and length > 0)'
+}
 
-# An infinite loop to re-configure and re-run the runner after each job.
+healthy() {
+    local attempt
+    for attempt in 1 2 3; do
+        if ./runner-health.sh; then
+            return 0
+        fi
+        state "health check failed (attempt $attempt of 3)"
+        [[ "$attempt" == 3 ]] || sleep 15
+    done
+    return 1
+}
+
+failures=0
 while true; do
-    # 1. Obtain the registration token.
-    token_curl=$(curl -L \
-    		      -X POST \
-    		      -H "Accept: application/vnd.github+json" \
-    		      -H "Authorization: Bearer ${PERSONAL_ACCESS_TOKEN}" \
-    		      -H "X-GitHub-Api-Version: 2022-11-28" \
-    		      https://api.github.com/orgs/${GITHUB_ORG}/actions/runners/registration-token)
-
-    token=$(echo ${token_curl} | jq -r '.token')
-
-    if [[ "${token}" == "null" ]];
-    then
-        # If "null" is returned, this can be because the GitHub API rate limit
-        # has been exceeded. To be safe we wait for 15 mintues before
-        # continuing.
-        sleep 900 # 15 minutes.
+    if [[ -e "$state_dir/drain" ]]; then
+        state drained
+        exit 0
+    fi
+    state checking
+    healthy || quarantine "pre-registration health check failed"
+    if [[ -f .runner ]]; then
+        removal_token=$(api_token remove) || \
+            quarantine "could not obtain removal token"
+        ./config.sh remove --token "$removal_token" || \
+            quarantine "could not remove previous registration"
+        unset removal_token
+    fi
+    # Transient API failures leave the VM offline and retry with a delay.
+    if ! registration_token=$(api_token registration); then
+        state "registration API unavailable; retrying in 180 seconds"
+        sleep 180
         continue
     fi
-
-    # 2. Configure the runner.
-    ./config.sh --unattended \
-                --url https://github.com/${GITHUB_ORG} \
-                --ephemeral \
-                --replace \
-                --work "${WORK_DIR}" \
-                --name "$(hostname)" \
-                --labels "${LABELS}" \
-                --token ${token}
-
-    # 3. Run the runner.
-    ./run.sh # This will complete with the runner being destroyed
-
-    # 4. Cleanup the machine
-    sudo rm -rf "${WORK_DIR}"
-    docker system prune --force --volumes --all
-
-    # 5. Sleep for a few minutes
-    #    GitHub has a api rate limit. This sleep ensures we dont ping GitHub
-    #    too frequently.
-    sleep 180 # 3 minutes.
+    if [[ -e "$state_dir/drain" ]]; then
+        state drained
+        exit 0
+    fi
+    args=(--unattended --url "https://github.com/$GITHUB_ORG" --ephemeral
+          --replace --work _work --name "$(hostname)")
+    [[ -z "$LABELS" ]] || args+=(--labels "$LABELS")
+    ./config.sh "${args[@]}" --token "$registration_token" || \
+        quarantine "runner configuration failed"
+    unset registration_token
+    state listening
+    result=0
+    ./run.sh || result=$?
+    state "cleaning; listener exit=$result"
+    timeout 900 ./runner-cleanup.py || quarantine "post-job cleanup failed"
+    healthy || quarantine "post-cleanup health check failed"
+    if (( result != 0 )); then
+        failures=$((failures + 1))
+        (( failures < 3 )) || quarantine "three consecutive listener failures"
+    else
+        failures=0
+    fi
+    state ready
+    if (( result != 0 )) && [[ ! -e "$state_dir/drain" ]]; then
+        sleep 180
+    fi
 done

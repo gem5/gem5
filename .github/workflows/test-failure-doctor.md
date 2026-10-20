@@ -11,6 +11,9 @@ on:
   bots: ["github-actions[bot]"]
   roles: all
 
+concurrency:
+  group: "test-failure-doctor-${{ github.event.inputs.failed_workflow_id }}"
+
 permissions: read-all
 
 network: defaults
@@ -44,7 +47,10 @@ tools:
     # `default` expands to context, repos, issues, pull_requests and users;
     # `actions` allows for access to workflow logs and artifacts
     toolsets: [default, actions]
-    lockdown: false
+    # Setting min-integrity to `unapproved` allows this workflow to run on PRs
+    # by first time contributors and contributors. The default for public repos
+    # is `approved`, which is more strict
+    min-integrity: unapproved
 timeout-minutes: 20
 
 engine:
@@ -76,11 +82,12 @@ the `noop` tool.
 ### Phase 2: Deep Log Analysis
 
 1. **Retrieve Logs**: Use `get_job_logs` with `failed_only=true` to get logs
-from all failed jobs. Additionally, look in the `Upload results` step(s) of the
-failed job(s) and download the artifact. This artifact contains logs for the
-simulations that the tests run. In particular, look for the files named
-`simerr.txt` and `simout.txt`, which will be located under a filepath with the
-following pattern: `weekly-tests-run-*/SuiteUID-*/TestUID-*/`.
+from all failed jobs. Additionally, if the workflow is a CI, Daily, or Weekly
+test, look in the `Upload results` step of the failed job(s) and download the
+artifact. This artifact contains logs for the simulations that the tests run. In
+particular, look for the files named `simerr.txt` and `simout.txt`, which will
+be located under a filepath with the following pattern:
+`(ci|daily|weekly)-tests-run-*/SuiteUID-*/TestUID-*/`.
 
 2. **Pattern Recognition**: Analyze logs for:
    - Error messages and stack traces
@@ -195,12 +202,12 @@ You can see this command in GitHub by clicking on the failed `clang-format-check
 
 If there were failure types other than the clang-format-check, print the message for the clang-format-check first, then report the other test failures in the same comment.
 
-When reporting test failures other than the `clang-format-check`, always print the name of the failed job before the analysis in the `Root cause analysis` section. For example, if the `gpu-tests` and `quick-tests (gem5/cpu_tests)` jobs failed, you should format the analysis as follows:
+When reporting test failures other than the `clang-format-check`, always print the name of the failed job before the analysis in the `Root cause analysis` section. For example, if the `quick-tests (gem5/gpu)` and `quick-tests (gem5/cpu_tests)` jobs failed, you should format the analysis as follows:
 
 ```markdown
 ## Root cause analysis
 
-- `gpu-tests`: [analysis of why the gpu-tests failed]
+- `quick-tests (gem5/gpu)`: [analysis of why the GPU tests failed]
 
 - `quick-tests (gem5/cpu-tests)`: [analysis of why the gem5/cpu-tests failed]
 ```

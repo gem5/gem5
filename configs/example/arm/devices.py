@@ -150,8 +150,8 @@ class ArmCpuCluster(CpuCluster):
     def addPMUs(
         self,
         ints,
-        events=[],
-        stat_counters=[],
+        events=None,
+        stat_counters=None,
         exit_sim_on_control=False,
         exit_sim_on_interrupt=False,
     ):
@@ -174,6 +174,9 @@ class ArmCpuCluster(CpuCluster):
         :type exit_on_control: bool
 
         """
+        events = [] if events is None else events
+        stat_counters = [] if stat_counters is None else stat_counters
+
         # If ALL option has been passed, simply enable everything
         stat_counters = (
             EventTypeId.vals if "ALL" in stat_counters else stat_counters

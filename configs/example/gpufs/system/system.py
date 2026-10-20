@@ -37,6 +37,10 @@ from example.gpufs.Disjoint_VIPER import *
 from ruby import Ruby
 from system.amdgpu import *
 
+from m5.objects import (
+    X86ACPIDSDT,
+    X86ACPIFADT,
+)
 from m5.util import panic
 
 
@@ -54,6 +58,8 @@ def makeGpuFSSystem(args):
         "drm_kms_helper.fbdev_emulation=0",
         "modprobe.blacklist=amdgpu",
         "modprobe.blacklist=psmouse",
+        # Tell linux to use MP table for PCI IRQs and not ACPI.
+        "pci=noacpi",
     ]
     cmdline = " ".join(boot_options)
 
@@ -72,6 +78,13 @@ def makeGpuFSSystem(args):
         test_mem_mode, args.num_cpus, bm, True, cmdline=cmdline
     )
     system.workload.object_file = binary(args.kernel)
+
+    # FADT pointing at a minimal DSDT. This prevents Linux from disabling
+    # ACPI which is needed by the WMI module which is a dependency for
+    # the amdgpu module.
+    fadt = X86ACPIFADT(dsdt=X86ACPIDSDT(), oem_id="gem5")
+    system.workload.acpi_description_table_pointer.rsdt.entries.append(fadt)
+    system.workload.acpi_description_table_pointer.xsdt.entries.append(fadt)
 
     # Set the cache line size for the entire system.
     system.cache_line_size = args.cacheline_size
