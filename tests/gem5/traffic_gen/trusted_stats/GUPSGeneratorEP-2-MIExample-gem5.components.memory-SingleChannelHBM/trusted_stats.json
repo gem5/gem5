@@ -2,7 +2,7 @@
     "type": "SimObject",
     "time_conversion": null,
     "simulated_begin_time": 0,
-    "simulated_end_time": 80997001,
+    "simulated_end_time": 65333001,
     "name": "processor",
     "cores": {
         "type": "SimObjectVector",
@@ -39,7 +39,7 @@
                         "datatype": "f64"
                     },
                     "totalReadLat": {
-                        "value": 678413500.0,
+                        "value": 495442000.0,
                         "type": "Scalar",
                         "description": "Total latency of read requests.",
                         "unit": "Tick",
@@ -60,7 +60,7 @@
                         "datatype": "f64"
                     },
                     "totalWriteLat": {
-                        "value": 689339000.0,
+                        "value": 607132000.0,
                         "type": "Scalar",
                         "description": "Total latency of write requests.",
                         "unit": "Tick",
@@ -308,7 +308,7 @@
                     "time_conversion": null,
                     "name": "generator",
                     "totalUpdates": {
-                        "value": 992.0,
+                        "value": 925.0,
                         "type": "Scalar",
                         "description":
                             "Total number of updates the generator made in the memory",
@@ -330,28 +330,28 @@
                         "datatype": "f64"
                     },
                     "totalReadLat": {
-                        "value": 688286500.0,
+                        "value": 538799000.0,
                         "type": "Scalar",
                         "description": "Total latency of read requests.",
                         "unit": "Tick",
                         "datatype": "f64"
                     },
                     "totalWrites": {
-                        "value": 992.0,
+                        "value": 925.0,
                         "type": "Scalar",
                         "description": "Total number of write requests",
                         "unit": "Count",
                         "datatype": "f64"
                     },
                     "totalBytesWritten": {
-                        "value": 7936.0,
+                        "value": 7400.0,
                         "type": "Scalar",
                         "description": "Total number of bytes written",
                         "unit": "Byte",
                         "datatype": "f64"
                     },
                     "totalWriteLat": {
-                        "value": 680532992.0,
+                        "value": 565369925.0,
                         "type": "Scalar",
                         "description": "Total latency of write requests.",
                         "unit": "Tick",
