@@ -5812,6 +5812,81 @@ decode QUADRANT default Unknown::unknown() {
                         0x1: ebreak({{
                             return executeEBreakOrSemihosting(xc);
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                        0x0d: wrs_nto({{
+                            if (RD != 0 || RS1 != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "wrs requires rd = rs1 = x0", machInst);
+                            }
+                            auto tc = xc->tcBase();
+                            auto cpu = tc->getCpuPtr();
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
+                            if (!isa->reportsExtension("Zawrs")) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "Zawrs is not enabled", machInst);
+                            }
+                            auto ic = dynamic_cast<RiscvISA::Interrupts*>(
+                                cpu->getInterruptController(tc->threadId()));
+                            panic_if(!ic, "Invalid Interrupt Controller.");
+                            // Apply the WFI resume-on-pending interrupt rules.
+                            bool pending = (isa->resumeOnPending() ?
+                                ic->readIP() :
+                                (ic->readIP() & ic->readIE())) != 0 ||
+                                xc->readMiscReg(MISCREG_NMIP) != 0;
+                            if (isa->hasLoadReservation(tc->contextId()) &&
+                                !pending) {
+                                // Apply WRS.NTO timeout rules for TW & VTW.
+                                MISA misa = xc->readMiscReg(MISCREG_ISA);
+                                STATUS status =
+                                    xc->readMiscReg(MISCREG_STATUS);
+                                HSTATUS hstatus =
+                                    xc->readMiscReg(MISCREG_HSTATUS);
+                                auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
+                                if (pm != PRV_M && status.tw == 1) {
+                                    return std::make_shared<IllegalInstFault>(
+                                        "wrs.nto with TW enabled", machInst);
+                                } else if (misa.rvh &&
+                                           virtualizationEnabled(xc) &&
+                                           hstatus.vtw == 1) {
+                                    return std::make_shared<VirtualInstFault>(
+                                        "wrs.nto with VTW enabled", machInst);
+                                }
+                                isa->setWrsWaiting(true);
+                                tc->quiesceTick(curTick() +
+                                    cpu->cyclesToTicks(Cycles(1000)));
+                            }
+                        }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
+                            IsSquashAfter, No_OpClass);
+                        0x1d: wrs_sto({{
+                            if (RD != 0 || RS1 != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "wrs requires rd = rs1 = x0", machInst);
+                            }
+                            auto tc = xc->tcBase();
+                            auto cpu = tc->getCpuPtr();
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
+                            if (!isa->reportsExtension("Zawrs")) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "Zawrs is not enabled", machInst);
+                            }
+                            auto ic = dynamic_cast<RiscvISA::Interrupts*>(
+                                cpu->getInterruptController(tc->threadId()));
+                            panic_if(!ic, "Invalid Interrupt Controller.");
+                            // Same rules as WFI for a pending interrupt
+                            bool pending = (isa->resumeOnPending() ?
+                                ic->readIP() :
+                                (ic->readIP() & ic->readIE())) != 0 ||
+                                xc->readMiscReg(MISCREG_NMIP) != 0;
+                            if (isa->hasLoadReservation(tc->contextId()) &&
+                                !pending) {
+                                isa->setWrsWaiting(true);
+                                tc->quiesceTick(curTick() +
+                                    cpu->cyclesToTicks(Cycles(100)));
+                            }
+                        }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
+                            IsSquashAfter, No_OpClass);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
