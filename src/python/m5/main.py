@@ -64,10 +64,13 @@ def _stats_help(option, opt, value, parser):
     sys.exit(0)
 
 
-def parse_options():
-    from .options import OptionParser
+def get_option_parser(options_class=None):
+    """Build the CLI parser without reading argv or importing embedded m5."""
+    if options_class is None:
+        from .options import OptionParser
 
-    options = OptionParser(usage=usage, description=brief_copyright)
+        options_class = OptionParser
+    options = options_class(usage=usage, description=brief_copyright)
     option = options.add_option
     group = options.set_group
 
@@ -339,6 +342,11 @@ def parse_options():
         help="List all built-in SimObjects, their params and default values",
     )
 
+    return options
+
+
+def parse_options():
+    options = get_option_parser()
     arguments = options.parse_args()
     return options, arguments
 
