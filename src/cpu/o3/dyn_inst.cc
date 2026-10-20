@@ -344,6 +344,10 @@ DynInst::setSquashed()
 {
     status.set(Squashed);
 
+    // Drop ISA-side FoF (or other) transient state for this dynamic inst.
+    if (cpu)
+        tcBase()->getIsaPtr()->clearTransientInstState(seqNum);
+
     if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone())
         return;
 
