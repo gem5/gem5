@@ -275,6 +275,7 @@ def define_constants(constants):
     constants.host_arm_tag = "aarch64"
 
     constants.kvm_tag = "kvm"
+    constants.pin_tag = "pin"
 
     constants.supported_tags = {
         constants.isa_tag_type: (
