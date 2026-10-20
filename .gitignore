@@ -19,6 +19,7 @@ m5out
 /util/m5/*.a
 /util/m5/m5
 /util/packet_pb2.py
+/util/etrace_pb2.py
 /util/tap/*.d
 /util/tap/*.o
 /util/tap/m5tap
