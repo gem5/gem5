@@ -43,6 +43,7 @@ SimObject('Cache.py', sim_objects=[
     'WriteAllocator', 'BaseCache', 'Cache', 'NoncoherentCache'],
     enums=['Clusivity'])
 
+Source('access_trace.cc')
 Source('base.cc')
 Source('cache.cc')
 Source('cache_blk.cc')

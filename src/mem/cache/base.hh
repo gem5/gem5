@@ -97,6 +97,7 @@ class QueueEntry;
 class BankPorts;
 class RetentionManager;
 class ReuseTracker;
+class AccessTrace;
 class WriteQueueEntry;
 struct BaseCacheParams;
 
@@ -369,6 +370,13 @@ class BaseCache : public ClockedObject
     /** Reuse statistics (reuse_stats), simulator-only; none if off. */
     friend class ReuseTracker;
     std::unique_ptr<ReuseTracker> reuse;
+
+    /** access_trace: text trace of accesses, fills and evictions (stats
+     *  only; nullptr: off). */
+    std::unique_ptr<AccessTrace> accessTrace;
+
+    /** access_trace: one access from above (after access()). */
+    void traceAccess(PacketPtr pkt, bool satisfied, bool was_present);
 
     /**
      * Data-array bank ports. Only exists when data_read_ports and

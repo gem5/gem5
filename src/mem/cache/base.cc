@@ -53,6 +53,7 @@
 #include "debug/CacheRepl.hh"
 #include "debug/CacheVerbose.hh"
 #include "debug/HWPrefetch.hh"
+#include "mem/cache/access_trace.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/mshr_queue.hh"
@@ -155,6 +156,33 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (p.reuse_stats || p.reuse_idle_gaps || p.reuse_fill_stats)
         reuse = std::make_unique<ReuseTracker>(*this, p.reuse_idle_gaps,
                                                p.reuse_fill_stats);
+
+    if (p.access_trace)
+        accessTrace = std::make_unique<AccessTrace>(name());
+}
+
+void
+BaseCache::traceAccess(PacketPtr pkt, bool satisfied, bool was_present)
+{
+    const char *type;
+    bool hit = was_present;
+    if (pkt->isDemand()) {
+        type = pkt->needsWritable() ? "W" : "R";
+        hit = satisfied;
+    } else if (pkt->isUpgrade()) {
+        type = "U";
+    } else if (pkt->cmd == MemCmd::WritebackDirty ||
+               pkt->cmd == MemCmd::WritebackClean ||
+               pkt->cmd == MemCmd::WriteClean) {
+        type = "WB";
+    } else if (pkt->cmd == MemCmd::CleanEvict) {
+        type = "CE";
+    } else {
+        return;
+    }
+    const Addr addr = pkt->getBlockAddr(blkSize);
+    accessTrace->access(curTick(), tags->getSetIndex({addr,
+                        pkt->isSecure()}), addr, type, hit);
 }
 
 BaseCache::~BaseCache()
@@ -520,7 +548,12 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         PacketList writebacks;
         // Note that lat is passed by reference here. The function
         // access() will set the lat value.
+        const bool trace = accessTrace && accessTrace->on();
+        const bool was_present = trace &&
+            tags->findBlock({pkt->getAddr(), pkt->isSecure()});
         satisfied = access(pkt, blk, lat, writebacks);
+        if (trace)
+            traceAccess(pkt, satisfied, was_present);
 
         // After the evicted blocks are selected, they must be forwarded
         // to the write buffer to ensure they logically precede anything
@@ -1833,6 +1866,11 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     }
     if (reuse)
         reuse->onAllocate(victim, pkt->isResponse());
+    if (accessTrace && accessTrace->on()) {
+        accessTrace->event(curTick(), victim->getSet(),
+                           regenerateBlkAddr(victim),
+                           pkt->isResponse() ? "FILL" : "WBFILL");
+    }
 
     // If using a compressor, set compression data. This must be done after
     // insertion, as the compression bit may be set.
@@ -1880,6 +1918,11 @@ BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
 {
     if (retention)
         retention->onEvict(blk);
+    if (accessTrace && accessTrace->on() && blk != tempBlock &&
+        blk->isValid()) {
+        accessTrace->event(curTick(), blk->getSet(), regenerateBlkAddr(blk),
+                           "EVICT");
+    }
 
     const unsigned set = blk->getSet();
     PacketPtr pkt = evictBlock(blk);

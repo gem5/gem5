@@ -242,6 +242,13 @@ class BaseCache(ClockedObject):
         "are below the demand accesses >> window_down_shift",
     )
 
+    access_trace = Param.Bool(
+        False,
+        "Text trace of the accesses from above, fills and evictions, from "
+        "the first stats reset on, to <cache>.access_trace.txt.gz (stats "
+        "only)",
+    )
+
     window_n_min = Param.Unsigned(
         1,
         "Window mode tcp / amc: smallest N (shrinks stop there); the tcp "
