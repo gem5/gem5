@@ -29,6 +29,7 @@ safe-outputs:
     target: "*"
   update-issue:
   noop:
+    report-as-issue: false
   report-failure-as-issue: false
   jobs:
     rerun-failed-jobs:
