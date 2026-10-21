@@ -28,6 +28,57 @@ from m5.params import *
 from m5.SimObject import SimObject
 
 
+# How the LSQ handles an access whose policy asks for more entries than
+# its instruction reserved at dispatch:
+#   Bound: the reserved entries are an upper bound; the access is clamped.
+#   Overcommit: the access occupies the entries it asks for, which may
+#       temporarily exceed the size of the queue.
+class LSQOverflowMode(ScopedEnum):
+    vals = ["Bound", "Overcommit"]
+
+
+class LSQOccupancyPolicy(SimObject):
+    type = "LSQOccupancyPolicy"
+    abstract = True
+    cxx_class = "gem5::o3::LSQOccupancyPolicy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+
+class ConstantOccupancy(LSQOccupancyPolicy):
+    type = "ConstantOccupancy"
+    cxx_class = "gem5::o3::ConstantOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    entries = Param.Unsigned(1, "LSQ entries occupied by each access")
+
+
+class PerSegmentOccupancy(LSQOccupancyPolicy):
+    type = "PerSegmentOccupancy"
+    cxx_class = "gem5::o3::PerSegmentOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+
+class PerBlockOccupancy(LSQOccupancyPolicy):
+    type = "PerBlockOccupancy"
+    cxx_class = "gem5::o3::PerBlockOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    blockSize = Param.MemorySize("16B", "Size of the aligned blocks")
+    coalesce = Param.Bool(
+        True, "Count a block touched by several segments only once"
+    )
+
+
+class PerCacheLineOccupancy(LSQOccupancyPolicy):
+    type = "PerCacheLineOccupancy"
+    cxx_class = "gem5::o3::PerCacheLineOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    coalesce = Param.Bool(
+        True, "Count a cache line touched by several segments only once"
+    )
+
+
 # LSQ occupancy of the instructions of some op classes. Whether an
 # instruction uses the LQ or the SQ depends on the instruction, not on its op
 # class: atomics of a load op class, such as RISC-V AMOs, use the SQ. So a
@@ -42,6 +93,11 @@ class LSQOpDesc(SimObject):
     opClasses = VectorParam.OpClass("Op classes this description applies to")
     entries = Param.Unsigned(
         1,
-        "LSQ entries occupied by each instruction of these op classes; at "
-        "most the entries per thread of the queue it uses",
+        "LSQ entries reserved at dispatch by each instruction of these op "
+        "classes; at most the entries per thread of the queue it uses",
+    )
+    policy = Param.LSQOccupancyPolicy(
+        NULL,
+        "Policy computing the entries occupied once the access is known; "
+        "without one, instructions keep the entries reserved at dispatch",
     )
