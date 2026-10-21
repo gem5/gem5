@@ -1157,6 +1157,18 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
     // assert(!pkt->needsWritable() || blk->isSet(CacheBlk::WritableBit));
     assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
 
+    // Compressed data is only updated on writebacks (see
+    // updateCompressionData()), so writes and atomics satisfied here leave
+    // the block's compressed size and co-allocation state unchanged
+    if (compressor && pkt->isWrite() && blk != tempBlock) {
+        warn_once("%s: compressed cache directly satisfied a write or "
+                  "atomic request (%s). The block is not recompressed, so "
+                  "its compressed size may be stale. Cache compression is "
+                  "only supported in caches whose data is updated through "
+                  "writebacks (e.g., not first-level caches).",
+                  name(), pkt->cmdString());
+    }
+
     // Check RMW operations first since both isRead() and
     // isWrite() will be true for them
     if (pkt->cmd == MemCmd::SwapReq) {
