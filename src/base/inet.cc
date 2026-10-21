@@ -57,21 +57,51 @@ namespace gem5
 namespace networking
 {
 
+namespace
+{
+
+int
+ip_cksum_add(const void *buf, size_t len, int cksum)
+{
+    uint16_t *sp = (uint16_t *)buf;
+    int sn = len / 2;
+
+    while (sn--) {
+        cksum += *sp++;
+    }
+
+    if (len & 1) {
+        cksum += htons(*(uint8_t *)sp << 8);
+    }
+
+    return cksum;
+}
+
+uint16_t
+ip_cksum_carry(int cksum)
+{
+    while (cksum >> 16) {
+        cksum = (cksum & 0xffff) + (cksum >> 16);
+    }
+
+    return (~(uint16_t)cksum);
+}
+
+} // anonymous namespace
+
 EthAddr::EthAddr()
 {
-    std::memset(data, 0, ETH_ADDR_LEN);
+    std::memset(ether_addr_octet, 0, ETHER_ADDR_LEN);
 }
 
-EthAddr::EthAddr(const uint8_t ea[ETH_ADDR_LEN])
+EthAddr::EthAddr(const uint8_t ea[ETHER_ADDR_LEN])
 {
-    for (int i = 0; i < ETH_ADDR_LEN; ++i)
-        data[i] = ea[i];
+    std::memcpy(ether_addr_octet, ea, ETHER_ADDR_LEN);
 }
 
-EthAddr::EthAddr(const eth_addr &ea)
+EthAddr::EthAddr(const ether_addr &ea)
 {
-    for (int i = 0; i < ETH_ADDR_LEN; ++i)
-        data[i] = ea.data[i];
+    std::memcpy(ether_addr_octet, ea.ether_addr_octet, ETHER_ADDR_LEN);
 }
 
 EthAddr::EthAddr(const std::string &addr)
@@ -80,9 +110,9 @@ EthAddr::EthAddr(const std::string &addr)
 }
 
 const EthAddr &
-EthAddr::operator=(const eth_addr &ea)
+EthAddr::operator=(const ether_addr &ea)
 {
-    *data = *ea.data;
+    std::memcpy(ether_addr_octet, ea.ether_addr_octet, ETHER_ADDR_LEN);
     return *this;
 }
 
@@ -96,22 +126,22 @@ EthAddr::operator=(const std::string &addr)
 void
 EthAddr::parse(const std::string &addr)
 {
-    // the hack below is to make sure that ETH_ADDR_LEN is 6 otherwise
+    // the hack below is to make sure that ETHER_ADDR_LEN is 6 otherwise
     // the sscanf function won't work.
-    int bytes[ETH_ADDR_LEN == 6 ? ETH_ADDR_LEN : -1];
+    int bytes[ETHER_ADDR_LEN == 6 ? ETHER_ADDR_LEN : -1];
     if (sscanf(addr.c_str(), "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1],
-               &bytes[2], &bytes[3], &bytes[4], &bytes[5]) != ETH_ADDR_LEN) {
-        std::memset(data, 0xff, ETH_ADDR_LEN);
+               &bytes[2], &bytes[3], &bytes[4], &bytes[5]) != ETHER_ADDR_LEN) {
+        std::memset(ether_addr_octet, 0xff, ETHER_ADDR_LEN);
         return;
     }
 
-    for (int i = 0; i < ETH_ADDR_LEN; ++i) {
+    for (int i = 0; i < ETHER_ADDR_LEN; ++i) {
         if (bytes[i] & ~0xff) {
-            std::memset(data, 0xff, ETH_ADDR_LEN);
+            std::memset(ether_addr_octet, 0xff, ETHER_ADDR_LEN);
             return;
         }
 
-        data[i] = bytes[i];
+        ether_addr_octet[i] = bytes[i];
     }
 }
 
@@ -126,7 +156,7 @@ EthAddr::string() const
 bool
 operator==(const EthAddr &left, const EthAddr &right)
 {
-    return !std::memcmp(left.bytes(), right.bytes(), ETH_ADDR_LEN);
+    return !std::memcmp(left.bytes(), right.bytes(), ETHER_ADDR_LEN);
 }
 
     std::ostream &
@@ -263,8 +293,8 @@ IpHdr::options(std::vector<const IpOpt *> &vec) const
 {
     vec.clear();
 
-    const uint8_t *data = bytes() + sizeof(struct ip_hdr);
-    int all = hlen() - sizeof(struct ip_hdr);
+    const uint8_t *data = bytes() + sizeof(struct ip);
+    int all = hlen() - sizeof(struct ip);
     while (all > 0) {
         const IpOpt *opt = (const IpOpt *)data;
         int len = opt->len();
@@ -285,9 +315,9 @@ namespace
 bool
 ip6Extension(uint8_t nxt)
 {
-    return nxt == IP_PROTO_HOPOPTS || nxt == IP_PROTO_ROUTING ||
-        nxt == IP_PROTO_FRAGMENT || nxt == IP_PROTO_AH ||
-        nxt == IP_PROTO_ESP || nxt == IP_PROTO_DSTOPTS;
+    return nxt == IPPROTO_HOPOPTS || nxt == IPPROTO_ROUTING ||
+           nxt == IPPROTO_FRAGMENT || nxt == IPPROTO_AH ||
+           nxt == IPPROTO_ESP || nxt == IPPROTO_DSTOPTS;
 }
 
 } // anonymous namespace
@@ -366,8 +396,8 @@ TcpHdr::options(std::vector<const TcpOpt *> &vec) const
 {
     vec.clear();
 
-    const uint8_t *data = bytes() + sizeof(struct tcp_hdr);
-    int all = off() - sizeof(struct tcp_hdr);
+    const uint8_t *data = bytes() + sizeof(struct tcphdr);
+    int all = off() - sizeof(struct tcphdr);
     while (all > 0) {
         const TcpOpt *opt = (const TcpOpt *)data;
         int len = opt->len();

@@ -46,7 +46,8 @@ if env['CONF']['BUILD_ISA']:
     SimObject('FUPool.py', sim_objects=['FUPool'])
     SimObject('FuncUnitConfig.py', sim_objects=[])
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'])
-    SimObject('IQUnit.py', sim_objects=['IQUnit'])
+    SimObject('IQUnit.py', sim_objects=['IQUnit'],
+        enums=['IQInsertionPolicy'])
     SimObject('SMT.py',
         enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 

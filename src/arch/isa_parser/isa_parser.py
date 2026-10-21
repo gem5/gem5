@@ -122,9 +122,7 @@ class Template:
             # The reinterpret casts are largely because an array with a known
             # size cannot be passed as an argument which is an array with an
             # unknown size in C++.
-            myDict[
-                "set_reg_idx_arr"
-            ] = """
+            myDict["set_reg_idx_arr"] = """
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
             &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
@@ -421,8 +419,16 @@ opClassRE = re.compile(r".*Op|No_OpClass")
 
 class InstObjParams:
     def __init__(
-        self, parser, mnem, class_name, base_class="", snippets={}, opt_args=[]
+        self,
+        parser,
+        mnem,
+        class_name,
+        base_class="",
+        snippets=None,
+        opt_args=None,
     ):
+        snippets = {} if snippets is None else snippets
+        opt_args = [] if opt_args is None else opt_args
         self.mnemonic = mnem
         self.class_name = class_name
         self.base_class = base_class
@@ -1180,7 +1186,7 @@ del wrap
     # "def format <fmt>(<params>) {{...}};"
     def p_def_format(self, t):
         "def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI"
-        (id, params, code) = (t[3], t[5], t[7])
+        id, params, code = (t[3], t[5], t[7])
         self.defFormat(id, params, code, t.lexer.lineno)
 
     # The formal parameter list for an instruction format is a
@@ -1262,8 +1268,7 @@ StaticInstPtr
 %(isa_name)s::%(decoder_name)s::decodeInst(%(isa_name)s::ExtMachInst machInst)
 {
     using namespace %(namespace)s;
-"""
-            % self,
+""" % self,
             "}",
         )
 

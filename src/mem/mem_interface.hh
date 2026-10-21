@@ -57,7 +57,7 @@
 #include "enums/AddrMap.hh"
 #include "enums/PageManage.hh"
 #include "mem/abstract_mem.hh"
-#include "mem/mem_ctrl.hh"
+#include "mem/qos/mem_ctrl.hh"
 #include "params/MemInterface.hh"
 #include "sim/eventq.hh"
 
@@ -66,6 +66,12 @@ namespace gem5
 
 namespace memory
 {
+
+class MemCtrl;
+class MemPacket;
+
+// Also declared in mem_ctrl.hh.
+typedef std::deque<MemPacket *> MemPacketQueue;
 
 /**
  * General interface to memory device
@@ -205,11 +211,10 @@ class MemInterface : public AbstractMemory
     uint32_t readQueueSize = 0;
     uint32_t writeQueueSize = 0;
 
-
-    MemCtrl::BusState busState = MemCtrl::READ;
+    qos::MemCtrl::BusState busState = qos::MemCtrl::READ;
 
     /** bus state for next request event triggered */
-    MemCtrl::BusState busStateNext = MemCtrl::READ;
+    qos::MemCtrl::BusState busStateNext = qos::MemCtrl::READ;
 
     /**
      * pseudo channel number used for HBM modeling

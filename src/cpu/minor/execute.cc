@@ -259,11 +259,14 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
                 *inst);
 
             reason = BranchData::BadlyPredictedBranch;
-        } else if (*inst->predictedTarget == *target) {
-            /* Branch prediction got the right target, kill the branch and
-             *  carry on.
-             *  Note that this information to the branch predictor might get
-             *  overwritten by a "real" branch during this cycle */
+        } else if (inst->predictedTarget->fullEquals(*target)) {
+            /* Address *and* ISA extras (RVV vl/vtype, ...) match. Using
+             * fullEquals rather than == / equals(): RISC-V equals()
+             * ignores vl when new_vconf is false (#1709). A predicted
+             * taken loop branch clones the branch PCState, so the
+             * address can be right while vl is stale; treating that as
+             * CorrectlyPredictedBranch skips the stream change and
+             * leaves Minor's decoder on the old vl (#2742). */
             DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x correctly"
                 " inst: %s\n",
                 inst->pc->instAddr(), inst->predictedTarget->instAddr(),

@@ -61,7 +61,7 @@ newMethodProcess(const char *name, ProcessFuncWrapper *func)
                 name.c_str());
         return nullptr;
     }
-    scheduler.reg(p);
+    scheduler().reg(p);
     return p;
 }
 
@@ -76,7 +76,7 @@ newThreadProcess(const char *name, ProcessFuncWrapper *func)
                 name.c_str());
         return nullptr;
     }
-    scheduler.reg(p);
+    scheduler().reg(p);
     return p;
 }
 
@@ -91,7 +91,7 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
                 name.c_str());
         return nullptr;
     }
-    scheduler.reg(p);
+    scheduler().reg(p);
     p->dontInitialize(true);
     return p;
 }
@@ -259,8 +259,9 @@ sc_module::sc_module() :
 {
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
-    if (::sc_gem5::scheduler.elaborationDone())
+    if (::sc_gem5::scheduler().elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
+    }
 }
 
 sc_module::sc_module(const sc_module_name &) : sc_module() {}
@@ -537,7 +538,7 @@ sc_module::at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &s)
 void
 next_trigger()
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->cancelTimeout();
     p->clearDynamic();
 }
@@ -545,7 +546,7 @@ next_trigger()
 void
 next_trigger(const sc_event &e)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->cancelTimeout();
     ::sc_gem5::newDynamicSensitivityEvent(p, &e);
 }
@@ -553,7 +554,7 @@ next_trigger(const sc_event &e)
 void
 next_trigger(const sc_event_or_list &eol)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->cancelTimeout();
     ::sc_gem5::newDynamicSensitivityEventOrList(p, &eol);
 }
@@ -561,7 +562,7 @@ next_trigger(const sc_event_or_list &eol)
 void
 next_trigger(const sc_event_and_list &eal)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->cancelTimeout();
     ::sc_gem5::newDynamicSensitivityEventAndList(p, &eal);
 }
@@ -569,7 +570,7 @@ next_trigger(const sc_event_and_list &eal)
 void
 next_trigger(const sc_time &t)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->setTimeout(t);
     p->clearDynamic();
 }
@@ -583,7 +584,7 @@ next_trigger(double d, sc_time_unit u)
 void
 next_trigger(const sc_time &t, const sc_event &e)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->setTimeout(t);
     ::sc_gem5::newDynamicSensitivityEvent(p, &e);
 }
@@ -597,7 +598,7 @@ next_trigger(double d, sc_time_unit u, const sc_event &e)
 void
 next_trigger(const sc_time &t, const sc_event_or_list &eol)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->setTimeout(t);
     ::sc_gem5::newDynamicSensitivityEventOrList(p, &eol);
 }
@@ -611,7 +612,7 @@ next_trigger(double d, sc_time_unit u, const sc_event_or_list &eol)
 void
 next_trigger(const sc_time &t, const sc_event_and_list &eal)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->setTimeout(t);
     ::sc_gem5::newDynamicSensitivityEventAndList(p, &eal);
 }
@@ -625,7 +626,7 @@ next_trigger(double d, sc_time_unit u, const sc_event_and_list &eal)
 bool
 timed_out()
 {
-    ::sc_gem5::Process *p = sc_gem5::scheduler.current();
+    ::sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (!p)
         return false;
     else
@@ -652,12 +653,12 @@ waitErrorCheck(sc_gem5::Process *p)
 void
 wait()
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->cancelTimeout();
     p->clearDynamic();
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
@@ -667,7 +668,7 @@ wait(int n)
         std::string msg = gem5::csprintf("n = %d", n);
         SC_REPORT_ERROR(SC_ID_WAIT_N_INVALID_, msg.c_str());
     }
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->waitCount(n - 1);
     wait();
 }
@@ -675,45 +676,45 @@ wait(int n)
 void
 wait(const sc_event &e)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->cancelTimeout();
     ::sc_gem5::newDynamicSensitivityEvent(p, &e);
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
 wait(const sc_event_or_list &eol)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->cancelTimeout();
     ::sc_gem5::newDynamicSensitivityEventOrList(p, &eol);
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
 wait(const sc_event_and_list &eal)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->cancelTimeout();
     ::sc_gem5::newDynamicSensitivityEventAndList(p, &eal);
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
 wait(const sc_time &t)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->setTimeout(t);
     p->clearDynamic();
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
@@ -725,12 +726,12 @@ wait(double d, sc_time_unit u)
 void
 wait(const sc_time &t, const sc_event &e)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->setTimeout(t);
     ::sc_gem5::newDynamicSensitivityEvent(p, &e);
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
@@ -742,12 +743,12 @@ wait(double d, sc_time_unit u, const sc_event &e)
 void
 wait(const sc_time &t, const sc_event_or_list &eol)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->setTimeout(t);
     ::sc_gem5::newDynamicSensitivityEventOrList(p, &eol);
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
@@ -759,12 +760,12 @@ wait(double d, sc_time_unit u, const sc_event_or_list &eol)
 void
 wait(const sc_time &t, const sc_event_and_list &eal)
 {
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (waitErrorCheck(p))
         return;
     p->setTimeout(t);
     ::sc_gem5::newDynamicSensitivityEventAndList(p, &eal);
-    sc_gem5::scheduler.yield();
+    sc_gem5::scheduler().yield();
 }
 
 void
@@ -828,11 +829,11 @@ sc_gen_unique_name(const char *seed)
     if (mod)
         return mod->uniqueName(seed);
 
-    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    sc_gem5::Process *p = sc_gem5::scheduler().current();
     if (p)
         return p->uniqueName(seed);
 
-    return ::sc_gem5::globalNameGen.gen(seed);
+    return ::sc_gem5::globalNameGen().gen(seed);
 }
 
 bool

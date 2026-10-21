@@ -174,7 +174,7 @@ def process_trace(
                         0,
                     )
                     return
-                (curr_inst["pc"], curr_inst["upc"]) = fields[3:5]
+                curr_inst["pc"], curr_inst["upc"] = fields[3:5]
                 curr_inst["sn"] = int(fields[5])
                 curr_inst["disasm"] = " ".join(fields[6][:-1].split())
             elif fields[1] == "retire":

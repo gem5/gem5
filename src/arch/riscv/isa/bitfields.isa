@@ -34,7 +34,7 @@
 // Bitfield definitions.
 //
 def bitfield RVTYPE rv_type;
-def bitfield ENABLE_ZCD enable_zcd;
+def bitfield HAS_ZCD has_zcd;
 
 def bitfield QUADRANT <1:0>;
 def bitfield OPCODE5 <6:2>;
@@ -142,6 +142,7 @@ def bitfield KFUNCT5    <29:25>;
 def bitfield BS         <31:30>;
 
 // Vector instructions
+def bitfield VSEW       vtype8.vsew;
 def bitfield VFUNCT6    vfunct6;
 def bitfield VFUNCT5    vfunct5;
 def bitfield VFUNCT3    vfunct3;

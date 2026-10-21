@@ -82,7 +82,7 @@ class Fixture:
     def teardown(self, testitem):
         pass
 
-    def get_get_build_info(self) -> Optional[dict]:
+    def get_get_build_info(self) -> dict | None:
         # If this is a gem5 build it will return the target gem5 build path
         # and any additional build information. E.g.:
         #

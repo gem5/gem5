@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2022, 2024-2025 Arm Limited
+# Copyright (c) 2012-2013, 2015-2022, 2024-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,6 +35,7 @@
 
 from m5.objects.ArmPMU import ArmPMU
 from m5.objects.ArmSystem import (
+    ArmDefaultRelease,
     ArmRelease,
     SmeVectorLength,
     SveVectorLength,
@@ -50,42 +51,6 @@ class DecoderFlavor(Enum):
     vals = ["Generic"]
 
 
-class ArmDefaultSERelease(ArmRelease):
-    extensions = [
-        "FEAT_AES",
-        "FEAT_PMULL",
-        "FEAT_SHA1",
-        "FEAT_SHA256",
-        "FEAT_CRC32",
-        # Armv8.1
-        "FEAT_LSE",
-        "FEAT_RDM",
-        "FEAT_FHM",
-        # Armv8.2
-        "FEAT_F32MM",
-        "FEAT_F64MM",
-        "FEAT_SVE",
-        "FEAT_I8MM",
-        "FEAT_DOTPROD",
-        "FEAT_FP16",
-        # Armv8.3
-        "FEAT_FCMA",
-        "FEAT_JSCVT",
-        "FEAT_PAuth",
-        "FEAT_LRCPC",
-        # Armv8.4
-        "FEAT_FLAGM",
-        "FEAT_FRINTTS",
-        "FEAT_LRCPC2",
-        # Armv8.5
-        "FEAT_FLAGM2",
-        # Armv9.2
-        "FEAT_SME",
-        # Other
-        "TME",
-    ]
-
-
 class ArmISA(BaseISA):
     type = "ArmISA"
     cxx_class = "gem5::ArmISA::ISA"
@@ -99,7 +64,8 @@ class ArmISA(BaseISA):
     )
 
     release_se = Param.ArmRelease(
-        ArmDefaultSERelease(), "Set of features/extensions to use in SE mode"
+        ArmDefaultRelease.for_se(),
+        "Set of features/extensions to use in SE mode",
     )
 
     # If no MIDR value is provided, 0x0 is treated by gem5 as follows:

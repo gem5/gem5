@@ -80,12 +80,6 @@ class BaseCPU : public gem5::BaseCPU
     Counter totalInsts() const override;
     Counter totalOps() const override { return totalInsts(); }
 
-    virtual void
-    setResetAddr(Addr addr, bool secure = false)
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
   protected:
     sc_core::sc_module *evs;
     // Hold casted pointer to *evs.

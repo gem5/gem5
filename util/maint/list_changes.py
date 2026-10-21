@@ -107,7 +107,7 @@ class Commit:
         return f"{self.rev[0:8]}: {self.log[0]}"
 
 
-def list_revs(branch, baseline=None, paths=[]):
+def list_revs(branch, baseline=None, paths=None):
     """Get a generator that lists git revisions that exist in 'branch'. If
     the optional parameter 'baseline' is specified, the generator
     excludes commits that exist on that branch.
@@ -115,6 +115,8 @@ def list_revs(branch, baseline=None, paths=[]):
     Returns: Generator of Commit objects
 
     """
+
+    paths = [] if paths is None else paths
 
     if baseline is not None:
         query = f"{branch}..{baseline}"
@@ -133,7 +135,8 @@ def list_revs(branch, baseline=None, paths=[]):
         yield Commit(rev)
 
 
-def list_changes(upstream, feature, paths=[]):
+def list_changes(upstream, feature, paths=None):
+    paths = [] if paths is None else paths
     feature_revs = tuple(list_revs(upstream, feature, paths=paths))
     upstream_revs = tuple(list_revs(feature, upstream, paths=paths))
 

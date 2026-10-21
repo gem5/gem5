@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Advanced Micro Devices, Inc.
- * Copyright (c) 2019,2021 ARM Limited
+ * Copyright (c) 2019,2021,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -89,6 +89,12 @@ SimpleNetwork::SimpleNetwork(const Params &p)
     fatal_if((physical_vnets_bandwidth.size() != vnets) &&
              (physical_vnets_bandwidth.size() != 0),
         "physical_vnets_bandwidth must provide BW for all vnets");
+
+    if (p.trace_routes) {
+        routeProfiler.enable();
+        // Register a callback to write the file with all routes
+        registerExitCallback([this]() { dumpRoutes(); });
+    }
 }
 
 void
@@ -156,6 +162,11 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 simple_link->m_bw_multiplier,
                                 false,
                                 dst_inport);
+
+    for (auto buffer : simple_link->m_buffers) {
+        buffer->setIntLink(simple_link);
+    }
+
     // Maitain a global list of buffers (used for functional accesses only)
     m_int_link_buffers.insert(m_int_link_buffers.end(),
             simple_link->m_buffers.begin(), simple_link->m_buffers.end());

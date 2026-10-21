@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2025 ARM Limited
+ * Copyright (c) 2018, 2025-2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -604,6 +604,296 @@ class SveStContigConseSI : public PredMacroOp
         ccprintf(ss, "{");
         for (int i = 0; i < numregs; ++i) {
             printVecReg(ss, (dest + i) % 32, true);
+            if (i < numregs - 1) {
+                ccprintf(ss, ", ");
+            }
+        }
+        ccprintf(ss, "}, ");
+        printVecPredReg(ss, gp, true);
+        ccprintf(ss, ", [");
+        printIntReg(ss, base);
+        if (imm != 0) {
+            ccprintf(ss, ", #%d, MUL VL", imm);
+        }
+        ccprintf(ss, "]");
+        return ss.str();
+    }
+};
+
+template <typename Element, template <typename> class MicroopLdMemType>
+class SmeLdNonContigSS : public PredMacroOp
+{
+  protected:
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    RegIndex offset;
+    uint8_t numregs;
+
+  public:
+    SmeLdNonContigSS(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                     RegIndex _dest, RegIndex _gp, RegIndex _base,
+                     RegIndex _offset, uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          offset(_offset),
+          numregs(_numregs)
+    {
+        numMicroops = numregs;
+
+        microOps = new StaticInstPtr[numMicroops];
+
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            RegIndex uop_dest = (RegIndex)((dest + tstride * i) % 32);
+            microOps[i] = new MicroopLdMemType<Element>(
+                mnem, machInst, uop_dest, _gp, _base, _offset, _numregs, i);
+        }
+
+        microOps[0]->setFirstMicroop();
+        microOps[numMicroops - 1]->setLastMicroop();
+
+        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
+            (*uop)->setDelayedCommit();
+        }
+    }
+
+    Fault
+    execute(ExecContext *, trace::InstRecord *) const override
+    {
+        panic("Execute method called when it shouldn't!");
+        return NoFault;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
+    {
+        std::stringstream ss;
+        printMnemonic(ss, "", false);
+        ccprintf(ss, "{");
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            printVecReg(ss, (dest + tstride * i) % 32, true);
+            if (i < numregs - 1) {
+                ccprintf(ss, ", ");
+            }
+        }
+        ccprintf(ss, "}, ");
+        printVecPredReg(ss, gp, true);
+        ccprintf(ss, "/z, [");
+        printIntReg(ss, base);
+        ccprintf(ss, ", ");
+        printIntReg(ss, offset);
+        ccprintf(ss, "]");
+        return ss.str();
+    }
+};
+
+template <typename Element, template <typename> class MicroopStMemType>
+class SmeStNonContigSS : public PredMacroOp
+{
+  protected:
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    RegIndex offset;
+    uint8_t numregs;
+
+  public:
+    SmeStNonContigSS(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                     RegIndex _dest, RegIndex _gp, RegIndex _base,
+                     RegIndex _offset, uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          offset(_offset),
+          numregs(_numregs)
+    {
+        numMicroops = numregs;
+
+        microOps = new StaticInstPtr[numMicroops];
+
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            RegIndex uop_dest = (RegIndex)((dest + tstride * i) % 32);
+            microOps[i] = new MicroopStMemType<Element>(
+                mnem, machInst, uop_dest, _gp, _base, _offset, _numregs, i);
+        }
+
+        microOps[0]->setFirstMicroop();
+        microOps[numMicroops - 1]->setLastMicroop();
+
+        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
+            (*uop)->setDelayedCommit();
+        }
+    }
+
+    Fault
+    execute(ExecContext *, trace::InstRecord *) const override
+    {
+        panic("Execute method called when it shouldn't!");
+        return NoFault;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
+    {
+        std::stringstream ss;
+        printMnemonic(ss, "", false);
+        ccprintf(ss, "{");
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            printVecReg(ss, (dest + tstride * i) % 32, true);
+            if (i < numregs - 1) {
+                ccprintf(ss, ", ");
+            }
+        }
+        ccprintf(ss, "}, ");
+        printVecPredReg(ss, gp, true);
+        ccprintf(ss, ", [");
+        printIntReg(ss, base);
+        ccprintf(ss, ", ");
+        printIntReg(ss, offset);
+        ccprintf(ss, "]");
+        return ss.str();
+    }
+};
+
+template <typename Element, template <typename> class MicroopLdMemType>
+class SmeLdNonContigSI : public PredMacroOp
+{
+  protected:
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    int64_t imm;
+    uint8_t numregs;
+
+  public:
+    SmeLdNonContigSI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                     RegIndex _dest, RegIndex _gp, RegIndex _base,
+                     int64_t _imm, uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          imm(_imm),
+          numregs(_numregs)
+    {
+        numMicroops = numregs;
+
+        microOps = new StaticInstPtr[numMicroops];
+
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            RegIndex uop_dest = (RegIndex)((dest + tstride * i) % 32);
+            microOps[i] = new MicroopLdMemType<Element>(
+                mnem, machInst, uop_dest, _gp, _base, _imm, _numregs, i);
+        }
+
+        microOps[0]->setFirstMicroop();
+        microOps[numMicroops - 1]->setLastMicroop();
+
+        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
+            (*uop)->setDelayedCommit();
+        }
+    }
+
+    Fault
+    execute(ExecContext *, trace::InstRecord *) const override
+    {
+        panic("Execute method called when it shouldn't!");
+        return NoFault;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
+    {
+        std::stringstream ss;
+        printMnemonic(ss, "", false);
+        ccprintf(ss, "{");
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            printVecReg(ss, (dest + tstride * i) % 32, true);
+            if (i < numregs - 1) {
+                ccprintf(ss, ", ");
+            }
+        }
+        ccprintf(ss, "}, ");
+        printVecPredReg(ss, gp, true);
+        ccprintf(ss, "/z, [");
+        printIntReg(ss, base);
+        if (imm != 0) {
+            ccprintf(ss, ", #%d, MUL VL", imm);
+        }
+        ccprintf(ss, "]");
+        return ss.str();
+    }
+};
+
+template <typename Element, template <typename> class MicroopStMemType>
+class SmeStNonContigSI : public PredMacroOp
+{
+  protected:
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    int64_t imm;
+    uint8_t numregs;
+
+  public:
+    SmeStNonContigSI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                     RegIndex _dest, RegIndex _gp, RegIndex _base,
+                     int64_t _imm, uint8_t _numregs)
+        : PredMacroOp(mnem, machInst, __opClass),
+          dest(_dest),
+          gp(_gp),
+          base(_base),
+          imm(_imm),
+          numregs(_numregs)
+    {
+        numMicroops = numregs;
+
+        microOps = new StaticInstPtr[numMicroops];
+
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            RegIndex uop_dest = (RegIndex)((dest + tstride * i) % 32);
+            microOps[i] = new MicroopStMemType<Element>(
+                mnem, machInst, uop_dest, _gp, _base, _imm, _numregs, i);
+        }
+
+        microOps[0]->setFirstMicroop();
+        microOps[numMicroops - 1]->setLastMicroop();
+
+        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
+            (*uop)->setDelayedCommit();
+        }
+    }
+
+    Fault
+    execute(ExecContext *, trace::InstRecord *) const override
+    {
+        panic("Execute method called when it shouldn't!");
+        return NoFault;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override
+    {
+        std::stringstream ss;
+        printMnemonic(ss, "", false);
+        ccprintf(ss, "{");
+        int tstride = 16 / numregs;
+        for (int i = 0; i < numregs; ++i) {
+            printVecReg(ss, (dest + tstride * i) % 32, true);
             if (i < numregs - 1) {
                 ccprintf(ss, ", ");
             }

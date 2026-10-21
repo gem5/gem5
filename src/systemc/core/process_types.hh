@@ -94,11 +94,11 @@ class Thread : public Process
                 thread->run();
             } catch (...) {
                 thread->terminate();
-                scheduler.throwUp();
+                scheduler().throwUp();
                 return;
             }
             thread->terminate();
-            scheduler.yield();
+            scheduler().yield();
         }
     };
     friend class Context;

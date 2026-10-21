@@ -201,7 +201,7 @@ let {{
 
         RegType = FoldedSrc2Op
         FloatType = FloatSrc2Op
-        ImmType = Imm8Op
+        ImmType = Imm64Op
 
     class Op3(object):
         @classmethod

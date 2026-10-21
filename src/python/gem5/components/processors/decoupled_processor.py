@@ -25,8 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from typing import Optional
-
 from m5.objects import (
     LTAGE,
     BranchPredictor,
@@ -49,7 +47,12 @@ class DecoupledProcessor(BaseCPUProcessor):
     """
 
     def __init__(
-        self, num_cores: int, isa: ISA, decoupled: bool = True
+        self,
+        num_cores: int,
+        isa: ISA,
+        decoupled: bool = True,
+        *,
+        clk_freq: str,
     ) -> None:
         """
         :param num_cores: The number of CPU cores in the processor.
@@ -57,12 +60,15 @@ class DecoupledProcessor(BaseCPUProcessor):
         :param isa: The ISA of the processor.
 
         :param decouple: Enable/Disable the decoupled frontend.
+
+        :param clk_freq: The clock frequency for the processor's cores.
         """
         super().__init__(
             cores=[
                 SimpleCore(cpu_type=CPUTypes.O3, core_id=i, isa=isa)
                 for i in range(num_cores)
-            ]
+            ],
+            clk_freq=clk_freq,
         )
 
         for c in self.get_cores():

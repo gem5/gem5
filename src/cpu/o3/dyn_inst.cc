@@ -41,11 +41,31 @@
 #include "cpu/o3/dyn_inst.hh"
 
 #include <algorithm>
+#include <cstdint>
+#include <memory>
 
+#include "arch/generic/pcstate.hh"
+#include "base/amo.hh"
+#include "base/cprintf.hh"
 #include "base/intmath.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "cpu/base.hh"
+#include "cpu/checker/cpu.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/cpu.hh"
+#include "cpu/o3/inst_queue.hh"
+#include "cpu/o3/lsq_unit.hh"
+#include "cpu/o3/thread_state.hh"
+#include "cpu/reg_class.hh"
+#include "cpu/static_inst.hh"
+#include "cpu/static_inst_fwd.hh"
+#include "cpu/thread_context.hh"
 #include "debug/DynInst.hh"
 #include "debug/IQ.hh"
 #include "debug/O3PipeView.hh"
+#include "mem/request.hh"
 
 namespace gem5
 {
@@ -454,6 +474,202 @@ DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
             /* atomic */ false, nullptr, size, addr, flags, nullptr,
             std::move(amo_op), std::vector<bool>(size, true));
 }
+
+void
+DynInst::demapPage(Addr vaddr, uint64_t asn)
+{ cpu->demapPage(vaddr, asn); }
+
+int
+DynInst::cpuId() const
+{ return cpu->cpuId(); }
+
+uint32_t
+DynInst::socketId() const
+{ return cpu->socketId(); }
+
+RequestorID
+DynInst::requestorId() const
+{ return cpu->dataRequestorId(); }
+
+void
+DynInst::armMonitor(Addr address)
+{ cpu->armMonitor(threadNumber, address); }
+
+bool
+DynInst::mwait(PacketPtr pkt)
+{ return cpu->mwait(threadNumber, pkt); }
+
+void
+DynInst::mwaitAtomic(gem5::ThreadContext *tc)
+{ cpu->mwaitAtomic(threadNumber, tc, cpu->mmu); }
+
+AddressMonitor *
+DynInst::getAddrMonitor()
+{ return cpu->getCpuAddrMonitor(threadNumber); }
+
+RegVal
+DynInst::readMiscReg(int misc_reg)
+{ return cpu->readMiscReg(misc_reg, threadNumber); }
+
+void
+DynInst::setMiscReg(int misc_reg, RegVal val)
+{
+    /** Writes to misc. registers are recorded and deferred until the
+     * commit stage, when updateMiscRegs() is called. First, check if
+     * the misc reg has been written before and update its value to be
+     * committed instead of making a new entry. If not, make a new
+     * entry and record the write.
+     */
+    for (auto &idx : _destMiscRegIdx) {
+        if (idx == misc_reg) {
+            return;
+        }
+    }
+
+    _destMiscRegIdx.push_back(misc_reg);
+    _destMiscRegVal.push_back(val);
+}
+
+RegVal
+DynInst::readMiscRegOperand(const StaticInst *si, int idx)
+{
+    const RegId &reg = si->srcRegIdx(idx);
+    assert(reg.is(MiscRegClass));
+    return cpu->readMiscReg(reg.index(), threadNumber);
+}
+
+void
+DynInst::setMiscRegOperand(const StaticInst *si, int idx, RegVal val)
+{
+    const RegId &reg = si->destRegIdx(idx);
+    assert(reg.is(MiscRegClass));
+    setMiscReg(reg.index(), val);
+}
+
+void
+DynInst::updateMiscRegs()
+{
+    // @todo: Pretty convoluted way to avoid squashing from happening when
+    // using the TC during an instruction's execution (specifically for
+    // instructions that have side-effects that use the TC).  Fix this.
+    // See cpu/o3/dyn_inst_impl.hh.
+    bool no_squash_from_TC = thread->noSquashFromTC;
+    thread->noSquashFromTC = true;
+
+    for (int i = 0; i < _destMiscRegIdx.size(); i++) {
+        cpu->setMiscReg(_destMiscRegIdx[i], _destMiscRegVal[i], threadNumber);
+    }
+
+    thread->noSquashFromTC = no_squash_from_TC;
+}
+
+void
+DynInst::forwardOldRegs()
+{
+    for (int idx = 0; idx < numDestRegs(); idx++) {
+        PhysRegIdPtr prev_phys_reg = prevDestIdx(idx);
+        const RegId &original_dest_reg = staticInst->destRegIdx(idx);
+        const auto bytes = original_dest_reg.regClass().regBytes();
+
+        // Registers which aren't renamed don't need to be forwarded.
+        if (!original_dest_reg.isRenameable()) {
+            continue;
+        }
+
+        if (bytes == sizeof(RegVal)) {
+            setRegOperand(staticInst.get(), idx,
+                          cpu->getReg(prev_phys_reg, threadNumber));
+        } else {
+            const size_t size = original_dest_reg.regClass().regBytes();
+            auto val = std::make_unique<uint8_t[]>(size);
+            cpu->getReg(prev_phys_reg, val.get(), threadNumber);
+            setRegOperand(staticInst.get(), idx, val.get());
+        }
+    }
+}
+
+RegVal
+DynInst::getRegOperand(const StaticInst *si, int idx)
+{
+    const PhysRegIdPtr reg = renamedSrcIdx(idx);
+    if (reg->is(InvalidRegClass)) {
+        return 0;
+    }
+    return cpu->getReg(reg, threadNumber);
+}
+
+void
+DynInst::getRegOperand(const StaticInst *si, int idx, void *val)
+{
+    const PhysRegIdPtr reg = renamedSrcIdx(idx);
+    if (reg->is(InvalidRegClass)) {
+        return;
+    }
+    cpu->getReg(reg, val, threadNumber);
+}
+
+void *
+DynInst::getWritableRegOperand(const StaticInst *si, int idx)
+{ return cpu->getWritableReg(renamedDestIdx(idx), threadNumber); }
+
+void
+DynInst::setRegOperand(const StaticInst *si, int idx, RegVal val)
+{
+    const PhysRegIdPtr reg = renamedDestIdx(idx);
+    if (reg->is(InvalidRegClass)) {
+        return;
+    }
+    cpu->setReg(reg, val, threadNumber);
+    setResult(reg->regClass(), val);
+}
+
+void
+DynInst::setRegOperand(const StaticInst *si, int idx, const void *val)
+{
+    const PhysRegIdPtr reg = renamedDestIdx(idx);
+    if (reg->is(InvalidRegClass)) {
+        return;
+    }
+    cpu->setReg(reg, val, threadNumber);
+    setResult(reg->regClass(), val);
+}
+
+BaseCPU *
+DynInst::getCpuPtr()
+{ return cpu; }
+
+ContextID
+DynInst::contextId() const
+{ return thread->contextId(); }
+
+gem5::ThreadContext *
+DynInst::tcBase() const
+{ return thread->getTC(); }
+
+void
+DynInst::setInIQ(IQUnit *_iq)
+{
+    assert(!iq);
+    status.set(IqEntry);
+    iq = _iq;
+}
+
+void
+DynInst::clearInIQ()
+{
+    assert(iq);
+    status.reset(IqEntry);
+    iq->remove(this);
+    iq = nullptr;
+}
+
+unsigned int
+DynInst::readStCondFailures() const
+{ return thread->storeCondFailures; }
+
+void
+DynInst::setStCondFailures(unsigned int sc_failures)
+{ thread->storeCondFailures = sc_failures; }
 
 } // namespace o3
 } // namespace gem5

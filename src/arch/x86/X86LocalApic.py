@@ -71,7 +71,7 @@ class X86LocalApic(BaseInterrupts):
 
     # The clock rate for the local APIC timer is supposed to be the "bus clock"
     # which we assume is 1/16th the rate of the CPU clock. I don't think this
-    # is a hard rule, but seems to be true in practice. This can be overriden
+    # is a hard rule, but seems to be true in practice. This can be overridden
     # in configs that use it.
     clk_domain = Param.DerivedClockDomain(
         DerivedClockDomain(clk_domain=Parent.clk_domain, clk_divider=16),

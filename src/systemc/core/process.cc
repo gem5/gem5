@@ -81,15 +81,15 @@ Process::suspend(bool inc_kids)
 
     if (!_suspended && !_terminated) {
         _suspended = true;
-        _suspendedReady = scheduler.suspend(this);
+        _suspendedReady = scheduler().suspend(this);
 
         if (procKind() != ::sc_core::SC_METHOD_PROC_ &&
-                scheduler.current() == this) {
+            scheduler().current() == this) {
             // This isn't in the spec, but Accellera says that a thread that
             // self suspends should be marked ready immediately when it's
             // resumed.
             _suspendedReady = true;
-            scheduler.yield();
+            scheduler().yield();
         }
     }
 }
@@ -103,7 +103,7 @@ Process::resume(bool inc_kids)
     if (_suspended && !_terminated) {
         _suspended = false;
         if (_suspendedReady)
-            scheduler.resume(this);
+            scheduler().resume(this);
         _suspendedReady = false;
     }
 }
@@ -187,7 +187,7 @@ Process::reset(bool inc_kids)
     _resetEvent.notify();
 
     if (_needsStart) {
-        scheduler.runNow(this);
+        scheduler().runNow(this);
     } else {
         _isUnwinding = true;
         injectException(resetException);
@@ -216,7 +216,7 @@ void
 Process::injectException(ExceptionWrapperBase &exc)
 {
     excWrapper = &exc;
-    scheduler.runNow(this);
+    scheduler().runNow(this);
 };
 
 void
@@ -248,7 +248,7 @@ Process::signalReset(bool set, bool sync)
             asyncResetCount++;
             cancelTimeout();
             clearDynamic();
-            scheduler.runNext(this);
+            scheduler().runNext(this);
         }
     } else {
         if (sync)
@@ -304,14 +304,14 @@ void
 Process::cancelTimeout()
 {
     if (timeoutEvent.scheduled())
-        scheduler.deschedule(&timeoutEvent);
+        scheduler().deschedule(&timeoutEvent);
 }
 
 void
 Process::setTimeout(::sc_core::sc_time t)
 {
     cancelTimeout();
-    scheduler.schedule(&timeoutEvent, t);
+    scheduler().schedule(&timeoutEvent, t);
 }
 
 void
@@ -359,7 +359,7 @@ Process::ready()
     if (suspended())
         _suspendedReady = true;
     else if (!scheduled())
-        scheduler.ready(this);
+        scheduler().ready(this);
 }
 
 void

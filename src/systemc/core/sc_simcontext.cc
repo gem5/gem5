@@ -49,7 +49,7 @@ void sc_simcontext::reset() { objIndex = 0; }
 sc_curr_proc_handle
 sc_simcontext::get_curr_proc_info()
 {
-    ::sc_gem5::Process *p = ::sc_gem5::scheduler.current();
+    ::sc_gem5::Process *p = ::sc_gem5::scheduler().current();
     currProcInfo.process_handle = p;
     currProcInfo.kind = p ? p->procKind() : SC_NO_PROC_;
     return &currProcInfo;
@@ -78,7 +78,7 @@ sc_simcontext::next_object()
 bool
 sc_simcontext::elaboration_done()
 {
-    return ::sc_gem5::scheduler.elaborationDone();
+    return ::sc_gem5::scheduler().elaborationDone();
 }
 
 sc_simcontext *

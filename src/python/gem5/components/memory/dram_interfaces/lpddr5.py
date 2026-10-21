@@ -303,7 +303,7 @@ class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):
     """
     A single LPDDR5 x16 interface (one command/address bus)
     for a single x16 channel with default timings based on initial
-    JEDEC specifcation.
+    JEDEC specification.
 
     6.4Gbps data rates and 8Gbit die.
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 ARM Limited
+# Copyright (c) 2021,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -76,6 +76,7 @@ from slicc.ast.StateDeclAST import *
 from slicc.ast.StatementAST import *
 from slicc.ast.StatementListAST import *
 from slicc.ast.StaticCastAST import *
+from slicc.ast.ThisExprAST import *
 from slicc.ast.TransitionDeclAST import *
 from slicc.ast.TypeAST import *
 from slicc.ast.TypeDeclAST import *

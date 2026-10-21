@@ -143,7 +143,7 @@ Router::addOutPort(PortDirection outport_dirn,
 
     routingUnit.addRoute(routing_table_entry);
     routingUnit.addWeight(link_weight);
-    routingUnit.addOutDirection(outport_dirn, port_num);
+    routingUnit.addOutDirection(outport_dirn, port_num, out_link->mVnets);
 }
 
 PortDirection

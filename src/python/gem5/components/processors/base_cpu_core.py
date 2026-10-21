@@ -146,8 +146,8 @@ class BaseCPUCore(AbstractCore):
     @overrides(AbstractCore)
     def connect_interrupt(
         self,
-        interrupt_requestor: Optional[Port] = None,
-        interrupt_responce: Optional[Port] = None,
+        interrupt_requestor: Port | None = None,
+        interrupt_responce: Port | None = None,
     ) -> None:
         # TODO: This model assumes that we will only create an interrupt
         # controller as we require it. Not sure how true this is in all cases.
@@ -166,7 +166,7 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def _set_simpoint(
-        self, inst_starts: List[int], board_initialized: bool
+        self, inst_starts: list[int], board_initialized: bool
     ) -> None:
         if board_initialized:
             self.core.scheduleSimpointsInstStop(sorted(set(inst_starts)))
@@ -184,7 +184,7 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def add_pc_tracker_probe(
-        self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
+        self, target_pair: list[PcCountPair], manager: PcCountTrackerManager
     ) -> None:
         pair_tracker = PcCountTracker()
         pair_tracker.targets = target_pair

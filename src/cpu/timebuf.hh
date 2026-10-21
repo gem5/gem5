@@ -30,8 +30,11 @@
 #define __BASE_TIMEBUF_HH__
 
 #include <cassert>
-#include <cstring>
+#include <type_traits>
 #include <vector>
+
+#include "base/compiler.hh"
+#include "base/logging.hh"
 
 namespace gem5
 {
@@ -49,9 +52,25 @@ class TimeBuffer
     std::vector<char *> index;
     unsigned base;
 
+    // Keep panicOutOfBounds() out-of-line via __attribute__((noinline)) for
+    // simulator performance reasons. Putting panic() directly inside valid()
+    // causes a 3-7% simulation slowdown because expanding the panic macro
+    // inlines extensive string formatting, Logger calls, and stack setup
+    // into every hot-path wire access site.
+    void
+    panicOutOfBounds(int idx) const __attribute__((noinline))
+    {
+        panic("TimeBuffer out-of-bounds access! Wire index %d is outside "
+              "valid range [-%d, +%d] (id=%d). "
+              "Increase forwardComSize or backComSize!",
+              idx, past, future, _id);
+    }
+
     void valid(int idx) const
     {
-        assert (idx >= -past && idx <= future);
+        if (GEM5_UNLIKELY(idx < -past || idx > future)) {
+            panicOutOfBounds(idx);
+        }
     }
 
   public:
@@ -141,12 +160,13 @@ class TimeBuffer
         : past(p), future(f), size(past + future + 1),
           data(new char[size * sizeof(T)]), index(size), base(0)
     {
+        static_assert(std::is_default_constructible_v<T>,
+                      "T must be default constructible.");
         assert(past >= 0 && future >= 0);
         char *ptr = data;
         for (unsigned i = 0; i < size; i++) {
             index[i] = ptr;
-            std::memset(ptr, 0, sizeof(T));
-            new (ptr) T;
+            new (ptr) T();
             ptr += sizeof(T);
         }
 
@@ -185,8 +205,7 @@ class TimeBuffer
         if (ptr >= (int)size)
             ptr -= size;
         (reinterpret_cast<T *>(index[ptr]))->~T();
-        std::memset(index[ptr], 0, sizeof(T));
-        new (index[ptr]) T;
+        new (index[ptr]) T();
     }
 
   protected:

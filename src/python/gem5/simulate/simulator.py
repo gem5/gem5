@@ -26,11 +26,13 @@
 
 import os
 import sys
+from collections.abc import (
+    Callable,
+    Generator,
+)
 from pathlib import Path
 from typing import (
-    Callable,
     Dict,
-    Generator,
     List,
     Optional,
     Tuple,
@@ -39,7 +41,6 @@ from typing import (
 )
 
 import m5
-from m5 import options as m5_options
 from m5.ext.pystats.simstat import SimStat
 from m5.stats import addStatVisitor
 from m5.util import warn
@@ -87,21 +88,22 @@ class Simulator:
     def __init__(
         self,
         board: AbstractBoard,
-        full_system: Optional[bool] = None,
-        on_exit_event: Optional[
-            Dict[
+        full_system: bool | None = None,
+        on_exit_event: None | (
+            dict[
                 ExitEvent,
-                Union[
-                    Generator[Optional[bool], None, None],
-                    List[Callable],
-                    Callable,
-                ],
+                (
+                    Generator[bool | None, None, None]
+                    | list[Callable]
+                    | Callable
+                ),
             ]
-        ] = None,
-        expected_execution_order: Optional[List[ExitEvent]] = None,
-        max_ticks: Optional[int] = m5.MaxTick,
-        id: Optional[int] = None,
-        outdir: Optional[str | Path] = None,
+        ) = None,
+        expected_execution_order: list[ExitEvent] | None = None,
+        max_ticks: int | None = m5.MaxTick,
+        id: int | None = None,
+        outdir: str | Path | None = None,
+        show_exit_event_messages: bool | None = None,
     ) -> None:
         """
         :param board: The board to be simulated.
@@ -151,12 +153,14 @@ class Simulator:
         Simulator configuration. Note, the latter means the ID only available
         after the Simulator has been instantiated. The ID can be obtained via
         the `get_id` method.
-        :param exit_event_handler_id_map: An optional parameter specifying the
-        mapping each exit event IDs the Exit Event handler class responsible
-        for handling them. The Simulator provides sensible defaults for stdlib
-        exit events, but this parameter allows the user to override these
-        or add handlers for custom exit events. Use
-        `ExitHandler.get_handler_map` to see the mapping.
+        :param outdir: directory to put output files (stats, config, etc.). If
+                       value is None, then fall back to what is specified on the
+                       command line via `--outdir`.
+        :param show_exit_event_messages: If true, every time the simulator exits
+                                         the main simulation loop, print the
+                                         exit event reason to stdout. If none,
+                                         fall back on the gem5 command line
+                                         value.
 
         See ClassicGeneratorExitHandler for details on
         """
@@ -204,6 +208,14 @@ class Simulator:
             self._outdir = Path(outdir)
             self.override_outdir(self._outdir)
 
+        if show_exit_event_messages is None:
+            # Use the command line option from gem5 binary
+            from m5 import options
+
+            self._show_exit_event_messages = options.show_exit_event_messages
+        else:
+            self._show_exit_event_messages = show_exit_event_messages
+
     def switch_processor(self) -> None:
         """
         Switch the processor. This is a convenience function to call the
@@ -211,10 +223,10 @@ class Simulator:
         """
         self._board.get_processor().switch()
 
-    def get_exit_handler_id_map(self) -> Dict[int, Type[ExitHandler]]:
+    def get_exit_handler_id_map(self) -> dict[int, type[ExitHandler]]:
         """
-        Returns the exit handler ID map. This is a dictionary mapping exit
-        event IDs to the ExitEvent handler class responsible for handling them.
+        Returns the exit handler map. This is a dictionary mapping hypercall
+        IDs to the ExitHandler class responsible for handling them.
         """
         return ExitHandler.get_handler_map()
 
@@ -250,7 +262,7 @@ class Simulator:
             )
         self._id = id
 
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str | None:
         """
         Returns the ID of the simulation. This is particularly useful when
         running multiple simulations in parallel. The ID can be unique and
@@ -274,7 +286,7 @@ class Simulator:
             )
         if self._hypercall_max_ticks:
             warn(
-                "A hypercall 6 exit has already been scheduled for tick "
+                "A SCHEDULED_EXIT hypercall (ID 6) has already been scheduled for tick "
                 f"{self._hypercall_max_ticks}. Setting hypercall and classic "
                 "exits in the same simulation is not well tested and the "
                 "simulation may not behave as expected."
@@ -290,7 +302,7 @@ class Simulator:
         self, max_tick: int, exit_str: str = "Max ticks reached"
     ) -> None:
         """Set the maximum number of ticks to simulate before the simulation
-        exits with a hypercall 6 exit. This exit will be handled by
+        exits with a SCHEDULED_EXIT hypercall (ID 6). This exit will be handled by
         ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
         exit_handler.py` for details.
 
@@ -318,7 +330,7 @@ class Simulator:
         self, ticks_from_current: int, exit_str: str = "Max ticks reached"
     ) -> None:
         """Set the number of ticks to simulate from the current tick before the
-        simulation exits with a hypercall 6 exit. This exit will be handled by
+        simulation exits with a SCHEDULED_EXIT hypercall (ID 6). This exit will be handled by
         ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
         exit_handler.py` for details.
 
@@ -330,7 +342,7 @@ class Simulator:
         max_tick = self.get_current_tick() + ticks_from_current
         self.set_hypercall_absolute_max_ticks(max_tick, exit_str)
 
-    def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
+    def schedule_simpoint(self, simpoint_start_insts: list[int]) -> None:
         """
         Schedule ``SIMPOINT_BEGIN`` exit events
 
@@ -372,7 +384,7 @@ class Simulator:
         """
         return self._board.get_workload()
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """
         Obtain the current simulation statistics as a Dictionary, conforming
         to a JSON-style schema.
@@ -473,14 +485,14 @@ class Simulator:
         """
         return m5.curTick()
 
-    def get_tick_stopwatch(self) -> List[Tuple[ExitEvent, int]]:
+    def get_tick_stopwatch(self) -> list[tuple[ExitEvent, int]]:
         """
         Returns a list of tuples, which each tuple specifying an exit event
         and the ticks at that event.
         """
         return self._tick_stopwatch
 
-    def get_roi_ticks(self) -> List[int]:
+    def get_roi_ticks(self) -> list[int]:
         """
         Returns a list of the tick counts for every ROI encountered (specified
         as a region of code between a Workbegin and Workend exit event).
@@ -495,7 +507,7 @@ class Simulator:
 
         return to_return
 
-    def get_exit_event_id_log(self) -> Dict[int, str]:
+    def get_exit_event_id_log(self) -> dict[int, str]:
         """
         Returns a dictionary mapping tick at which an exit event was encountered
         to the exit event description.
@@ -507,14 +519,14 @@ class Simulator:
         Show exit event messages. This will print the exit event messages to
         the console.
         """
-        m5_options.show_exit_event_messages = True
+        self._show_exit_event_messages = True
 
     def override_outdir(self, new_outdir: Path) -> None:
-        """This function can be used to override the output directory locatiomn
-        Assiming the path passed is valid, the directory will be created
+        """This function can be used to override the output directory location
+        Assuming the path passed is valid, the directory will be created
         and set as the new output directory, thus overriding what was set at
-        the gem5 command line. Is there fore advised this function is used with
-        caution. Its primary use is for swaning multiple gem5 processes from
+        the gem5 command line. Is therefore advised this function is used with
+        caution. Its primary use is for spawning multiple gem5 processes from
         a gem5 process to allow the child processes their own output directory.
 
         :param new_outdir: The new output directory to be used instead of that
@@ -526,7 +538,6 @@ class Simulator:
                 "Cannot override the output directory after the simulation "
                 "has been instantiated."
             )
-        from m5 import options
 
         from _m5.core import setOutputDir
 
@@ -538,8 +549,14 @@ class Simulator:
         if not new_outdir.is_dir():
             raise Exception(f"'{new_outdir}' is not a directory")
 
-        options.outdir = str(new_outdir)  # for backwards compatibility
-        setOutputDir(options.outdir)
+        try:
+            from m5 import options
+
+            options.outdir = str(new_outdir)  # for backwards compatibility
+        except ImportError:
+            pass  # In this case, we're not using main.py
+
+        setOutputDir(new_outdir.as_posix())
         self._outdir = new_outdir
 
     def _instantiate(self) -> None:
@@ -590,7 +607,7 @@ class Simulator:
             # any final things.
             self._board._post_instantiate()
 
-    def run(self, max_ticks: Optional[int] = None) -> None:
+    def run(self, max_ticks: int | None = None) -> None:
         """
         This function will start or continue the simulator run and handle exit
         events accordingly.
@@ -631,16 +648,16 @@ class Simulator:
                 not in self.get_exit_handler_id_map().keys()
             ):
                 warn(
-                    f"Warning: Exit event type ID "
+                    f"Warning: Hypercall ID "
                     f"{self._last_exit_event.getHypercallId()} "
-                    f"not in exit handler ID map. Reentering simulation loop."
+                    f"not in exit handler map. Reentering simulation loop."
                 )
                 continue
             exit_handler = self.get_exit_handler_id_map()[
                 exit_event_hypercall_id
             ](self._last_exit_event.getPayload())
 
-            if m5_options.show_exit_event_messages:
+            if self._show_exit_event_messages:
                 print(
                     f"Exit event: {exit_handler.get_handler_description()} called at tick {self.get_current_tick()}"
                 )
@@ -664,5 +681,5 @@ class Simulator:
         """
         m5.checkpoint(str(checkpoint_dir))
 
-    def get_checkpoint_dir(self) -> Optional[Path]:
+    def get_checkpoint_dir(self) -> Path | None:
         return self._board.get_checkpoint_dir()

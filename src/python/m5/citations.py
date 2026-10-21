@@ -25,10 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from pathlib import Path
-from typing import Type
+from typing import Protocol
 
 
-def add_citation(sim_obj_cls: Type["SimObject"], citation: str):
+class _CitableSimObjectClass(Protocol):
+    _citations: str
+
+
+def add_citation(sim_obj_cls: _CitableSimObjectClass, citation: str) -> None:
     """Add a citation to a SimObject class.
 
     :param sim_obj_cls: The SimObject class to add the citation to.

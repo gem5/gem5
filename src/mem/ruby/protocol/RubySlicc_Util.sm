@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021,2023 ARM Limited
+ * Copyright (c) 2021,2023,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@ void error(std::string msg);
 void assert(bool condition);
 Cycles zero_time();
 Cycles intToCycles(int c);
+int cyclesToInt(Cycles c);
 Tick intToTick(int c);
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);

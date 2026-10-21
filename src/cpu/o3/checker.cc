@@ -40,7 +40,10 @@
 
 #include "cpu/o3/checker.hh"
 
+#include "cpu/checker/cpu.hh"
 #include "cpu/checker/cpu_impl.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/thread_state.hh"
 
 namespace gem5
 {

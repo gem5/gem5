@@ -1064,7 +1064,8 @@ class MultiperspectivePerceptron : public ConditionalPredictor
     void init() override;
 
     // Base class methods.
-    bool lookup(ThreadID tid, Addr branch_addr, void* &bp_history) override;
+    Prediction lookup(ThreadID tid, Addr branch_addr,
+                      void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target, const StaticInstPtr &inst,
                          void * &bp_history) override;

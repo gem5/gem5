@@ -46,6 +46,7 @@
 #define __CPU_PRED_BI_MODE_PRED_HH__
 
 #include "base/sat_counter.hh"
+#include "cpu/pred/branch_type.hh"
 #include "cpu/pred/conditional.hh"
 #include "params/BiModeBP.hh"
 
@@ -73,7 +74,7 @@ class BiModeBP : public ConditionalPredictor
 {
   public:
     BiModeBP(const BiModeBPParams &params);
-    bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
+    Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target, const StaticInstPtr &inst,
                          void * &bp_history) override;

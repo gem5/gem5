@@ -356,4 +356,16 @@ Terminal::writeData(uint8_t c)
 
 }
 
+std::string
+Terminal::getListenerOutput() const
+{
+    if (!listener) {
+        return "";
+    }
+
+    std::stringstream ss;
+    listener->output(ss);
+    return ss.str();
+}
+
 } // namespace gem5

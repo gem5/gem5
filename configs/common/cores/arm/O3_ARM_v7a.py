@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Arm Limited
+# Copyright (c) 2025-2026 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -80,6 +80,9 @@ class O3_ARM_v7a_FP(FUDesc):
         OpDesc(opClass="SimdFloatMultAcc", opLat=5),
         OpDesc(opClass="SimdFloatMatMultAcc", opLat=5),
         OpDesc(opClass="SimdFloatSqrt", opLat=9),
+        OpDesc(opClass="SimdDotProd", opLat=3),
+        OpDesc(opClass="SimdSha3", opLat=2),
+        OpDesc(opClass="SimdCrc", opLat=3),
         OpDesc(opClass="SimdBf16Add", opLat=4),
         OpDesc(opClass="SimdBf16Cmp", opLat=4),
         OpDesc(opClass="SimdBf16Cvt", opLat=3),

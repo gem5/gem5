@@ -66,13 +66,13 @@ class ClockTick : public ScEvent
     {
         p = new Method(name.c_str(), &funcWrapper, true);
         p->dontInitialize(true);
-        scheduler.reg(p);
+        scheduler().reg(p);
     }
 
     ~ClockTick()
     {
         if (scheduled())
-            scheduler.deschedule(this);
+            scheduler().deschedule(this);
         if (p)
             p->popListNode();
     }
@@ -80,7 +80,7 @@ class ClockTick : public ScEvent
     void
     tick()
     {
-        scheduler.schedule(this, _period);
+        scheduler().schedule(this, _period);
         p->ready();
     }
 };
@@ -153,9 +153,9 @@ sc_clock::sc_clock(const char *name, double period, double duty_cycle,
 sc_clock::~sc_clock()
 {
     if (_gem5UpEdge->scheduled())
-        ::sc_gem5::scheduler.deschedule(_gem5UpEdge);
+        ::sc_gem5::scheduler().deschedule(_gem5UpEdge);
     if (_gem5DownEdge->scheduled())
-        ::sc_gem5::scheduler.deschedule(_gem5DownEdge);
+        ::sc_gem5::scheduler().deschedule(_gem5DownEdge);
     delete _gem5UpEdge;
     delete _gem5DownEdge;
 }
@@ -183,13 +183,13 @@ sc_clock::before_end_of_elaboration()
     _gem5UpEdge->createProcess();
     _gem5DownEdge->createProcess();
     if (_posedgeFirst) {
-        ::sc_gem5::scheduler.schedule(_gem5UpEdge, _startTime);
-        ::sc_gem5::scheduler.schedule(_gem5DownEdge,
-                _startTime + _period * _dutyCycle);
+        ::sc_gem5::scheduler().schedule(_gem5UpEdge, _startTime);
+        ::sc_gem5::scheduler().schedule(_gem5DownEdge,
+                                        _startTime + _period * _dutyCycle);
     } else {
-        ::sc_gem5::scheduler.schedule(_gem5DownEdge, _startTime);
-        ::sc_gem5::scheduler.schedule(_gem5UpEdge,
-                _startTime + _period * (1.0 - _dutyCycle));
+        ::sc_gem5::scheduler().schedule(_gem5DownEdge, _startTime);
+        ::sc_gem5::scheduler().schedule(
+            _gem5UpEdge, _startTime + _period * (1.0 - _dutyCycle));
     }
 }
 

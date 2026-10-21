@@ -62,7 +62,9 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 memory = SingleChannelDDR3_1600(size="1GiB")
 
 # Setup a single core Processor.
-processor = SimpleProcessor(cpu_type=CPUTypes.O3, isa=ISA.X86, num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.O3, isa=ISA.X86, num_cores=1, clk_freq="3GHz"
+)
 
 # Setup the board.
 board = X86Board(

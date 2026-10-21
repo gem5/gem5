@@ -51,25 +51,25 @@ namespace gem5
  */
 enum it_opcode_type
 {
-    IT_NOP                               = 0x10,
-    IT_WRITE_DATA                        = 0x37,
-    IT_WAIT_REG_MEM                      = 0x3C,
-    IT_INDIRECT_BUFFER                   = 0x3F,
-    IT_RELEASE_MEM                       = 0x49,
-    IT_SET_UCONFIG_REG                   = 0x79,
-    IT_SWITCH_BUFFER                     = 0x8B,
-    IT_INVALIDATE_TLBS                   = 0x98,
-    IT_MAP_PROCESS                       = 0xA1,
-    IT_MAP_QUEUES                        = 0xA2,
-    IT_UNMAP_QUEUES                      = 0xA3,
-    IT_QUERY_STATUS                      = 0xA4,
-    IT_RUN_LIST                          = 0xA5,
+    IT_NOP = 0x10,
+    IT_WRITE_DATA = 0x37,
+    IT_WAIT_REG_MEM = 0x3C,
+    IT_INDIRECT_BUFFER = 0x3F,
+    IT_RELEASE_MEM = 0x49,
+    IT_SET_UCONFIG_REG = 0x79,
+    IT_SWITCH_BUFFER = 0x8B,
+    IT_INVALIDATE_TLBS = 0x98,
+    IT_MAP_PROCESS = 0xA1,
+    IT_MAP_QUEUES = 0xA2,
+    IT_UNMAP_QUEUES = 0xA3,
+    IT_QUERY_STATUS = 0xA4,
+    IT_RUN_LIST = 0xA5,
 };
 
 /**
  * Value from vega10/pm4_header.h.
  */
-#define PACKET3_SET_UCONFIG_REG_START                   0x0000c000
+#define PACKET3_SET_UCONFIG_REG_START 0x0000c000
 
 /**
  * PM4 packets
@@ -114,7 +114,7 @@ typedef struct GEM5_PACKED
         uint64_t destAddr;
     };
     uint32_t data;
-}  PM4WriteData;
+} PM4WriteData;
 static_assert(sizeof(PM4WriteData) == 16);
 
 typedef struct GEM5_PACKED
@@ -154,7 +154,7 @@ typedef struct GEM5_PACKED
         };
         uint64_t wptrAddr;
     };
-}  PM4MapQueues;
+} PM4MapQueues;
 static_assert(sizeof(PM4MapQueues) == 24);
 
 typedef struct GEM5_PACKED
@@ -188,7 +188,7 @@ typedef struct GEM5_PACKED
     uint32_t reserved9 : 2;
     uint32_t doorbellOffset3 : 26;
     uint32_t reserved10 : 4;
-}  PM4UnmapQueues;
+} PM4UnmapQueues;
 static_assert(sizeof(PM4UnmapQueues) == 20);
 
 typedef struct GEM5_PACKED
@@ -221,7 +221,7 @@ typedef struct GEM5_PACKED
     uint32_t reserved2 : 5;
     uint32_t gdsHeapSize : 6;
     uint32_t reserved3 : 15;
-}  PM4SetResources;
+} PM4SetResources;
 static_assert(sizeof(PM4SetResources) == 28);
 
 typedef struct GEM5_PACKED
@@ -270,7 +270,7 @@ typedef struct GEM5_PACKED
         };
         uint64_t completionSignal;
     };
-}  PM4MapProcess;
+} PM4MapProcess;
 static_assert(sizeof(PM4MapProcess) == 60);
 
 typedef struct GEM5_PACKED
@@ -328,7 +328,7 @@ typedef struct GEM5_PACKED
         };
         uint64_t completionSignal;
     };
-}  PM4MapProcessV2;
+} PM4MapProcessV2;
 static_assert(sizeof(PM4MapProcessV2) == 80);
 
 typedef struct GEM5_PACKED
@@ -358,7 +358,7 @@ typedef struct GEM5_PACKED
     uint32_t reference;
     uint32_t mask;
     uint32_t pollInterval;
-}  PM4WaitRegMem;
+} PM4WaitRegMem;
 static_assert(sizeof(PM4WaitRegMem) == 24);
 
 typedef struct GEM5_PACKED
@@ -366,7 +366,7 @@ typedef struct GEM5_PACKED
     uint32_t regOffset : 16;
     uint32_t reserved : 16;
     uint32_t regData;
-}  PM4SetUConfig;
+} PM4SetUConfig;
 static_assert(sizeof(PM4SetUConfig) == 8);
 
 typedef struct GEM5_PACKED
@@ -384,12 +384,12 @@ typedef struct GEM5_PACKED
     uint32_t chain : 1;
     uint32_t poll : 1;
     uint32_t reserved0 : 1;
-    uint32_t valid: 1;
+    uint32_t valid : 1;
     uint32_t vmid : 4;
     uint32_t cachePolicy : 2;
     uint32_t reserved1 : 1;
     uint32_t priv : 1;
-}  PM4IndirectBuf;
+} PM4IndirectBuf;
 static_assert(sizeof(PM4IndirectBuf) == 12);
 
 typedef struct GEM5_PACKED
@@ -403,7 +403,7 @@ typedef struct GEM5_PACKED
         };
         uint32_t dummy;
     };
-}  PM4SwitchBuf;
+} PM4SwitchBuf;
 static_assert(sizeof(PM4SwitchBuf) == 4);
 
 typedef struct GEM5_PACKED
@@ -425,7 +425,7 @@ typedef struct GEM5_PACKED
     uint32_t cachePolicy : 2;
     uint32_t preResume : 1;
     uint32_t priv : 1;
-}  PM4IndirectBufConst;
+} PM4IndirectBufConst;
 static_assert(sizeof(PM4IndirectBufConst) == 12);
 
 typedef struct GEM5_PACKED
@@ -433,7 +433,7 @@ typedef struct GEM5_PACKED
     uint32_t tmz : 1;
     uint32_t reserved : 27;
     uint32_t command : 4;
-}  PM4FrameCtrl;
+} PM4FrameCtrl;
 static_assert(sizeof(PM4FrameCtrl) == 4);
 
 typedef struct GEM5_PACKED
@@ -489,7 +489,7 @@ typedef struct GEM5_PACKED
         uint64_t data;
     };
     uint32_t intCtxId;
-}  PM4ReleaseMem;
+} PM4ReleaseMem;
 static_assert(sizeof(PM4ReleaseMem) == 28);
 
 typedef struct GEM5_PACKED
@@ -497,7 +497,7 @@ typedef struct GEM5_PACKED
     uint32_t offset : 16;
     uint32_t reserved : 16;
     uint32_t data;
-}  PM4SetUconfigReg;
+} PM4SetUconfigReg;
 static_assert(sizeof(PM4SetUconfigReg) == 8);
 
 typedef struct GEM5_PACKED
@@ -518,7 +518,7 @@ typedef struct GEM5_PACKED
     uint32_t valid : 1;
     uint32_t processCnt : 4;
     uint32_t reserved2 : 4;
-}  PM4RunList;
+} PM4RunList;
 static_assert(sizeof(PM4RunList) == 12);
 
 typedef struct GEM5_PACKED
@@ -559,7 +559,7 @@ typedef struct GEM5_PACKED
         };
         uint64_t data;
     };
-}  PM4QueryStatus;
+} PM4QueryStatus;
 static_assert(sizeof(PM4QueryStatus) == 24);
 
 } // namespace gem5

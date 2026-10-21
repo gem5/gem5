@@ -37,8 +37,7 @@ from m5.objects import *
 
 def TLB_constructor(options, level, gpu_ctrl=None, full_system=False):
     if full_system:
-        constructor_call = (
-            "VegaGPUTLB(\
+        constructor_call = "VegaGPUTLB(\
                 gpu_device = gpu_ctrl, \
                 size = options.L%(level)dTLBentries, \
                 assoc = options.L%(level)dTLBassoc, \
@@ -49,12 +48,9 @@ def TLB_constructor(options, level, gpu_ctrl=None, full_system=False):
                 clk_domain = SrcClockDomain(\
                     clock = options.gpu_clock,\
                     voltage_domain = VoltageDomain(\
-                        voltage = options.gpu_voltage)))"
-            % locals()
-        )
+                        voltage = options.gpu_voltage)))" % locals()
     else:
-        constructor_call = (
-            "X86GPUTLB(size = options.L%(level)dTLBentries, \
+        constructor_call = "X86GPUTLB(size = options.L%(level)dTLBentries, \
                 assoc = options.L%(level)dTLBassoc, \
                 hitLatency = options.L%(level)dAccessLatency,\
                 missLatency2 = options.L%(level)dMissLatency,\
@@ -63,16 +59,13 @@ def TLB_constructor(options, level, gpu_ctrl=None, full_system=False):
                 clk_domain = SrcClockDomain(\
                     clock = options.gpu_clock,\
                     voltage_domain = VoltageDomain(\
-                        voltage = options.gpu_voltage)))"
-            % locals()
-        )
+                        voltage = options.gpu_voltage)))" % locals()
     return constructor_call
 
 
 def Coalescer_constructor(options, level, full_system):
     if full_system:
-        constructor_call = (
-            "VegaTLBCoalescer(probesPerCycle = \
+        constructor_call = "VegaTLBCoalescer(probesPerCycle = \
             options.L%(level)dProbesPerCycle, \
             tlb_level  = %(level)d ,\
             coalescingWindow = options.L%(level)dCoalescingWindow,\
@@ -80,21 +73,16 @@ def Coalescer_constructor(options, level, full_system):
             clk_domain = SrcClockDomain(\
                 clock = options.gpu_clock,\
                 voltage_domain = VoltageDomain(\
-                    voltage = options.gpu_voltage)))"
-            % locals()
-        )
+                    voltage = options.gpu_voltage)))" % locals()
     else:
-        constructor_call = (
-            "TLBCoalescer(probesPerCycle = \
+        constructor_call = "TLBCoalescer(probesPerCycle = \
             options.L%(level)dProbesPerCycle, \
             coalescingWindow = options.L%(level)dCoalescingWindow,\
             disableCoalescing = options.L%(level)dDisableCoalescing,\
             clk_domain = SrcClockDomain(\
                 clock = options.gpu_clock,\
                 voltage_domain = VoltageDomain(\
-                    voltage = options.gpu_voltage)))"
-            % locals()
-        )
+                    voltage = options.gpu_voltage)))" % locals()
     return constructor_call
 
 

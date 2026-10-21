@@ -40,7 +40,8 @@
 namespace gem5
 {
 
-namespace RiscvISA {
+namespace RiscvISA
+{
 
 BitUnion64(SATP)
     Bitfield<63, 60> mode;
@@ -56,18 +57,46 @@ enum AddrXlateMode
     SV57 = 10,
 };
 
+// BARE
+const Addr BARE_VADDR_BITS = 64;
+
 // Sv39 paging
 const Addr SV39_XLEN = 64;
-const Addr SV39_VADDR_BITS  = 39;
+const Addr SV39_VADDR_BITS = 39;
 const Addr SV39_LEVELS = 3;
-const Addr SV39_LEVEL_BITS  = 9;
+const Addr SV39_LEVEL_BITS = 9;
 const Addr SV39X4_WIDENED_BITS = 2;
 
-BitUnion64(PTESv39)
+// Sv48 paging
+const Addr SV48_XLEN = 64;
+const Addr SV48_VADDR_BITS = 48;
+const Addr SV48_LEVELS = 4;
+const Addr SV48_LEVEL_BITS = 9;
+const Addr SV48X4_WIDENED_BITS = 2;
+
+// Sv57 paging
+const Addr SV57_XLEN = 64;
+const Addr SV57_VADDR_BITS = 57;
+const Addr SV57_LEVELS = 5;
+const Addr SV57_LEVEL_BITS = 9;
+const Addr SV57X4_WIDENED_BITS = 2;
+
+BitUnion64(PTE)
     Bitfield<63> n;
     Bitfield<62, 54> reserved;
     Bitfield<53, 10> ppn;
-    Bitfield<53, 28> ppn2;
+    SubBitUnion(PTESv39, 53, 28)
+        Bitfield<53, 28> ppn2;
+    EndSubBitUnion(PTESv39)
+    SubBitUnion(PTESv48, 53, 28)
+        Bitfield<53, 37> ppn3;
+        Bitfield<36, 28> ppn2;
+    EndSubBitUnion(PTESv48)
+    SubBitUnion(PTESv57, 53, 28)
+        Bitfield<53, 46> ppn4;
+        Bitfield<45, 37> ppn3;
+        Bitfield<36, 28> ppn2;
+    EndSubBitUnion(PTESv57)
     Bitfield<27, 19> ppn1;
     Bitfield<18, 10> ppn0;
     Bitfield<7> d;
@@ -79,7 +108,7 @@ BitUnion64(PTESv39)
     Bitfield<2> w;
     Bitfield<1> r;
     Bitfield<0> v;
-EndBitUnion(PTESv39)
+EndBitUnion(PTE)
 
 /**
  * Remove the page offset and the upper bits that are
@@ -87,6 +116,11 @@ EndBitUnion(PTESv39)
  * Note that this must assume the smallest page size
  */
 Addr getVPNFromVAddr(Addr vaddr, Addr mode);
+Addr getVAddrBits(Addr mode);
+Addr getLevels(Addr mode);
+Addr getLevelBits(Addr mode);
+Addr getWidenedBits(Addr mode);
+Addr getSextVAddr(Addr vaddr, Addr mode);
 
 struct TlbEntry;
 typedef Trie<Addr, TlbEntry> TlbEntryTrie;
@@ -103,9 +137,12 @@ struct TlbEntry : public Serializable
 
     uint16_t asid;
 
-    PTESv39 pte;
+    // The trieKey is for checkpoint.
+    Addr trieKey;
 
-    PTESv39 gpte;
+    PTE pte;
+
+    PTE gpte;
 
     TlbEntryTrie::Handle trieHandle;
 
@@ -113,18 +150,20 @@ struct TlbEntry : public Serializable
     uint64_t lruSeq;
 
     TlbEntry()
-        : paddr(0), vaddr(0), logBytes(0), pte(), gpte(), lruSeq(0)
+        : paddr(0), vaddr(0), logBytes(0), trieKey(0), pte(), gpte(), lruSeq(0)
     {}
 
     // Return the page size in bytes
-    Addr size() const
+    Addr
+    size() const
     {
         return (static_cast<Addr>(1) << logBytes);
     }
 
-    void reset()
+    void
+    reset()
     {
-        paddr = vaddr = logBytes = pte = gpte = lruSeq = 0;
+        paddr = vaddr = logBytes = trieKey = pte = gpte = lruSeq = 0;
     }
 
     void serialize(CheckpointOut &cp) const override;

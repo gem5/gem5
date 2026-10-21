@@ -25,8 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from typing import Optional
-
 from m5.util import warn
 
 from ...isas import ISA
@@ -41,17 +39,26 @@ class SimpleProcessor(BaseCPUProcessor):
     same CPUType.
     """
 
-    def __init__(self, cpu_type: CPUTypes, num_cores: int, isa: ISA) -> None:
+    def __init__(
+        self,
+        cpu_type: CPUTypes,
+        num_cores: int,
+        isa: ISA,
+        clk_freq: str,
+    ) -> None:
         """
         :param cpu_type: The CPU type for each type in the processor.
 
         :param num_cores: The number of CPU cores in the processor.
 
         :param isa: The ISA of the processor.
+
+        :param clk_freq: The clock frequency for the processor's cores.
         """
         super().__init__(
             cores=[
                 SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa)
                 for i in range(num_cores)
-            ]
+            ],
+            clk_freq=clk_freq,
         )

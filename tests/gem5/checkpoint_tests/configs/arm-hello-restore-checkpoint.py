@@ -1,3 +1,16 @@
+# -*- mode:python -*-
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
@@ -57,7 +70,9 @@ cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
 
 memory = SingleChannelDDR3_1600(size="32MiB")
 
-processor = SimpleProcessor(cpu_type=CPUTypes.ATOMIC, isa=ISA.ARM, num_cores=2)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.ATOMIC, isa=ISA.ARM, num_cores=2, clk_freq="3GHz"
+)
 
 board = SimpleBoard(
     clk_freq="3GHz",
@@ -69,7 +84,7 @@ board = SimpleBoard(
 board.set_se_binary_workload(
     obtain_resource("arm-hello64-static", resource_version="1.0.0"),
     checkpoint=obtain_resource(
-        "arm-hello-test-checkpoint", resource_version="1.0.0"
+        "arm-hello-test-checkpoint", resource_version="2.0.0"
     ),
 )
 

@@ -43,7 +43,7 @@ from .memory import ChanneledMemory
 
 
 def SingleChannelDDR3_1600(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A single channel memory system using DDR3_1600_8x8 based DIMM.
@@ -52,7 +52,7 @@ def SingleChannelDDR3_1600(
 
 
 def SingleChannelDDR3_2133(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A single channel memory system using DDR3_2133_8x8 based DIMM.
@@ -61,7 +61,7 @@ def SingleChannelDDR3_2133(
 
 
 def SingleChannelDDR4_2400(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A single channel memory system using DDR4_2400_8x8 based DIMM.
@@ -70,13 +70,13 @@ def SingleChannelDDR4_2400(
 
 
 def SingleChannelLPDDR3_1600(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     return ChanneledMemory(LPDDR3_1600_1x32, 1, 64, size=size)
 
 
 def SingleChannelHBM(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     if not size:
         size = "256MiB"
@@ -84,7 +84,7 @@ def SingleChannelHBM(
 
 
 def DIMM_DDR5_4400(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A single DIMM of DDR5 has two channels.
@@ -93,7 +93,7 @@ def DIMM_DDR5_4400(
 
 
 def DIMM_DDR5_6400(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A single DIMM of DDR5 has two channels.
@@ -102,7 +102,7 @@ def DIMM_DDR5_6400(
 
 
 def DIMM_DDR5_8400(
-    size: Optional[str] = None,
+    size: str | None = None,
 ) -> AbstractMemorySystem:
     """
     A single DIMM of DDR5 has two channels.

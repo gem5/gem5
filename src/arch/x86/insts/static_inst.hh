@@ -224,6 +224,7 @@ class X86StaticInst : public StaticInst
     {
         PCStateBase *ret_pc_ptr = call_pc.clone();
         ret_pc_ptr->as<PCState>().uEnd();
+        ret_pc_ptr->set(call_pc.instAddr() + size());
         return std::unique_ptr<PCStateBase>{ret_pc_ptr};
     }
 };

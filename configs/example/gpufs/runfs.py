@@ -229,6 +229,14 @@ def addRunFSOptions(parser):
         help="Frequency in exec cycles of GPU progress prints",
     )
 
+    parser.add_argument(
+        "--emulate-blit-kernels",
+        default=False,
+        action="store_true",
+        help="Emulate blit kernels as functional copies instead of running"
+        "GPU kernel. Intended to improve simulation performance.",
+    )
+
 
 def runGpuFSSystem(args):
     """

@@ -53,7 +53,11 @@ class RegisterFileCache : public SimObject
     RegisterFileCache(const RegisterFileCacheParams &p);
     virtual ~RegisterFileCache();
     virtual void setParent(ComputeUnit *_computeUnit);
-    int cacheSize() const { return _capacity; }
+    int
+    cacheSize() const
+    {
+        return _capacity;
+    }
 
     // Debug functions
     virtual std::string dumpLL() const;
@@ -67,14 +71,18 @@ class RegisterFileCache : public SimObject
 
       public:
         RegisterCacheEvent(RegisterFileCache *rfc, int regIdx)
-            : rfc(rfc), regIdx(regIdx) { setFlags(AutoDelete); }
+            : rfc(rfc), regIdx(regIdx)
+        {
+            setFlags(AutoDelete);
+        }
     };
 
     class MarkRegCachedEvent : public RegisterCacheEvent
     {
       public:
         MarkRegCachedEvent(RegisterFileCache *rfc, int regIdx)
-            : RegisterCacheEvent(rfc, regIdx) { }
+            : RegisterCacheEvent(rfc, regIdx)
+        {}
         void process();
     };
 
@@ -88,7 +96,7 @@ class RegisterFileCache : public SimObject
     virtual bool inRFC(int regIdx);
 
   protected:
-    ComputeUnit* computeUnit;
+    ComputeUnit *computeUnit;
     int simdId, _capacity;
 
     class OrderedRegs
@@ -96,16 +104,15 @@ class RegisterFileCache : public SimObject
       public:
         int regIdx;
 
-        OrderedRegs* next;
-        OrderedRegs* prev;
+        OrderedRegs *next;
+        OrderedRegs *prev;
         OrderedRegs(int val) : regIdx(val), next(nullptr), prev(nullptr) {}
     };
 
     // Doubly linked list, head is the most recently used
-    std::unordered_map<int, OrderedRegs*> lruHash;
-    OrderedRegs* lruHead = nullptr;
-    OrderedRegs* lruTail = nullptr;
-
+    std::unordered_map<int, OrderedRegs *> lruHash;
+    OrderedRegs *lruHead = nullptr;
+    OrderedRegs *lruTail = nullptr;
 };
 
 } // namespace gem5

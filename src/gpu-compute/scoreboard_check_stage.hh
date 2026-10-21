@@ -82,13 +82,17 @@ class ScoreboardCheckStage
     void exec();
 
     // Stats related variables and methods
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
 
   private:
     void collectStatistics(nonrdytype_e rdyStatus);
     int mapWaveToExeUnit(Wavefront *w);
-    bool ready(Wavefront *w, nonrdytype_e *rdyStatus,
-               int *exeResType, int wfSlot);
+    bool ready(Wavefront *w, nonrdytype_e *rdyStatus, int *exeResType,
+               int wfSlot);
     ComputeUnit &computeUnit;
 
     /**
@@ -100,18 +104,30 @@ class ScoreboardCheckStage
 
     const std::string _name;
 
-    std::string rdyStatusStr(const nonrdytype_e& rdyStatus) {
+    std::string
+    rdyStatusStr(const nonrdytype_e &rdyStatus)
+    {
         switch (rdyStatus) {
-            case NRDY_ILLEGAL: return "NRDY_ILLEGAL";
-            case NRDY_WF_STOP: return "NRDY_WF_STOP";
-            case NRDY_IB_EMPTY: return "NRDY_IB_EMPTY";
-            case NRDY_WAIT_CNT: return "NRDY_WAIT_CNT";
-            case NRDY_SLEEP: return "NRDY_SLEEP";
-            case NRDY_BARRIER_WAIT: return "NRDY_BARRIER_WAIT";
-            case NRDY_VGPR_NRDY: return "NRDY_VGPR_NRDY";
-            case NRDY_SGPR_NRDY: return "NRDY_SGPR_NRDY";
-            case NRDY_MATRIX_CORE: return "NRDY_MATRIX_CORE";
-            case INST_RDY: return "INST_RDY";
+            case NRDY_ILLEGAL:
+                return "NRDY_ILLEGAL";
+            case NRDY_WF_STOP:
+                return "NRDY_WF_STOP";
+            case NRDY_IB_EMPTY:
+                return "NRDY_IB_EMPTY";
+            case NRDY_WAIT_CNT:
+                return "NRDY_WAIT_CNT";
+            case NRDY_SLEEP:
+                return "NRDY_SLEEP";
+            case NRDY_BARRIER_WAIT:
+                return "NRDY_BARRIER_WAIT";
+            case NRDY_VGPR_NRDY:
+                return "NRDY_VGPR_NRDY";
+            case NRDY_SGPR_NRDY:
+                return "NRDY_SGPR_NRDY";
+            case NRDY_MATRIX_CORE:
+                return "NRDY_MATRIX_CORE";
+            case INST_RDY:
+                return "INST_RDY";
             default:
                 return "UNKNOWN";
         };

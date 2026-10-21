@@ -193,6 +193,16 @@ Root::Root(const RootParams &p, int)
     // having a single global stat group for global stats. Merge that
     // group into the root object here.
     mergeStatGroup(&Root::RootStats::instance);
+
+    // Print the tick if we panic.
+    Logger::getPanic().registerExtraLog([]() {
+        if (Gem5Internal::_curTickPtr) {
+            return csprintf("Panic at tick %llu\n",
+                            (unsigned long long)curTick());
+        } else {
+            return std::string("Panic at tick 0 (no event queue active)\n");
+        }
+    });
 }
 
 void

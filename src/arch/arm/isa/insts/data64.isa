@@ -237,7 +237,7 @@ let {{
     uint64_t data = htole(Op264);
     auto data_buffer = reinterpret_cast<uint8_t*>(&data);
 
-    Dest = crc32<poly>(
+    WDest = crc32<poly>(
         data_buffer,   /* Message register */
         initial_crc,   /* Initial value of the CRC */
         size_bytes     /* Size of the original Message */

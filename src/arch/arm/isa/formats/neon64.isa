@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013, 2020, 2025 Arm Limited
+// Copyright (c) 2012-2013, 2020, 2025-2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -944,13 +944,34 @@ namespace Aarch64
                 }
             }
           case 0xe:
-            if (u || size != 0) {
+            if (u) {
                 return new Unknown64(machInst);
             } else {
-                if (q)
-                    return new Pmull2X<uint8_t>(machInst, vd, vn, vm);
-                else
-                    return new PmullX<uint8_t>(machInst, vd, vn, vm);
+                if (q) {
+                    switch (size) {
+                      case 0:
+                        return new Pmull2X<uint8_t>(machInst, vd, vn, vm);
+                      case 1:
+                      case 2:
+                        return new Unknown64(machInst);
+                      case 3:
+                        return new Pmull2X<uint64_t>(machInst, vd, vn, vm);
+                      default:
+                        return new Unknown64(machInst);
+                    }
+                } else {
+                    switch (size) {
+                      case 0:
+                        return new PmullX<uint8_t>(machInst, vd, vn, vm);
+                      case 1:
+                      case 2:
+                        return new Unknown64(machInst);
+                      case 3:
+                        return new PmullX<uint64_t>(machInst, vd, vn, vm);
+                      default:
+                        return new Unknown64(machInst);
+                    }
+                }
             }
           default:
             return new Unknown64(machInst);

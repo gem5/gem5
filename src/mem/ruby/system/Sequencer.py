@@ -1,4 +1,4 @@
-# Copyright (c) 2020 ARM Limited
+# Copyright (c) 2020,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -70,6 +70,10 @@ class RubyPort(ClockedObject):
     mem_request_port = RequestPort("Ruby mem request port")
 
     pio_response_port = ResponsePort("Ruby pio response port")
+
+    response_latency = Param.Cycles(
+        0, "Latency for enqueueing response pkts to peer"
+    )
 
     using_ruby_tester = Param.Bool(False, "")
     no_retry_on_stall = Param.Bool(False, "")

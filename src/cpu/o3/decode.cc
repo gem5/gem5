@@ -42,13 +42,23 @@
 #include "cpu/o3/decode.hh"
 
 #include "arch/generic/pcstate.hh"
+#include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
 #include "params/BaseO3CPU.hh"
+#include "sim/cur_tick.hh"
 #include "sim/full_system.hh"
 
 // clang complains about std::set being overloaded with Packet::set if

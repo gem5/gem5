@@ -42,7 +42,7 @@ class GUPSGeneratorEP(AbstractGenerator):
         start_addr: Addr,
         mem_size: str,
         update_limit: int = 0,
-        clk_freq: Optional[str] = None,
+        clk_freq: str | None = None,
     ):
         """The GUPSGeneratorEP class
 

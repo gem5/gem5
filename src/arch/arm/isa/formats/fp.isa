@@ -50,7 +50,7 @@ output header {{
     newNeonMemInst(const unsigned size,
                    const ExtMachInst &machInst,
                    const RegIndex dest, const RegIndex ra,
-                   const uint32_t imm, const unsigned extraMemFlags)
+                   const uint32_t imm, const Request::Flags extraMemFlags)
     {
         switch (size) {
           case 0:

@@ -119,7 +119,7 @@ def getOutput(command, inputVal=""):
     if debug:
         print("%>", " ".join(command))
     proc = Popen(command, stderr=STDOUT, stdin=PIPE, stdout=PIPE)
-    (out, err) = proc.communicate(inputVal)
+    out, err = proc.communicate(inputVal)
     return (out.decode(), proc.returncode)
 
 
@@ -140,7 +140,7 @@ def privOutput(command, inputVal=""):
 
 # Find the path to a program.
 def findProg(program, cleanupDev=None):
-    (out, returncode) = getOutput(["which", program])
+    out, returncode = getOutput(["which", program])
     if returncode != 0:
         if cleanupDev:
             cleanupDev.destroy()
@@ -157,7 +157,7 @@ class LoopbackDevice:
 
     def setup(self, fileName, offset=False):
         assert not self.devFile
-        (out, returncode) = privOutput([findProg("losetup"), "-f"])
+        out, returncode = privOutput([findProg("losetup"), "-f"])
         if returncode != 0:
             print(out)
             return returncode
@@ -181,7 +181,7 @@ def findPartOffset(devFile, fileName, partition):
     dev.setup(fileName)
     # Dump the partition information.
     command = [findProg("sfdisk"), "-d", dev.devFile]
-    (out, returncode) = privOutput(command)
+    out, returncode = privOutput(command)
     if returncode != 0:
         print(out)
         exit(returncode)
@@ -217,7 +217,7 @@ def findPartOffset(devFile, fileName, partition):
 
 
 def mountPointToDev(mountPoint):
-    (mountTable, returncode) = getOutput([findProg("mount")])
+    mountTable, returncode = getOutput([findProg("mount")])
     if returncode != 0:
         print(mountTable)
         exit(returncode)
@@ -251,7 +251,7 @@ class Command:
         usage = "%(prog)s [options]"
         posUsage = ""
         for posArg in posArgs:
-            (argName, argDesc) = posArg
+            argName, argDesc = posArg
             usage += f" {argName}"
             posUsage += "\n  %s: %s" % posArg
         usage += posUsage
@@ -308,7 +308,7 @@ mountCom = Command(
 
 
 def mountComFunc(options, args):
-    (path, mountPoint) = args
+    path, mountPoint = args
     if not os.path.isdir(mountPoint):
         print(f"Mount point {mountPoint} is not a directory.")
 
@@ -361,7 +361,7 @@ newCom = Command(
 
 
 def newImage(file, mb):
-    (cylinders, heads, sectors) = chsFromSize((mb * MiB) / BlockSize)
+    cylinders, heads, sectors = chsFromSize((mb * MiB) / BlockSize)
     size = cylinders * heads * sectors * BlockSize
 
     # We lseek to the end of the file and only write one byte there. This
@@ -373,7 +373,7 @@ def newImage(file, mb):
 
 
 def newComFunc(options, args):
-    (file, mb) = args
+    file, mb = args
     mb = int(mb)
     newImage(file, mb)
 
@@ -456,7 +456,7 @@ formatCom.func = formatComFunc
 
 
 def initComFunc(options, args):
-    (path, mb) = args
+    path, mb = args
     mb = int(mb)
     newImage(path, mb)
     dev = LoopbackDevice()

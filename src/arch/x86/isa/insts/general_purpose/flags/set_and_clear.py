@@ -71,7 +71,7 @@ def macroop STI {
 
     # Extract the IOPL.
     srli t2, t1, 12, dataSize=8
-    andi t2, t1, 0x3, dataSize=8
+    andi t2, t2, 0x3, dataSize=8
 
     # Find the CPL.
     rdm5reg t3, dataSize=8
@@ -87,12 +87,12 @@ def macroop STI {
 
     # Check CR4.PVI
     rdcr t4, cr4, dataSize=8
-    andi t0, t4, 0x1, flags=(CEZF,)
+    andi t0, t4, 0x1, flags=(EZF,)
     fault "std::make_shared<GeneralProtection>(0)", flags=(CEZF,)
 
     # Check CPL.
     andi t4, t3, 0x3, dataSize=8
-    xori t4, t4, 0x3, dataSize=8, flags=(CEZF,)
+    xori t4, t4, 0x3, dataSize=8, flags=(EZF,)
     fault "std::make_shared<GeneralProtection>(0)", flags=(nCEZF,)
 
     #     if (RFLAGS.VIP == 1)
@@ -129,7 +129,7 @@ def macroop CLI {
 
     # Extract the IOPL.
     srli t2, t1, 12, dataSize=8
-    andi t2, t1, 0x3, dataSize=8
+    andi t2, t2, 0x3, dataSize=8
 
     # Find the CPL.
     rdm5reg t3, dataSize=8
@@ -145,12 +145,12 @@ def macroop CLI {
 
     # Check CR4.PVI
     rdcr t4, cr4, dataSize=8
-    andi t0, t4, 0x1, flags=(CEZF,)
+    andi t0, t4, 0x1, flags=(EZF,)
     fault "std::make_shared<GeneralProtection>(0)", flags=(CEZF,)
 
     # Check CPL.
     andi t4, t3, 0x3, dataSize=8
-    xori t4, t4, 0x3, dataSize=8, flags=(CEZF,)
+    xori t4, t4, 0x3, dataSize=8, flags=(EZF,)
     fault "std::make_shared<GeneralProtection>(0)", flags=(nCEZF,)
 
     # RFLAGS.VIF = 0

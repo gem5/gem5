@@ -43,9 +43,10 @@ class U74Processor(BaseCPUProcessor):
     def __init__(
         self,
         is_fs: bool,
+        clk_freq: str,
     ) -> None:
         self._cpu_type = CPUTypes.MINOR
-        super().__init__(cores=self._create_cores(is_fs))
+        super().__init__(cores=self._create_cores(is_fs), clk_freq=clk_freq)
 
     def _create_cores(self, is_fs: bool):
         if is_fs:

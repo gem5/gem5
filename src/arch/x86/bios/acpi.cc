@@ -41,6 +41,7 @@
 #include <cassert>
 #include <cstring>
 
+#include "arch/x86/bios/dsdt_aml.hh"
 #include "base/trace.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
@@ -138,6 +139,61 @@ RSDP::write(PortProxy& phys_proxy, Allocator& alloc) const
     phys_proxy.writeBlob(addr, mem.data(), mem.size());
 
     return addr;
+}
+
+DSDT::DSDT(const Params &p) : SimObject(p)
+{}
+
+Addr
+DSDT::write(PortProxy &phys_proxy, Allocator &alloc) const
+{
+    // Allocate the ASL blob embedded via SCons. It is a complete table so we
+    // just copy the whole unmodified blob into simulated memory.
+    Addr addr = alloc.alloc(Blobs::dsdt_aml_len, 16);
+    phys_proxy.writeBlob(addr, Blobs::dsdt_aml, Blobs::dsdt_aml_len);
+    DPRINTF(ACPI, "Wrote DSDT (%d bytes) @ %#x\n", Blobs::dsdt_aml_len, addr);
+    return addr;
+}
+
+FADT::FADT(const Params &p) : SysDescTable(p, "FACP", 6), dsdt(p.dsdt)
+{}
+
+Addr
+FADT::writeBuf(PortProxy &phys_proxy, Allocator &alloc,
+               std::vector<uint8_t> &mem) const
+{
+    assert(mem.empty());
+    mem.resize(sizeof(Mem));
+
+    Mem *data = reinterpret_cast<Mem *>(mem.data());
+
+    // Write the DSDT first and point this FADT at it. The guest finds the DSDT
+    // here not via the RSDT/XSDT.
+    if (dsdt) {
+        Addr dsdt_addr = dsdt->write(phys_proxy, alloc);
+        data->dsdt = static_cast<uint32_t>(dsdt_addr);
+        data->xDsdt = dsdt_addr;
+        DPRINTF(ACPI, "FADT: DSDT @ %#x\n", dsdt_addr);
+    }
+
+    // Setting this is required but not really used. Set to some unused
+    // interrupt value.
+    data->sciInt = 9;
+
+    // Ensure that we don't claim to support anything that gem5 does not model.
+    // The following is ACPI_FADT_LEGACY_DEVICES | ACPI_FADT_8042. See:
+    // https://elixir.bootlin.com/linux/v7.1/source/include/acpi/actbl.h#L260
+    data->iapcBootArch = 0x3;
+
+    // These are required but gem5 does not model the registers. Here we just
+    // assign them to some unused I/O port range. Then gem5 will ignore writes
+    // and return 0 on reads which is what Linux expects.
+    data->pm1aEvtBlk = 0x600;
+    data->pm1EvtLen = 4;
+    data->pm1aCntBlk = 0x604;
+    data->pm1CntLen = 2;
+
+    return SysDescTable::writeBuf(phys_proxy, alloc, mem);
 }
 
 Addr

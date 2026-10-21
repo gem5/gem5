@@ -48,12 +48,12 @@
  */
 
 // Registers used to read GPU clock count used in profiling
-#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB                 0x13090
-#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB                 0x13094
-#define AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT             0x13098
+#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB 0x13090
+#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB 0x13094
+#define AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT 0x13098
 
 // Scratch registers used for GPU post
-#define AMDGPU_MM_SCRATCH_REG0                            0x08100
+#define AMDGPU_MM_SCRATCH_REG0 0x08100
 
 namespace gem5
 {

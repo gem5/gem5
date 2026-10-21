@@ -44,10 +44,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <csignal>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <string>
+#include <utility>
 
 #if defined(__FreeBSD__)
 #include <sys/param.h>
@@ -288,7 +291,9 @@ processExternalSignal(void)
     id_pos += id_field.length();
 
     // Skip whitespace
-    while (id_pos < full_payload_str.length() && isspace(id_pos)) {
+    while (
+        id_pos < full_payload_str.length() &&
+        std::isspace(static_cast<unsigned char>(full_payload_str[id_pos]))) {
         id_pos++;
     }
 
@@ -391,8 +396,8 @@ processExternalSignal(void)
     munmap(shm_ptr, shared_mem_size);
     close(shm_fd);
 
-    exitSimLoopWithHypercall("Handling external signal!", 0, curTick(), 0,
-                             payload_map, hypercall_id, false);
+    exitSimulationLoop(hypercall_id, std::move(payload_map),
+                       curTick() + simQuantum);
 }
 
 std::string

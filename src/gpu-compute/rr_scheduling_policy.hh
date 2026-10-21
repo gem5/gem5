@@ -45,15 +45,13 @@ namespace gem5
 class RRSchedulingPolicy final : public __SchedulingPolicy<RRSchedulingPolicy>
 {
   public:
-    RRSchedulingPolicy()
-    {
-    }
+    RRSchedulingPolicy() {}
 
-    static Wavefront*
-    __chooseWave(std::vector<Wavefront*> *sched_list)
+    static Wavefront *
+    __chooseWave(std::vector<Wavefront *> *sched_list)
     {
         panic_if(!sched_list->size(), "RR scheduling policy sched list is "
-            "empty.\n");
+                                      "empty.\n");
         Wavefront *selected_wave(nullptr);
 
         /**

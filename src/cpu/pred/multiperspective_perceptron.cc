@@ -591,9 +591,9 @@ MultiperspectivePerceptron::updateHistories(ThreadID tid, Addr pc,
     threadData[tid]->path_history[0] = pc2;
 }
 
-bool
+Prediction
 MultiperspectivePerceptron::lookup(ThreadID tid, Addr instPC,
-                                   void * &bp_history)
+                                   void *&bp_history)
 {
     MPPBranchInfo *bi = new MPPBranchInfo(instPC, pcshift, true);
     bp_history = (void *)bi;
@@ -608,11 +608,11 @@ MultiperspectivePerceptron::lookup(ThreadID tid, Addr instPC,
         if (f.alwaysNotTakenSoFar()) {
             bi->filtered = true;
             bi->prediction = false;
-            return false;
+            return predictWithDefaultLatency(false);
         } else if (f.alwaysTakenSoFar()) {
             bi->filtered = true;
             bi->prediction = true;
-            return true;
+            return predictWithDefaultLatency(true);
         }
         if (f.neverSeen()) {
             use_static = true;
@@ -630,7 +630,7 @@ MultiperspectivePerceptron::lookup(ThreadID tid, Addr instPC,
         }
     }
 
-    return bi->prediction;
+    return predictWithDefaultLatency(bi->prediction);
 }
 
 void

@@ -330,9 +330,9 @@ machine(MachineType:MiscNode, "CHI Misc Node for handling and distrbuting DVM op
 
   // TBE table for DVM requests
   MN_TBETable dvmTBEs, constructor="m_number_of_DVM_TBEs";
-  TBEStorage nonSyncTBEs, constructor="this, m_number_of_non_sync_TBEs";
-  TBEStorage genericTBEs, constructor="this, (m_number_of_DVM_TBEs - m_number_of_non_sync_TBEs)";
-  MN_TBEStorage storDvmTBEs, template="<MiscNode_RetryQueueEntry>", constructor="this, {m_genericTBEs_ptr, m_nonSyncTBEs_ptr}";
+  TBEStorage nonSyncTBEs, constructor='this, m_number_of_non_sync_TBEs, "nonSyncTBEs"';
+  TBEStorage genericTBEs, constructor='this, (m_number_of_DVM_TBEs - m_number_of_non_sync_TBEs), "genericTBEs"';
+  MN_TBEStorage storDvmTBEs, template="<MiscNode_RetryQueueEntry>", constructor='this, {m_genericTBEs_ptr, m_nonSyncTBEs_ptr}, "storDvmTBEs"';
 
   // txnId of the current TBE which is distributing snoops
   // NOTE - this is a safety measure for making sure we don't

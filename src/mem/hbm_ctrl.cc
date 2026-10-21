@@ -460,6 +460,25 @@ HBMCtrl::verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
     return cmd_at;
 }
 
+bool
+HBMCtrl::allIntfDrained() const
+{ return MemCtrl::allIntfDrained() && pc1Int->allRanksDrained(); }
+
+DrainState
+HBMCtrl::drain()
+{
+    const DrainState state = MemCtrl::drain();
+
+    if (state == DrainState::Draining) {
+        if (pc1Int->writeQueueSize && !nextReqEventPC1.scheduled()) {
+            schedule(nextReqEventPC1, curTick());
+        }
+        pc1Int->drainRanks();
+    }
+
+    return state;
+}
+
 void
 HBMCtrl::drainResume()
 {

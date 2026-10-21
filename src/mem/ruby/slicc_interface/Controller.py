@@ -1,4 +1,4 @@
-# Copyright (c) 2017,2019-2021 ARM Limited
+# Copyright (c) 2017,2019-2021, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -41,6 +41,7 @@ from m5.objects.RubySystem import RubySystem
 from m5.objects.System import System
 from m5.params import *
 from m5.proxy import *
+from m5.util.pybind import PyBindMethod
 
 
 class RubyController(ClockedObject):
@@ -48,6 +49,10 @@ class RubyController(ClockedObject):
     cxx_class = "gem5::ruby::AbstractController"
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
     abstract = True
+
+    cxx_exports = [
+        PyBindMethod("flushController"),
+    ]
 
     version = Param.Int("")
     addr_ranges = VectorParam.AddrRange(

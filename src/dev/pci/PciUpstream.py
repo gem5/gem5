@@ -37,7 +37,6 @@ from m5.objects.Bridge import (
     Bridge,
     BridgeBase,
 )
-from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Device import IsaFake
 from m5.objects.XBar import NoncoherentXBar
 from m5.params import *
@@ -72,31 +71,3 @@ class PciUpDownBridge(BridgeBase):
     type = "PciUpDownBridge"
     cxx_class = "gem5::PciUpDownBridge"
     cxx_header = "dev/pci/up_down_bridge.hh"
-
-
-class PciUpstream(ClockedObject):
-    type = "PciUpstream"
-    cxx_class = "gem5::PciUpstream"
-    cxx_header = "dev/pci/upstream.hh"
-    abstract = True
-
-    up_to_down = Param.PciUpDownBridge(
-        PciUpDownBridge(), "Bridge upstream -> downstream"
-    )
-    down_to_up = Param.BridgeBase(Bridge(), "Bridge downstream -> upstream")
-
-    config_error = Param.PciConfigError(
-        PciConfigError(), "Device to handle config errors"
-    )
-
-    def down_response_port(self):
-        return self.down_to_up.cpu_side_port
-
-    def down_request_port(self):
-        return self.up_to_down.mem_side_port
-
-    def up_response_port(self):
-        return self.up_to_down.cpu_side_port
-
-    def up_request_port(self):
-        return self.down_to_up.mem_side_port

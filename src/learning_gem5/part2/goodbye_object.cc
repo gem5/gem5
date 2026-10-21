@@ -94,7 +94,8 @@ GoodbyeObject::fillBuffer()
     } else {
         DPRINTF(HelloExample, "Goodbye done copying!\n");
         // Be sure to take into account the time for the last bytes
-        exitSimLoop(buffer, 0, curTick() + bandwidth * bytes_copied);
+        exitSimulationLoopClassic(buffer, 0,
+                                  curTick() + bandwidth * bytes_copied);
     }
 }
 

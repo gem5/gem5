@@ -31,16 +31,16 @@ running expensive tests, and prefer focused `--uid <SuiteUID>` runs when
 validating a specific suite. Add `--skip-build` only when all required gem5 and
 unit-test binaries already exist.
 
-Host and ISA filters are part of suite selection. In the current suite set,
-`--host gcn_gpu` selects GPU suites whose declared ISA is `VEGA_X86`, so an
-explicit `--isa=VEGA_X86` is optional. Supplying both can make the intended
-intersection explicit, but the container image alone does not select tests.
+Host and ISA filters are part of suite selection. The full-system GPU suites
+declare `ALL` and run on the ordinary supported hosts. Use an explicit
+`--isa=ALL` filter when selecting them; the container image alone does not
+select tests.
 
 ## Validation Examples
 
 ```sh
 ./main.py list --length=long -q --suites
-./main.py list --host gcn_gpu --isa=VEGA_X86 -q
+./main.py list --isa=ALL -q
 ./main.py run --uid <SuiteUID> --skip-build
 ```
 
