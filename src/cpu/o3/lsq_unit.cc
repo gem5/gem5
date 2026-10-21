@@ -41,6 +41,8 @@
 
 #include "cpu/o3/lsq_unit.hh"
 
+#include <algorithm>
+
 #include "arch/generic/debugfaults.hh"
 #include "arch/generic/mmu.hh"
 #include "base/cprintf.hh"
@@ -253,6 +255,8 @@ LSQUnit::resetState()
 
     lqOccupied = 0;
     sqOccupied = 0;
+    lqWaiters = false;
+    sqWaiters = false;
 
     // hardware transactional memory
     // nesting depth
@@ -317,6 +321,9 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Number of accesses clamped to the entries they reserved"),
       ADD_STAT(entryOvercommits, statistics::units::Count::get(),
                "Number of times a queue occupied more entries than it has"),
+      ADD_STAT(entryReplays, statistics::units::Count::get(),
+               "Number of times an access waited for free entries to be "
+               "replayed"),
       ADD_STAT(vecMemPackAccesses, statistics::units::Count::get(),
                "Unit-stride vector accesses with pack width enabled"),
       ADD_STAT(vecMemPackFlows, statistics::units::Count::get(),
@@ -509,7 +516,7 @@ LSQUnit::numFreeStoreEntries()
                : 0;
 }
 
-void
+bool
 LSQUnit::resizeEntries(const DynInstPtr &inst, unsigned entries)
 {
     const unsigned reserved = lsq->reservedEntries(inst);
@@ -523,9 +530,32 @@ LSQUnit::resizeEntries(const DynInstPtr &inst, unsigned entries)
         uses_sq ? static_cast<LSQEntry &>(*inst->sqIt) : *inst->lqIt;
     assert(entry.valid() && entry.instruction() == inst);
 
+    // The access is executing, so it no longer waits for entries.
+    entry.waitingEntries() = 0;
+
     const unsigned current = entry.occupiedEntries();
     if (entries == current) {
-        return;
+        return true;
+    }
+
+    unsigned &occupied = uses_sq ? sqOccupied : lqOccupied;
+    const unsigned capacity =
+        uses_sq ? storeQueue.capacity() : loadQueue.capacity();
+    assert(occupied >= current);
+
+    // The oldest access of the queue never waits, so that it can always
+    // make progress.
+    const bool is_head = uses_sq ? inst->sqIt == storeQueue.begin()
+                                 : inst->lqIt == loadQueue.begin();
+    if (overflowMode == LSQOverflowMode::Replay && entries > current &&
+        occupied - current + entries > capacity && !is_head) {
+        DPRINTF(LSQOccupancy,
+                "[sn:%llu] Waits for %u free %s entries to replay\n",
+                inst->seqNum, entries - current, uses_sq ? "SQ" : "LQ");
+        ++stats.entryReplays;
+        entry.waitingEntries() = entries;
+        (uses_sq ? sqWaiters : lqWaiters) = true;
+        return false;
     }
 
     DPRINTF(LSQOccupancy,
@@ -539,10 +569,6 @@ LSQUnit::resizeEntries(const DynInstPtr &inst, unsigned entries)
         ++stats.entriesShrunk;
     }
 
-    unsigned &occupied = uses_sq ? sqOccupied : lqOccupied;
-    const unsigned capacity =
-        uses_sq ? storeQueue.capacity() : loadQueue.capacity();
-    assert(occupied >= current);
     occupied = occupied - current + entries;
     entry.occupiedEntries() = entries;
     if (occupied > capacity) {
@@ -557,6 +583,55 @@ LSQUnit::resizeEntries(const DynInstPtr &inst, unsigned entries)
 
     // Let rename see the new number of free entries.
     iewStage->updateLSQNextCycle = true;
+
+    if (entries < current) {
+        wakeEntryWaiters(uses_sq);
+    }
+
+    return true;
+}
+
+void
+LSQUnit::wakeEntryWaiters(bool uses_sq)
+{
+    bool &waiters = uses_sq ? sqWaiters : lqWaiters;
+    if (!waiters) {
+        return;
+    }
+    waiters = false;
+
+    const unsigned occupied = uses_sq ? sqOccupied : lqOccupied;
+    const unsigned capacity =
+        uses_sq ? storeQueue.capacity() : loadQueue.capacity();
+    unsigned free_entries = occupied < capacity ? capacity - occupied : 0;
+
+    // Replay, oldest first, the waiters whose growth fits in the free
+    // entries. The oldest access of the queue never waits.
+    auto wake = [&](auto &queue) {
+        for (auto it = queue.begin(); it != queue.end(); ++it) {
+            const unsigned waiting = it->waitingEntries();
+            if (waiting == 0) {
+                continue;
+            }
+            const unsigned growth = waiting - it->occupiedEntries();
+            if (it != queue.begin() && growth > free_entries) {
+                waiters = true;
+                continue;
+            }
+            free_entries -= std::min(growth, free_entries);
+            it->waitingEntries() = 0;
+            DPRINTF(LSQOccupancy,
+                    "[sn:%llu] Replays to occupy %u %s entries\n",
+                    it->instruction()->seqNum, waiting, uses_sq ? "SQ" : "LQ");
+            iewStage->replaySingleMemInst(it->instruction());
+        }
+    };
+
+    if (uses_sq) {
+        wake(storeQueue);
+    } else {
+        wake(loadQueue);
+    }
 }
 
 void
@@ -768,7 +843,13 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
         return NoFault;
     }
 
+    inst->waitingForLSQEntries(false);
     load_fault = inst->initiateAcc();
+
+    if (inst->waitingForLSQEntries()) {
+        // The load is replayed once enough LQ entries are free.
+        return load_fault;
+    }
 
     if (load_fault == NoFault && !inst->readMemAccPredicate()) {
         assert(inst->readPredicate());
@@ -874,7 +955,13 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
     // address.  If so, then we have a memory ordering violation.
     typename LoadQueue::iterator loadIt = store_inst->lqIt;
 
+    store_inst->waitingForLSQEntries(false);
     Fault store_fault = store_inst->initiateAcc();
+
+    if (store_inst->waitingForLSQEntries()) {
+        // The store is replayed once enough SQ entries are free.
+        return store_fault;
+    }
 
     if (store_inst->isTranslationDelayed() &&
         store_fault == NoFault)
@@ -941,6 +1028,7 @@ LSQUnit::commitLoad()
     releaseLoadEntries(loadQueue.front());
     loadQueue.front().clear();
     loadQueue.pop_front();
+    wakeEntryWaiters(false);
 
     updateLQOccupancyStats();
 }
@@ -1169,6 +1257,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
     }
 
     updateLQOccupancyStats();
+    wakeEntryWaiters(false);
 
     // hardware transactional memory
     // scan load queue (from oldest to youngest) for most recent valid htmUid
@@ -1242,6 +1331,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         ++stats.squashedStores;
     }
     updateSQOccupancyStats();
+    wakeEntryWaiters(true);
 }
 
 uint64_t
@@ -1368,6 +1458,7 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
                  !storeQueue.empty());
 
         iewStage->updateLSQNextCycle = true;
+        wakeEntryWaiters(true);
     }
 
     updateSQOccupancyStats();
@@ -1890,6 +1981,7 @@ LSQEntry::clear()
     _valid = false;
     _size = 0;
     _occupiedEntries = 0;
+    _waitingEntries = 0;
 }
 
 void
