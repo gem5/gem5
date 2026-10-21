@@ -92,6 +92,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     isCpuDrained() const
     {
         SimpleExecContext &t_info = *threadInfo[curThread];
+        if (t_info.thread->status() != ThreadContext::Active) {
+            return true;
+        }
         return t_info.thread->pcState().microPC() == 0 &&
             !locked && !t_info.stayAtPC;
     }
