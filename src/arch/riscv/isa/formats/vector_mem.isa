@@ -41,15 +41,10 @@ def declareVMemTemplate(class_name):
 
 def getFaultCode():
     return '''
-    Addr fault_addr;
-    if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
-        assert(fault_addr >= EA);
-        faultIdx = (fault_addr - EA) / (width_EEW(machInst.width) / 8);
-        if (microIdx != 0 || faultIdx != 0) {
-            fault = NoFault;
-            trimVl = true;
-        }
-    }
+    // Fault-only-first handling is shared with the asynchronous (timing)
+    // delivery path through StaticInst::handleMemFault(); the actual trim
+    // logic lives in VleMicroInst/VlSegMicroInst::handleMemFault().
+    fault = handleMemFault(fault, EA);
     '''
 
 def getTailMaskPolicyCode():
