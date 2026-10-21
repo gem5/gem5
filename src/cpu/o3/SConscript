@@ -50,7 +50,9 @@ if env['CONF']['BUILD_ISA']:
         enums=['IQInsertionPolicy'])
     SimObject('LSQOccupancy.py', sim_objects=['LSQOccupancyPolicy',
         'ConstantOccupancy', 'PerSegmentOccupancy', 'PerBlockOccupancy',
-        'PerCacheLineOccupancy', 'LSQOpDesc'], enums=['LSQOverflowMode'])
+        'PerCacheLineOccupancy', 'PerChunkOccupancy', 'LineCrossOccupancy',
+        'MaxOccupancy', 'SumOccupancy', 'ClampOccupancy', 'LSQOpDesc'],
+        enums=['LSQOverflowMode'])
     SimObject('SMT.py',
         enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 
