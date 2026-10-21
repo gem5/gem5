@@ -119,6 +119,8 @@ Source('thread_context.cc')
 Source('thread_state.cc')
 Source('timing_expr.cc')
 
+GTest('timebuf.test', 'timebuf.test.cc')
+
 if env['CONF']['USE_CAPSTONE']:
     SourceLib('capstone')
     Source('capstone.cc')
