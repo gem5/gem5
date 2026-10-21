@@ -377,13 +377,15 @@ class Rename
      */
     int instsInProgress[MaxThreads];
 
-    /** Count of Load instructions in progress that have been sent off to the
-     * IQ and ROB, but are not yet included in their occupancy counts.
+    /** Count of LQ entries occupied by Load instructions in progress that
+     * have been sent off to the IQ and ROB, but are not yet included in
+     * their occupancy counts.
      */
     int loadsInProgress[MaxThreads];
 
-    /** Count of Store instructions in progress that have been sent off to the
-     * IQ and ROB, but are not yet included in their occupancy counts.
+    /** Count of SQ entries occupied by Store instructions in progress that
+     * have been sent off to the IQ and ROB, but are not yet included in
+     * their occupancy counts.
      */
     int storesInProgress[MaxThreads];
 

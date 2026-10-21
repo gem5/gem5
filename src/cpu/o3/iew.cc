@@ -468,13 +468,7 @@ IEW::squash(ThreadID tid)
             fromCommit->commitInfo[tid].doneSeqNum, tid);
 
     while (!skidBuffer[tid].empty()) {
-        if (skidBuffer[tid].front()->isLoad()) {
-            toRename->iewInfo[tid].dispatchedToLQ++;
-        }
-        if (skidBuffer[tid].front()->isStore() ||
-            skidBuffer[tid].front()->isAtomic()) {
-            toRename->iewInfo[tid].dispatchedToSQ++;
-        }
+        reportLSQDispatched(tid, skidBuffer[tid].front());
 
         toRename->iewInfo[tid].dispatched++;
 
@@ -635,6 +629,18 @@ void
 IEW::cacheUnblocked()
 {
     instQueue.cacheUnblocked();
+}
+
+void
+IEW::reportLSQDispatched(ThreadID tid, const DynInstPtr &inst)
+{
+    if (inst->isAtomic() || inst->isStore()) {
+        toRename->iewInfo[tid].dispatchedToSQ +=
+            ldstQueue.reservedEntries(inst);
+    } else if (inst->isLoad()) {
+        toRename->iewInfo[tid].dispatchedToLQ +=
+            ldstQueue.reservedEntries(inst);
+    }
 }
 
 void
@@ -845,13 +851,7 @@ IEW::emptyRenameInsts(ThreadID tid)
 
     while (!insts[tid].empty()) {
 
-        if (insts[tid].front()->isLoad()) {
-            toRename->iewInfo[tid].dispatchedToLQ++;
-        }
-        if (insts[tid].front()->isStore() ||
-            insts[tid].front()->isAtomic()) {
-            toRename->iewInfo[tid].dispatchedToSQ++;
-        }
+        reportLSQDispatched(tid, insts[tid].front());
 
         toRename->iewInfo[tid].dispatched++;
 
@@ -974,12 +974,7 @@ IEW::dispatchInsts(ThreadID tid)
             insts_to_dispatch.pop();
 
             //Tell Rename That An Instruction has been processed
-            if (inst->isLoad()) {
-                toRename->iewInfo[tid].dispatchedToLQ++;
-            }
-            if (inst->isStore() || inst->isAtomic()) {
-                toRename->iewInfo[tid].dispatchedToSQ++;
-            }
+            reportLSQDispatched(tid, inst);
 
             toRename->iewInfo[tid].dispatched++;
 
@@ -1003,9 +998,7 @@ IEW::dispatchInsts(ThreadID tid)
         }
 
         // Check LSQ if inst is LD/ST
-        if ((inst->isAtomic() && ldstQueue.sqFull(tid)) ||
-            (inst->isLoad() && ldstQueue.lqFull(tid)) ||
-            (inst->isStore() && ldstQueue.sqFull(tid))) {
+        if (inst->isMemRef() && !ldstQueue.canInsert(inst)) {
             DPRINTF(IEW, "[tid:%i] Issue: %s has become full.\n",tid,
                     inst->isLoad() ? "LQ" : "SQ");
 
@@ -1053,7 +1046,7 @@ IEW::dispatchInsts(ThreadID tid)
 
             ++iewStats.dispNonSpecInsts;
 
-            toRename->iewInfo[tid].dispatchedToSQ++;
+            reportLSQDispatched(tid, inst);
         } else if (inst->isLoad()) {
             DPRINTF(IEW, "[tid:%i] Issue: Memory instruction "
                     "encountered, adding to LSQ.\n", tid);
@@ -1066,7 +1059,7 @@ IEW::dispatchInsts(ThreadID tid)
 
             add_to_iq = true;
 
-            toRename->iewInfo[tid].dispatchedToLQ++;
+            reportLSQDispatched(tid, inst);
         } else if (inst->isStore()) {
             DPRINTF(IEW, "[tid:%i] Issue: Memory instruction "
                     "encountered, adding to LSQ.\n", tid);
@@ -1089,7 +1082,7 @@ IEW::dispatchInsts(ThreadID tid)
                 add_to_iq = true;
             }
 
-            toRename->iewInfo[tid].dispatchedToSQ++;
+            reportLSQDispatched(tid, inst);
         } else if (inst->isReadBarrier() || inst->isWriteBarrier()) {
             // Same as non-speculative stores.
             inst->setCanCommit();

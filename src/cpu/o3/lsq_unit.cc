@@ -249,6 +249,9 @@ LSQUnit::resetState()
 {
     storesToWB = 0;
 
+    lqOccupied = 0;
+    sqOccupied = 0;
+
     // hardware transactional memory
     // nesting depth
     htmStarts = htmStops = 0;
@@ -297,9 +300,13 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(addedLoadsAndStores, statistics::units::Count::get(),
                "Number of loads and stores written to the Load Store Queue"),
       ADD_STAT(lqAvgOccupancy, statistics::units::Ratio::get(),
-               "Average LQ Occupancy (UsedSlots/TotalSlots)"),
+               "Average LQ Occupancy (OccupiedEntries/TotalEntries)"),
       ADD_STAT(sqAvgOccupancy, statistics::units::Ratio::get(),
-               "Average SQ Occupancy (UsedSlots/TotalSlots)")
+               "Average SQ Occupancy (OccupiedEntries/TotalEntries)"),
+      ADD_STAT(lqAvgInstOccupancy, statistics::units::Ratio::get(),
+               "Average LQ instruction occupancy (Loads/TotalEntries)"),
+      ADD_STAT(sqAvgInstOccupancy, statistics::units::Ratio::get(),
+               "Average SQ instruction occupancy (Stores/TotalEntries)")
 {
     loadToUse
         .init(0, 299, 10)
@@ -308,6 +315,10 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
     lqAvgOccupancy.precision(2);
 
     sqAvgOccupancy.precision(2);
+
+    lqAvgInstOccupancy.precision(2);
+
+    sqAvgInstOccupancy.precision(2);
 }
 
 void
@@ -324,6 +335,8 @@ LSQUnit::drainSanityCheck() const
 
     assert(storesToWB == 0);
     assert(!retryPkt);
+    assert(lqOccupied == 0);
+    assert(sqOccupied == 0);
 }
 
 void
@@ -351,6 +364,8 @@ LSQUnit::insert(const DynInstPtr &inst)
 void
 LSQUnit::insertLoad(const DynInstPtr &load_inst)
 {
+    const unsigned entries = lsq->reservedEntries(load_inst);
+    assert(canInsertLoad(entries));
     assert(!loadQueue.full());
     assert(loadQueue.size() < loadQueue.capacity());
     ++stats.addedLoadsAndStores;
@@ -365,11 +380,13 @@ LSQUnit::insertLoad(const DynInstPtr &load_inst)
 
     assert(!loadQueue.back().valid());
     loadQueue.back().set(load_inst);
+    loadQueue.back().occupiedEntries() = entries;
+    lqOccupied += entries;
     load_inst->lqIdx = loadQueue.tail();
     assert(load_inst->lqIdx > 0);
     load_inst->lqIt = loadQueue.getIterator(load_inst->lqIdx);
 
-    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+    updateLQOccupancyStats();
 
     // hardware transactional memory
     // transactional state and nesting depth must be tracked
@@ -415,6 +432,8 @@ void
 LSQUnit::insertStore(const DynInstPtr& store_inst)
 {
     // Make sure it is not full before inserting an instruction.
+    const unsigned entries = lsq->reservedEntries(store_inst);
+    assert(canInsertStore(entries));
     assert(!storeQueue.full());
     assert(storeQueue.size() < storeQueue.capacity());
     ++stats.addedLoadsAndStores;
@@ -431,8 +450,10 @@ LSQUnit::insertStore(const DynInstPtr& store_inst)
     store_inst->lqIt = loadQueue.end();
 
     storeQueue.back().set(store_inst);
+    storeQueue.back().occupiedEntries() = entries;
+    sqOccupied += entries;
 
-    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
+    updateSQOccupancyStats();
 }
 
 DynInstPtr
@@ -448,19 +469,50 @@ LSQUnit::getMemDepViolator()
 unsigned
 LSQUnit::numFreeLoadEntries()
 {
-        DPRINTF(LSQUnit, "LQ size: %d, #loads occupied: %d\n",
-                loadQueue.capacity(), loadQueue.size());
-        return loadQueue.capacity() - loadQueue.size();
+    assert(lqOccupied <= loadQueue.capacity());
+    DPRINTF(LSQUnit, "LQ size: %d, #entries occupied: %d, #loads: %d\n",
+            loadQueue.capacity(), lqOccupied, loadQueue.size());
+    return loadQueue.capacity() - lqOccupied;
 }
 
 unsigned
 LSQUnit::numFreeStoreEntries()
 {
-        DPRINTF(LSQUnit, "SQ size: %d, #stores occupied: %d\n",
-                storeQueue.capacity(), storeQueue.size());
-        return storeQueue.capacity() - storeQueue.size();
+    assert(sqOccupied <= storeQueue.capacity());
+    DPRINTF(LSQUnit, "SQ size: %d, #entries occupied: %d, #stores: %d\n",
+            storeQueue.capacity(), sqOccupied, storeQueue.size());
+    return storeQueue.capacity() - sqOccupied;
+}
 
- }
+void
+LSQUnit::releaseLoadEntries(const LQEntry &entry)
+{
+    assert(lqOccupied >= entry.occupiedEntries());
+    lqOccupied -= entry.occupiedEntries();
+}
+
+void
+LSQUnit::releaseStoreEntries(const SQEntry &entry)
+{
+    assert(sqOccupied >= entry.occupiedEntries());
+    sqOccupied -= entry.occupiedEntries();
+}
+
+void
+LSQUnit::updateLQOccupancyStats()
+{
+    stats.lqAvgOccupancy =
+        static_cast<double>(lqOccupied) / loadQueue.capacity();
+    stats.lqAvgInstOccupancy = queueOccupancy(loadQueue);
+}
+
+void
+LSQUnit::updateSQOccupancyStats()
+{
+    stats.sqAvgOccupancy =
+        static_cast<double>(sqOccupied) / storeQueue.capacity();
+    stats.sqAvgInstOccupancy = queueOccupancy(storeQueue);
+}
 
 void
 LSQUnit::checkSnoop(PacketPtr pkt)
@@ -811,10 +863,11 @@ LSQUnit::commitLoad()
                     inst->lastWakeDependents - inst->firstIssue));
     }
 
+    releaseLoadEntries(loadQueue.front());
     loadQueue.front().clear();
     loadQueue.pop_front();
 
-    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+    updateLQOccupancyStats();
 }
 
 void
@@ -1033,13 +1086,14 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         }
         // Clear the smart pointer to make sure it is decremented.
         loadQueue.back().instruction()->setSquashed();
+        releaseLoadEntries(loadQueue.back());
         loadQueue.back().clear();
 
         loadQueue.pop_back();
         ++stats.squashedLoads;
     }
 
-    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+    updateLQOccupancyStats();
 
     // hardware transactional memory
     // scan load queue (from oldest to youngest) for most recent valid htmUid
@@ -1106,12 +1160,13 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         // Must delete request now that it wasn't handed off to
         // memory.  This is quite ugly.  @todo: Figure out the proper
         // place to really handle request deletes.
+        releaseStoreEntries(storeQueue.back());
         storeQueue.back().clear();
 
         storeQueue.pop_back();
         ++stats.squashedStores;
     }
-    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
+    updateSQOccupancyStats();
 }
 
 uint64_t
@@ -1231,6 +1286,7 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
     DynInstPtr store_inst = store_idx->instruction();
     if (store_idx == storeQueue.begin()) {
         do {
+            releaseStoreEntries(storeQueue.front());
             storeQueue.front().clear();
             storeQueue.pop_front();
         } while (storeQueue.front().completed() &&
@@ -1239,7 +1295,7 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
         iewStage->updateLSQNextCycle = true;
     }
 
-    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
+    updateSQOccupancyStats();
 
     DPRINTF(LSQUnit, "Completing store [sn:%lli], idx:%i, store head "
             "idx:%i\n",
@@ -1752,6 +1808,7 @@ LSQEntry::clear()
     _request = nullptr;
     _valid = false;
     _size = 0;
+    _occupiedEntries = 0;
 }
 
 void

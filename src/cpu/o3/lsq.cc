@@ -41,6 +41,7 @@
 
 #include "cpu/o3/lsq.hh"
 
+#include <algorithm>
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -60,6 +61,7 @@
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/lsq_occupancy.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/utils.hh"
@@ -173,6 +175,26 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
     } else {
         panic("Invalid LSQ sharing policy. Options are: Dynamic, "
                     "Partitioned, Threshold");
+    }
+
+    for (const LSQOpDesc *desc : params.lsqOpDescs) {
+        fatal_if(desc->opClasses.empty(),
+                 "%s: %s does not list any op class.\n", name(), desc->name());
+        fatal_if(desc->entries == 0,
+                 "%s: %s must occupy at least one LSQ entry.\n", name(),
+                 desc->name());
+        fatal_if(desc->entries > std::max(maxLQEntries, maxSQEntries),
+                 "%s: %s occupies %u entries, but each thread has at most "
+                 "%u LQ and %u SQ entries.\n",
+                 name(), desc->name(), desc->entries, maxLQEntries,
+                 maxSQEntries);
+        for (OpClass op_class : desc->opClasses) {
+            fatal_if(opDescs[op_class],
+                     "%s: op class %s is described by both %s and %s.\n",
+                     name(), enums::OpClassStrings[op_class],
+                     opDescs[op_class]->name(), desc->name());
+            opDescs[op_class] = desc;
+        }
     }
 
     thread.reserve(numThreads);
@@ -690,6 +712,49 @@ LSQ::sqFull(ThreadID tid)
         return sqFull();
     else
         return thread[tid]->sqFull();
+}
+
+unsigned
+LSQ::reservedEntries(const DynInstPtr &inst) const
+{
+    assert(inst->isMemRef());
+
+    const LSQOpDesc *desc = opDescs[inst->opClass()];
+    const unsigned entries = desc ? desc->entries : 1;
+    const bool uses_sq = inst->isStore() || inst->isAtomic();
+    const unsigned capacity = uses_sq ? maxSQEntries : maxLQEntries;
+
+    fatal_if(entries > capacity,
+             "%s: op class %s occupies %u entries, but each thread only has "
+             "%u %s entries.\n",
+             name(), enums::OpClassStrings[inst->opClass()], entries, capacity,
+             uses_sq ? "SQ" : "LQ");
+
+    return entries;
+}
+
+bool
+LSQ::canInsert(const DynInstPtr &inst)
+{
+    const unsigned entries = reservedEntries(inst);
+    const bool uses_sq = inst->isStore() || inst->isAtomic();
+    auto fits = [&](ThreadID tid) {
+        return uses_sq ? thread[tid]->canInsertStore(entries)
+                       : thread[tid]->canInsertLoad(entries);
+    };
+
+    //@todo: Change to Calculate All Entries for
+    // Dynamic Policy
+    if (lsqPolicy == SMTQueuePolicy::Dynamic) {
+        for (ThreadID tid : *activeThreads) {
+            if (fits(tid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    return fits(inst->threadNumber);
 }
 
 bool

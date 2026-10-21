@@ -82,6 +82,8 @@ class LSQEntry
     LSQRequest *_request = nullptr;
     /** The size of the operation. */
     uint32_t _size = 0;
+    /** Number of LSQ entries occupied by the operation. */
+    unsigned _occupiedEntries = 0;
     /** Valid entry. */
     bool _valid = false;
 
@@ -112,6 +114,16 @@ class LSQEntry
     const uint32_t &
     size() const
     { return _size; }
+    unsigned &
+    occupiedEntries()
+    {
+        return _occupiedEntries;
+    }
+    const unsigned &
+    occupiedEntries() const
+    {
+        return _occupiedEntries;
+    }
     const DynInstPtr &
     instruction() const
     { return _inst; }
@@ -341,10 +353,32 @@ class LSQUnit
     bool isEmpty() const { return lqEmpty() && sqEmpty(); }
 
     /** Returns if the LQ is full. */
-    bool lqFull() { return loadQueue.full(); }
+    bool
+    lqFull()
+    {
+        return lqOccupied >= loadQueue.capacity();
+    }
 
     /** Returns if the SQ is full. */
-    bool sqFull() { return storeQueue.full(); }
+    bool
+    sqFull()
+    {
+        return sqOccupied >= storeQueue.capacity();
+    }
+
+    /** Returns if the given number of LQ entries are free. */
+    bool
+    canInsertLoad(unsigned entries) const
+    {
+        return lqOccupied + entries <= loadQueue.capacity();
+    }
+
+    /** Returns if the given number of SQ entries are free. */
+    bool
+    canInsertStore(unsigned entries) const
+    {
+        return sqOccupied + entries <= storeQueue.capacity();
+    }
 
     /** Returns if the LQ is empty. */
     bool lqEmpty() const { return loadQueue.size() == 0; }
@@ -379,6 +413,18 @@ class LSQUnit
   private:
     /** Reset the LSQ state */
     void resetState();
+
+    /** Releases the LQ entries occupied by a load. */
+    void releaseLoadEntries(const LQEntry &entry);
+
+    /** Releases the SQ entries occupied by a store. */
+    void releaseStoreEntries(const SQEntry &entry);
+
+    /** Updates the LQ occupancy stats. */
+    void updateLQOccupancyStats();
+
+    /** Updates the SQ occupancy stats. */
+    void updateSQOccupancyStats();
 
     /** Writes back the instruction, sending it to IEW. */
     void writeback(const DynInstPtr &inst, PacketPtr pkt);
@@ -466,6 +512,12 @@ class LSQUnit
     LoadQueue loadQueue;
 
   private:
+    /** Number of LQ entries occupied by the loads in the LQ. */
+    unsigned lqOccupied = 0;
+
+    /** Number of SQ entries occupied by the stores in the SQ. */
+    unsigned sqOccupied = 0;
+
     /** The number of places to shift addresses in the LSQ before checking
      * for dependency violations
      */
@@ -560,6 +612,10 @@ class LSQUnit
         statistics::Average lqAvgOccupancy;
         /** SQ Occupancy */
         statistics::Average sqAvgOccupancy;
+        /** LQ instruction occupancy */
+        statistics::Average lqAvgInstOccupancy;
+        /** SQ instruction occupancy */
+        statistics::Average sqAvgInstOccupancy;
     } stats;
 
   public:

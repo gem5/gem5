@@ -42,6 +42,7 @@
 #ifndef __CPU_O3_LSQ_HH__
 #define __CPU_O3_LSQ_HH__
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <list>
@@ -53,6 +54,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/op_class.hh"
 #include "cpu/utils.hh"
 #include "dyn_inst_ptr.hh"
 #include "enums/SMTQueuePolicy.hh"
@@ -69,6 +71,7 @@ namespace o3
 
 class CPU;
 class IEW;
+class LSQOpDesc;
 class LSQUnit;
 
 /** Memory operation metadata.
@@ -819,6 +822,15 @@ class LSQ
     /** Returns if the SQ of a given thread is full. */
     bool sqFull(ThreadID tid);
 
+    /** Returns the number of LSQ entries a memory instruction occupies. */
+    unsigned reservedEntries(const DynInstPtr &inst) const;
+
+    /**
+     * Returns if there are enough free entries to insert a memory
+     * instruction into its queue.
+     */
+    bool canInsert(const DynInstPtr &inst);
+
     /**
      * Returns if the LSQ is stalled due to a memory operation that must be
      * replayed.
@@ -964,6 +976,9 @@ class LSQ
 
     /** Max SQ Size - Used to Enforce Sharing Policies. */
     unsigned maxSQEntries;
+
+    /** LSQ occupancy description of each op class, if any. */
+    std::array<const LSQOpDesc *, Num_OpClasses> opDescs{};
 
     /** Data port. */
     DcachePort dcachePort;
