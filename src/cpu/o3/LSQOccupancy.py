@@ -77,6 +77,58 @@ class PerCacheLineOccupancy(LSQOccupancyPolicy):
     )
 
 
+class PerChunkOccupancy(LSQOccupancyPolicy):
+    type = "PerChunkOccupancy"
+    cxx_class = "gem5::o3::PerChunkOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    chunkSize = Param.MemorySize("16B", "Size of the chunks")
+    coalesce = Param.Bool(
+        True,
+        "Hold the enabled bytes of all segments together instead of "
+        "rounding each segment up to whole chunks",
+    )
+
+
+class LineCrossOccupancy(LSQOccupancyPolicy):
+    type = "LineCrossOccupancy"
+    cxx_class = "gem5::o3::LineCrossOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    entries = Param.Unsigned(1, "LSQ entries occupied by each access")
+    extraEntries = Param.Unsigned(
+        1,
+        "Extra LSQ entries occupied for each segment that crosses a cache "
+        "line boundary",
+    )
+
+
+class MaxOccupancy(LSQOccupancyPolicy):
+    type = "MaxOccupancy"
+    cxx_class = "gem5::o3::MaxOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    policies = VectorParam.LSQOccupancyPolicy("Policies to take the max of")
+
+
+class SumOccupancy(LSQOccupancyPolicy):
+    type = "SumOccupancy"
+    cxx_class = "gem5::o3::SumOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    policies = VectorParam.LSQOccupancyPolicy("Policies to add up")
+
+
+class ClampOccupancy(LSQOccupancyPolicy):
+    type = "ClampOccupancy"
+    cxx_class = "gem5::o3::ClampOccupancy"
+    cxx_header = "cpu/o3/lsq_occupancy.hh"
+
+    policy = Param.LSQOccupancyPolicy("Policy whose entries are clamped")
+    minEntries = Param.Unsigned(0, "Minimum LSQ entries occupied")
+    maxEntries = Param.Unsigned("Maximum LSQ entries occupied")
+
+
 class LSQOpDesc(SimObject):
     type = "LSQOpDesc"
     cxx_class = "gem5::o3::LSQOpDesc"

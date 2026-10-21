@@ -83,6 +83,24 @@ unsigned sumBlocks(std::span<const MemSegment> segments, Addr block_size);
  */
 unsigned distinctBlocks(std::span<const MemSegment> segments, Addr block_size);
 
+/**
+ * Returns the number of segments that touch more than one block_size
+ * aligned block.
+ */
+unsigned crossingSegments(std::span<const MemSegment> segments,
+                          Addr block_size);
+
+/** Returns the number of enabled bytes of the segments. */
+unsigned totalActiveBytes(std::span<const MemSegment> segments);
+
+/**
+ * Returns the number of chunk_size chunks needed to hold the enabled bytes
+ * of the segments. If coalesce is false, the enabled bytes of each segment
+ * are rounded up to whole chunks separately.
+ */
+unsigned chunks(std::span<const MemSegment> segments, Addr chunk_size,
+                bool coalesce);
+
 } // namespace o3
 } // namespace gem5
 

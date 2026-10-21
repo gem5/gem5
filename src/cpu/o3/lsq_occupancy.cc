@@ -25,6 +25,8 @@
 
 #include "cpu/o3/lsq_occupancy.hh"
 
+#include <algorithm>
+
 #include "base/logging.hh"
 
 namespace gem5
@@ -75,6 +77,79 @@ PerCacheLineOccupancy::occupiedEntries(const MemAccessInfo &info) const
 {
     return coalesce ? distinctBlocks(info.segments, info.lineSize)
                     : sumBlocks(info.segments, info.lineSize);
+}
+
+PerChunkOccupancy::PerChunkOccupancy(const Params &p)
+    : LSQOccupancyPolicy(p), chunkSize(p.chunkSize), coalesce(p.coalesce)
+{
+    fatal_if(chunkSize == 0, "%s: chunkSize must not be zero.\n", name());
+}
+
+unsigned
+PerChunkOccupancy::occupiedEntries(const MemAccessInfo &info) const
+{
+    return chunks(info.segments, chunkSize, coalesce);
+}
+
+LineCrossOccupancy::LineCrossOccupancy(const Params &p)
+    : LSQOccupancyPolicy(p), entries(p.entries), extraEntries(p.extraEntries)
+{}
+
+unsigned
+LineCrossOccupancy::occupiedEntries(const MemAccessInfo &info) const
+{
+    return entries +
+           extraEntries * crossingSegments(info.segments, info.lineSize);
+}
+
+MaxOccupancy::MaxOccupancy(const Params &p)
+    : LSQOccupancyPolicy(p), policies(p.policies)
+{
+    fatal_if(policies.empty(), "%s: policies must not be empty.\n", name());
+}
+
+unsigned
+MaxOccupancy::occupiedEntries(const MemAccessInfo &info) const
+{
+    unsigned entries = 0;
+    for (const LSQOccupancyPolicy *policy : policies) {
+        entries = std::max(entries, policy->occupiedEntries(info));
+    }
+    return entries;
+}
+
+SumOccupancy::SumOccupancy(const Params &p)
+    : LSQOccupancyPolicy(p), policies(p.policies)
+{
+    fatal_if(policies.empty(), "%s: policies must not be empty.\n", name());
+}
+
+unsigned
+SumOccupancy::occupiedEntries(const MemAccessInfo &info) const
+{
+    unsigned entries = 0;
+    for (const LSQOccupancyPolicy *policy : policies) {
+        entries += policy->occupiedEntries(info);
+    }
+    return entries;
+}
+
+ClampOccupancy::ClampOccupancy(const Params &p)
+    : LSQOccupancyPolicy(p),
+      policy(p.policy),
+      minEntries(p.minEntries),
+      maxEntries(p.maxEntries)
+{
+    fatal_if(!policy, "%s: policy must be set.\n", name());
+    fatal_if(minEntries > maxEntries,
+             "%s: minEntries (%u) must not exceed maxEntries (%u).\n", name(),
+             minEntries, maxEntries);
+}
+
+unsigned
+ClampOccupancy::occupiedEntries(const MemAccessInfo &info) const
+{
+    return std::clamp(policy->occupiedEntries(info), minEntries, maxEntries);
 }
 
 } // namespace o3

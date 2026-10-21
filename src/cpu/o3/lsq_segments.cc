@@ -29,6 +29,8 @@
 #include <cassert>
 #include <utility>
 
+#include "base/intmath.hh"
+
 namespace gem5
 {
 
@@ -98,6 +100,45 @@ distinctBlocks(std::span<const MemSegment> segments, Addr block_size)
         blocks += last - first + 1;
     }
     return blocks;
+}
+
+unsigned
+crossingSegments(std::span<const MemSegment> segments, Addr block_size)
+{
+    assert(block_size > 0);
+    unsigned crossing = 0;
+    for (const MemSegment &segment : segments) {
+        const auto [first, last] = blockRange(segment, block_size);
+        if (first != last) {
+            ++crossing;
+        }
+    }
+    return crossing;
+}
+
+unsigned
+totalActiveBytes(std::span<const MemSegment> segments)
+{
+    unsigned bytes = 0;
+    for (const MemSegment &segment : segments) {
+        bytes += segment.activeBytes;
+    }
+    return bytes;
+}
+
+unsigned
+chunks(std::span<const MemSegment> segments, Addr chunk_size, bool coalesce)
+{
+    assert(chunk_size > 0);
+    if (coalesce) {
+        return divCeil(totalActiveBytes(segments), chunk_size);
+    }
+
+    unsigned count = 0;
+    for (const MemSegment &segment : segments) {
+        count += divCeil(segment.activeBytes, chunk_size);
+    }
+    return count;
 }
 
 } // namespace o3

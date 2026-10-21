@@ -31,12 +31,17 @@
 #include "base/types.hh"
 #include "cpu/o3/lsq_segments.hh"
 #include "cpu/op_class.hh"
+#include "params/ClampOccupancy.hh"
 #include "params/ConstantOccupancy.hh"
 #include "params/LSQOccupancyPolicy.hh"
 #include "params/LSQOpDesc.hh"
+#include "params/LineCrossOccupancy.hh"
+#include "params/MaxOccupancy.hh"
 #include "params/PerBlockOccupancy.hh"
 #include "params/PerCacheLineOccupancy.hh"
+#include "params/PerChunkOccupancy.hh"
 #include "params/PerSegmentOccupancy.hh"
+#include "params/SumOccupancy.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -112,6 +117,79 @@ class PerCacheLineOccupancy : public LSQOccupancyPolicy
   private:
     /** Count a cache line touched by several segments only once. */
     const bool coalesce;
+};
+
+/** Occupies one entry per chunk needed to hold the enabled bytes. */
+class PerChunkOccupancy : public LSQOccupancyPolicy
+{
+  public:
+    PARAMS(PerChunkOccupancy);
+    PerChunkOccupancy(const Params &p);
+
+    unsigned occupiedEntries(const MemAccessInfo &info) const override;
+
+  private:
+    const Addr chunkSize;
+    /** Hold the enabled bytes of all segments together. */
+    const bool coalesce;
+};
+
+/**
+ * Occupies a fixed number of entries, plus extra entries for each segment
+ * that crosses a cache line boundary.
+ */
+class LineCrossOccupancy : public LSQOccupancyPolicy
+{
+  public:
+    PARAMS(LineCrossOccupancy);
+    LineCrossOccupancy(const Params &p);
+
+    unsigned occupiedEntries(const MemAccessInfo &info) const override;
+
+  private:
+    const unsigned entries;
+    const unsigned extraEntries;
+};
+
+/** Occupies the largest number of entries given by several policies. */
+class MaxOccupancy : public LSQOccupancyPolicy
+{
+  public:
+    PARAMS(MaxOccupancy);
+    MaxOccupancy(const Params &p);
+
+    unsigned occupiedEntries(const MemAccessInfo &info) const override;
+
+  private:
+    const std::vector<LSQOccupancyPolicy *> policies;
+};
+
+/** Occupies the sum of the entries given by several policies. */
+class SumOccupancy : public LSQOccupancyPolicy
+{
+  public:
+    PARAMS(SumOccupancy);
+    SumOccupancy(const Params &p);
+
+    unsigned occupiedEntries(const MemAccessInfo &info) const override;
+
+  private:
+    const std::vector<LSQOccupancyPolicy *> policies;
+};
+
+/** Limits the entries given by another policy to a range. */
+class ClampOccupancy : public LSQOccupancyPolicy
+{
+  public:
+    PARAMS(ClampOccupancy);
+    ClampOccupancy(const Params &p);
+
+    unsigned occupiedEntries(const MemAccessInfo &info) const override;
+
+  private:
+    const LSQOccupancyPolicy *policy;
+    const unsigned minEntries;
+    const unsigned maxEntries;
 };
 
 /**
