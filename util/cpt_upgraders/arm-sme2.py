@@ -36,21 +36,31 @@
 
 def upgrader(cpt):
     """
-    Update the checkpoint to support SME2 implemtation.
-    The updater is extending the isa vector length to reflect the LUT addition
+    Extend Arm vector and vector-element state for the SME2 LUT register.
     """
-    for sec in cpt.sections():
-        import re
+    import re
 
-        # Search for all ISA sections
-        res = re.search(r"(.*processor.*\.core.*)\.xc.*", sec)
-        if res and cpt.get(res.groups()[0] + ".isa", "isaName") == "arm":
-            # Updating vector registers to add the LUT
-            vec_list = cpt.get(sec, "regs.vector").split()
-            vec_list_len = len(vec_list)
-            if vec_list_len < 11520:
-                extension = ["0"] * (11520 - vec_list_len)
-                cpt.set(sec, "regs.vector", " ".join(vec_list + extension))
+    for sec in cpt.sections():
+        # Thread contexts use this suffix regardless of the CPU's name.
+        res = re.fullmatch(r"(.+)\.xc\.(\d+)", sec)
+        if not res:
+            continue
+        cpu, thread = res.groups()
+        isa_section = cpu + ".isa"
+        if not cpt.has_section(isa_section):
+            isa_section += thread
+        if cpt.get(isa_section, "isaName", fallback="") != "arm":
+            continue
+
+        # There are now 45 256-byte vectors and 45 * 64 8-byte elements.
+        for field, size in (
+            ("regs.vector", 11520),
+            ("regs.vector_element", 23040),
+        ):
+            values = cpt.get(sec, field).split()
+            if len(values) < size:
+                values.extend(["0"] * (size - len(values)))
+                cpt.set(sec, field, " ".join(values))
 
 
 legacy_version = 20
