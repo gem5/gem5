@@ -757,6 +757,32 @@ LSQ::canInsert(const DynInstPtr &inst)
     return fits(inst->threadNumber);
 }
 
+unsigned
+LSQ::requiredEntries(const DynInstPtr &inst, const LSQRequest &request)
+{
+    const unsigned reserved = reservedEntries(inst);
+    const LSQOpDesc *desc = opDescs[inst->opClass()];
+    if (!desc || !desc->policy) {
+        return reserved;
+    }
+
+    segmentBuffer.clear();
+    request.segments(segmentBuffer);
+    if (segmentBuffer.empty()) {
+        return reserved;
+    }
+
+    const MemAccessInfo info{
+        .segments = segmentBuffer,
+        .lineSize = cpu->cacheLineSize(),
+        .opClass = inst->opClass(),
+        .isLoad = inst->isLoad(),
+        .isAtomic = inst->isAtomic(),
+        .flags = request._flags,
+    };
+    return std::max(desc->policy->occupiedEntries(info), 1u);
+}
+
 bool
 LSQ::isStalled()
 {
@@ -875,6 +901,10 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
         // There might be fault from a previous execution attempt if this is
         // a strictly ordered load
         inst->getFault() = NoFault;
+
+        if (!htm_cmd && !tlbi_cmd) {
+            thread[tid]->resizeEntries(inst, requiredEntries(inst, *request));
+        }
 
         request->initiateTranslation();
     }
@@ -1223,6 +1253,12 @@ ContextID
 LSQRequest::contextId() const
 {
     return _inst->contextId();
+}
+
+void
+LSQRequest::segments(std::vector<MemSegment> &out) const
+{
+    appendSegment(out, _addr, _size, _byteEnable);
 }
 
 void

@@ -58,6 +58,7 @@
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
 #include "debug/HtmCpu.hh"
+#include "debug/LSQOccupancy.hh"
 #include "debug/LSQUnit.hh"
 #include "mem/htm.hh"
 #include "mem/packet.hh"
@@ -237,6 +238,7 @@ LSQUnit::init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",lsqID);
 
     depCheckShift = params.LSQDepCheckShift;
+    overflowMode = params.lsqOverflowMode;
     checkLoads = params.LSQCheckLoads;
     needsTSO = params.needsTSO;
 
@@ -306,7 +308,15 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(lqAvgInstOccupancy, statistics::units::Ratio::get(),
                "Average LQ instruction occupancy (Loads/TotalEntries)"),
       ADD_STAT(sqAvgInstOccupancy, statistics::units::Ratio::get(),
-               "Average SQ instruction occupancy (Stores/TotalEntries)")
+               "Average SQ instruction occupancy (Stores/TotalEntries)"),
+      ADD_STAT(entriesGrown, statistics::units::Count::get(),
+               "Number of times an access increased its occupied entries"),
+      ADD_STAT(entriesShrunk, statistics::units::Count::get(),
+               "Number of times an access decreased its occupied entries"),
+      ADD_STAT(entryClamps, statistics::units::Count::get(),
+               "Number of accesses clamped to the entries they reserved"),
+      ADD_STAT(entryOvercommits, statistics::units::Count::get(),
+               "Number of times a queue occupied more entries than it has")
 {
     loadToUse
         .init(0, 299, 10)
@@ -469,19 +479,73 @@ LSQUnit::getMemDepViolator()
 unsigned
 LSQUnit::numFreeLoadEntries()
 {
-    assert(lqOccupied <= loadQueue.capacity());
     DPRINTF(LSQUnit, "LQ size: %d, #entries occupied: %d, #loads: %d\n",
             loadQueue.capacity(), lqOccupied, loadQueue.size());
-    return loadQueue.capacity() - lqOccupied;
+    // Overcommitted accesses may occupy more entries than the LQ has.
+    return lqOccupied < loadQueue.capacity()
+               ? loadQueue.capacity() - lqOccupied
+               : 0;
 }
 
 unsigned
 LSQUnit::numFreeStoreEntries()
 {
-    assert(sqOccupied <= storeQueue.capacity());
     DPRINTF(LSQUnit, "SQ size: %d, #entries occupied: %d, #stores: %d\n",
             storeQueue.capacity(), sqOccupied, storeQueue.size());
-    return storeQueue.capacity() - sqOccupied;
+    // Overcommitted accesses may occupy more entries than the SQ has.
+    return sqOccupied < storeQueue.capacity()
+               ? storeQueue.capacity() - sqOccupied
+               : 0;
+}
+
+void
+LSQUnit::resizeEntries(const DynInstPtr &inst, unsigned entries)
+{
+    const unsigned reserved = lsq->reservedEntries(inst);
+    if (overflowMode == LSQOverflowMode::Bound && entries > reserved) {
+        ++stats.entryClamps;
+        entries = reserved;
+    }
+
+    const bool uses_sq = inst->isStore() || inst->isAtomic();
+    LSQEntry &entry =
+        uses_sq ? static_cast<LSQEntry &>(*inst->sqIt) : *inst->lqIt;
+    assert(entry.valid() && entry.instruction() == inst);
+
+    const unsigned current = entry.occupiedEntries();
+    if (entries == current) {
+        return;
+    }
+
+    DPRINTF(LSQOccupancy,
+            "[sn:%llu] Occupies %u %s entries instead of %u "
+            "(reserved %u)\n",
+            inst->seqNum, entries, uses_sq ? "SQ" : "LQ", current, reserved);
+
+    if (entries > current) {
+        ++stats.entriesGrown;
+    } else {
+        ++stats.entriesShrunk;
+    }
+
+    unsigned &occupied = uses_sq ? sqOccupied : lqOccupied;
+    const unsigned capacity =
+        uses_sq ? storeQueue.capacity() : loadQueue.capacity();
+    assert(occupied >= current);
+    occupied = occupied - current + entries;
+    entry.occupiedEntries() = entries;
+    if (occupied > capacity) {
+        ++stats.entryOvercommits;
+    }
+
+    if (uses_sq) {
+        updateSQOccupancyStats();
+    } else {
+        updateLQOccupancyStats();
+    }
+
+    // Let rename see the new number of free entries.
+    iewStage->updateLSQNextCycle = true;
 }
 
 void

@@ -147,6 +147,11 @@ class BaseO3CPU(BaseCPU):
         "LSQ entries occupied per op class; op classes not listed occupy "
         "one entry",
     )
+    lsqOverflowMode = Param.LSQOverflowMode(
+        "Overcommit",
+        "Handling of accesses that need more LSQ entries than they reserved "
+        "at dispatch",
+    )
     LSQDepCheckShift = Param.Unsigned(
         4, "Number of places to shift addr before check"
     )

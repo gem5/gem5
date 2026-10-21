@@ -55,6 +55,7 @@
 #include "cpu/timebuf.hh"
 #include "debug/HtmCpu.hh"
 #include "debug/LSQUnit.hh"
+#include "enums/LSQOverflowMode.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
@@ -380,6 +381,12 @@ class LSQUnit
         return sqOccupied + entries <= storeQueue.capacity();
     }
 
+    /**
+     * Changes the number of entries occupied by a memory instruction in
+     * the LSQ, as allowed by the overflow mode.
+     */
+    void resizeEntries(const DynInstPtr &inst, unsigned entries);
+
     /** Returns if the LQ is empty. */
     bool lqEmpty() const { return loadQueue.size() == 0; }
 
@@ -518,6 +525,12 @@ class LSQUnit
     /** Number of SQ entries occupied by the stores in the SQ. */
     unsigned sqOccupied = 0;
 
+    /**
+     * How to handle accesses that need more entries than they reserved at
+     * dispatch.
+     */
+    LSQOverflowMode overflowMode;
+
     /** The number of places to shift addresses in the LSQ before checking
      * for dependency violations
      */
@@ -616,6 +629,15 @@ class LSQUnit
         statistics::Average lqAvgInstOccupancy;
         /** SQ instruction occupancy */
         statistics::Average sqAvgInstOccupancy;
+
+        /** Number of times an access increased its occupied entries. */
+        statistics::Scalar entriesGrown;
+        /** Number of times an access decreased its occupied entries. */
+        statistics::Scalar entriesShrunk;
+        /** Number of accesses clamped to the entries they reserved. */
+        statistics::Scalar entryClamps;
+        /** Number of times a queue occupied more entries than it has. */
+        statistics::Scalar entryOvercommits;
     } stats;
 
   public:
