@@ -67,19 +67,22 @@ class L1Cache(MESI_Two_Level_L1Cache_Controller):
 
         self.version = self.versionCount()
         self._cache_line_size = cache_line_size
+        block_size_bits = int(math.log2(cache_line_size))
+        if 2**block_size_bits != int(cache_line_size):
+            raise ValueError("Cache line size must be a power of 2.")
         self.connectQueues(network)
 
         # This is the cache memory object that stores the cache data and tags
         self.L1Icache = RubyCache(
             size=l1i_size,
             assoc=l1i_assoc,
-            start_index_bit=self._cache_line_size,
+            start_index_bit=block_size_bits,
             is_icache=True,
         )
         self.L1Dcache = RubyCache(
             size=l1d_size,
             assoc=l1d_assoc,
-            start_index_bit=self._cache_line_size,
+            start_index_bit=block_size_bits,
             is_icache=False,
         )
         self.l2_select_num_bits = int(math.log(num_l2Caches, 2))

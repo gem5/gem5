@@ -385,8 +385,7 @@ def create_system(
                 line_size=options.cacheline_size,
                 assoc=options.l2_assoc,
                 cpus=[
-                    n
-                    for n in range(
+                    *range(
                         i * num_cpus_per_cluster,
                         (i + 1) * num_cpus_per_cluster,
                     )

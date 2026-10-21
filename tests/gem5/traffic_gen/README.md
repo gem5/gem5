@@ -13,6 +13,12 @@ invalidating the references. Lists are compared in order and must have the same
 length; this ensures that statistics from every requested traffic-generator
 core are checked.
 
+The MESITwoLevel and MIExample references use the corrected L1 cache indexing
+from #3638: the first set-index bit is `log2(cache_line_size)` (6 for 64-byte
+lines). Their timing, latency, and request counts reflect this indexing. These
+references were captured by CI run 39322231942 at commit `55a47ed6dfdb` and
+agree across both attempts of that run.
+
 To run these tests by themselves, you can run the following command in the tests directory:
 
 ```bash

@@ -205,7 +205,12 @@ public:
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)
         const override
     {
-        return fault;
+        if (fault != NoFault) {
+            return fault;
+        }
+        // This micro-op does not modify vector state, so set_dirty is false.
+        // The vector specification allows VS to remain unchanged in this case.
+        return updateVPUStatus(xc, machInst, false, true);
     }
 
     std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
@@ -624,6 +629,16 @@ class VsIndexMicroInst : public VectorMemMicroInst
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+class VectorUnaryMacroInst : public VectorArithMacroInst
+{
+  public:
+    using VectorArithMacroInst::VectorArithMacroInst;
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
 class VMvWholeMacroInst : public VectorArithMacroInst
 {
   protected:
@@ -634,6 +649,16 @@ class VMvWholeMacroInst : public VectorArithMacroInst
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorUnaryMicroInst : public VectorArithMicroInst
+{
+  public:
+    using VectorArithMicroInst::VectorArithMicroInst;
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class VMvWholeMicroInst : public VectorArithMicroInst
