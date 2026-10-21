@@ -1239,6 +1239,14 @@ IEW::executeInsts()
                 // AMOs are treated like store requests
                 fault = ldstQueue.executeStore(inst);
 
+                if (inst->waitingForLSQEntries()) {
+                    // There are not enough free SQ entries; the LSQ
+                    // replays the instruction once entries are released.
+                    DPRINTF(IEW, "Execute: Not enough SQ entries, "
+                                 "replaying store later.\n");
+                    continue;
+                }
+
                 if (inst->isTranslationDelayed() &&
                     fault == NoFault) {
                     // A hw page table walk is currently going on; the
@@ -1252,6 +1260,14 @@ IEW::executeInsts()
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
+
+                if (inst->waitingForLSQEntries()) {
+                    // There are not enough free LQ entries; the LSQ
+                    // replays the instruction once entries are released.
+                    DPRINTF(IEW, "Execute: Not enough LQ entries, "
+                                 "replaying load later.\n");
+                    continue;
+                }
 
                 if (inst->isTranslationDelayed() &&
                     fault == NoFault) {
@@ -1268,6 +1284,14 @@ IEW::executeInsts()
                 }
             } else if (inst->isStore()) {
                 fault = ldstQueue.executeStore(inst);
+
+                if (inst->waitingForLSQEntries()) {
+                    // There are not enough free SQ entries; the LSQ
+                    // replays the instruction once entries are released.
+                    DPRINTF(IEW, "Execute: Not enough SQ entries, "
+                                 "replaying store later.\n");
+                    continue;
+                }
 
                 if (inst->isTranslationDelayed() &&
                     fault == NoFault) {

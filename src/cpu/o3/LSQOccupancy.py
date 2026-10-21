@@ -31,8 +31,11 @@ from m5.SimObject import SimObject
 #   Bound: the reserved entries are an upper bound; the access is clamped.
 #   Overcommit: the access occupies the entries it asks for, which may
 #       temporarily exceed the size of the queue.
+#   Replay: if the entries are not free, the access is replayed once
+#       entries are released. The oldest access of a queue overcommits
+#       instead, so that execution always makes progress.
 class LSQOverflowMode(ScopedEnum):
-    vals = ["Bound", "Overcommit"]
+    vals = ["Bound", "Overcommit", "Replay"]
 
 
 class LSQOccupancyPolicy(SimObject):

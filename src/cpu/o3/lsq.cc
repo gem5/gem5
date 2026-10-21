@@ -902,8 +902,22 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
         // a strictly ordered load
         inst->getFault() = NoFault;
 
-        if (!htm_cmd && !tlbi_cmd) {
-            thread[tid]->resizeEntries(inst, requiredEntries(inst, *request));
+        if (!htm_cmd && !tlbi_cmd &&
+            !thread[tid]->resizeEntries(inst,
+                                        requiredEntries(inst, *request))) {
+            // There are not enough free entries for the access. Drop the
+            // request and replay the instruction once entries are released.
+            if (isLoad) {
+                thread[tid]->loadQueue[inst->lqIdx].setRequest(nullptr);
+            } else {
+                thread[tid]->storeQueue[inst->sqIdx].setRequest(nullptr);
+            }
+            request->discard();
+            inst->clearRequest();
+            inst->waitingForLSQEntries(true);
+            iewStage->rescheduleMemInst(inst);
+            inst->clearIssued();
+            return NoFault;
         }
 
         request->initiateTranslation();

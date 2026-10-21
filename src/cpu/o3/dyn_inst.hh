@@ -196,8 +196,9 @@ class DynInst : public ExecContext, public RefCounted
         ReqMade,
         MemOpDone,
         HtmFromTransaction,
-        NoCapableFU,           /// Processor does not have capability to
-                               /// execute the instruction
+        NoCapableFU,          /// Processor does not have capability to
+                              /// execute the instruction
+        WaitingForLSQEntries, /// Access waits for free LSQ entries
         MaxFlags
     };
 
@@ -423,6 +424,18 @@ class DynInst : public ExecContext, public RefCounted
         return instFlags[TranslationCompleted];
     }
     void translationCompleted(bool f) { instFlags[TranslationCompleted] = f; }
+
+    /** True if the access is replayed once enough LSQ entries are free. */
+    bool
+    waitingForLSQEntries() const
+    {
+        return instFlags[WaitingForLSQEntries];
+    }
+    void
+    waitingForLSQEntries(bool f)
+    {
+        instFlags[WaitingForLSQEntries] = f;
+    }
 
     /** True if this address was found to match a previous load and they issued
      * out of order. If that happend, then it's only a problem if an incoming

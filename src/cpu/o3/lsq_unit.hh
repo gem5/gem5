@@ -383,9 +383,10 @@ class LSQUnit
 
     /**
      * Changes the number of entries occupied by a memory instruction in
-     * the LSQ, as allowed by the overflow mode.
+     * the LSQ, as allowed by the overflow mode. Returns false if the
+     * access must be replayed once more entries are free.
      */
-    void resizeEntries(const DynInstPtr &inst, unsigned entries);
+    bool resizeEntries(const DynInstPtr &inst, unsigned entries);
 
     /** Returns if the LQ is empty. */
     bool lqEmpty() const { return loadQueue.size() == 0; }
@@ -432,6 +433,12 @@ class LSQUnit
 
     /** Updates the SQ occupancy stats. */
     void updateSQOccupancyStats();
+
+    /**
+     * Replays the accesses waiting for free entries, if any. inst is any
+     * instruction of this thread.
+     */
+    void wakeEntryWaiters(const DynInstPtr &inst);
 
     /** Writes back the instruction, sending it to IEW. */
     void writeback(const DynInstPtr &inst, PacketPtr pkt);
@@ -530,6 +537,9 @@ class LSQUnit
      * dispatch.
      */
     LSQOverflowMode overflowMode;
+
+    /** Whether an access waits to be replayed until entries are freed. */
+    bool entryWaiters = false;
 
     /** The number of places to shift addresses in the LSQ before checking
      * for dependency violations
@@ -638,6 +648,8 @@ class LSQUnit
         statistics::Scalar entryClamps;
         /** Number of times a queue occupied more entries than it has. */
         statistics::Scalar entryOvercommits;
+        /** Number of accesses replayed until enough entries were free. */
+        statistics::Scalar entryReplays;
     } stats;
 
   public:
