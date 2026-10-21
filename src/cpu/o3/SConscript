@@ -48,6 +48,7 @@ if env['CONF']['BUILD_ISA']:
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'])
     SimObject('IQUnit.py', sim_objects=['IQUnit'],
         enums=['IQInsertionPolicy'])
+    SimObject('LSQOccupancy.py', sim_objects=['LSQOpDesc'])
     SimObject('SMT.py',
         enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 
