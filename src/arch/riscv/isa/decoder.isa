@@ -222,30 +222,41 @@ decode QUADRANT default Unknown::unknown() {
             // RC1 == 0 is HINT
             Rc1_sd = imm;
         }});
-        0x3: decode RC1 {
-            0x2: CIOp::c_addi16sp({{
-                imm = sext<10>((CIMM5<4:4> << 4) |
-                               (CIMM5<0:0> << 5) |
-                               (CIMM5<3:3> << 6) |
-                               (CIMM5<2:1> << 7) |
-                               (CIMM1 << 9));
-            }}, {{
-                if (imm == 0) {
+        0x3: decode CMOPSEL {
+            0x20, 0x60, 0xa0, 0xe0, 0x120, 0x160, 0x1a0, 0x1e0:
+            SystemOp::c_mop({{
+                auto isa = dynamic_cast<RiscvISA::ISA*>(
+                    xc->tcBase()->getIsaPtr());
+                if (!isa->reportsExtension("Zcmop")) {
                     return std::make_shared<IllegalInstFault>(
-                            "immediate = 0", machInst);
+                        "Zcmop is not enabled", machInst);
                 }
-                sp_sd = rvSext(sp_sd + imm);
-            }});
-            default: CIOp::c_lui({{
-                imm = sext<6>(CIMM5 | (CIMM1 << 5)) << 12;
-            }}, {{
-                // RC1 == 0 is HINT
-                if (imm == 0) {
-                    return std::make_shared<IllegalInstFault>(
-                            "immediate = 0", machInst);
-                }
-                Rc1_sd = imm;
-            }});
+            }}, IntAluOp);
+            default: decode RC1 {
+                0x2: CIOp::c_addi16sp({{
+                    imm = sext<10>((CIMM5<4:4> << 4) |
+                                   (CIMM5<0:0> << 5) |
+                                   (CIMM5<3:3> << 6) |
+                                   (CIMM5<2:1> << 7) |
+                                   (CIMM1 << 9));
+                }}, {{
+                    if (imm == 0) {
+                        return std::make_shared<IllegalInstFault>(
+                                "immediate = 0", machInst);
+                    }
+                    sp_sd = rvSext(sp_sd + imm);
+                }});
+                default: CIOp::c_lui({{
+                    imm = sext<6>(CIMM5 | (CIMM1 << 5)) << 12;
+                }}, {{
+                    // RC1 == 0 is HINT
+                    if (imm == 0) {
+                        return std::make_shared<IllegalInstFault>(
+                                "immediate = 0", machInst);
+                    }
+                    Rc1_sd = imm;
+                }});
+            }
         }
         0x4: decode CFUNCT2HIGH {
             format CIOp {
@@ -6181,6 +6192,27 @@ decode QUADRANT default Unknown::unknown() {
                     Mem_ud = Rs2_ud;
                 }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
 
+                0x40, 0x42, 0x44, 0x46, 0x60, 0x62, 0x64, 0x66: decode RS2 {
+                    0x1c, 0x1d, 0x1e, 0x1f: SystemOp::mop_r({{
+                        auto isa = dynamic_cast<RiscvISA::ISA*>(
+                            xc->tcBase()->getIsaPtr());
+                        if (!isa->reportsExtension("Zimop")) {
+                            return std::make_shared<IllegalInstFault>(
+                                "Zimop is not enabled", machInst);
+                        }
+                        Rd = 0;
+                    }}, IntAluOp);
+                }
+                0x41, 0x43, 0x45, 0x47, 0x61, 0x63, 0x65, 0x67:
+                SystemOp::mop_rr({{
+                    auto isa = dynamic_cast<RiscvISA::ISA*>(
+                        xc->tcBase()->getIsaPtr());
+                    if (!isa->reportsExtension("Zimop")) {
+                        return std::make_shared<IllegalInstFault>(
+                            "Zimop is not enabled", machInst);
+                    }
+                    Rd = 0;
+                }}, IntAluOp);
             }
         }
 
