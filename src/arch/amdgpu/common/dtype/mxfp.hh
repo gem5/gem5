@@ -35,6 +35,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <type_traits>
 
 #include "arch/amdgpu/common/dtype/mxfp_convert.hh"
 
@@ -43,6 +44,17 @@ namespace gem5
 
 namespace AMDGPU
 {
+
+// Forward declaration for the SFINAE guard below.
+template <typename FMT> class mxfp;
+
+// Trait to restrict math/comparison operators to mxfp<> instantiations.
+template <typename T> struct is_mxfp : std::false_type
+{
+};
+template <typename FMT> struct is_mxfp<mxfp<FMT>> : std::true_type
+{
+};
 
 // Base class for all microscaling types. The sizes of everything are
 // determined by the enum fields in the FMT struct. All of these share the
@@ -268,15 +280,15 @@ template <typename FMT> class mxfp
     }
 };
 
-// Unary operators
-template <typename T>
+// Unary operators — restricted to mxfp<> types.
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator+(T a)
 {
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator-(T a)
 {
@@ -285,7 +297,7 @@ operator-(T a)
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator++(T a)
 {
@@ -293,7 +305,7 @@ operator++(T a)
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator--(T a)
 {
@@ -301,7 +313,7 @@ operator--(T a)
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator++(T a, int)
 {
@@ -310,7 +322,7 @@ operator++(T a, int)
     return original;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator--(T a, int)
 {
@@ -319,36 +331,36 @@ operator--(T a, int)
     return original;
 }
 
-// Math operators
-template <typename T>
+// Math operators — restricted to mxfp<> types to avoid matching unrelated T.
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator+(T a, T b)
 {
     return T(float(a) + float(b));
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator-(T a, T b)
 {
     return T(float(a) - float(b));
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator*(T a, T b)
 {
     return T(float(a) * float(b));
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator/(T a, T b)
 {
     return T(float(a) / float(b));
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator+=(T &a, T b)
 {
@@ -356,7 +368,7 @@ operator+=(T &a, T b)
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator-=(T &a, T b)
 {
@@ -364,7 +376,7 @@ operator-=(T &a, T b)
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator*=(T &a, T b)
 {
@@ -372,7 +384,7 @@ operator*=(T &a, T b)
     return a;
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline T
 operator/=(T &a, T b)
 {
@@ -380,43 +392,43 @@ operator/=(T &a, T b)
     return a;
 }
 
-// Comparison operators
-template <typename T>
+// Comparison operators — restricted to mxfp<> types.
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline bool
 operator<(T a, T b)
 {
     return float(a) < float(b);
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline bool
 operator>(T a, T b)
 {
     return float(a) > float(b);
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline bool
 operator<=(T a, T b)
 {
     return float(a) <= float(b);
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline bool
 operator>=(T a, T b)
 {
     return float(a) >= float(b);
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline bool
 operator==(T a, T b)
 {
     return float(a) == float(b);
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
 inline bool
 operator!=(T a, T b)
 {
