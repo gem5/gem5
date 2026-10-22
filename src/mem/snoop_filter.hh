@@ -46,6 +46,7 @@
 #include <bitset>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "mem/packet.hh"
 #include "mem/port.hh"
@@ -95,11 +96,12 @@ class SnoopFilter : public SimObject
 
     typedef std::vector<QueuedResponsePort*> SnoopList;
 
-    SnoopFilter (const SnoopFilterParams &p) :
-        SimObject(p), reqLookupResult(cachedLocations.end()),
-        linesize(p.system->cacheLineSize()), lookupLatency(p.lookup_latency),
-        maxEntryCount(p.max_capacity / p.system->cacheLineSize()),
-        stats(this)
+    SnoopFilter(const SnoopFilterParams &p)
+        : SimObject(p),
+          linesize(p.system->cacheLineSize()),
+          lookupLatency(p.lookup_latency),
+          maxEntryCount(p.max_capacity / p.system->cacheLineSize()),
+          stats(this)
     {
     }
 
@@ -144,9 +146,9 @@ class SnoopFilter : public SimObject
 
     /**
      * For an un-successful request, revert the change to the snoop
-     * filter. Also take care of erasing any null entries. This method
-     * relies on the result from lookupRequest being stored in
-     * reqLookupResult.
+     * filter. Also take care of erasing any null entries. Pending request
+     * lookups are kept in a stack because forwarding can enter this filter
+     * again before the outer request completes.
      *
      * @param will_retry    This request will retry on this bus / snoop filter
      * @param addr          Packet address, merely for sanity checking
@@ -274,8 +276,8 @@ class SnoopFilter : public SimObject
      */
     struct ReqLookupResult
     {
-        /** Iterator used to store the result from lookupRequest. */
-        SnoopFilterCache::iterator it;
+        Addr lineAddr;
+        bool hasEntry;
 
         /**
          * Variable to temporarily store value of snoopfilter entry
@@ -285,17 +287,16 @@ class SnoopFilter : public SimObject
         SnoopItem retryItem;
 
         /**
-         * The constructor must be informed of the internal cache's end
-         * iterator, so do not allow the compiler to implictly define it.
-         *
-         * @param end_it Iterator to the end of the internal cache.
+         * Keep the address instead of an unordered_map iterator: a nested
+         * lookup can insert an entry and rehash the map.
          */
-        ReqLookupResult(SnoopFilterCache::iterator end_it)
-            : it(end_it), retryItem{0, 0}
+        ReqLookupResult(Addr addr)
+            : lineAddr(addr), hasEntry(false), retryItem{0, 0}
         {
         }
         ReqLookupResult() = delete;
-    } reqLookupResult;
+    };
+    std::vector<ReqLookupResult> reqLookupResults;
 
     /** List of all attached snooping CPU-side ports. */
     SnoopList cpuSidePorts;
