@@ -97,7 +97,8 @@ get started. Additional information can be found in the CONTRIBUTING.md file.
 
 ## Funding
 
-gem5 is funded in part by the National Science Foundation (NSF) under awards
+gem5 acknowledges past and ongoing funding from the National Science
+Foundation (NSF) under awards
 [OAC-2311888][nsf-oac] and [TIP-2533192][nsf-tip], and by the U.S. Department
 of Energy (DOE) under awards [DE-SC0024502][doe-24502] and
 [DE-SC0024206][doe-24206].
