@@ -69,7 +69,7 @@ jobs:
                   permission-pull-requests: write
             - name: Extract command
               id: extract_command
-              uses: actions/github-script@v9
+              uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # ratchet:actions/github-script@v9
               env:
                   EVENT_TYPE: ${{ github.event_name }}.${{ github.event.action }}
                   REQUEST: ${{ github.event.comment.body || github.event.review.body || github.event.issue.body }}
@@ -118,7 +118,7 @@ jobs:
         needs: dispatch
         if: |-
             ${{ needs.dispatch.outputs.command == 'review' }}
-        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@main
+        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@f5c369fabff266742fdaaf3774063a38815d818a # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.0
         permissions:
             contents: read
             id-token: write
