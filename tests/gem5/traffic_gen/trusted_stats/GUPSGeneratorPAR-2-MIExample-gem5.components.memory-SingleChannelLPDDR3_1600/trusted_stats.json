@@ -2,7 +2,7 @@
     "type": "SimObject",
     "time_conversion": null,
     "simulated_begin_time": 0,
-    "simulated_end_time": 29923001,
+    "simulated_end_time": 23068001,
     "name": "processor",
     "cores": {
         "type": "SimObjectVector",
@@ -39,7 +39,7 @@
                         "datatype": "f64"
                     },
                     "totalReadLat": {
-                        "value": 250262000.0,
+                        "value": 163889500.0,
                         "type": "Scalar",
                         "description": "Total latency of read requests.",
                         "unit": "Tick",
@@ -60,7 +60,7 @@
                         "datatype": "f64"
                     },
                     "totalWriteLat": {
-                        "value": 254148500.0,
+                        "value": 222149000.0,
                         "type": "Scalar",
                         "description": "Total latency of write requests.",
                         "unit": "Tick",
@@ -330,7 +330,7 @@
                         "datatype": "f64"
                     },
                     "totalReadLat": {
-                        "value": 251793000.0,
+                        "value": 165303000.0,
                         "type": "Scalar",
                         "description": "Total latency of read requests.",
                         "unit": "Tick",
@@ -351,7 +351,7 @@
                         "datatype": "f64"
                     },
                     "totalWriteLat": {
-                        "value": 252173999.0,
+                        "value": 220172999.0,
                         "type": "Scalar",
                         "description": "Total latency of write requests.",
                         "unit": "Tick",

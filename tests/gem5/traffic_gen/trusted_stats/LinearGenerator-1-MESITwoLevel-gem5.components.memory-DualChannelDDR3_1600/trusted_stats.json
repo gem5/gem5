@@ -2,7 +2,7 @@
     "type": "SimObject",
     "time_conversion": null,
     "simulated_begin_time": 0,
-    "simulated_end_time": 250016000,
+    "simulated_end_time": 250001000,
     "name": "processor",
     "cores": {
         "type": "SimObjectVector",
@@ -24,21 +24,21 @@
                         "datatype": "f64"
                     },
                     "numPackets": {
-                        "value": 35377.0,
+                        "value": 63640.0,
                         "type": "Scalar",
                         "description": "Number of packets generated",
                         "unit": "Count",
                         "datatype": "f64"
                     },
                     "numRetries": {
-                        "value": 35361.0,
+                        "value": 63624.0,
                         "type": "Scalar",
                         "description": "Number of retries",
                         "unit": "Count",
                         "datatype": "f64"
                     },
                     "retryTicks": {
-                        "value": 247089380.0,
+                        "value": 242291980.0,
                         "type": "Scalar",
                         "description":
                             "Time spent waiting due to back-pressure",
@@ -46,7 +46,7 @@
                         "datatype": "f64"
                     },
                     "bytesRead": {
-                        "value": 2263040.0,
+                        "value": 4071872.0,
                         "type": "Scalar",
                         "description": "Number of bytes read",
                         "unit": "Byte",
@@ -60,7 +60,7 @@
                         "datatype": "f64"
                     },
                     "totalReadLatency": {
-                        "value": 4245943060.0,
+                        "value": 4241480963.0,
                         "type": "Scalar",
                         "description": "Total latency of read requests",
                         "unit": "Tick",
@@ -74,7 +74,7 @@
                         "datatype": "f64"
                     },
                     "totalReads": {
-                        "value": 35360.0,
+                        "value": 63623.0,
                         "type": "Scalar",
                         "description": "Total num of reads",
                         "unit": "Count",
