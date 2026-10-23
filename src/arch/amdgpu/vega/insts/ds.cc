@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_DS__DS_ADD_U32 class methods ---
@@ -5219,4 +5222,5 @@ Inst_DS__DS_READ_B64_TR_B16::completeAcc(GPUDynInstPtr gpuDynInst)
     vdst.write();
 } // completeAcc
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

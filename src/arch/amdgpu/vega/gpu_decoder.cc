@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 Decoder::Decoder()
@@ -14033,4 +14036,5 @@ Decoder::decode_invalid(MachInst iFmt)
     return nullptr;
 }
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

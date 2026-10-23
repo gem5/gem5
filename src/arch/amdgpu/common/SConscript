@@ -34,8 +34,22 @@ Import('*')
 if not env['CONF']['BUILD_GPU']:
     Return()
 
-if env['CONF']['TARGET_GPU_ISA'] in ('vega'):
-    SimObject('X86GPUTLB.py', sim_objects=['X86GPUTLB', 'TLBCoalescer'])
+Source('faults.cc')
+Source('pagetable.cc')
+Source('pagetable_walker.cc')
 
-    Source('tlb.cc')
-    Source('tlb_coalescer.cc')
+DebugFlag('GPUPTWalker', 'Debug flag for GPU page table walker')
+
+SimObject('X86GPUTLB.py', sim_objects=['X86GPUTLB', 'TLBCoalescer'])
+
+Source('x86_gpu_tlb.cc')
+Source('x86_gpu_tlb_coalescer.cc')
+
+if env['CONF']['TARGET_GPU_ISA'] in ('vega'):
+    SimObject('VegaGPUTLB.py', sim_objects=['VegaPagetableWalker',
+                                            'VegaGPUTLB',
+                                            'VegaTLBCoalescer',
+                                            'VegaPWCIndexingPolicy',])
+
+    Source('amdgpu_tlb.cc')
+    Source('amdgpu_tlb_coalescer.cc')

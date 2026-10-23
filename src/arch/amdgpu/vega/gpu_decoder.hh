@@ -43,6 +43,9 @@ namespace gem5
 
 class GPUStaticInst;
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 class Decoder;
@@ -2168,6 +2171,7 @@ union InstFormat
     float imm_f32;
 }; // union InstFormat
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_DECODER_HH__

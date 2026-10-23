@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_VEGA_GPU_MEM_HELPERS_HH__
-#define __ARCH_VEGA_GPU_MEM_HELPERS_HH__
+#ifndef __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__
+#define __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__
 
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/vega/insts/op_encodings.hh"
@@ -38,6 +38,9 @@
 #include "gpu-compute/gpu_dyn_inst.hh"
 
 namespace gem5
+{
+
+namespace AMDGPU
 {
 
 /**
@@ -249,6 +252,7 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
     }
 }
 
+} // namespace AMDGPU
 } // namespace gem5
 
-#endif // __ARCH_VEGA_GPU_MEM_HELPERS_HH__
+#endif // __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__

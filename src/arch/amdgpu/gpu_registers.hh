@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2026 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,18 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
-#define __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
+#ifndef __ARCH_AMDGPU_GPU_REGISTERS_HH__
+#define __ARCH_AMDGPU_GPU_REGISTERS_HH__
 
-#include "base/types.hh"
+// Include register definitions for all supported GPU ISAs.
+// Additional ISAs are added here as they are implemented.
+#include "arch/amdgpu/vega/gpu_registers.hh"
 
-namespace gem5
-{
-namespace VegaISA
-{
-const Addr PageShift = 12;
-const Addr PageBytes = 1ULL << PageShift;
-} // namespace VegaISA
-} // namespace gem5
-
-#endif // __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
+#endif // __ARCH_AMDGPU_GPU_REGISTERS_HH__

@@ -29,7 +29,7 @@
 #ifndef __ARCH_AMDGPU_VEGA_PAGE_WALK_CACHE_HH__
 #define __ARCH_AMDGPU_VEGA_PAGE_WALK_CACHE_HH__
 
-#include "arch/amdgpu/vega/pagetable.hh"
+#include "arch/amdgpu/common/pagetable.hh"
 #include "base/cache/associative_cache.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
@@ -38,7 +38,7 @@
 namespace gem5
 {
 
-namespace VegaISA
+namespace AMDGPU
 {
 
 // Page walk cache entry
@@ -164,7 +164,7 @@ class PageWalkCache : public AssociativeCache<PWCEntry>
     }
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_VEGA_PAGE_WALK_CACHE_HH__

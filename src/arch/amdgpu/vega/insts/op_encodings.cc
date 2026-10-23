@@ -36,6 +36,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_SOP2 base class methods ---
@@ -1923,4 +1926,5 @@ Inst_FLAT::generateGlobalScratchDisassembly()
     disassembly = dis_stream.str();
 }
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

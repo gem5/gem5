@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_MTBUF__TBUFFER_LOAD_FORMAT_X class methods ---
@@ -511,4 +514,5 @@ Inst_MTBUF__TBUFFER_STORE_FORMAT_D16_XYZW::completeAcc(
     GPUDynInstPtr gpuDynInst)
 {} // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

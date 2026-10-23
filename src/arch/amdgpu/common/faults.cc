@@ -29,44 +29,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/pagetable.hh"
+#include "arch/amdgpu/common/faults.hh"
 
-#include "sim/serialize.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
-/**
- * Serialize all of the POD fields in a TLB entry. These fields contain all
- * of the information needed to handle any of the function calls in the entry.
- */
 void
-VegaTlbEntry::serialize(CheckpointOut &cp) const
+VegaFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    SERIALIZE_SCALAR(paddr);
-    SERIALIZE_SCALAR(vaddr);
-    SERIALIZE_SCALAR(logBytes);
-    SERIALIZE_SCALAR(vmid);
-    SERIALIZE_SCALAR(pte);
-    SERIALIZE_SCALAR(lruSeq);
+    // Currently only Vega10 is supported, which is not using XNACK on
+    // translation error. On hardware the process would be killed. Emulate
+    // that behavior in gem5 by exiting simulation.
+    panic("Vega translation resulted in page fault!");
 }
 
-/**
- * Unserialize all of the POD fields in a TLB entry. These fields contain all
- * of the information needed to handle any of the function calls in the entry.
- */
-void
-VegaTlbEntry::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(paddr);
-    UNSERIALIZE_SCALAR(vaddr);
-    UNSERIALIZE_SCALAR(logBytes);
-    UNSERIALIZE_SCALAR(vmid);
-    UNSERIALIZE_SCALAR(pte);
-    UNSERIALIZE_SCALAR(lruSeq);
-}
-
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
