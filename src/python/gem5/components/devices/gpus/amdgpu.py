@@ -105,6 +105,7 @@ class BaseViperGPU(SubSystem):
             tcc_count=self._tcc_count,
             cu_per_sqc=self._cu_per_sqc,
             cache_line_size=self._cache_line_size,
+            use_garnet=self._use_garnet,
             shader=self.shader,
         )
 
@@ -149,6 +150,7 @@ class MI210(BaseViperGPU):
         tcc_assoc: int = 16,
         tcc_count: int = 8,
         cache_line_size: int = 64,
+        use_garnet: bool = False,
     ):
         super().__init__(gpu_memory=gpu_memory)
 
@@ -163,6 +165,7 @@ class MI210(BaseViperGPU):
         self._tcc_assoc = tcc_assoc
         self._tcc_count = tcc_count
         self._cache_line_size = cache_line_size
+        self._use_garnet = use_garnet
 
         self.device.device_name = "MI200"
 
@@ -239,6 +242,7 @@ class MI300X(BaseViperGPU):
         cache_line_size: int = 64,
         ipt_binary: str = "",
         debug: bool = False,
+        use_garnet: bool = False,
     ):
         super().__init__(
             gpu_memory=gpu_memory, ipt_binary=ipt_binary, debug=debug
@@ -255,6 +259,7 @@ class MI300X(BaseViperGPU):
         self._tcc_assoc = tcc_assoc
         self._tcc_count = tcc_count
         self._cache_line_size = cache_line_size
+        self._use_garnet = use_garnet
 
         self.device.device_name = "MI300X"
 
@@ -366,6 +371,7 @@ class MI355X(MI300X):
         cache_line_size: int = 64,
         ipt_binary: str = "",
         debug: bool = False,
+        use_garnet: bool = False,
     ):
         super().__init__(
             gpu_memory=gpu_memory,
@@ -383,6 +389,7 @@ class MI355X(MI300X):
             cache_line_size=cache_line_size,
             ipt_binary=ipt_binary,
             debug=debug,
+            use_garnet=use_garnet,
         )
 
         self.device.DeviceID = 0x75A0

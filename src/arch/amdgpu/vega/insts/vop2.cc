@@ -216,6 +216,7 @@ Inst_VOP2__V_MUL_LEGACY_F32::Inst_VOP2__V_MUL_LEGACY_F32(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_legacy_f32")
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F32);
 } // Inst_VOP2__V_MUL_LEGACY_F32
 
@@ -252,6 +253,7 @@ Inst_VOP2__V_MUL_F32::Inst_VOP2__V_MUL_F32(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_f32")
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F32);
 } // Inst_VOP2__V_MUL_F32
 
@@ -330,6 +332,8 @@ Inst_VOP2__V_MUL_I32_I24::Inst_VOP2__V_MUL_I32_I24(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_i32_i24")
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP2__V_MUL_I32_I24
 
 Inst_VOP2__V_MUL_I32_I24::~Inst_VOP2__V_MUL_I32_I24()
@@ -366,6 +370,8 @@ Inst_VOP2__V_MUL_HI_I32_I24::Inst_VOP2__V_MUL_HI_I32_I24(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_hi_i32_i24")
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP2__V_MUL_HI_I32_I24
 
 Inst_VOP2__V_MUL_HI_I32_I24::~Inst_VOP2__V_MUL_HI_I32_I24()
@@ -406,6 +412,8 @@ Inst_VOP2__V_MUL_U32_U24::Inst_VOP2__V_MUL_U32_U24(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_u32_u24")
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP2__V_MUL_U32_U24
 
 Inst_VOP2__V_MUL_U32_U24::~Inst_VOP2__V_MUL_U32_U24()
@@ -433,6 +441,8 @@ Inst_VOP2__V_MUL_HI_U32_U24::Inst_VOP2__V_MUL_HI_U32_U24(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_hi_u32_u24")
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP2__V_MUL_HI_U32_U24
 
 Inst_VOP2__V_MUL_HI_U32_U24::~Inst_VOP2__V_MUL_HI_U32_U24()
@@ -1532,6 +1542,7 @@ Inst_VOP2__V_MUL_F16::Inst_VOP2__V_MUL_F16(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_mul_f16")
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F16);
 } // Inst_VOP2__V_MUL_F16
 
@@ -2211,6 +2222,9 @@ Inst_VOP2__V_FMAC_F32::Inst_VOP2__V_FMAC_F32(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_fmac_f32")
 {
     setFlag(ALU);
+    setFlag(MAC);
+    setFlag(F32);
+    setFlag(FpMul);
 } // Inst_VOP2__V_FMAC_F32
 
 Inst_VOP2__V_FMAC_F32::~Inst_VOP2__V_FMAC_F32()
@@ -2247,6 +2261,9 @@ Inst_VOP2__V_FMAC_F64::Inst_VOP2__V_FMAC_F64(InFmt_VOP2 *iFmt)
     : Inst_VOP2(iFmt, "v_fmac_f64")
 {
     setFlag(ALU);
+    setFlag(MAC);
+    setFlag(F64);
+    setFlag(FpMul);
 } // Inst_VOP2__V_FMAC_F64
 
 Inst_VOP2__V_FMAC_F64::~Inst_VOP2__V_FMAC_F64()

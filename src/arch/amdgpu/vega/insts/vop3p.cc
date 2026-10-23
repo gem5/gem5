@@ -775,6 +775,8 @@ Inst_VOP3P__V_PK_MUL_F32::Inst_VOP3P__V_PK_MUL_F32(InFmt_VOP3P *iFmt)
     : Inst_VOP3P(iFmt, "v_pk_mul_f32")
 {
     setFlag(ALU);
+    setFlag(FpMul);
+    setFlag(F32);
 } // Inst_VOP3P__V_PK_MUL_F32
 
 Inst_VOP3P__V_PK_MUL_F32::~Inst_VOP3P__V_PK_MUL_F32()

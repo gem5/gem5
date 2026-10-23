@@ -29,7 +29,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/Router.hh"
 
 #include "debug/RubyNetwork.hh"
@@ -49,11 +48,18 @@ namespace garnet
 {
 
 Router::Router(const Params &p)
-  : BasicRouter(p), Consumer(this), m_latency(p.latency),
-    m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
-    m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
-    m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
-    crossbarSwitch(this)
+    : BasicRouter(p),
+      Consumer(this),
+      m_latency(p.latency),
+      m_virtual_networks(p.virt_nets),
+      m_vc_per_vnet(p.vcs_per_vnet),
+      m_num_vcs(m_virtual_networks * m_vc_per_vnet),
+      m_bit_width(p.width),
+      m_network_ptr(nullptr),
+      routingUnit(this),
+      switchAllocator(this),
+      crossbarSwitch(this),
+      m_stats(this)
 {
     m_input_unit.clear();
     m_output_unit.clear();
@@ -97,12 +103,14 @@ Router::wakeup()
 }
 
 void
-Router::addInPort(PortDirection inport_dirn,
-                  NetworkLink *in_link, CreditLink *credit_link)
+Router::addInPort(PortDirection inport_dirn, NetworkLink *in_link,
+                  CreditLink *credit_link)
 {
-    fatal_if(in_link->bitWidth != m_bit_width, "Widths of link %s(%d)does"
-            " not match that of Router%d(%d). Consider inserting SerDes "
-            "Units.", in_link->name(), in_link->bitWidth, m_id, m_bit_width);
+    fatal_if(in_link->bitWidth != m_bit_width,
+             "Widths of link %s(%d)does"
+             " not match that of Router%d(%d). Consider inserting SerDes "
+             "Units.",
+             in_link->name(), in_link->bitWidth, m_id, m_bit_width);
 
     int port_num = m_input_unit.size();
     InputUnit *input_unit = new InputUnit(port_num, inport_dirn, this);
@@ -120,17 +128,17 @@ Router::addInPort(PortDirection inport_dirn,
 }
 
 void
-Router::addOutPort(PortDirection outport_dirn,
-                   NetworkLink *out_link,
-                   std::vector<NetDest>& routing_table_entry, int link_weight,
+Router::addOutPort(PortDirection outport_dirn, NetworkLink *out_link,
+                   std::vector<NetDest> &routing_table_entry, int link_weight,
                    CreditLink *credit_link, uint32_t consumerVcs)
 {
-    fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
-            " Consider inserting SerDes Units");
+    fatal_if(out_link->bitWidth != m_bit_width,
+             "Widths of units do not match."
+             " Consider inserting SerDes Units");
 
     int port_num = m_output_unit.size();
-    OutputUnit *output_unit = new OutputUnit(port_num, outport_dirn, this,
-                                             consumerVcs);
+    OutputUnit *output_unit =
+        new OutputUnit(port_num, outport_dirn, this, consumerVcs);
 
     output_unit->set_out_link(out_link);
     output_unit->set_credit_link(credit_link);
@@ -187,35 +195,25 @@ Router::getPortDirectionName(PortDirection direction)
     return direction;
 }
 
+Router::RouterStats::RouterStats(Router *parent)
+    : statistics::Group(parent),
+      m_buffer_reads(this, "buffer_reads"),
+      m_buffer_writes(this, "buffer_writes"),
+      m_sw_input_arbiter_activity(this, "sw_input_arbiter_activity"),
+      m_sw_output_arbiter_activity(this, "sw_output_arbiter_activity"),
+      m_crossbar_activity(this, "crossbar_activity")
+{
+    m_buffer_reads.flags(statistics::nozero);
+    m_buffer_writes.flags(statistics::nozero);
+    m_crossbar_activity.flags(statistics::nozero);
+    m_sw_input_arbiter_activity.flags(statistics::nozero);
+    m_sw_output_arbiter_activity.flags(statistics::nozero);
+}
+
 void
 Router::regStats()
 {
     BasicRouter::regStats();
-
-    m_buffer_reads
-        .name(name() + ".buffer_reads")
-        .flags(statistics::nozero)
-    ;
-
-    m_buffer_writes
-        .name(name() + ".buffer_writes")
-        .flags(statistics::nozero)
-    ;
-
-    m_crossbar_activity
-        .name(name() + ".crossbar_activity")
-        .flags(statistics::nozero)
-    ;
-
-    m_sw_input_arbiter_activity
-        .name(name() + ".sw_input_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
-
-    m_sw_output_arbiter_activity
-        .name(name() + ".sw_output_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
 }
 
 void
@@ -223,22 +221,25 @@ Router::collateStats()
 {
     for (int j = 0; j < m_virtual_networks; j++) {
         for (int i = 0; i < m_input_unit.size(); i++) {
-            m_buffer_reads += m_input_unit[i]->get_buf_read_activity(j);
-            m_buffer_writes += m_input_unit[i]->get_buf_write_activity(j);
+            m_stats.m_buffer_reads +=
+                m_input_unit[i]->get_buf_read_activity(j);
+            m_stats.m_buffer_writes +=
+                m_input_unit[i]->get_buf_write_activity(j);
         }
     }
 
-    m_sw_input_arbiter_activity = switchAllocator.get_input_arbiter_activity();
-    m_sw_output_arbiter_activity =
+    m_stats.m_sw_input_arbiter_activity =
+        switchAllocator.get_input_arbiter_activity();
+    m_stats.m_sw_output_arbiter_activity =
         switchAllocator.get_output_arbiter_activity();
-    m_crossbar_activity = crossbarSwitch.get_crossbar_activity();
+    m_stats.m_crossbar_activity = crossbarSwitch.get_crossbar_activity();
 }
 
 void
 Router::resetStats()
 {
     for (int i = 0; i < m_input_unit.size(); i++) {
-            m_input_unit[i]->resetStats();
+        m_input_unit[i]->resetStats();
     }
 
     crossbarSwitch.resetStats();
@@ -246,7 +247,7 @@ Router::resetStats()
 }
 
 void
-Router::printFaultVector(std::ostream& out)
+Router::printFaultVector(std::ostream &out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     int num_fault_types = m_network_ptr->fault_model->number_of_fault_types;
@@ -256,13 +257,12 @@ Router::printFaultVector(std::ostream& out)
     for (int i = 0; i < num_fault_types; i++) {
         out << " - probability of ("
             << m_network_ptr->fault_model->fault_type_to_string(i)
-            << ") = "
-            << fault_vector[i] << std::endl;
+            << ") = " << fault_vector[i] << std::endl;
     }
 }
 
 void
-Router::printAggregateFaultProbability(std::ostream& out)
+Router::printAggregateFaultProbability(std::ostream &out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     float aggregate_fault_prob;
@@ -276,17 +276,20 @@ bool
 Router::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    if (crossbarSwitch.functionalRead(pkt, mask))
+    if (crossbarSwitch.functionalRead(pkt, mask)) {
         read = true;
+    }
 
     for (uint32_t i = 0; i < m_input_unit.size(); i++) {
-        if (m_input_unit[i]->functionalRead(pkt, mask))
+        if (m_input_unit[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
 
     for (uint32_t i = 0; i < m_output_unit.size(); i++) {
-        if (m_output_unit[i]->functionalRead(pkt, mask))
+        if (m_output_unit[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
 
     return read;
