@@ -1,0 +1,16 @@
+---
+# 40nm, 5 ns. One complete functional-unit directory and one instruction list.
+functional_units: functional_units
+functional_unit_order:
+    - float_divider
+    - float_adder
+    - double_multiplier
+    - double_adder
+    - bit_shifter
+    - integer_multiplier
+    - bit_register
+    - double_divider
+    - float_multiplier
+    - integer_adder
+    - bitwise_operations
+instructions: instructions/inst_list.yml
