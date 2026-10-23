@@ -66,6 +66,11 @@ DebugFlag('RubySlicc')
 DebugFlag('RubySystem')
 DebugFlag('RubyTester')
 DebugFlag('RubyStats')
+# Every cache flush/CMO (DC CIVAC/CVAC/CVAU/IVAC, FlushReq) and non-temporal
+# access (LDNP/STNP, LDNT1/STNT1) a CPU sends into Ruby, printed by the
+# sequencer at issue and at completion (with latency in cycles). Off by
+# default; enable with --debug-flags=FlushNT.
+DebugFlag('FlushNT')
 DebugFlag('RubyResourceStalls')
 DebugFlag('RubyProtocol')
 DebugFlag('RubyHitMiss')

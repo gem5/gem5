@@ -167,6 +167,11 @@ class Request : public Extensible<Request>
         PF_EXCLUSIVE                = 0x02000000,
         /** The request should be marked as LRU. */
         EVICT_NEXT                  = 0x04000000,
+        /**
+         * The request is a non-temporal access, i.e., the data is not
+         * expected to be reused soon and caches should avoid allocating it.
+         */
+        NON_TEMPORAL                = 0x08000000,
         /** The request should be marked with ACQUIRE. */
         ACQUIRE                     = 0x00020000,
         /** The request should be marked with ACQUIRE_PC. */
@@ -1059,6 +1064,11 @@ class Request : public Extensible<Request>
         return (_flags.isSet(PREFETCH | PF_EXCLUSIVE));
     }
     bool isPrefetchEx() const { return _flags.isSet(PF_EXCLUSIVE); }
+    bool
+    isNonTemporal() const
+    {
+        return _flags.isSet(NON_TEMPORAL);
+    }
     bool isLLSC() const { return _flags.isSet(LLSC); }
     bool isPriv() const { return _flags.isSet(PRIVILEGED); }
     bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
