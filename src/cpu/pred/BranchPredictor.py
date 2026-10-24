@@ -39,6 +39,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.defines import buildEnv
+from m5.objects.BaseCPU import BaseCPU
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
@@ -217,6 +219,29 @@ class ConditionalPredictor(ClockedObject):
         Parent.speculativeHistUpdate,
         "Use speculative update for the conditional predictor",
     )
+
+
+if any(
+    buildEnv[isa] for isa in ("USE_ARM_ISA", "USE_X86_ISA", "USE_RISCV_ISA")
+):
+
+    class RUNLTS(ConditionalPredictor):
+        type = "RUNLTS"
+        cxx_class = "gem5::branch_prediction::RUNLTS"
+        cxx_header = "cpu/pred/runlts_192KB.hh"
+        cxx_exports = [PyBindMethod("setProbeTarget")]
+
+        use_logical = Param.Bool(False, "Use Log-RBias instead of Seq-RBias")
+
+        def createCCObject(self):
+            super().createCCObject()
+
+            cpu = self.get_parent()
+            while cpu is not None and not isinstance(cpu, BaseCPU):
+                cpu = cpu.get_parent()
+            if cpu is None:
+                raise RuntimeError("RUNLTS must be a child of a BaseCPU")
+            self.getCCObject().setProbeTarget(cpu.getCCObject())
 
 
 class IndirectPredictor(SimObject):
