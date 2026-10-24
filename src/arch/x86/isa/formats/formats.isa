@@ -43,6 +43,9 @@
 //Include a format to generate a CPUID instruction.
 ##include "cpuid.isa"
 
+// Intel AMX tile configuration instructions.
+##include "amx.isa"
+
 //Include a format to generate a monitor/mwait instructions.
 ##include "monitor_mwait.isa"
 

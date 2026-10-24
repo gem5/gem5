@@ -39,6 +39,7 @@
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
+#include "arch/x86/regs/tile.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
 
@@ -96,6 +97,9 @@ class ISA : public BaseISA
     std::string getVendorString() const;
 
     std::unique_ptr<X86CPUID> cpuid;
+
+    // Architectural AMX state (TILECFG and TMM0-7).
+    AmxTileState amxState;
 };
 
 } // namespace X86ISA
