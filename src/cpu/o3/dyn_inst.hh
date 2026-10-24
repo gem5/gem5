@@ -351,8 +351,9 @@ class DynInst : public ExecContext, public RefCounted
     /** The memory request flags (from translation). */
     Request::Flags memReqFlags = 0;
 
-    /** The size of the request */
-    unsigned effSize;
+    /** The size of the request, or the size of the address range spanned
+     * by a non-contiguous one (which may not fit in 32 bits) */
+    Addr effSize;
 
     /** Pointer to the data for the memory access. */
     uint8_t *memData = nullptr;
@@ -411,6 +412,15 @@ class DynInst : public ExecContext, public RefCounted
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
                          AtomicOpFunctorPtr amo_op) override;
+
+    Fault initiateMemReadNonContiguous(
+        const std::vector<Addr> &addrs, const std::vector<unsigned int> &sizes,
+        Request::Flags flags, const std::vector<bool> &byte_enable) override;
+
+    Fault writeMemNonContiguous(uint8_t *data, const std::vector<Addr> &addrs,
+                                const std::vector<unsigned int> &sizes,
+                                Request::Flags flags, uint64_t *res,
+                                const std::vector<bool> &byte_enable) override;
 
     /** True if the DTB address translation has started. */
     bool translationStarted() const { return instFlags[TranslationStarted]; }
