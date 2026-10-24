@@ -115,6 +115,9 @@ void togglesync(ThreadContext *tc);
 void triggerWorkloadEvent(ThreadContext *tc);
 void m5Hypercall(ThreadContext *tc, uint64_t hypercall_id);
 
+/* Função Projeto 01 */
+void taskEvent(ThreadContext *tc, uint64_t tipo, uint64_t arg);
+
 /**
  * Execute a decoded M5 pseudo instruction
  *
@@ -233,7 +236,11 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
         invokeSimcall<ABI>(tc, workend);
         return true;
 
-      case M5OP_RESERVED1:
+      /* Função Projeto 01 */
+      case M5OP_TASK_EVENT:
+        invokeSimcall<ABI>(tc, taskEvent);
+        return true;
+
       case M5OP_RESERVED2:
       case M5OP_RESERVED3:
       case M5OP_RESERVED4:

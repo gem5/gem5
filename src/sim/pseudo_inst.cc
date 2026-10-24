@@ -62,6 +62,7 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
 #include "params/BaseCPU.hh"
+#include "projetos/p01/task_monitor.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
@@ -615,6 +616,19 @@ m5Hypercall(ThreadContext *tc, uint64_t hypercall_id)
     exitSimLoopWithHypercall("m5_hypercall instruction encountered", 0,
     curTick(),0, std::map<std::string, std::string>(), hypercall_id, true);
 }
+
+
+void
+taskEvent(ThreadContext *tc, uint64_t tipo, uint64_t arg) {
+    DPRINTF(PseudoInst, "taskEvent(%llu, %llu)\n", tipo, arg);
+    if (TaskMonitor *tm = TaskMonitor::instance()) {
+        tm->event(tc->contextId(), curTick(), tipo, arg);
+    }
+    else {
+        warn_once("m5_task_event usado sem TaskEvent no sistema");
+    }
+}
+
 
 } // namespace pseudo_inst
 } // namespace gem5

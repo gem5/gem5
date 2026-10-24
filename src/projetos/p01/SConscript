@@ -1,0 +1,5 @@
+Import("*")
+
+SimObject("TaskMonitor.py", sim_objects=["TaskMonitor"])
+Source("task_monitor.cc")
+DebugFlag("TaskMonitor", "Mensagens de debug do TaskMonitor")
