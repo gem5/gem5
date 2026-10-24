@@ -69,6 +69,53 @@ test_type(int bits)
     return errors;
 }
 
+// Checks rounding to nearest, ties to even, from float: values between two
+// neighbouring T values convert to the nearer one and midpoints to the one
+// with the even encoding. Values past the largest finite T value convert
+// like an infinity.
+template <typename T>
+int
+test_rounding()
+{
+    using FMT = decltype(T().getFmt());
+    const int shift = 32 - T::size();
+    const uint32_t sign = 1 << (T::size() - 1);
+
+    // Largest finite encoding, without the sign bit.
+    uint32_t max_bits = sign - 1;
+    if (std::numeric_limits<FMT>::has_infinity) {
+        max_bits -= 1 << FMT::mbits;
+    } else if (std::numeric_limits<FMT>::has_quiet_NaN) {
+        max_bits -= 1;
+    }
+    const uint32_t overflow =
+        (std::numeric_limits<FMT>::has_infinity ? FMT::inf : FMT::max) >>
+        shift;
+
+    auto value = [](uint32_t bits) { return float(T(bits)); };
+    auto convert = [shift](float f) { return T(f).data >> shift; };
+    const float inf = std::numeric_limits<float>::infinity();
+
+    int errors = 0;
+    for (uint32_t bits = 0; bits <= max_bits; ++bits) {
+        float lo = value(bits);
+        float step =
+            bits < max_bits ? value(bits + 1) - lo : lo - value(bits - 1);
+        float mid = lo + step / 2;
+        uint32_t up = bits < max_bits ? bits + 1 : overflow;
+        uint32_t even = (bits & 1) ? up : bits;
+
+        errors += convert(std::nextafter(mid, 0.0f)) != bits;
+        errors += convert(mid) != even;
+        errors += convert(-mid) != (even | sign);
+        errors += convert(std::nextafter(mid, inf)) != up;
+    }
+    errors += convert(std::numeric_limits<float>::max()) != overflow;
+    errors += convert(std::numeric_limits<float>::denorm_min()) != 0;
+
+    return errors;
+}
+
 TEST(MxfpTest, MxBf16Test)
 {
     using T = gem5::AMDGPU::mxbfloat16;
@@ -76,6 +123,7 @@ TEST(MxfpTest, MxBf16Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp16Test)
@@ -85,6 +133,7 @@ TEST(MxfpTest, MxFp16Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxBf8Test)
@@ -94,6 +143,7 @@ TEST(MxfpTest, MxBf8Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp8Test)
@@ -103,6 +153,7 @@ TEST(MxfpTest, MxFp8Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxBf6Test)
@@ -112,6 +163,7 @@ TEST(MxfpTest, MxBf6Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp6Test)
@@ -121,6 +173,7 @@ TEST(MxfpTest, MxFp6Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp4Test)
@@ -130,4 +183,5 @@ TEST(MxfpTest, MxFp4Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
