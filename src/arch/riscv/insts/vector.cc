@@ -451,6 +451,32 @@ std::string VsIndexMicroInst::generateDisassembly(Addr pc,
 }
 
 std::string
+VectorUnaryMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0));
+    if (!machInst.vm) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorUnaryMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0));
+    if (!machInst.vm) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
 VMvWholeMacroInst::generateDisassembly(Addr pc,
     const loader::SymbolTable *symtab) const
 {
@@ -548,9 +574,11 @@ VMaskMergeMicroInst::generateDisassembly(Addr pc,
 Fault
 VxsatMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    xc->setMiscReg(MISCREG_VXSAT, *vxsat);
-    auto vcsr = xc->readMiscReg(MISCREG_VCSR);
-    xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+    if (*vxsat) {
+        xc->setMiscReg(MISCREG_VXSAT, *vxsat);
+        auto vcsr = xc->readMiscReg(MISCREG_VCSR);
+        xc->setMiscReg(MISCREG_VCSR, ((vcsr & ~1) | *vxsat));
+    }
     return NoFault;
 }
 

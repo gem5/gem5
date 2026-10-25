@@ -201,7 +201,7 @@ class ChanneledMemory(AbstractMemorySystem):
 
     @overrides(AbstractMemorySystem)
     def get_memory_controllers(self) -> list[MemCtrl]:
-        return [ctrl for ctrl in self.mem_ctrl]
+        return [*self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
     def get_mem_interfaces(self) -> list[AbstractMemory]:
