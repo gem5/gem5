@@ -52,6 +52,11 @@ class GarnetNetwork(RubyNetwork):
     garnet_deadlock_threshold = Param.UInt32(
         50000, "network-level deadlock threshold"
     )
+    ignore_mesh_chk = Param.Bool(
+        False,
+        "Whether to ignore mesh router count checking. "
+        "Should only be used with chiplets where a mesh is a subnet.",
+    )
 
 
 class GarnetNetworkInterface(ClockedObject):
