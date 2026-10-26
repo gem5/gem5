@@ -140,6 +140,14 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     Source("LLVMRead/instruction.cc")
     Source("LLVMRead/registers.cc")
     Source("LLVMRead/operand.cc")
+    GTest(
+        "LLVMRead/value.test",
+        "LLVMRead/value.test.cc",
+        "LLVMRead/value.cc",
+        "LLVMRead/registers.cc",
+        "LLVMRead/debug_flags.cc",
+        with_tag("gem5 trace"),
+    )
 
     Source("HWModeling/cycle_counts.cc")
     for node in generated_cc:

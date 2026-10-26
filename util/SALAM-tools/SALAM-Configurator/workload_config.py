@@ -69,9 +69,11 @@ _SPM_KEYS = {
     "WriteOnValid",
     "Connections",
 }
-_REGISTER_KEYS = {"Name", "Type", "Size", "Connections"}
-# RegisterBank has no consumer for these fields.
-_UNSUPPORTED_REGISTER_KEYS = ("Ports", "ReadyMode")
+_REGISTER_KEYS = {"Name", "Type", "Size"}
+# RegisterBank has no consumer for Ports or ReadyMode. Its single
+# reg_port connects to the owning accelerator only, so extra
+# Connections cannot be honored.
+_UNSUPPORTED_REGISTER_KEYS = ("Ports", "ReadyMode", "Connections")
 _STREAM_KEYS = {
     "Name",
     "Type",
@@ -81,6 +83,81 @@ _STREAM_KEYS = {
     "OutCon",
 }
 _CACHE_KEYS = {"Name", "Type", "Size"}
+# Parameters of the CycleCounts SimObject (src/salam/CycleCounts.py).
+CYCLE_COUNT_PARAMS = frozenset(
+    (
+        "counter",
+        "gep",
+        "phi",
+        "select",
+        "ret",
+        "br",
+        "switch_inst",
+        "indirectbr",
+        "invoke",
+        "resume",
+        "unreachable",
+        "icmp",
+        "fcmp",
+        "trunc",
+        "zext",
+        "sext",
+        "fptrunc",
+        "fpext",
+        "fptoui",
+        "fptosi",
+        "uitofp",
+        "sitofp",
+        "ptrtoint",
+        "inttoptr",
+        "bitcast",
+        "addrspacecast",
+        "call",
+        "vaarg",
+        "landingpad",
+        "catchpad",
+        "alloca",
+        "load",
+        "store",
+        "fence",
+        "cmpxchg",
+        "atomicrmw",
+        "extractvalue",
+        "insertvalue",
+        "extractelement",
+        "insertelement",
+        "shufflevector",
+        "shl",
+        "lshr",
+        "ashr",
+        "and_inst",
+        "or_inst",
+        "xor_inst",
+        "add",
+        "sub",
+        "mul",
+        "udiv",
+        "sdiv",
+        "urem",
+        "srem",
+        "fadd",
+        "fsub",
+        "fmul",
+        "fdiv",
+        "frem",
+    )
+)
+# Fields of an hw_config instruction entry. Only runtime_cycles is read;
+# the others follow the inst_list.yml format.
+_INSTRUCTION_ENTRY_KEYS = {
+    "runtime_cycles",
+    "functional_unit",
+    "functional_unit_limit",
+    "opcode_num",
+}
+_UINT32_MAX = (1 << 32) - 1
+# Load and store latency comes from the memory system, not CycleCounts.
+_MEMORY_INSTRUCTIONS = ("load", "store")
 _VAR_KEYS = {
     "SPM": _SPM_KEYS,
     "RegisterBank": _REGISTER_KEYS,
@@ -133,6 +210,8 @@ def load_documents(config_path):
             document.get("acc_cluster", []),
             config_path,
         )
+        if "hw_config" in document:
+            validate_hw_config(document["hw_config"], config_path)
         documents.append(document)
     return documents
 
@@ -171,6 +250,7 @@ def _validate_cluster_list(cluster_items, config_path):
             )
         if "Accelerator" in item:
             _validate_accelerator(item["Accelerator"], config_path)
+    _validate_connection_targets(cluster_items, config_path)
 
 
 def _validate_device_group(device, scope, allowed, config_path):
@@ -279,6 +359,170 @@ def _validate_variable(variable, config_path, acc_name):
             config_path,
             var_name,
             "Ports" not in variable,
+        )
+
+
+def _accelerator_name(accelerator):
+    for entry in accelerator:
+        if isinstance(entry, dict) and "Name" in entry:
+            return entry["Name"]
+    return None
+
+
+def _validate_connection_targets(cluster_items, config_path):
+    # SPM Connections must name an accelerator of the same cluster.
+    accelerators = [
+        item["Accelerator"]
+        for item in cluster_items
+        if isinstance(item, dict) and isinstance(item.get("Accelerator"), list)
+    ]
+    names = {
+        str(name).lower()
+        for name in map(_accelerator_name, accelerators)
+        if name is not None
+    }
+    for accelerator in accelerators:
+        for entry in accelerator:
+            for variable in entry.get("Var", []) or []:
+                if "Connections" not in variable:
+                    continue
+                var_name = variable.get("Name", "variable")
+                for target, _count in parse_connections(
+                    variable["Connections"], config_path, var_name
+                ):
+                    if target.lower() not in names:
+                        raise WorkloadConfigError(
+                            config_path,
+                            f"variable {var_name}",
+                            "Connections",
+                            variable["Connections"],
+                            f"Connections names unknown accelerator "
+                            f"{target!r}",
+                        )
+
+
+def parse_connections(value, config_path, var_name):
+    # Parse "Name:N[,Name:N...]" into (name, ports) pairs.
+    scope = f"variable {var_name}"
+    if not isinstance(value, str) or not value.strip():
+        raise WorkloadConfigError(
+            config_path,
+            scope,
+            "Connections",
+            value,
+            "Connections must be a string of Name:N entries",
+        )
+    connections = []
+    for item in value.split(","):
+        name, sep, count = item.strip().partition(":")
+        name = name.strip()
+        ports = None
+        if sep and name:
+            try:
+                ports = int(count.strip(), 10)
+            except ValueError:
+                pass
+        if ports is None or ports < 1:
+            raise WorkloadConfigError(
+                config_path,
+                scope,
+                "Connections",
+                value,
+                f"Connections entry {item.strip()!r} must be Name:N with "
+                "a positive integer N",
+            )
+        connections.append((name, ports))
+    return connections
+
+
+def validate_hw_config(hw_config, config_path):
+    # Shared by inline hw_config and files selected with HWPath.
+    if not isinstance(hw_config, dict):
+        raise WorkloadConfigError(
+            config_path,
+            "hw_config",
+            "hw_config",
+            hw_config,
+            "hw_config must be a mapping of profiles",
+        )
+    for profile, node in hw_config.items():
+        scope = f"hw_config profile {profile!r}"
+        # An explicit null profile means no overrides.
+        if node is None:
+            continue
+        if (
+            not isinstance(node, dict)
+            or set(node) != {"instructions"}
+            or not isinstance(node["instructions"], dict)
+        ):
+            raise WorkloadConfigError(
+                config_path,
+                scope,
+                None,
+                node,
+                "profile must be null or contain only an instructions "
+                "mapping",
+            )
+        for name, entry in node["instructions"].items():
+            _validate_instruction_entry(name, entry, config_path, scope)
+
+
+def _validate_instruction_entry(name, entry, config_path, scope):
+    if name not in CYCLE_COUNT_PARAMS:
+        raise WorkloadConfigError(
+            config_path,
+            scope,
+            name,
+            entry,
+            f"unknown instruction {name!r}; expected a CycleCounts parameter",
+        )
+    if not isinstance(entry, dict):
+        raise WorkloadConfigError(
+            config_path,
+            scope,
+            name,
+            entry,
+            f"instruction {name!r} must be a mapping",
+        )
+    for field in entry:
+        if field not in _INSTRUCTION_ENTRY_KEYS:
+            raise WorkloadConfigError(
+                config_path,
+                scope,
+                field,
+                entry[field],
+                f"unknown field {field!r} on instruction {name!r}",
+            )
+    if "runtime_cycles" not in entry:
+        raise WorkloadConfigError(
+            config_path,
+            scope,
+            "runtime_cycles",
+            None,
+            f"instruction {name!r} has no runtime_cycles",
+        )
+    cycles = entry["runtime_cycles"]
+    if (
+        isinstance(cycles, bool)
+        or not isinstance(cycles, int)
+        or not 0 <= cycles <= _UINT32_MAX
+    ):
+        raise WorkloadConfigError(
+            config_path,
+            scope,
+            "runtime_cycles",
+            cycles,
+            f"runtime_cycles of {name!r} must be an integer from 0 to "
+            f"{_UINT32_MAX}, got {cycles!r}",
+        )
+    if name in _MEMORY_INSTRUCTIONS and cycles != 0:
+        raise WorkloadConfigError(
+            config_path,
+            scope,
+            "runtime_cycles",
+            cycles,
+            f"nonzero runtime_cycles for {name!r} is not supported; "
+            "memory latency comes from the memory system",
         )
 
 

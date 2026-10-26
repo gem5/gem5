@@ -134,6 +134,7 @@ def _attach_accelerator(clstr, acc, gic):
         acc.hw_config_document,
         acc.hw_config_path,
         acc.profile_name,
+        acc.hw_config_source,
     )
     if acc.int_num is not None:
         setattr(
@@ -221,7 +222,7 @@ def _attach_variable(clstr, var):
         setattr(clstr, var.name, L1Cache(size=str(var.size) + "B"))
         cache = getattr(clstr, var.name)
         cache.mem_side = clstr.coherency_bus.cpu_side_ports
-        cache.cpu_side = getattr(clstr, var.accName).local
+        cache.cpu_side = getattr(clstr, var.accName.lower()).local
     else:
         raise Exception(
             "The variable: "

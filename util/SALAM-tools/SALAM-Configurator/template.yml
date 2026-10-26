@@ -50,7 +50,7 @@ acc_cluster:
                   Type: # SPM
                   Size: # Size in Bytes
                   Ports: # Ports to parent Acc, a positive integer (Optional, default 1)
-                  Connections: # Define extra connections here with porting
+                  Connections: # Extra ports for other accelerators in this cluster, Name:N
         # e.g. SecondAcc:1,ThirdAccAcc:1
     # Stream Buffer Example
           - Var:
@@ -64,10 +64,9 @@ acc_cluster:
           - Var:
                 - Name: # Var name here (Required)
                   Type: # RegisterBank
-                  # Ports and ReadyMode are unsupported and rejected.
+                  # Ports, ReadyMode and Connections are unsupported and
+                  # rejected; a RegisterBank serves its own accelerator.
                   Size: # Register size in Bytes
-                  Connections: # Define extra connections here with porting
-        # e.g. SecondAcc:1,ThirdAccAcc:1
     # L1 Cache Example
           - Var:
                 - Name: # Var name here (Required)

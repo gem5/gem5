@@ -295,6 +295,21 @@ class Instruction : public Value
     {
         return nullptr;
     }
+    // For a load or store, the bytes [start, end) it accesses. False
+    // while its address is still being computed.
+    virtual bool
+    accessRange(Addr &start, Addr &end)
+    {
+        return false;
+    }
+
+    // Whether operand op_num has its value: any producer has completed.
+    bool
+    operandReady(uint64_t op_num)
+    {
+        return dynamicDependencies.find(operands.at(op_num).getUID()) ==
+               dynamicDependencies.end();
+    }
 
     // Functions for getting data from operands
     uint64_t
@@ -1442,6 +1457,16 @@ class Load : public Instruction
     }
 
     MemoryRequest *createMemoryRequest() override;
+    bool
+    accessRange(Addr &start, Addr &end) override
+    {
+        if (!operandReady(0)) {
+            return false;
+        }
+        start = getPtrOperandValue(0);
+        end = start + getSizeInBytes();
+        return true;
+    }
 };
 
 std::shared_ptr<SALAM::Instruction>
@@ -1454,6 +1479,8 @@ class Store : public Instruction
   private:
     std::vector<std::vector<uint64_t>> conditions;
     uint64_t align;
+    // Bytes written, from the module's data layout.
+    uint64_t storeBytes = 0;
     SALAM::Debugger *dbgr;
     uint64_t currentCycle;
 
@@ -1496,6 +1523,16 @@ class Store : public Instruction
     }
 
     MemoryRequest *createMemoryRequest() override;
+    bool
+    accessRange(Addr &start, Addr &end) override
+    {
+        if (!operandReady(1)) {
+            return false;
+        }
+        start = getPtrOperandValue(1);
+        end = start + storeBytes;
+        return true;
+    }
 };
 
 std::shared_ptr<SALAM::Instruction>
@@ -2311,6 +2348,8 @@ class Call : public Instruction
     SALAM::Debugger *dbgr;
     uint64_t currentCycle;
     std::shared_ptr<SALAM::Value> callee;
+    // Set when the callee returns; the call cannot complete before.
+    bool calleeReturned = false;
 
   protected:
   public:
@@ -2331,6 +2370,23 @@ class Call : public Instruction
         return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
+    // The call's latency counts from the callee's return.
+    bool
+    commit() override
+    {
+        return calleeReturned && Instruction::commit();
+    }
+    void
+    reset() override
+    {
+        Instruction::reset();
+        calleeReturned = false;
+    }
+    void
+    calleeReturn()
+    {
+        calleeReturned = true;
+    }
     void
     dump()
     {

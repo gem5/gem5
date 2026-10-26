@@ -39,7 +39,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cycle_counts.hh"
+#include "salam/HWModeling/cycle_counts.hh"
+
+#include "base/logging.hh"
 
 CycleCounts::CycleCounts(const CycleCountsParams &p)
     : SimObject(p),
@@ -102,4 +104,11 @@ CycleCounts::CycleCounts(const CycleCountsParams &p)
       fmul_inst(p.fmul),
       fdiv_inst(p.fdiv),
       frem_inst(p.frem)
-{}
+{
+    // Loads and stores complete when the memory system responds; their
+    // cycle counts are not used as a latency.
+    fatal_if(p.load != 0 || p.store != 0,
+             "%s: CycleCounts load and store must be 0 (got %u and %u); "
+             "memory latency comes from the memory system",
+             name(), p.load, p.store);
+}

@@ -238,6 +238,8 @@ class APIntRegister : public Register
 {
   private:
     uint64_t data = 0;
+    // Bit width of the LLVM integer type; writes are masked to it.
+    unsigned bits = 64;
 
   public:
     APIntRegister(uint64_t bitwidth, bool isTracked);

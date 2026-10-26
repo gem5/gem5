@@ -136,32 +136,54 @@ class LLVMInterface : public AccComputeUnit
                    writeUIDActive(id);
         }
 
-        std::map<Addr, std::shared_ptr<SALAM::Instruction>> activeWrites;
+        // In-flight stores, by UID, with the bytes [start, end) each
+        // one writes.
+        struct ActiveWrite
+        {
+            Addr start;
+            Addr end;
+            std::shared_ptr<SALAM::Instruction> inst;
+        };
+        std::map<uint64_t, ActiveWrite> activeWrites;
         inline void
-        trackWrite(Addr writeAddr,
+        trackWrite(MemoryRequest *req,
                    std::shared_ptr<SALAM::Instruction> writeInst)
         {
-            activeWrites.insert({writeAddr, writeInst});
+            Addr start = req->getAddress();
+            bool added =
+                activeWrites
+                    .emplace(writeInst->getUID(),
+                             ActiveWrite{start, start + req->getLength(),
+                                         writeInst})
+                    .second;
+            panic_if(!added, "Store UID[%d] is already in flight",
+                     writeInst->getUID());
         }
         inline void
-        untrackWrite(uint64_t writeAddr)
+        untrackWrite(uint64_t uid)
         {
-            auto it = activeWrites.find(writeAddr);
-            if (it != activeWrites.end()) {
-                activeWrites.erase(it);
+            activeWrites.erase(uid);
+        }
+        // An in-flight store that writes any byte of [addr, addr + len),
+        // or nullptr.
+        inline std::shared_ptr<SALAM::Instruction>
+        getActiveWrite(Addr addr, size_t len)
+        {
+            for (auto &entry : activeWrites) {
+                const ActiveWrite &write = entry.second;
+                if (addr < write.end && write.start < addr + len) {
+                    return write.inst;
+                }
             }
+            return nullptr;
         }
         inline bool
-        writeActive(uint64_t writeAddr)
+        writeActive(Addr addr, size_t len)
         {
-            return (activeWrites.find(writeAddr) != activeWrites.end());
+            return getActiveWrite(addr, len) != nullptr;
         }
-
-        inline std::shared_ptr<SALAM::Instruction>
-        getActiveWrite(uint64_t writeAddr)
-        {
-            return activeWrites.find(writeAddr)->second;
-        }
+        bool mustWaitForOlder(
+            std::list<std::shared_ptr<SALAM::Instruction>>::iterator pos);
         inline bool
         writeUIDActive(uint64_t uid)
         {

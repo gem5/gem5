@@ -44,6 +44,7 @@
 #include "instruction.hh"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/GetElementPtrTypeIterator.h"
+#include "llvm/IR/Module.h"
 #include "sim/sim_object.hh"
 
 namespace SALAM
@@ -1773,6 +1774,12 @@ Load::initialize(llvm::Value *irval, irvmap *irmap,
     // ****** //
     llvm::LoadInst *inst = llvm::dyn_cast<llvm::LoadInst>(irval);
     this->align = inst->getAlign().value();
+    // A pointer in memory has the target's width, not the 64 bits of
+    // a pointer register.
+    if (inst->getType()->isPointerTy()) {
+        const llvm::DataLayout &layout = inst->getModule()->getDataLayout();
+        size = layout.getPointerTypeSizeInBits(inst->getType());
+    }
     if (staticDependencies.front()->isGlobalConstant()) {
         loadingInternal = true;
     }
@@ -1853,6 +1860,9 @@ Store::initialize(llvm::Value *irval, irvmap *irmap,
     // ****** //
     llvm::StoreInst *inst = llvm::dyn_cast<llvm::StoreInst>(irval);
     this->align = inst->getAlign().value();
+    const llvm::DataLayout &layout = inst->getModule()->getDataLayout();
+    storeBytes = layout.getTypeStoreSize(inst->getValueOperand()->getType())
+                     .getFixedValue();
 }
 
 void
@@ -1865,7 +1875,7 @@ MemoryRequest *
 Store::createMemoryRequest()
 {
     Addr memAddr = (operands.at(1).getPtrRegValue());
-    size_t reqLen = operands.at(0).getSizeInBytes();
+    size_t reqLen = storeBytes;
 
     MemoryRequest *req;
 

@@ -101,6 +101,11 @@ class MemoryRequest
     {
         return address;
     }
+    size_t
+    getLength() const
+    {
+        return length;
+    }
     std::string printBuffer();
 };
 

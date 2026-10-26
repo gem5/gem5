@@ -205,7 +205,7 @@ The full file also declares the `EDGES`, `LEVELS`, and `LEVELCOUNTS` RegisterBan
 
 The `hw_config` section provides per-kernel instruction timing. Each accelerator's `Profile` field names the key to use. For example, `Profile: bfs` selects the `bfs:` section. The IR path is only the location of the bitcode.
 
-Each listed instruction includes opcode and functional-unit metadata along with its execution latency. The `hw_config` mapping selected by `Profile` supplies per-instruction `runtime_cycles` overrides. `config_parser.resolve_cycle_counts()` extracts these values, and `AccConfig()` applies them to `CycleCounts`. Instructions without an override retain their defaults. The other fields follow the build-time `inst_list.yml` entry format described in [Instruction entries](README_SALAM.md#instruction-entries). For example:
+Each listed instruction includes opcode and functional-unit metadata along with its execution latency. The `hw_config` mapping selected by `Profile` supplies per-instruction `runtime_cycles` overrides. `config_parser.resolve_cycle_counts()` extracts these values, and `AccConfig()` applies them to `CycleCounts`. Instructions without an override retain their defaults. `load` and `store` must stay 0: their latency comes from the memory system, and other values are rejected. Memory-operation latency is not configurable through `hw_config`. The other fields follow the build-time `inst_list.yml` entry format described in [Instruction entries](README_SALAM.md#instruction-entries). For example:
 
 ```yaml
 hw_config:

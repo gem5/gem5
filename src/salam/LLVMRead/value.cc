@@ -227,6 +227,23 @@ SALAM::Value::setRegisterValue(const uint64_t data)
         }
     }
 }
+namespace
+{
+
+// Assemble a value from exactly len bytes of data, which need not be
+// aligned. SALAM targets little-endian ARM.
+uint64_t
+readTargetBytes(const uint8_t *data, size_t len)
+{
+    uint64_t value = 0;
+    for (size_t i = 0; i < len; i++) {
+        value |= uint64_t(data[i]) << (8 * i);
+    }
+    return value;
+}
+
+} // anonymous namespace
+
 void
 SALAM::Value::setRegisterValue(uint8_t *data)
 {
@@ -238,21 +255,21 @@ SALAM::Value::setRegisterValue(uint8_t *data)
             if (dbg) {
                 DPRINTFS(Runtime, owner, "Float\n");
             }
-            returnReg->writeFloatData(*(uint64_t *)data, (size_t)4);
+            returnReg->writeFloatData(readTargetBytes(data, 4), (size_t)4);
             break;
         }
         case llvm::Type::DoubleTyID: {
             if (dbg) {
                 DPRINTFS(Runtime, owner, "Double\n");
             }
-            returnReg->writeFloatData(*(uint64_t *)data, (size_t)8);
+            returnReg->writeFloatData(readTargetBytes(data, 8), (size_t)8);
             break;
         }
         case llvm::Type::IntegerTyID: {
             if (dbg) {
                 DPRINTFS(Runtime, owner, "Integer Type | Size = %d\n", size);
             }
-            returnReg->writeIntData(*(uint64_t *)data,
+            returnReg->writeIntData(readTargetBytes(data, getSizeInBytes()),
                                     (size_t)getSizeInBytes());
             break;
         }
@@ -260,7 +277,7 @@ SALAM::Value::setRegisterValue(uint8_t *data)
             if (dbg) {
                 DPRINTFS(Runtime, owner, "Pointer\n");
             }
-            returnReg->writePtrData(*(uint64_t *)data);
+            returnReg->writePtrData(readTargetBytes(data, getSizeInBytes()));
             break;
         }
         default: {

@@ -295,16 +295,46 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit]
         timeout-minutes: 90
+        # The SALAM test fixture builds with absolute compiler paths. Use
+        # the same ones for every build here, or SCons rebuilds it all.
+        env:
+            CC: /usr/bin/gcc
+            CXX: /usr/bin/g++
         steps:
             - uses: actions/checkout@v7
             - name: Install SALAM dependencies
               run: |
                   apt-get update
-                  apt-get install -y --no-install-recommends llvm-dev python3-yaml
+                  apt-get install -y --no-install-recommends llvm-dev \
+                      python3-yaml clang-18 gcc-arm-none-eabi \
+                      libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
                   llvm-config --version
             - name: Build gem5 with SALAM
               run: |
                   scons build/ARM/gem5.opt --with-salam -j $(nproc)
+        # Run the SALAM suites on the default-profile build, before the
+        # ExtraUnit build below replaces it. The check fails if any
+        # listed suite did not run or any test did not pass.
+            - name: Run the SALAM test suites
+              id: run-salam-tests
+              working-directory: ${{ github.workspace }}/tests
+              run: |
+                  ./main.py list -q --suites gem5/salam --include-tags salam \
+                      > "${RUNNER_TEMP}/salam-suites.txt"
+                  status=0
+                  ./main.py run gem5/salam --include-tags salam -j $(nproc) \
+                      || status=$?
+                  python3 gem5/salam/check_salam_results.py \
+                      "${RUNNER_TEMP}/salam-suites.txt" \
+                      testing-results/results.xml gem5/salam || status=1
+                  exit ${status}
+            - name: Upload SALAM test results
+              if: success() || failure()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ steps.run-salam-tests.outcome }}-output
+                  path: tests/testing-results
+                  retention-days: 30
             - name: Build a complete ExtraUnit hardware profile
               run: |
                   dest="${RUNNER_TEMP}/salam-extra-unit"

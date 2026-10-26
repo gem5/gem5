@@ -75,7 +75,17 @@ LLVMInterface::ActiveFunction::scheduleBB(
     bool needToScheduleBranch = false;
     std::shared_ptr<SALAM::BasicBlock> nextBB;
     auto instruction_list = *(bb->Instructions());
+    // The phis at the start of a block read their incoming values as of
+    // block entry. Resolve all of them before any is queued, so that one
+    // phi never reads another phi's new value.
+    std::vector<std::shared_ptr<SALAM::Instruction>> entryPhis;
     for (auto inst : instruction_list) {
+        if (!entryPhis.empty() && !inst->isPhi()) {
+            for (auto phi : entryPhis) {
+                reservation.push_back(phi);
+            }
+            entryPhis.clear();
+        }
         std::shared_ptr<SALAM::Instruction> clone_inst = inst->clone();
         if (dbg) {
             DPRINTFS(Runtime, owner, "\t\t Instruction Cloned [UID: %d] \n",
@@ -112,10 +122,16 @@ LLVMInterface::ActiveFunction::scheduleBB(
                 if (phi) {
                     phi->setPrevBB(previousBB);
                 }
+                findDynamicDeps(clone_inst);
+                entryPhis.push_back(clone_inst);
+                continue;
             }
             findDynamicDeps(clone_inst);
             reservation.push_back(clone_inst);
         }
+    }
+    for (auto phi : entryPhis) {
+        reservation.push_back(phi);
     }
     previousBB = bb;
     auto schedulingStop = std::chrono::high_resolution_clock::now();
@@ -181,14 +197,17 @@ LLVMInterface::ActiveFunction::processQueues()
             DPRINTFS(Runtime, owner, "[[Function Return]]\n\n");
         }
         if (caller != nullptr) {
-            // Signal the calling instruction
+            // Pass the return value; the call completes from the
+            // caller's compute queue, once, after this.
             if (caller->getSize() > 0) {
                 auto retInst = reservation.front();
                 auto retOperand = retInst->getOperands()->front();
                 caller->setRegisterValue(retOperand.getOpRegister());
             }
             func->removeInstance();
-            caller->commit();
+            auto callInst = std::dynamic_pointer_cast<SALAM::Call>(caller);
+            assert(callInst);
+            callInst->calleeReturn();
         }
         returned = true;
         return;
@@ -228,7 +247,11 @@ LLVMInterface::ActiveFunction::processQueues()
                             }
                             queue_iter = reservation.erase(queue_iter);
                             hw_cycle_stats.loadInternal++;
-                        } else if (!writeActive(inst->getPtrOperandValue(0))) {
+                        } else if (mustWaitForOlder(queue_iter)) {
+                            ++queue_iter;
+                            hw_cycle_stats.loadRawStall++;
+                        } else if (!writeActive(inst->getPtrOperandValue(0),
+                                                inst->getSizeInBytes())) {
                             launchRead(inst);
                             if (dbg) {
                                 DPRINTFS(
@@ -242,15 +265,17 @@ LLVMInterface::ActiveFunction::processQueues()
                             hw_cycle_stats.loadAcitve++;
                         } else {
                             auto activeWrite =
-                                getActiveWrite(inst->getPtrOperandValue(0));
+                                getActiveWrite(inst->getPtrOperandValue(0),
+                                               inst->getSizeInBytes());
                             inst->addRuntimeDependency(activeWrite);
                             activeWrite->addRuntimeUser(inst);
                             ++queue_iter;
                             hw_cycle_stats.loadRawStall++;
                         }
+                    } else if ((inst)->isStore() &&
+                               mustWaitForOlder(queue_iter)) {
+                        ++queue_iter;
                     } else if ((inst)->isStore()) {
-                        // WAR Protection to insure reading
-                        // finishes before a write
                         launchWrite(inst);
                         if (dbg) {
                             DPRINTFS(
@@ -302,7 +327,8 @@ LLVMInterface::ActiveFunction::processQueues()
                             std::dynamic_pointer_cast<SALAM::Function>(
                                 calleeValue);
                         assert(callee);
-                        if (callee->canLaunch()) {
+                        if (callee->canLaunch() &&
+                            !mustWaitForOlder(queue_iter)) {
                             owner->launchFunction(callee, callInst);
                             computeQueue.insert({(inst)->getUID(), inst});
                             if (dbg) {
@@ -704,12 +730,74 @@ LLVMInterface::launchWrite(MemoryRequest *memReq, ActiveFunction *func)
     comm->enqueueWrite(memReq);
 }
 
+// Memory accesses issue in program order wherever they may overlap.
+// Whether the ready load, store or call at pos must wait because of an
+// older access: one not yet issued whose address is unknown or
+// overlaps, or, for a store, an overlapping one still in flight. A call
+// waits for every older access to finish, and every access and call
+// waits for an older call to return. No value is forwarded.
+bool
+LLVMInterface::ActiveFunction::mustWaitForOlder(
+    std::list<std::shared_ptr<SALAM::Instruction>>::iterator pos)
+{
+    // A launched call is older than everything still reserved.
+    for (auto &entry : computeQueue) {
+        if (entry.second->isCall()) {
+            return true;
+        }
+    }
+    auto inst = *pos;
+    bool isCall = inst->isCall();
+    bool isStore = inst->isStore();
+    Addr start = 0;
+    Addr end = 0;
+    if (!isCall && !inst->accessRange(start, end)) {
+        panic("%s is ready without an address", inst->getIRString());
+    }
+    for (auto it = reservation.begin(); it != pos; ++it) {
+        auto older = *it;
+        if (older->isCall()) {
+            return true;
+        }
+        bool olderLoad = older->isLoad() && !older->isLoadingInternal();
+        if (!older->isStore() && !(olderLoad && (isStore || isCall))) {
+            continue;
+        }
+        if (isCall) {
+            return true;
+        }
+        Addr olderStart;
+        Addr olderEnd;
+        if (!older->accessRange(olderStart, olderEnd) ||
+            (olderStart < end && start < olderEnd)) {
+            return true;
+        }
+    }
+    if (isCall) {
+        return !readQueue.empty() || !writeQueue.empty();
+    }
+    if (isStore) {
+        if (writeActive(start, end - start)) {
+            return true;
+        }
+        for (auto &entry : readQueue) {
+            Addr readStart;
+            Addr readEnd;
+            entry.second->accessRange(readStart, readEnd);
+            if (readStart < end && start < readEnd) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void
 LLVMInterface::ActiveFunction::launchWrite(
     std::shared_ptr<SALAM::Instruction> writeInst)
 {
     auto memReq = (writeInst)->createMemoryRequest();
-    trackWrite(memReq->getAddress(), writeInst);
+    trackWrite(memReq, writeInst);
     auto wr_uid = writeInst->getUID();
     writeQueue.insert({wr_uid, (writeInst)});
     writeQueueMap.insert({memReq, wr_uid});
@@ -788,8 +876,7 @@ LLVMInterface::ActiveFunction::writeCommit(MemoryRequest *req)
         auto queue_iter = writeQueue.find(map_iter->second);
         if (queue_iter != writeQueue.end()) {
             queue_iter->second->commit();
-            Addr addressWritten = map_iter->first->getAddress();
-            untrackWrite(addressWritten);
+            untrackWrite(map_iter->second);
             writeQueue.erase(queue_iter);
             writeQueueMap.erase(map_iter);
         } else {

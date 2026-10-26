@@ -61,6 +61,7 @@ def parse_yaml(
     parent_path: str = None,
     hw_path: str = None,
     hw_config_document=None,
+    hw_config_source: str = None,
 ):
     clusters = []
     # Load in each acc cluster and add it to the list
@@ -70,6 +71,8 @@ def parse_yaml(
         # was selected, or None when hw_path names an external file.
         doc_hw_path = hw_path
         doc_hw_document = hw_config_document
+        # YAML file that selected doc_hw_path, for diagnostics.
+        doc_hw_source = hw_config_source
         if (
             doc_hw_document is None
             and doc_hw_path is not None
@@ -93,6 +96,7 @@ def parse_yaml(
                         doc_hw_path = _resolve_path(
                             parent_path, param["HWPath"]
                         )
+                        doc_hw_source = parent_path
                         doc_hw_document = (
                             cluster_dict
                             if doc_hw_path == parent_path
@@ -106,6 +110,7 @@ def parse_yaml(
                         if not FOUND_HW_PATH and doc_hw_path is None:
                             doc_hw_path = parent_path
                             doc_hw_document = cluster_dict
+                            doc_hw_source = parent_path
             if FOUND_SYS_PATH and FOUND_DEVICE:
                 raise Exception(
                     "Found device definitions in a cluster with a"
@@ -120,6 +125,7 @@ def parse_yaml(
                     parent_path=cur_path,
                     hw_path=doc_hw_path,
                     hw_config_document=doc_hw_document,
+                    hw_config_source=doc_hw_source,
                 )
                 clusters.extend(temp_cluster)
             elif FOUND_HW_PATH:
@@ -151,6 +157,7 @@ def parse_yaml(
                 config_path=parent_path,
                 hw_config_path=doc_hw_path,
                 hw_config_document=doc_hw_document,
+                hw_config_source=doc_hw_source,
                 document=cluster_dict,
             )
         )
@@ -189,6 +196,7 @@ class AccCluster:
         config_path: str,
         hw_config_path: str = None,
         hw_config_document=None,
+        hw_config_source: str = None,
         document=None,
     ):
         self.name = name
@@ -203,6 +211,8 @@ class AccCluster:
         # YAML document whose inline hw_config is selected, or None when
         # hw_config_path names an external file.
         self.hw_config_document = hw_config_document
+        # YAML file that selected hw_config_path, for diagnostics.
+        self.hw_config_source = hw_config_source
         # YAML document that defined this cluster. An accelerator HWPath
         # naming config_path selects its inline hw_config.
         self.document = document
@@ -338,6 +348,7 @@ class AccCluster:
             ir_path = None
             hw_config_path = self.hw_config_path
             hw_config_document = self.hw_config_document
+            hw_config_source = self.hw_config_source
             profile_name = None
             debug = False
 
@@ -369,6 +380,7 @@ class AccCluster:
                         if hw_config_path == self.config_path
                         else None
                     )
+                    hw_config_source = self.config_path
                 if "PIOMaster" in device_dict:
                     pio_masters.extend(device_dict["PIOMaster"].split(","))
                 if "StreamIn" in device_dict:
@@ -451,6 +463,7 @@ class AccCluster:
                     config_path=self.config_path,
                     hw_config_path=hw_config_path,
                     hw_config_document=hw_config_document,
+                    hw_config_source=hw_config_source,
                     variables=variables,
                     debug=debug,
                 )
@@ -479,6 +492,7 @@ class Accelerator:
         config_path: str,
         hw_config_path: str,
         hw_config_document=None,
+        hw_config_source: str = None,
         variables=None,
         debug: bool = False,
     ):
@@ -498,6 +512,7 @@ class Accelerator:
         self.config_path = config_path
         self.hw_config_path = hw_config_path
         self.hw_config_document = hw_config_document
+        self.hw_config_source = hw_config_source
         self.variables = variables
         self.debug = debug
 
@@ -586,9 +601,11 @@ class Variable:
             # probably need to be more elegant
             self.connections.append(PortedConnection(self.accName, self.ports))
             # Append other connections to the connections list
+            # Connections were validated when the workload was loaded.
             if "Connections" in kwargs:
-                for conDef in kwargs.get("Connections").split(","):
-                    con, numPorts = conDef.split(":")
+                for con, numPorts in workload_config.parse_connections(
+                    kwargs["Connections"], None, self.name
+                ):
                     self.connections.append(PortedConnection(con, numPorts))
         elif self.type == "Stream":
             # Read in Stream args
@@ -612,12 +629,9 @@ class Variable:
             self.address = kwargs.get("Address")
             # Append the default connection here...
             # probably need to be more elegant
+            # The reg_port connects to the owning accelerator only;
+            # the workload reader rejects extra Connections.
             self.connections.append(PortedConnection(self.accName, 1))
-            # Append other connections to the connections list
-            if "Connections" in kwargs:
-                for conDef in kwargs.get("Connections").split(","):
-                    con, numPorts = conDef.split(":")
-                    self.connections.append(PortedConnection(con, numPorts))
         elif self.type == "Cache":
             self.name = kwargs.get("Name")
             self.accName = kwargs.get("AccName")
@@ -640,16 +654,17 @@ class CycleCountError(Exception):
         self.path = path
         self.profile_name = profile_name
         self.reason = reason
-        super().__init__(
-            f"SALAM config: {path}: profile {profile_name!r}: {reason}"
-        )
+        scope = "" if profile_name is None else f"profile {profile_name!r}: "
+        super().__init__(f"SALAM config: {path}: {scope}{reason}")
 
 
-def resolve_cycle_counts(hw_config_document, hw_config_path, profile_name):
+def resolve_cycle_counts(
+    hw_config_document, hw_config_path, profile_name, hw_config_source=None
+):
     if hw_config_document is not None:
         hw_config = hw_config_document.get("hw_config")
     else:
-        hw_config = _load_external_hw_config(hw_config_path)
+        hw_config = _load_external_hw_config(hw_config_path, hw_config_source)
     return _cycle_counts(hw_config, profile_name, hw_config_path)
 
 
@@ -672,8 +687,19 @@ def _cycle_counts(hw_config, profile_name, source):
     return cycles
 
 
-def _load_external_hw_config(path):
-    with open(path, encoding="utf-8") as stream:
+def _load_external_hw_config(path, source=None):
+    try:
+        stream = open(path, encoding="utf-8")
+    except OSError as exc:
+        # Report the file that declared HWPath, not just the missing one.
+        raise workload_config.WorkloadConfigError(
+            source or path,
+            "HWPath",
+            "HWPath",
+            path,
+            f"cannot read HWPath file {path}: {exc.strerror}",
+        ) from exc
+    with stream:
         documents = [
             document
             for document in yaml.safe_load_all(stream)
@@ -686,4 +712,5 @@ def _load_external_hw_config(path):
     hw_config = documents[0].get("hw_config")
     if not isinstance(hw_config, dict):
         raise CycleCountError(path, None, "HWPath file has no hw_config")
+    workload_config.validate_hw_config(hw_config, path)
     return hw_config

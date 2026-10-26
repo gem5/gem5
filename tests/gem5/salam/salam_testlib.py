@@ -103,6 +103,22 @@ def _output(argv, env=None, cwd=None):
     ).stdout
 
 
+def _run_logged(step, argv, env, log_path):
+    # Run a build step, keeping its output for the failure report.
+    with open(log_path, "a") as logf:
+        logf.write("$ " + " ".join(argv) + "\n")
+        logf.flush()
+        result = subprocess.run(
+            argv, env=env, stdout=logf, stderr=subprocess.STDOUT
+        )
+    if result.returncode != 0:
+        with open(log_path) as logf:
+            tail = "".join(logf.readlines()[-30:])
+        raise SalamTestError(
+            f"{step} failed ({result.returncode}); see {log_path}:\n{tail}"
+        )
+
+
 class Toolchain:
     # Absolute tool paths resolved from the calling environment before
     # any environment is sanitized.
@@ -434,14 +450,12 @@ class SalamWorkloadFixture(Fixture):
         self.build_env = env
         self._check_header(tools, src, env)
         self.build_log = os.path.join(self.root, "build.log")
-        with open(self.build_log, "w") as logf:
-            subprocess.run(
-                [tools.make, "-C", os.path.join(src, self.bench), "build"],
-                env=env,
-                check=True,
-                stdout=logf,
-                stderr=subprocess.STDOUT,
-            )
+        _run_logged(
+            "make",
+            [tools.make, "-C", os.path.join(src, self.bench), "build"],
+            env,
+            self.build_log,
+        )
         self.elf = os.path.join(src, self.bench, "sw", "main.elf")
         self.accpath = os.path.join(src, self.bench)
         outputs = {}
@@ -493,7 +507,8 @@ class SalamWorkloadFixture(Fixture):
             config.base_dir,
             "util/SALAM-tools/SALAM-Configurator/systembuilder.py",
         )
-        subprocess.run(
+        _run_logged(
+            "systembuilder",
             [
                 tools.python,
                 builder,
@@ -504,9 +519,8 @@ class SalamWorkloadFixture(Fixture):
                 "--config-name",
                 "config.yml",
             ],
-            env=dict(env, ACC_BENCH_PATH=src),
-            check=True,
-            capture_output=True,
+            dict(env, ACC_BENCH_PATH=src),
+            os.path.join(self.root, "systembuilder.log"),
         )
         if sha256_file(header) != before:
             raise SalamTestError(
@@ -535,37 +549,69 @@ def enable_check(bench):
     return edit
 
 
-def run_fs(workload, wall, ticks):
-    # Runs configs/SALAM/fs.py on a built workload.
+def _fs_command(params, workload, wall, ticks, fs_args=()):
+    gem5 = params.fixtures["salam-gem5"]
+    wl = params.fixtures[workload]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    command = [
+        gem5.tools.timeout,
+        "--kill-after=30",
+        str(wall),
+        gem5.path,
+        "-d",
+        outdir,
+        "-re",
+        "--silent-redirect",
+        os.path.join(config.base_dir, "configs/SALAM/fs.py"),
+        "--kernel=" + wl.elf,
+        "--accpath=" + wl.accpath,
+        "--accbench=" + wl.bench,
+        "--acccfg=config.yml",
+        "--abs-max-tick=" + str(ticks),
+    ] + FS_ARGS
+    command += fs_args
+    env = gem5.tools.env(extra={"M5_PATH": config.base_dir})
+    return command, env, outdir
+
+
+def run_fs(workload, wall, ticks, fs_args=()):
+    # Runs configs/SALAM/fs.py on a built workload; fs_args are extra
+    # fs.py options, such as --param overrides.
 
     def test(params):
-        gem5 = params.fixtures["salam-gem5"]
-        wl = params.fixtures[workload]
-        outdir = params.fixtures[constants.tempdir_fixture_name].path
-        command = [
-            gem5.tools.timeout,
-            "--kill-after=30",
-            str(wall),
-            gem5.path,
-            "-d",
-            outdir,
-            "-re",
-            "--silent-redirect",
-            os.path.join(config.base_dir, "configs/SALAM/fs.py"),
-            "--kernel=" + wl.elf,
-            "--accpath=" + wl.accpath,
-            "--accbench=" + wl.bench,
-            "--acccfg=config.yml",
-            "--abs-max-tick=" + str(ticks),
-        ] + FS_ARGS
+        command, env, _outdir = _fs_command(
+            params, workload, wall, ticks, fs_args
+        )
         log_call(
             params.log,
             command,
             time=params.time,
-            env=gem5.tools.env(extra={"M5_PATH": config.base_dir}),
+            env=env,
             stdout=sys.stdout,
             stderr=sys.stderr,
         )
+
+    return test
+
+
+def run_fs_rejected(workload, wall, ticks, regex):
+    # Runs fs.py and requires gem5 to stop with an error matching regex,
+    # not by a timeout.
+
+    def test(params):
+        command, env, outdir = _fs_command(params, workload, wall, ticks)
+        result = subprocess.run(command, env=env)
+        if result.returncode in (0, 124, 137):
+            raise AssertionError(
+                f"expected gem5 to reject the run, got {result.returncode}"
+            )
+        for name in ("simerr.txt", "simout.txt"):
+            path = os.path.join(outdir, name)
+            if os.path.isfile(path) and re.search(
+                regex, open(path).read(), re.MULTILINE
+            ):
+                return
+        raise AssertionError(f"no {regex!r} in gem5 output")
 
     return test
 
@@ -578,3 +624,223 @@ class NoMatchFileRegex(MatchFileRegex):
         for fname in self.filenames:
             if self.parse_file(os.path.join(tempdir, fname)):
                 raise AssertionError(f"unexpected match in {fname}")
+
+
+HARNESS_DIR = "tests/gem5/salam/harness"
+HARNESS_FROM_BFS = ("sw/boot.s", "sw/boot.ld", "sw/isr.c")
+
+
+def _copy_tracked(tools, paths, dest_for):
+    # Copy tracked files under paths; dest_for maps a tracked path to
+    # its destination, or None to skip it.
+    copied = {}
+    listing = _output(
+        [tools.git, "-C", config.base_dir, "ls-files", "-z", "--"] + paths
+    )
+    for rel in filter(None, listing.split("\0")):
+        dest = dest_for(rel)
+        if dest is None:
+            continue
+        if re.search(r"\.(o|elf|ll)$", rel):
+            raise SalamTestError(f"tracked build product in sources: {rel}")
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(os.path.join(config.base_dir, rel), dest)
+        copied[rel] = sha256_file(dest)
+    return copied
+
+
+class SalamHarnessFixture(Fixture):
+    # Builds the single-accelerator kernel harness around one kernel.
+    #
+    # kernel: a .c file, or a .ll.in template, in harness/kernels.
+    # inputs: int32 values written to IN, or C expressions over the
+    # generated defines (such as "IN + 8"); n_out: OUT words printed.
+    # hw_config: optional cycle overrides for the "kernel" profile.
+    # cache_size: if set, the accelerator gets a Cache var of that size.
+    # ir_patterns: regexes the generated kernel.ll must contain.
+
+    def __init__(
+        self,
+        name,
+        gem5,
+        tempdir,
+        kernel,
+        inputs,
+        n_out,
+        runs=1,
+        hw_config=None,
+        ir_patterns=(),
+        cache_size=None,
+    ):
+        super().__init__(name=name)
+        self.gem5 = gem5
+        self.tempdir = tempdir
+        self.kernel = kernel
+        self.inputs = list(inputs)
+        self.n_out = n_out
+        self.runs = runs
+        self.hw_config = hw_config
+        self.ir_patterns = ir_patterns
+        self.cache_size = cache_size
+        self.bench = "harness"
+
+    def setup(self, testitem):
+        tools = self.gem5.tools
+        self.root = os.path.join(self.tempdir.path, "workload")
+        src = os.path.join(self.root, "src")
+        self.accpath = os.path.join(src, self.bench)
+        bfs = os.path.join(BENCH_DIR, "bfs") + "/"
+        copied = _copy_tracked(
+            tools,
+            [os.path.join(BENCH_DIR, "common"), HARNESS_DIR]
+            + [bfs + rel for rel in HARNESS_FROM_BFS],
+            lambda rel: self._dest(src, rel),
+        )
+        self._write_inputs()
+        if self.cache_size is not None:
+            self._add_cache()
+        shim = os.path.join(self.root, "bin")
+        os.makedirs(shim)
+        os.symlink(tools.clang, os.path.join(shim, "clang"))
+        env = tools.env(extra={"M5_PATH": config.base_dir}, path_prefix=[shim])
+        self.build_env = env
+        builder = os.path.join(
+            config.base_dir,
+            "util/SALAM-tools/SALAM-Configurator/systembuilder.py",
+        )
+        _run_logged(
+            "systembuilder",
+            [
+                tools.python,
+                builder,
+                "--sys-name",
+                self.bench,
+                "--bench-path",
+                self.bench,
+                "--config-name",
+                "config.yml",
+            ],
+            dict(env, ACC_BENCH_PATH=src),
+            os.path.join(self.root, "systembuilder.log"),
+        )
+        self._place_kernel(tools)
+        self.build_log = os.path.join(self.root, "build.log")
+        _run_logged(
+            "make",
+            [tools.make, "-C", self.accpath, "build"],
+            env,
+            self.build_log,
+        )
+        # The timing overrides do not affect the header or the build.
+        if self.hw_config is not None:
+            self._write_hw_config()
+        self.ir = os.path.join(self.accpath, "hw", "kernel.ll")
+        with open(self.ir) as f:
+            ir_text = f.read()
+        for pattern in self.ir_patterns:
+            if not re.search(pattern, ir_text, re.MULTILINE):
+                raise SalamTestError(
+                    f"reproducer precondition not met: {pattern!r} is not "
+                    f"in {self.kernel}'s IR"
+                )
+        self.elf = os.path.join(self.accpath, "sw", "main.elf")
+        self.manifest = {
+            "toolchain": tools.describe(),
+            "env": env,
+            "kernel": self.kernel,
+            "inputs": self.inputs,
+            "hw_config": self.hw_config,
+            "cache_size": self.cache_size,
+            "copied": copied,
+            "outputs": {
+                "hw/kernel.ll": sha256_file(self.ir),
+                "sw/main.elf": sha256_file(self.elf),
+            },
+            "gem5_sha256": sha256_file(self.gem5.path),
+        }
+        with open(os.path.join(self.root, "manifest.json"), "w") as f:
+            json.dump(self.manifest, f, indent=1, sort_keys=True)
+
+    def _dest(self, src, rel):
+        if rel.startswith(HARNESS_DIR + "/kernels/"):
+            return None
+        if rel.startswith(HARNESS_DIR + "/"):
+            return os.path.join(
+                src, self.bench, os.path.relpath(rel, HARNESS_DIR)
+            )
+        bfs = os.path.join(BENCH_DIR, "bfs") + "/"
+        if rel.startswith(bfs):
+            return os.path.join(src, self.bench, os.path.relpath(rel, bfs))
+        return os.path.join(src, os.path.relpath(rel, BENCH_DIR))
+
+    def _write_inputs(self):
+        path = os.path.join(self.accpath, "sw", "inputs.h")
+        values = (
+            ", ".join(
+                f"(int32_t)({v if isinstance(v, str) else int(v)})"
+                for v in self.inputs
+            )
+            or "0"
+        )
+        with open(path, "w") as f:
+            f.write(
+                f"#define N_IN {len(self.inputs)}\n"
+                f"#define N_OUT {self.n_out}\n"
+                f"#define N_RUNS {self.runs}\n"
+                f"static const int32_t inputs[] = {{{values}}};\n"
+            )
+
+    def _add_cache(self):
+        import yaml
+
+        path = os.path.join(self.accpath, "config.yml")
+        with open(path) as f:
+            document = yaml.safe_load(f)
+        cache = {"Name": "Cache", "Type": "Cache", "Size": self.cache_size}
+        for item in document["acc_cluster"]:
+            if "Accelerator" in item:
+                item["Accelerator"].append({"Var": [cache]})
+        with open(path, "w") as f:
+            f.write("---\n")
+            yaml.safe_dump(document, f, sort_keys=False)
+
+    def _write_hw_config(self):
+        import yaml
+
+        path = os.path.join(self.accpath, "config.yml")
+        with open(path) as f:
+            document = yaml.safe_load(f)
+        document["hw_config"] = {"kernel": self.hw_config}
+        with open(path, "w") as f:
+            f.write("---\n")
+            yaml.safe_dump(document, f, sort_keys=False)
+
+    def _place_kernel(self, tools):
+        source = os.path.join(
+            config.base_dir, HARNESS_DIR, "kernels", self.kernel
+        )
+        hw = os.path.join(self.accpath, "hw")
+        if self.kernel.endswith(".c"):
+            shutil.copy2(source, os.path.join(hw, "kernel.c"))
+            return
+        if not self.kernel.endswith(".ll.in"):
+            raise SalamTestError(f"unknown kernel kind: {self.kernel}")
+        header = os.path.join(self.accpath, "harness_clstr_hw_defines.h")
+        with open(header) as f:
+            defines = dict(
+                re.findall(r"#define (\w+) (0x[0-9a-fA-F]+)", f.read())
+            )
+        ptr = "i32*" if tools.llvm_major < 15 else "ptr"
+        with open(source) as f:
+            text = f.read()
+        text = text.replace("{PTR_I32}", ptr)
+        # {IN}, {OUT}: base addresses; {IN2}, {OUT1}: word offsets.
+        text = re.sub(
+            r"\{(IN|OUT)(\d*)\}",
+            lambda m: str(
+                int(defines[m.group(1)], 16) + 4 * int(m.group(2) or 0)
+            ),
+            text,
+        )
+        with open(os.path.join(hw, "kernel.ll"), "w") as f:
+            f.write(text)
