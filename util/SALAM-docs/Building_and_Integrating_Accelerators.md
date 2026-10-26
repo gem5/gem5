@@ -15,7 +15,14 @@ On the software (workload) side, the user provides:
 * a YAML specification (`config.yml`) that describes the accelerator cluster topology and instruction timing,
 * an auto-generated header (`*_hw_defines.h`) that keeps software-visible MMIO addresses consistent with gem5’s address map.
 
-On the hardware side, SALAM models the datapath through a functional-unit inventory, per-instruction cycle counts, and device characterization at a chosen technology node. The in-tree default targets a 40nm node with a 5ns cycle-time budget. Changing that model is optional and is described later in this guide.
+On the hardware side, SALAM models the datapath through a functional-unit
+inventory and per-instruction cycle counts. The default profile retains
+historical 40 nm/5 ns metadata; those labels do not establish physical
+characterization or set the simulated compute clock. Optional sourced
+coefficients select PPA estimates without changing the existing profile,
+clock, or scheduling interfaces. See
+[Power, performance, and area](PPA_and_Validation.md) for configuration,
+coverage, and physical compatibility requirements.
 
 Together, these parts let users model and explore accelerator microarchitecture and system integration early, without writing RTL.
 

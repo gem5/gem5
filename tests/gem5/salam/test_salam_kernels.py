@@ -1188,6 +1188,7 @@ def check_generated_bitwise_ppa(params):
     disabled_args = [
         f"--param={model_path}.enabled=False",
         f"--param={model_path}.strict=True",
+        f"--param={model_path}.report_details=True",
     ]
     disabled_args += [
         f"--param=getattr(system.harness_clstr, {name!r}).ppa.enabled=False"
@@ -1366,7 +1367,8 @@ kernel_suite(
     forbid=[(0, 23)],
     ir_patterns=[r"= and i32 ", r"= or i32 ", r"= xor i32 "],
     fs_args=[
-        "--param=system.harness_clstr.kernel.hw_interface.salam_power_model.strict=True"
+        "--param=system.harness_clstr.kernel.hw_interface.salam_power_model.strict=True",
+        "--param=system.harness_clstr.kernel.hw_interface.salam_power_model.report_details=True",
     ],
     gem5_args=["--debug-flags=SALAMLaunch"],
     gem5=st.SalamGem5Fixture(REMAP_CONFIG),
@@ -1976,6 +1978,9 @@ kernel_suite(
     inputs=[3, 4, 5],
     expect={0: 9, 1: 16, 2: 25},
     runs=3,
+    fs_args=[
+        "--param=system.harness_clstr.kernel.hw_interface.salam_power_model.report_details=True"
+    ],
     extra_tests=[("summaries", summaries_per_invocation)],
 )
 

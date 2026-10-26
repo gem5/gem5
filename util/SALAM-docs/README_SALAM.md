@@ -45,7 +45,8 @@ sudo apt install clang gcc-arm-none-eabi
 ```
 
 The offline **cacti-SALAM** helper additionally needs `g++-multilib` on
-x86_64 Ubuntu; see **Power Modeling using cacti-SALAM**.
+x86_64 Ubuntu; see
+[Offline CACTI characterization](#offline-cacti-characterization).
 
 # Building gem5-SALAM
 
@@ -157,11 +158,24 @@ measure elapsed simulator time from accepted launch to completion, in ticks
 and microseconds respectively. A pass count is not an elapsed-cycle count:
 14 passes on consecutive edges span 13 clock periods. The launch debug trace
 also reports the interval from the first compute pass separately. These
-per-invocation values are distinct from the reset-window counters. The printed area/power block is an **Uncalibrated area/power
-estimate**, not a calibrated hardware power prediction.
+per-invocation values are distinct from the reset-window counters. PPA
+statistics report functional-unit and modeled-storage estimates with
+separate area, dynamic-energy, and leakage coverage. Missing characterization
+produces an explicit incomplete estimate. Set `report_details=True` on the
+desired `SALAMPowerModel` children for invocation and statistics-window
+details, including physical inventory, SSA slots, and missing coverage
+reasons. Detailed output defaults to off; native statistics and strict
+coverage checks remain active. See
+[Power, performance, and area](PPA_and_Validation.md) for the coefficient
+schema, units, model limits, and explicit reporting commands.
 
 Names below are relative to each object's path in `config.ini`:
 
+- `SALAMPowerModel`: `knownAreaUm2`, `knownDynamicEnergyJ`,
+  `knownLeakageEnergyJ`, `knownTotalEnergyJ`, `elapsedSeconds`, and
+  `knownAveragePowerW` describe known subtotals. Independent coverage flags
+  distinguish those subtotals from complete modeled estimates. FU/SSA
+  invocation summaries remain separate from memory statistics windows.
 - `LLVMInterface`: `invocations`, `cycles`, `issued` and `completed` by
   operation class, `opcodesIssued`, `fuDenials`, and `memoryOrderWaits`.
   `reservedOps`, `computeOps`, `readOps`, and `writeOps` are time-weighted
@@ -441,9 +455,18 @@ same generated sources outside the repository. It takes `--hw-config`
 and `--output-dir`, and it refuses to write under `src/`. A normal
 `--with-salam` build does not need this tool.
 
-## Power Modeling using cacti-SALAM
+## Offline CACTI characterization
 
-**cacti-SALAM** (`util/SALAM-tools/cacti-SALAM`) is an **offline helper** for running CACTI on accelerator YAML configs. It is **not wired into** gem5-SALAM simulation.
+`util/SALAM-tools/cacti-SALAM/import_cacti.py` converts supported, retained
+raw CACTI output into the characterization format consumed by existing
+SALAM memory objects. It validates source identity, units, capacity,
+organization, and ports. The simulator never runs CACTI. See the
+[import and binding examples](PPA_and_Validation.md) for supported formats
+and physical-model limitations.
+
+The older **cacti-SALAM** setup/run scripts below are offline batch helpers
+for accelerator YAML configurations. Their summary CSV is not itself an
+accepted runtime characterization record.
 
 On x86_64 Ubuntu, CACTI's 32-bit build needs a 32-bit C/C++ toolchain.
 The ordinary gem5 and SALAM packages above do not provide `gcc -m32` /
@@ -494,9 +517,10 @@ YAML, so setup is required even when a config has no SPMs. The in-tree BFS
 exits 0, and does not write `results/SALAM-out.csv`.
 
 When SPMs are present, results are written to
-`util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. To use those (or other)
-coefficients in a simulation power estimate, add code in
-`LLVMInterface::printResults()` in **src/salam/llvm_interface.cc**.
+`util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. Retain the underlying
+raw CACTI output and its producing inputs. Use the validated importer and
+an explicit memory `Characterization` reference to select coefficients;
+no source-code formula changes are required.
 
 # Resources
 

@@ -60,6 +60,22 @@ It aggregates the modeled hardware description components used by the datapath, 
 
 This object is typically instantiated as part of an accelerator definition and passed to the compute engine (LLVMInterface) so execution reflects the intended microarchitectural model.
 
+## SALAMPowerModel
+
+`HWInterface.salam_power_model` observes the resolved FU inventory and a
+static SSA-storage approximation. It counts successful operation admissions,
+operand captures, and result publications without changing scheduling.
+Each ScratchpadMemory and RegisterBank has a separate `ppa` child that
+observes serviced accesses to that physical memory, including CPU and DMA
+traffic. Shared memory is counted once.
+
+The model reports area, dynamic energy, leakage energy, average power, and
+independent coverage flags. Invocation summaries and resettable statistics
+windows share the same arithmetic. Characterization is optional; absent or
+incompatible data remains explicitly incomplete. See
+[PPA configuration and validation](PPA_and_Validation.md) for supported
+scope, exclusions, units, reset behavior, and reproduction commands.
+
 ## ScratchpadMemory
 
 ScratchpadMemory is a custom fast-access memory for accelerators. It includes access synchronization mechanisms such as ready mode. When access synchronization is activated accelerators will not be able to access data that is not marked ready. Furthermore, additional controls will be placed on reads and writes to the scratchpad in order to implement various sync mechanisms.

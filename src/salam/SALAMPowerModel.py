@@ -50,6 +50,9 @@ class SALAMPowerModel(SimObject):
 
     enabled = Param.Bool(True, "Observe PPA without affecting execution")
     strict = Param.Bool(False, "Reject incomplete modeled PPA coverage")
+    report_details = Param.Bool(
+        False, "Print PPA quantities, inventory, and missing coverage"
+    )
     keys = VectorParam.String([], "Unique normalized characterization keys")
     ids = VectorParam.String([], "Physical implementation identifiers")
     sources = VectorParam.String([], "Characterization provenance as JSON")

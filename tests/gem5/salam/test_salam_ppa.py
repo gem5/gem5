@@ -32,6 +32,7 @@ import math
 import os
 import re
 import subprocess
+import sys
 
 import salam_testlib as st
 from testlib import *
@@ -252,7 +253,7 @@ def coefficients():
     return model
 
 
-def model_args(enabled=True, strict=True, missing=False):
+def model_args(enabled=True, strict=True, missing=False, report_details=True):
     model = coefficients()
     if missing:
         index = model["keys"].index("op:integer_multiplier:mul:i32,i32->i32")
@@ -261,6 +262,14 @@ def model_args(enabled=True, strict=True, missing=False):
     args = [
         f"--param={MODEL}.{field}={value!r}" for field, value in model.items()
     ]
+    if report_details is not None:
+        paths = [MODEL] + [
+            f"getattr(system.harness_clstr, {memory!r}).ppa"
+            for memory in ("in", "out", "mem")
+        ]
+        args += [
+            f"--param={path}.report_details={report_details}" for path in paths
+        ]
     return (
         args
         + [
@@ -407,17 +416,22 @@ def run_variant(params, name, args, tracing=False, rejected=False):
     return outdir, text
 
 
-def equal_observations(first, second):
+def equal_observations(first, second, include_ppa=False):
     a, b = st.read_stats(first), st.read_stats(second)
     if len(a) != len(b):
         raise AssertionError("different statistics dump counts")
     for left, right in zip(a, b):
         for key in set(left) | set(right):
-            if (
-                key.startswith("host")
-                or ".power_state." in key
-                or ".salam_power_model." in key
-                or ".ppa." in key
+            if key.startswith("host") or (
+                not include_ppa
+                and any(
+                    part in key
+                    for part in (
+                        ".power_state.",
+                        ".salam_power_model.",
+                        ".ppa.",
+                    )
+                )
             ):
                 continue
             x, y = left.get(key), right.get(key)
@@ -427,7 +441,7 @@ def equal_observations(first, second):
                 and math.isnan(x)
                 and math.isnan(y)
             ):
-                raise AssertionError(f"non-PPA statistic {key}: {x} != {y}")
+                raise AssertionError(f"statistic {key}: {x} != {y}")
     if read_text(os.path.join(first, "system.terminal")) != read_text(
         os.path.join(second, "system.terminal")
     ):
@@ -834,3 +848,224 @@ def functional_unit_timing(params):
 
 
 suite("salam-ppa-fu-timing-compatibility", BASIC, functional_unit_timing)
+
+
+def same_report_configuration(first, second):
+    models = [set(), set()]
+
+    def without_details(value, details, found):
+        if isinstance(value, dict):
+            is_model = value.get("type") == "SALAMPowerModel"
+            if is_model:
+                if value.get("report_details") is not details:
+                    raise AssertionError("incorrect effective report setting")
+                found.add(value["path"])
+            return {
+                key: without_details(child, details, found)
+                for key, child in value.items()
+                if not (is_model and key == "report_details")
+            }
+        if isinstance(value, list):
+            return [without_details(child, details, found) for child in value]
+        return value
+
+    left = without_details(
+        json.loads(read_text(os.path.join(first, "config.json"))),
+        True,
+        models[0],
+    )
+    right = without_details(
+        json.loads(read_text(os.path.join(second, "config.json"))),
+        False,
+        models[1],
+    )
+    if left != right or models[0] != models[1] or MODEL not in models[0]:
+        raise AssertionError("report setting changed another parameter")
+
+
+def check_generic_report(outdir, expected_status):
+    output = os.path.join(outdir, "ppa-report.json")
+    command = [
+        sys.executable,
+        os.path.join(config.base_dir, "util/SALAM-tools/ppa_report.py"),
+        "--stats",
+        os.path.join(outdir, "stats.txt"),
+        "--config",
+        os.path.join(outdir, "config.json"),
+        "--prefix",
+        MODEL,
+        "--output",
+        output,
+    ]
+    subprocess.run(command, check=True, timeout=30)
+    report = json.loads(read_text(output))
+    if report["status"] != expected_status:
+        raise AssertionError(f"incorrect report status: {report}")
+    if expected_status == "disabled":
+        if report["components"] or report["disabled"] != [MODEL]:
+            raise AssertionError("disabled model was reported as observed")
+        return
+    if len(report["components"]) != 1:
+        raise AssertionError("report omitted or duplicated the model")
+    component = report["components"][0]
+    stats = st.read_stats(outdir)[-1]
+    if (
+        component["identity"] != MODEL
+        or component["characterization_keys"] != coefficients()["keys"]
+    ):
+        raise AssertionError("report lost characterization identities")
+    if component["characterization_sources"] != [
+        json.loads(source) for source in coefficients()["sources"]
+    ]:
+        raise AssertionError("report lost characterization sources")
+    for reported, statistic in (
+        ("known_area_um2", "knownAreaUm2"),
+        ("known_dynamic_j", "knownDynamicEnergyJ"),
+        ("known_leakage_j", "knownLeakageEnergyJ"),
+    ):
+        if report[reported] != stats[MODEL + "." + statistic]:
+            raise AssertionError("report differs from native statistics")
+    if component["coverage"] != dict(
+        area=True, dynamic=expected_status == "complete", leakage=True
+    ):
+        raise AssertionError("report lost independent coverage flags")
+
+
+def reporting_controls(params):
+    workload = params.fixtures["salam-workload"]
+    artifacts = (
+        workload.elf,
+        workload.ir,
+        os.path.join(workload.accpath, "config.yml"),
+    )
+    before = {path: st.sha256_file(path) for path in artifacts}
+    for missing in (False, True):
+        status = "incomplete" if missing else "complete"
+        detailed, text = run_variant(
+            params,
+            status + "-detailed",
+            model_args(strict=not missing, missing=missing),
+        )
+        # Omit the parameter to check the public default, not just an
+        # explicit false override. Coefficients and inputs stay identical.
+        quiet, quiet_text = run_variant(
+            params,
+            status + "-quiet",
+            model_args(
+                strict=not missing, missing=missing, report_details=None
+            ),
+        )
+        if "   PPA " in quiet_text:
+            raise AssertionError("default PPA output was not quiet")
+        expected = dict(BASIC_EXPECTED)
+        if missing:
+            expected.update(
+                dynamic=45e-12,
+                coverage="1/0/1",
+                missing_events=1,
+                missing=["op:integer_multiplier:mul:i32,i32->i32:energy"],
+            )
+        check_reports(text, expected, 1)
+        for identity in (
+            "PPA physical inventory: fu:integer_adder=1",
+            "PPA physical inventory: fu:integer_multiplier=1",
+            "PPA SSA slots: i32=4",
+        ):
+            if identity not in text:
+                raise AssertionError("explicit report lost " + identity)
+        output_check(read_text(os.path.join(quiet, "system.terminal")), 15, 1)
+        equal_observations(detailed, quiet, include_ppa=True)
+        same_report_configuration(detailed, quiet)
+        check_generic_report(quiet, status)
+
+    disabled, text = run_variant(
+        params, "disabled-detailed", model_args(enabled=False)
+    )
+    if "   PPA " in text:
+        raise AssertionError("disabled model emitted PPA details")
+    output_check(read_text(os.path.join(disabled, "system.terminal")), 15, 1)
+    check_generic_report(disabled, "disabled")
+    for details in (False, True):
+        extra = [f"--param={HW}.inst_config.add.functional_unit=0"]
+        outdir, _ = run_variant(
+            params,
+            "strict-unbound-" + str(details),
+            model_args(report_details=details) + extra,
+            rejected=True,
+        )
+        if "fu:unbound:add:i32,i32->i32" not in read_text(
+            os.path.join(outdir, "simerr.txt")
+        ):
+            raise AssertionError("strict rejection lost its missing binding")
+    if before != {path: st.sha256_file(path) for path in artifacts}:
+        raise AssertionError("report controls changed workload artifacts")
+
+
+suite("salam-ppa-report-controls", BASIC, reporting_controls)
+
+
+def dump_reporting_controls(params):
+    gem5 = params.fixtures["salam-gem5"]
+    base = params.fixtures[constants.tempdir_fixture_name].path
+    for enabled in (False, True):
+        for strict in (False, True):
+            for details in (False, True):
+                outdir = os.path.join(
+                    base, f"dump-{enabled}-{strict}-{details}"
+                )
+                os.makedirs(outdir)
+                settings = dict(enabled=enabled, strict=strict)
+                if details:
+                    settings["report_details"] = True
+                script = os.path.join(outdir, "dump.py")
+                with open(script, "w") as stream:
+                    stream.write(
+                        "import m5\n"
+                        "from m5.objects import Root, SALAMPowerModel\n"
+                        "root = Root(full_system=False)\n"
+                        f"root.ppa = SALAMPowerModel(**{settings!r})\n"
+                        "m5.instantiate()\n"
+                        "m5.simulate(1)\n"
+                        "print('PPA_DUMP_READY', flush=True)\n"
+                        "m5.stats.dump()\n"
+                        "print('PPA_DUMP_COMPLETE', flush=True)\n"
+                    )
+                result = subprocess.run(
+                    [gem5.path, "-d", outdir, "-re", script],
+                    env=gem5.tools.env(),
+                    timeout=30,
+                )
+                output = read_text(os.path.join(outdir, "simout.txt"))
+                error = read_text(os.path.join(outdir, "simerr.txt"))
+                if "PPA_DUMP_READY" not in output:
+                    raise AssertionError("did not reach explicit stats dump")
+                if enabled and strict:
+                    if result.returncode == 0 or (
+                        "strict PPA coverage is incomplete" not in error
+                    ):
+                        raise AssertionError(
+                            "output setting bypassed strict dump validation"
+                        )
+                    if "PPA_DUMP_COMPLETE" in output or "   PPA " in output:
+                        raise AssertionError("strict dump completed")
+                else:
+                    if result.returncode or "PPA_DUMP_COMPLETE" not in output:
+                        raise AssertionError("non-strict/disabled dump failed")
+                    if ("   PPA model: " in output) != (enabled and details):
+                        raise AssertionError("incorrect explicit dump output")
+                    stats = st.read_stats(outdir)[-1]
+                    for quantity in ("area", "dynamic", "leakage"):
+                        if stats["ppa." + quantity + "Complete"] != 0:
+                            raise AssertionError(
+                                "unconfigured model claimed complete coverage"
+                            )
+
+
+TestSuite(
+    name="salam-ppa-report-dump",
+    fixtures=[st.SalamGem5Fixture(), TempdirFixture()],
+    tags=[st.SALAM_TAG, "salam-ppa"],
+    tests=[
+        TestFunction(dump_reporting_controls, name="salam-ppa-report-dump")
+    ],
+)

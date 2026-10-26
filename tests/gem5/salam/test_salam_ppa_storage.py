@@ -258,6 +258,7 @@ def model(kind, mask="byte_enable", enabled=True, strict=True):
     return dict(
         enabled=enabled,
         strict=strict,
+        report_details=True,
         keys=["memory"],
         ids=["controlled-" + kind],
         signatures=[""],
@@ -739,7 +740,7 @@ def unknown_word_width(params):
         reset=False,
         reset_after_traffic=True,
         bandwidth="128MiB/s",
-        model=dict(enabled=True, strict=False),
+        model=dict(enabled=True, strict=False, report_details=True),
     )
     outdir = run_config(params, "unknown-width", TRAFFIC_CONFIG, values)
     output = read(outdir, "simout.txt")

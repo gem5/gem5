@@ -561,7 +561,7 @@ SALAMPowerModel::markStaticIncomplete(const std::string &reason)
 void
 SALAMPowerModel::printInvocation(std::ostream &stream) const
 {
-    if (enabled && invocationStarted) {
+    if (enabled && params().report_details && invocationStarted) {
         printResult(stream, invocationResult(), ledger.invocation,
                     "invocation: FU datapath and SSA storage");
     }
@@ -570,7 +570,7 @@ SALAMPowerModel::printInvocation(std::ostream &stream) const
 void
 SALAMPowerModel::printWindow(std::ostream &stream) const
 {
-    if (enabled) {
+    if (enabled && params().report_details) {
         printResult(stream, windowResult(), ledger.window,
                     "device statistics window");
     }
