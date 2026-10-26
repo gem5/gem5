@@ -470,6 +470,12 @@ class DmaReadFifo : public Drainable, public Serializable
 
     /** Get the amount of data stored in the FIFO */
     size_t size() const { return buffer.size(); }
+    /** Get the maximum amount of data the FIFO can hold. */
+    size_t
+    capacity() const
+    {
+        return buffer.capacity();
+    }
     /** Flush the FIFO */
     void flush() { buffer.flush(); }
 
@@ -545,6 +551,9 @@ class DmaReadFifo : public Drainable, public Serializable
      */
     virtual void onIdle() {};
 
+    /** Bytes became available, including a partial DMA block. */
+    virtual void onDataAvailable() {};
+
     /** @} */
   private: // Configuration
     /** Maximum request size in bytes */
@@ -555,8 +564,6 @@ class DmaReadFifo : public Drainable, public Serializable
     const Request::Flags reqFlags;
 
     DmaPort &port;
-
-    const Addr cacheLineSize;
 
   private:
     class DmaDoneEvent : public Event

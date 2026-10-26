@@ -496,12 +496,12 @@ DmaDevice::getPort(const std::string &if_name, PortID idx)
     return PioDevice::getPort(if_name, idx);
 }
 
-DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
-                         unsigned max_req_size,
-                         unsigned max_pending,
-                         Request::Flags flags)
-    : maxReqSize(max_req_size), fifoSize(size),
-      reqFlags(flags), port(_port), cacheLineSize(port.sys->cacheLineSize()),
+DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size, unsigned max_req_size,
+                         unsigned max_pending, Request::Flags flags)
+    : maxReqSize(max_req_size),
+      fifoSize(size),
+      reqFlags(flags),
+      port(_port),
       buffer(size)
 {
     freeRequests.resize(max_pending);
@@ -594,6 +594,7 @@ DmaReadFifo::resumeFill()
         return;
 
     const bool old_eob(atEndOfBlock());
+    const size_t old_size = buffer.size();
 
     if (port.sys->bypassCaches())
         resumeFillBypass();
@@ -602,28 +603,37 @@ DmaReadFifo::resumeFill()
 
     if (!old_eob && atEndOfBlock())
         onEndOfBlock();
+    if (buffer.size() > old_size) {
+        onDataAvailable();
+    }
 }
 
 void
 DmaReadFifo::resumeFillBypass()
 {
+    // A consumer may need more bytes while leaving less than one cache
+    // line free. Waiting for a whole line then prevents either side from
+    // making progress. Bypass accesses complete synchronously, so fill
+    // the available space without imposing a cache-line minimum.
     const size_t fifo_space = buffer.capacity() - buffer.size();
-    if (fifo_space >= cacheLineSize || buffer.capacity() < cacheLineSize) {
-        const size_t block_remaining = endAddr - nextAddr;
-        const size_t xfer_size = std::min(fifo_space, block_remaining);
-        std::vector<uint8_t> tmp_buffer(xfer_size);
-
-        assert(pendingRequests.empty());
-        DPRINTF(DMA, "Direct bypass startAddr=%#x xfer_size=%#x " \
-                "fifo_space=%#x block_remaining=%#x\n",
-                nextAddr, xfer_size, fifo_space, block_remaining);
-
-        port.dmaAction(MemCmd::ReadReq, nextAddr, xfer_size, nullptr,
-                tmp_buffer.data(), 0, reqFlags);
-
-        buffer.write(tmp_buffer.begin(), xfer_size);
-        nextAddr += xfer_size;
+    const size_t block_remaining = endAddr - nextAddr;
+    const size_t xfer_size = std::min(fifo_space, block_remaining);
+    if (xfer_size == 0) {
+        return;
     }
+
+    std::vector<uint8_t> tmp_buffer(xfer_size);
+    assert(pendingRequests.empty());
+    DPRINTF(DMA,
+            "Direct bypass startAddr=%#x xfer_size=%#x "
+            "fifo_space=%#x block_remaining=%#x\n",
+            nextAddr, xfer_size, fifo_space, block_remaining);
+
+    port.dmaAction(MemCmd::ReadReq, nextAddr, xfer_size, nullptr,
+                   tmp_buffer.data(), 0, reqFlags);
+
+    buffer.write(tmp_buffer.begin(), xfer_size);
+    nextAddr += xfer_size;
 }
 
 void
@@ -656,12 +666,16 @@ void
 DmaReadFifo::dmaDone()
 {
     const bool old_active(isActive());
+    const size_t old_size = buffer.size();
 
     handlePending();
     resumeFill();
 
     if (old_active && !isActive())
         onIdle();
+    if (buffer.size() > old_size) {
+        onDataAvailable();
+    }
 }
 
 void
