@@ -352,9 +352,6 @@ class BAC
     /** Wire to get decode's information from backwards time buffer. */
     TimeBuffer<TimeStruct>::wire fromDecode;
 
-    /** Wire to get IEW's information from backwards time buffer. */
-    TimeBuffer<TimeStruct>::wire fromIEW;
-
     /** Wire to get commit's information from backwards time buffer. */
     TimeBuffer<TimeStruct>::wire fromCommit;
 
@@ -397,9 +394,6 @@ class BAC
 
     /** Decode to fetch delay. (Same delay for BAC as for fetch) */
     const Cycles decodeToFetchDelay;
-
-    /** IEW to fetch delay. (Same delay for BAC as for fetch) */
-    const Cycles iewToFetchDelay;
 
     /** Commit to fetch delay. (Same delay for BAC as for fetch) */
     const Cycles commitToFetchDelay;

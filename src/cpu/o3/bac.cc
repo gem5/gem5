@@ -93,7 +93,6 @@ BAC::BAC(CPU *_cpu, const BaseO3CPUParams &params)
       decoupledFrontEnd(params.decoupledFrontEnd),
       fetchToBacDelay(params.fetchToBacDelay),
       decodeToFetchDelay(params.decodeToFetchDelay),
-      iewToFetchDelay(params.iewToFetchDelay),
       commitToFetchDelay(params.commitToFetchDelay),
       bacToFetchDelay(params.bacToFetchDelay),
       cacheBlkSize(cpu->cacheLineSize()),
@@ -139,7 +138,6 @@ BAC::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
     // Create wires to get information from proper places in time buffer.
     fromFetch = timeBuffer->getWire(-fetchToBacDelay);
     fromDecode = timeBuffer->getWire(-decodeToFetchDelay);
-    fromIEW = timeBuffer->getWire(-iewToFetchDelay);
     fromCommit = timeBuffer->getWire(-commitToFetchDelay);
 }
 
