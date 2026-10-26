@@ -2307,7 +2307,7 @@ decode QUADRANT default Unknown::unknown() {
         0x0c: decode FUNCT3 {
             format ROp {
                 0x0: decode KFUNCT5 {
-                    0x0: decode BS {
+                    0x00: decode BS {
                         0x0: decode NTLHINT {
                             0x4000: ntl_p1({{
                                 // HINT: add x0, x0, x2
