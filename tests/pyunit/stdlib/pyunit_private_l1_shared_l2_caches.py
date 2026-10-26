@@ -1,0 +1,113 @@
+# Copyright (c) 2026 Akanksha Chaudhari
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+import unittest
+
+from m5.objects import L2XBar
+
+from gem5.components.boards.simple_board import SimpleBoard
+from gem5.components.cachehierarchies.classic.caches.l1dcache import L1DCache
+from gem5.components.cachehierarchies.classic.caches.l1icache import L1ICache
+from gem5.components.cachehierarchies.classic.caches.l2cache import L2Cache
+from gem5.components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
+    PrivateL1SharedL2CacheHierarchy,
+)
+from gem5.components.memory.single_channel import SingleChannelDDR4_2400
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+
+
+def _connect(hierarchy, num_cores):
+    board = SimpleBoard(
+        clk_freq="1GHz",
+        processor=SimpleProcessor(
+            cpu_type=CPUTypes.TIMING,
+            isa=ISA.ARM,
+            num_cores=num_cores,
+            clk_freq="1GHz",
+        ),
+        memory=SingleChannelDDR4_2400(size="1GiB"),
+        cache_hierarchy=hierarchy,
+    )
+    board._set_fullsystem(False)
+    board._connect_things()
+    return board
+
+
+class TestPrivateL1SharedL2Caches(unittest.TestCase):
+    def test_defaults(self):
+        hierarchy = PrivateL1SharedL2CacheHierarchy(
+            l1d_size="16KiB", l1i_size="8KiB", l2_size="256KiB"
+        )
+        _connect(hierarchy, 2)
+        for cache in hierarchy.l1icaches:
+            self.assertIsInstance(cache, L1ICache)
+            self.assertEqual(int(cache.size), 8 * 1024)
+            self.assertEqual(int(cache.assoc), 8)
+            self.assertFalse(cache.writeback_clean)
+        for cache in hierarchy.l1dcaches:
+            self.assertIsInstance(cache, L1DCache)
+            self.assertEqual(int(cache.size), 16 * 1024)
+        self.assertIsInstance(hierarchy.l2cache, L2Cache)
+        self.assertEqual(int(hierarchy.l2cache.size), 256 * 1024)
+        self.assertEqual(int(hierarchy.l2cache.assoc), 16)
+        self.assertIsInstance(hierarchy.l2bus, L2XBar)
+
+    def test_given_caches_and_bus(self):
+        made = {"l1i": [], "l1d": [], "l2": []}
+
+        def factory(kind, cls, size):
+            def make():
+                made[kind].append(cls(size=size, assoc=2))
+                return made[kind][-1]
+
+            return make
+
+        l2bus = L2XBar(width=16)
+        hierarchy = PrivateL1SharedL2CacheHierarchy(
+            l1d_size="16KiB",
+            l1i_size="8KiB",
+            l2_size="256KiB",
+            l1i_cache=factory("l1i", L1ICache, "4KiB"),
+            l1d_cache=factory("l1d", L1DCache, "4KiB"),
+            l2_cache=factory("l2", L2Cache, "64KiB"),
+            l2bus=l2bus,
+        )
+        _connect(hierarchy, 2)
+        # One cache per core, each a new one, and a single L2.
+        self.assertEqual(len(made["l1i"]), 2)
+        self.assertEqual(len(made["l1d"]), 2)
+        self.assertEqual(len(made["l2"]), 1)
+        self.assertIsNot(made["l1i"][0], made["l1i"][1])
+        for given, used in zip(made["l1i"], hierarchy.l1icaches):
+            self.assertIs(given, used)
+        for given, used in zip(made["l1d"], hierarchy.l1dcaches):
+            self.assertIs(given, used)
+        self.assertIs(hierarchy.l2cache, made["l2"][0])
+        self.assertIs(hierarchy.l2bus, l2bus)
+        self.assertEqual(int(hierarchy.l2bus.width), 16)
