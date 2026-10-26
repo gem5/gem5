@@ -43,7 +43,7 @@ BFS_WALL = 300
 BFS_TICKS = 4000000000
 
 
-def bfs_suite(name, edits, verifiers):
+def bfs_suite(name, edits, verifiers, extra_tests=()):
     gem5 = st.SalamGem5Fixture()
     tempdir = TempdirFixture()
     workload = st.SalamWorkloadFixture(
@@ -56,6 +56,10 @@ def bfs_suite(name, edits, verifiers):
     ]
     tests += [
         v.instantiate_test(f"{name}-{label}") for label, v in verifiers.items()
+    ]
+    tests += [
+        TestFunction(check, name=f"{name}-{label}")
+        for label, check in extra_tests
     ]
     return TestSuite(
         name=name,
@@ -73,6 +77,68 @@ def wrong_expected_count(src):
     )
 
 
+def accelerators_counted_separately(params):
+    # BFS runs two accelerators. Each one's statistics count its own
+    # single invocation and the cycles its printResults reports.
+    outdir, out = st.read_simout(params)
+    runtimes = dict(
+        re.findall(
+            r"^(system\.\S+\.llvm_interface)$(?:.*\n)*?"
+            r"\s*Compute passes:\s+(\d+)$",
+            out,
+            re.M,
+        )
+    )
+    stats = st.read_stats(outdir)[-1]
+    if len(runtimes) != 2:
+        raise AssertionError(f"accelerator runtimes: {runtimes}")
+    for acc, cycles in runtimes.items():
+        if stats[acc + ".invocations"] != 1:
+            raise AssertionError(f"{acc}: {stats[acc + '.invocations']} runs")
+        if stats[acc + ".cycles"] != int(cycles):
+            raise AssertionError(
+                f"{acc}: cycles {stats[acc + '.cycles']}, runtime {cycles}"
+            )
+    if len(set(runtimes.values())) != 2:
+        raise AssertionError(f"accelerators share counts: {runtimes}")
+
+
+def dma_counts(params):
+    # top copies nodes (256 * 8 bytes), edges (4096 * 4), levels (256)
+    # in and level counts (10 * 4) out: four transfers of 18728 bytes,
+    # moved and written in 16 + 128 + 2 + 1 pieces of up to 128 bytes.
+    outdir, _out = st.read_simout(params)
+    stats = st.read_stats(outdir)[-1]
+    dma = "system.bfs_clstr.dma."
+    found = {
+        k: stats[dma + k]
+        for k in ("transfers", "bytes", "beats", "writePackets")
+    }
+    expected = {
+        "transfers": 4,
+        "bytes": 18728,
+        "beats": 147,
+        "writePackets": 147,
+    }
+    if found != expected:
+        raise AssertionError(f"DMA {found}, not {expected}")
+    # Nodes, edges and levels enter the cluster; level counts leave it.
+    # Each byte is counted once on completion at each DMA endpoint.
+    for port, read_bytes, write_bytes in (
+        ("memoryPackets", 18688, 40),
+        ("clusterPackets", 40, 18688),
+    ):
+        for direction, expected_bytes in (
+            ("read", read_bytes),
+            ("write", write_bytes),
+        ):
+            name = dma + port + "." + direction + "Bytes"
+            if stats[name] != expected_bytes:
+                raise AssertionError(
+                    f"{name}: {stats[name]} != {expected_bytes}"
+                )
+
+
 bfs_suite(
     "salam-bfs-check",
     [st.enable_check("bfs")],
@@ -87,6 +153,10 @@ bfs_suite(
             re.compile(st.M5_EXIT_REGEX), ["simout.txt"]
         ),
     },
+    extra_tests=[
+        ("accelerators", accelerators_counted_separately),
+        ("dma", dma_counts),
+    ],
 )
 
 

@@ -46,6 +46,7 @@
 #include <queue>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "params/CommInterface.hh"
@@ -440,6 +441,32 @@ class CommInterface : public BasicPioDevice
     const Cycles processCycles;
 
     bool reset_spm;
+
+    enum Direction
+    {
+        ReadDir,
+        WriteDir
+    };
+    // Memory-interface counts for the current statistics window. A
+    // request is one accelerator load or store; it may need several
+    // packets, and a packet may be offered more than once.
+    struct CommStats : public statistics::Group
+    {
+        CommStats(CommInterface *comm);
+        void regStats() override;
+
+        statistics::Scalar starts;
+        statistics::Scalar finishes;
+        statistics::Vector requests;
+        statistics::Vector attempts;
+        statistics::Vector accepted;
+        statistics::Vector responses;
+        statistics::Vector bytes;
+    } stats;
+
+    // Offer a packet to a port, counting the attempt and whether it was
+    // accepted.
+    bool countedSend(RequestPort &port, PacketPtr pkt);
 
     AccComputeUnit *cu;
 

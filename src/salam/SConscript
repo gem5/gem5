@@ -111,7 +111,6 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     generated_cc = [node for node in content if str(node).endswith(".cc")]
 
     SimObject("HWInterface.py", sim_objects=["HWInterface"])
-    SimObject("HWStatistics.py", sim_objects=["HWStatistics"])
     SimObject("InstOpCodes.py", sim_objects=["InstOpCodes"])
     SimObject("SALAMPowerModel.py", sim_objects=["SALAMPowerModel"])
     SimObject("SimulatorConfig.py", sim_objects=["SimulatorConfig"])
@@ -157,7 +156,6 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
         "HWModeling/fu_pool.test.cc",
         "HWModeling/fu_pool.cc",
     )
-    Source("HWModeling/hw_statistics.cc")
     Source("HWModeling/opcodes.cc")
     Source("HWModeling/salam_power_model.cc")
     Source("HWModeling/simulator_config.cc")
@@ -175,6 +173,11 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     DebugFlag(
         "SALAMScratchpad",
         "Scratchpad latency samples and rejected requests",
+    )
+    DebugFlag(
+        "SALAMIssue",
+        "Each operation a compute pass issues or completes, and why ready "
+        "ones wait",
     )
     DebugFlag(
         "SALAMLaunch",

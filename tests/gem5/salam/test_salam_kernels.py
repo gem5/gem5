@@ -30,9 +30,11 @@
 # runs it, and checks the OUT words the host prints. Run explicitly:
 #   ./main.py run gem5/salam --include-tags salam
 
+import json
 import os
 import re
 import shutil
+import subprocess
 
 import salam_testlib as st
 from testlib import *
@@ -43,6 +45,84 @@ KERNEL_TICKS = 1000000000
 
 def out_regex(index, value, run=0):
     return re.compile(rf"^RUN\[{run}\] OUT\[{index}\]={value} ")
+
+
+def check_invocation_duration(params):
+    outdir, out = st.read_simout(params)
+    starts = [
+        tuple(map(int, values))
+        for values in re.findall(
+            r"launch accepted at (\d+); first compute pass at (\d+) "
+            r"\(period (\d+)\)",
+            out,
+        )
+    ]
+    finishes = [
+        tuple(map(int, values))
+        for values in re.findall(
+            r"finished at (\d+) after (\d+) cycles",
+            out,
+        )
+    ]
+    printed = [
+        float(value)
+        for value in re.findall(
+            r"^\s*Runtime:\s+([0-9.e+-]+) us$",
+            out,
+            re.M,
+        )
+    ]
+    if (
+        not starts
+        or len(starts) != len(finishes)
+        or len(starts) != len(printed)
+    ):
+        raise AssertionError("missing invocation boundary or runtime report")
+    frequency = st.read_stats(outdir)[-1]["simFreq"]
+    records = [
+        dict(
+            accepted=start,
+            first_pass=first,
+            period=period,
+            completed=end,
+            passes=passes,
+            elapsed_ticks=end - start,
+            printed_us=us,
+        )
+        for (start, first, period), (end, passes), us in zip(
+            starts, finishes, printed
+        )
+    ]
+    with open(os.path.join(outdir, "invocation-duration.json"), "w") as f:
+        json.dump(records, f, indent=2)
+    for record in records:
+        # Match the summary's six significant digits, not a tolerance.
+        expected = float(f"{record['elapsed_ticks'] / (frequency / 1e6):.6g}")
+        if record["printed_us"] != expected:
+            raise AssertionError(
+                f"elapsed invocation runtime {record['printed_us']} us != "
+                f"{expected} us from accepted/completed events {record}"
+            )
+    ticks = [
+        int(n)
+        for n in re.findall(
+            r"^\s*Invocation duration:\s+(\d+) ticks$",
+            out,
+            re.M,
+        )
+    ]
+    passes = [
+        int(n)
+        for n in re.findall(
+            r"^\s*Compute passes:\s+(\d+)$",
+            out,
+            re.M,
+        )
+    ]
+    if ticks != [r["elapsed_ticks"] for r in records]:
+        raise AssertionError("reported ticks differ from invocation events")
+    if passes != [r["passes"] for r in records]:
+        raise AssertionError("compute-pass count changed in the report")
 
 
 def kernel_suite(
@@ -65,7 +145,14 @@ def kernel_suite(
     clocks=None,
     ticks=KERNEL_TICKS,
     wrapper=None,
+    host_options=None,
+    extra_tests=(),
 ):
+    if any("SALAMLaunch" in arg for arg in gem5_args):
+        extra_tests = tuple(extra_tests) + (
+            ("invocation-duration", check_invocation_duration),
+        )
+        tags = tuple(tags) + ("salam-invocation-duration",)
     # expect/forbid: {index: value} checked for every run.
     # fs_args, gem5_args: extra fs.py and gem5 options for the run.
     # cache_size: give the accelerator a Cache var of that size.
@@ -86,6 +173,7 @@ def kernel_suite(
         ir_patterns=ir_patterns,
         cache_size=cache_size,
         clocks=clocks,
+        host_options=host_options,
     )
     tests = [
         TestFunction(
@@ -122,6 +210,10 @@ def kernel_suite(
         )
     tests += [
         v.instantiate_test(f"{name}-{label}") for label, v in verifiers.items()
+    ]
+    tests += [
+        TestFunction(check, name=f"{name}-{label}")
+        for label, check in extra_tests
     ]
     fixtures = [gem5, tempdir, harness]
     if profile is not None:
@@ -379,7 +471,7 @@ rejected_suite(
 FU_UNITS = "system.harness_clstr.kernel.hw_interface.functional_units"
 INVENTORY_IR = [
     r"call i32 @helper\(.*\n.*call i32 @helper\(",
-    r"define dso_local i32 @unused\(.*\n.*= shl ",
+    r"define dso_local (?:noundef )?i32 @unused\(.*\n.*= shl ",
 ]
 
 
@@ -457,7 +549,7 @@ for name, latency, limit, interval, lockstep, runtime, runs in (
         fs_args=fs_args,
         ir_patterns=[r"(?s)(= mul i32 .*){3}"],
         simout_counts=[
-            ("runtime", rf"^\s*Runtime:\s+{runtime} cycles$", runs)
+            ("runtime", rf"^\s*Compute passes:\s+{runtime}$", runs)
         ],
     )
 
@@ -476,7 +568,7 @@ kernel_suite(
         f"--param={INST_CONFIG}.mul.functional_unit_limit=9",
     ],
     ir_patterns=[r"(?s)(= mul i32 .*){3}"],
-    simout_counts=[("runtime", r"^\s*Runtime:\s+3 cycles$", 1)],
+    simout_counts=[("runtime", r"^\s*Compute passes:\s+3$", 1)],
 )
 
 # A remap profile moves fsub from double_adder to the float_trig_sine
@@ -579,7 +671,7 @@ for name, fs_args, period, edge in (
                 rf"\(period {period}\)$",
                 2,
             ),
-            ("cycles", r"^\s*Runtime:\s+3 cycles$", 2),
+            ("cycles", r"^\s*Compute passes:\s+3$", 2),
         ],
     )
 
@@ -597,7 +689,7 @@ for cycles in (1, 2, 4):
         fs_args=[f"--param={COMM}.process_cycles={cycles}"],
         ir_patterns=[r"= load volatile i32, (i32\*|ptr) inttoptr"],
         simout_counts=[
-            ("runtime", rf"^\s*Runtime:\s+{4 + cycles} cycles$", 1)
+            ("runtime", rf"^\s*Compute passes:\s+{4 + cycles}$", 1)
         ],
     )
 
@@ -661,7 +753,7 @@ for access, runtime in ((2, 5), (10, 5), (11, 6)):
         inputs=[0],
         expect={0: 1},
         fs_args=[f"--param={SPM}.access_cycles={access}"],
-        simout_counts=[("runtime", rf"^\s*Runtime:\s+{runtime} cycles$", 1)],
+        simout_counts=[("runtime", rf"^\s*Compute passes:\s+{runtime}$", 1)],
     )
 
 # Register-bank writes are acknowledged after access_cycles and become
@@ -734,5 +826,445 @@ kernel_suite(
     inputs=[0],
     expect={0: 1},
     clocks={"Fabric": "100MHz"},
-    simout_counts=[("runtime", r"^\s*Runtime:\s+15 cycles$", 1)],
+    simout_counts=[("runtime", r"^\s*Compute passes:\s+15$", 1)],
+)
+
+
+# Execution statistics report the current statistics window. A reset
+# clears them and changes nothing in the accelerator: the kernel takes
+# the same cycles, and printResults (per-invocation totals) still shows
+# all of them.
+LLVM_STATS = "system.harness_clstr.kernel.llvm_interface."
+
+
+def check_reset_during_compute(params):
+    # The reset lands while the one-multiplier kernel runs. Passes run
+    # on edges first + k * period; those at or before the reset tick are
+    # outside the window (the reset event runs after a pass on the same
+    # tick).
+    outdir, out = st.read_simout(params)
+    first, period = map(
+        int,
+        re.search(
+            r"first compute pass at (\d+) \(period (\d+)\)", out
+        ).groups(),
+    )
+    reset = int(re.search(r"^(\d+): .*resetstats", out, re.M).group(1))
+    total = int(re.search(r"after (\d+) cycles", out).group(1))
+    before = sum(1 for k in range(total) if first + k * period <= reset)
+    stats = st.read_stats(outdir)[-1]
+    if not 0 < before < total:
+        raise AssertionError(f"reset at {reset} is not during compute")
+    if stats[LLVM_STATS + "cycles"] != total - before:
+        raise AssertionError(
+            f"cycles {stats[LLVM_STATS + 'cycles']}, expected {total - before}"
+        )
+    if stats[LLVM_STATS + "invocations"] != 0:
+        raise AssertionError("the invocation started before the reset")
+
+
+def check_reset_with_load_outstanding(params):
+    # A slow scratchpad load is in flight when the reset lands: it was
+    # issued before the window and completes, once, inside it.
+    outdir, out = st.read_simout(params)
+    stats = st.read_stats(outdir)[-1]
+    issued = stats[LLVM_STATS + "issued::load"]
+    completed = stats[LLVM_STATS + "completed::load"]
+    if (issued, completed) != (0, 1):
+        raise AssertionError(f"loads issued {issued}, completed {completed}")
+    # The memory interface counts its response, and its bytes, once.
+    comm = "system.harness_clstr.kernel."
+    found = tuple(
+        stats[comm + k]
+        for k in ("requests::read", "responses::read", "bytes::read")
+    )
+    if found != (0, 1, 4):
+        raise AssertionError(f"read requests/responses/bytes {found}")
+
+
+def check_repeated_dumps(params):
+    # Dumps with no activity between them report the same counts. A
+    # time-weighted average covers the whole window, so with nothing in
+    # flight its value times the window length stays the same.
+    outdir, _out = st.read_simout(params)
+    dumps = st.read_stats(outdir)
+    if len(dumps) != 3:
+        raise AssertionError(f"{len(dumps)} dumps, not 3")
+    averages = ("reservedOps", "computeOps", "readOps", "writeOps")
+    first = dumps[0]
+    for dump in dumps[1:]:
+        for key, value in first.items():
+            # power_state residency is gem5's time accounting, not ours.
+            if not key.startswith(LLVM_STATS) or ".power_state." in key:
+                continue
+            if key[len(LLVM_STATS) :] in averages:
+                # Within the last printed digit (stats print 6 decimals).
+                expected = value * first["simTicks"] / dump["simTicks"]
+                if abs(dump[key] - expected) > 1e-6:
+                    raise AssertionError(
+                        f"{key}: {dump[key]}, expected {expected}"
+                    )
+            elif dump[key] != value:
+                raise AssertionError(f"{key}: {value} then {dump[key]}")
+
+
+# Three 20-cycle multiplies on one multiplier, 2 + 3 * 20 cycles, so
+# the host's reset, issued after its run-bit write is acknowledged, lands
+# while they run.
+kernel_suite(
+    "salam-kernel-stats-reset-compute",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    fs_args=[
+        f"--param={LOCKSTEP}=False",
+        f"--param={CYCLE_COUNTS}.mul=20",
+        f"--param={MULTIPLIER}.limit=1",
+    ],
+    gem5_args=["--debug-flags=SALAMLaunch,PseudoInst"],
+    host_options={"STATS_RESET_AFTER_START": 1},
+    simout_counts=[("runtime", r"^\s*Compute passes:\s+62$", 1)],
+    extra_tests=[("window", check_reset_during_compute)],
+)
+
+kernel_suite(
+    "salam-kernel-stats-reset-load",
+    "spm_load.c",
+    inputs=[0],
+    expect={0: 1},
+    fs_args=[f"--param={SPM}.access_cycles=150"],
+    host_options={"STATS_RESET_AFTER_START": 1},
+    extra_tests=[("load", check_reset_with_load_outstanding)],
+)
+
+kernel_suite(
+    "salam-kernel-stats-dumps",
+    "sanity.c",
+    inputs=[2, 3],
+    expect={0: 5},
+    host_options={"STATS_DUMPS_AT_END": 2},
+    extra_tests=[("dumps", check_repeated_dumps)],
+)
+
+
+# Cycle categories, derived pass by pass. Three 4-cycle multiplies:
+# with three multipliers, pass 1 issues the loads and multiplies,
+# passes 2-4 wait for them, pass 5 issues the stores, pass 6 the
+# return. With one multiplier the waiting multiplies are denied it in
+# passes 2-4 and 6-8, and the last one computes alone in 10-12. An
+# idle scratchpad load waits for memory while it is in flight: one
+# pass at the default 2 cycles, 15 passes when the scratchpad takes 150.
+def categories(expected):
+    def check(params):
+        outdir, _out = st.read_simout(params)
+        stats = st.read_stats(outdir)[-1]
+        found = {
+            name: stats[LLVM_STATS + "cycleCategories::" + name]
+            for name in expected
+        }
+        if found != expected:
+            raise AssertionError(f"cycle categories {found}, not {expected}")
+
+    return check
+
+
+ONE_PASS = dict(fuStall=0, memoryWait=0, computeWait=0, other=0)
+for name, kernel, fs_args, expected in (
+    (
+        "three-multipliers",
+        "fu_sched.c",
+        [
+            f"--param={LOCKSTEP}=False",
+            f"--param={CYCLE_COUNTS}.mul=4",
+            f"--param={MULTIPLIER}.limit=3",
+        ],
+        dict(ONE_PASS, issue=3, computeWait=3),
+    ),
+    (
+        "one-multiplier",
+        "fu_sched.c",
+        ONE_MULTIPLIER,
+        dict(ONE_PASS, issue=5, fuStall=6, computeWait=3),
+    ),
+    ("spm", "spm_load.c", [], dict(ONE_PASS, issue=4, memoryWait=1)),
+    (
+        "slow-spm",
+        "spm_load.c",
+        [f"--param={SPM}.access_cycles=150"],
+        dict(ONE_PASS, issue=4, memoryWait=15),
+    ),
+):
+    kernel_suite(
+        f"salam-kernel-categories-{name}",
+        kernel,
+        inputs=[3, 4, 5] if kernel == "fu_sched.c" else [0],
+        expect={0: 9, 1: 16, 2: 25} if kernel == "fu_sched.c" else {0: 1},
+        fs_args=fs_args,
+        extra_tests=[("categories", categories(expected))],
+    )
+
+
+# Functional-unit statistics. Three 4-cycle multiplies on one
+# multiplier keep operations in flight for 3 * 4 cycles (120000 ticks)
+# either way. The instance is busy for those 12 cycles when it is not
+# pipelined, but only from the first admission to the last completion,
+# 6 cycles, when it admits one per cycle. A reset while 20-cycle
+# multiplies run leaves the instance count alone and counts the two
+# admissions and the busy time after it.
+MULTIPLIER_STATS = (
+    "system.harness_clstr.kernel.hw_interface.integer_multiplier."
+)
+
+
+def unit_stats(admissions, denials, in_flight, busy, start_tick=None):
+    def check(params):
+        outdir, out = st.read_simout(params)
+        stats = st.read_stats(outdir)[-1]
+        window = stats["simTicks"]
+        expected = {"instances": 1, "admissions": admissions}
+        if denials is not None:
+            expected["denials"] = denials
+        found = {k: stats[MULTIPLIER_STATS + k] for k in expected}
+        if found != expected:
+            raise AssertionError(f"unit counts {found}, not {expected}")
+        busy_area = busy
+        if start_tick is not None:
+            reset = int(re.search(r"^(\d+): .*resetstats", out, re.M).group(1))
+            busy_area = busy - reset
+        # Averages are printed with 6 decimals.
+        slack = 1e-6 * window
+        for name, area in (
+            ("inFlight", in_flight),
+            ("busyInstances", busy_area),
+        ):
+            if (
+                area is not None
+                and abs(stats[MULTIPLIER_STATS + name] * window - area) > slack
+            ):
+                raise AssertionError(
+                    f"{name} area {stats[MULTIPLIER_STATS + name] * window}, "
+                    f"expected {area}"
+                )
+        utilization = stats[MULTIPLIER_STATS + "utilization"]
+        if abs(utilization - stats[MULTIPLIER_STATS + "busyInstances"]) > 1e-6:
+            raise AssertionError(f"utilization {utilization}")
+
+    return check
+
+
+for name, interval, denials in (
+    ("pipelined", 1, 3),
+    ("unpipelined", None, 12),
+):
+    fs_args = [
+        f"--param={LOCKSTEP}=False",
+        f"--param={CYCLE_COUNTS}.mul=4",
+        f"--param={MULTIPLIER}.limit=1",
+    ]
+    if interval:
+        fs_args.append(f"--param={MULTIPLIER}.initiation_interval={interval}")
+    kernel_suite(
+        f"salam-kernel-fu-stats-{name}",
+        "fu_sched.c",
+        inputs=[3, 4, 5],
+        expect={0: 9, 1: 16, 2: 25},
+        fs_args=fs_args,
+        extra_tests=[
+            (
+                "unit",
+                unit_stats(3, denials, 120000, 60000 if interval else 120000),
+            )
+        ],
+    )
+
+
+def busy_until_last_completion(params):
+    # The 20-cycle multiplies end 60 compute cycles after the first pass.
+    _outdir, out = st.read_simout(params)
+    first = int(re.search(r"first compute pass at (\d+)", out).group(1))
+    return first + 60 * 10000
+
+
+def reset_unit_check(params):
+    end = busy_until_last_completion(params)
+    unit_stats(2, None, None, end, start_tick=True)(params)
+
+
+kernel_suite(
+    "salam-kernel-fu-stats-reset",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    fs_args=[
+        f"--param={LOCKSTEP}=False",
+        f"--param={CYCLE_COUNTS}.mul=20",
+        f"--param={MULTIPLIER}.limit=1",
+    ],
+    gem5_args=["--debug-flags=SALAMLaunch,PseudoInst"],
+    host_options={"STATS_RESET_AFTER_START": 1},
+    extra_tests=[("unit", reset_unit_check)],
+)
+
+
+# Memory-interface statistics, counted by hand. A request is one load
+# or store; attempts include a packet offered again after a rejection;
+# accepted packets, responses and bytes are counted once each. Register
+# reads complete during the send and are still counted once.
+COMM_STATS = "system.harness_clstr.kernel."
+
+
+def comm_stats(expected):
+    def check(params):
+        outdir, _out = st.read_simout(params)
+        stats = st.read_stats(outdir)[-1]
+        found = {k: stats[COMM_STATS + k] for k in expected}
+        if found != expected:
+            raise AssertionError(f"memory interface {found}, not {expected}")
+
+    return check
+
+
+def directions(**counts):
+    # requests=(reads, writes), ... -> {"requests::read": reads, ...}
+    out = {}
+    for name, (reads, writes) in counts.items():
+        out[f"{name}::read"] = reads
+        out[f"{name}::write"] = writes
+    return out
+
+
+for name, kernel, inputs, expect, fs_args, runs, counts in (
+    (
+        "spm",
+        "spm_load.c",
+        [0],
+        {0: 1},
+        [],
+        1,
+        directions(
+            requests=(1, 1),
+            attempts=(1, 1),
+            accepted=(1, 1),
+            responses=(1, 1),
+            bytes=(4, 4),
+        ),
+    ),
+    (
+        "rejected",
+        "spm_two_loads.c",
+        [0],
+        {0: 0},
+        [SLOW_SPM],
+        1,
+        directions(
+            requests=(2, 1),
+            attempts=(3, 1),
+            accepted=(2, 1),
+            responses=(2, 1),
+            bytes=(8, 4),
+        ),
+    ),
+    (
+        "registers",
+        "fu_sched.c",
+        [3, 4, 5],
+        {0: 9, 1: 16, 2: 25},
+        [],
+        1,
+        directions(
+            requests=(3, 3),
+            attempts=(3, 3),
+            accepted=(3, 3),
+            responses=(3, 3),
+            bytes=(12, 12),
+        ),
+    ),
+    ("runs", "sanity.c", [2, 3], {0: 5}, [], 2, {"starts": 2, "finishes": 2}),
+):
+    if "starts" not in counts:
+        counts = dict(counts, starts=1, finishes=1)
+    kernel_suite(
+        f"salam-kernel-comm-stats-{name}",
+        kernel,
+        inputs=inputs,
+        expect=expect,
+        runs=runs,
+        fs_args=fs_args,
+        extra_tests=[("memory-interface", comm_stats(counts))],
+    )
+
+
+# The end-of-invocation summary comes from the invocation's totals.
+# Each of three invocations prints the same area (the opcode counts no
+# longer accumulate across invocations), issues the same 10 operations
+# (3 loads, 3 multiplies, 3 stores, the return), and its cycle
+# categories add up to its runtime.
+def summaries_per_invocation(params):
+    _outdir, out = st.read_simout(params)
+    blocks = out.split("Uncalibrated area/power estimate:")[1:]
+    if len(blocks) != 3:
+        raise AssertionError(f"{len(blocks)} summaries, not 3")
+    areas = {re.search(r"Total Area: (\S+)", b).group(1) for b in blocks}
+    if len(areas) != 1:
+        raise AssertionError(f"area changes between invocations: {areas}")
+    for block in blocks:
+        runtime = int(re.search(r"Compute passes:\s+(\d+)", block).group(1))
+        parts = re.findall(r"^\s+[a-z ]+:\s+(\d+) cycles$", block, re.M)
+        if sum(map(int, parts)) != runtime or len(parts) != 5:
+            raise AssertionError(f"categories {parts} for {runtime} cycles")
+        if not re.search(r"Operations Issued:\s+10$", block, re.M):
+            raise AssertionError("not 10 operations issued")
+
+
+kernel_suite(
+    "salam-kernel-summary",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    runs=3,
+    extra_tests=[("summaries", summaries_per_invocation)],
+)
+
+
+# Tracing changes no statistics: the same kernel run again with the
+# SALAMIssue debug flag reports the same values, apart from host time.
+HOST_STATS = re.compile(r"^(host|sim(Seconds|Freq))|\.power_state\.")
+
+
+def same_stats_with_tracing(params):
+    outdir, _out = st.read_simout(params)
+    command, env, _ = st._fs_command(
+        params, "salam-workload", KERNEL_WALL, KERNEL_TICKS, ONE_MULTIPLIER
+    )
+    traced = os.path.join(outdir, "traced")
+    i = command.index("-d")
+    command[i + 1] = traced
+    command.insert(i, "--debug-flags=SALAMIssue")
+    subprocess.run(command, env=env, check=True)
+    with open(os.path.join(traced, "simout.txt")) as f:
+        if "issue compute mul" not in f.read():
+            raise AssertionError("SALAMIssue printed no issues")
+    plain = st.read_stats(outdir)[-1]
+    with_flag = st.read_stats(traced)[-1]
+
+    def same(a, b):
+        return a == b or (a != a and b != b)  # NaN matches NaN
+
+    differ = {
+        k: (plain.get(k), with_flag.get(k))
+        for k in set(plain) | set(with_flag)
+        if not HOST_STATS.search(k)
+        and not same(plain.get(k), with_flag.get(k))
+    }
+    if differ:
+        raise AssertionError(f"statistics differ with tracing: {differ}")
+
+
+kernel_suite(
+    "salam-kernel-issue-trace",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    fs_args=ONE_MULTIPLIER,
+    extra_tests=[("same-stats", same_stats_with_tracing)],
 )

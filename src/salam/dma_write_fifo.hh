@@ -42,6 +42,7 @@
 #ifndef __SALAM_DMA_WRITE_FIFO_HH__
 #define __SALAM_DMA_WRITE_FIFO_HH__
 
+#include "base/statistics.hh"
 #include "dev/dma_device.hh"
 #include "salam/LLVMRead/debug_flags.hh"
 
@@ -54,6 +55,13 @@ class DmaWriteFifo : public Drainable, public Serializable
                  unsigned max_pending, Request::Flags flags = 0);
 
     ~DmaWriteFifo();
+
+    // Count each write packet this FIFO issues in stat.
+    void
+    countPacketsIn(gem5::statistics::Scalar *stat)
+    {
+        packetStat = stat;
+    }
 
   public: // Serializable
     void serialize(CheckpointOut &cp) const override;
@@ -273,6 +281,9 @@ class DmaWriteFifo : public Drainable, public Serializable
 
     /** Try to bypass DMA requests in KVM execution mode */
     void resumeEmptyFunctional();
+
+  private:
+    gem5::statistics::Scalar *packetStat = nullptr;
 
   private: // Internal state
     Fifo<uint8_t> buffer;

@@ -63,10 +63,10 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         config = os.path.join(self.profile, "salam-hw-config.yml")
         return g.load_generated_sources(g.load_source_config(config))
 
-    def edit(self, alias, **changes):
+    def edit(self, unit_alias, **changes):
         # Set (or, for None, remove) parameters of one unit's YAML.
         path = os.path.join(
-            self.profile, "functional_units", alias, alias + ".yml"
+            self.profile, "functional_units", unit_alias, unit_alias + ".yml"
         )
         with open(path) as f:
             document = yaml.safe_load(f)
@@ -138,6 +138,74 @@ class FunctionalUnitFieldTest(unittest.TestCase):
             r"unknown functional unit parameter initiation_interva ",
             initiation_interva=2,
         )
+
+    def test_profile_replacement_preserves_inactive_files(self):
+        root = os.path.join(self.tmp, "generated", "salam")
+        sentinels = {}
+        for directory in ("functional_units", "instructions"):
+            for suffix in ("cc", "hh"):
+                rel = f"HWModeling/{directory}/keep_me.{suffix}"
+                path = os.path.join(root, rel)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                sentinels[rel] = (
+                    "#error This unrelated file must stay inactive\n"
+                )
+                with open(path, "w") as f:
+                    f.write(sentinels[rel])
+
+        def generate():
+            outputs = g.generate_sources(self.load())
+            targets = [os.path.join(root, name) for name in outputs]
+            g.generate_sources_action(
+                targets,
+                [],
+                {
+                    "SALAM_HW_CONFIG": os.path.join(
+                        self.profile, "salam-hw-config.yml"
+                    )
+                },
+            )
+            for rel, expected in {**outputs, **sentinels}.items():
+                with open(os.path.join(root, rel)) as f:
+                    self.assertEqual(f.read(), expected, rel)
+            return outputs
+
+        default = generate()
+        directory = os.path.join(
+            self.profile, "functional_units", "extra_unit"
+        )
+        os.makedirs(directory)
+        shutil.copyfile(
+            os.path.join(
+                self.profile,
+                "functional_units",
+                "bit_register",
+                "bit_register.yml",
+            ),
+            os.path.join(directory, "extra_unit.yml"),
+        )
+        self.edit(
+            "extra_unit",
+            alias="extra_unit",
+            enum_value=99,
+            instructions=["none"],
+        )
+        config = os.path.join(self.profile, "salam-hw-config.yml")
+        with open(config) as f:
+            document = yaml.safe_load(f)
+        document["functional_unit_order"].append("extra_unit")
+        with open(config, "w") as f:
+            yaml.safe_dump(document, f, sort_keys=False)
+        custom = generate()
+        inactive = {
+            name: text for name, text in custom.items() if name not in default
+        }
+        self.assertTrue(inactive)
+        self.reset()
+        self.assertEqual(generate(), default)
+        for rel, expected in inactive.items():
+            with open(os.path.join(root, rel)) as f:
+                self.assertEqual(f.read(), expected, rel)
 
 
 if __name__ == "__main__":

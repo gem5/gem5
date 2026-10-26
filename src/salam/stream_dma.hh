@@ -137,6 +137,8 @@
 class StreamDma : public DmaDevice
 {
   private:
+    friend class StreamResponsePortT<StreamDma>;
+    StreamStats streamStats;
     std::string devname;
     StreamResponsePortT<StreamDma> streamIn;
     StreamResponsePortT<StreamDma> streamOut;
@@ -164,6 +166,15 @@ class StreamDma : public DmaDevice
     bool rdRunning;
     bool wrRunning;
     bool running;
+
+    struct TransferStats : public statistics::Group
+    {
+        TransferStats(StreamDma *dma);
+        statistics::Scalar readTransfers, writeTransfers;
+        statistics::Scalar readFrames, writeFrames;
+        statistics::Scalar readBytes, writeBytes;
+        statistics::Average readActive, writeActive;
+    } transferStats;
 
     ByteOrder endian;
 
@@ -222,6 +233,7 @@ class StreamDma : public DmaDevice
   public:
     PARAMS(StreamDma);
     StreamDma(const StreamDmaParams &p);
+    void init() override;
     ~StreamDma() {}
 
     AddrRangeList getAddrRanges() const;

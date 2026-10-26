@@ -50,6 +50,7 @@ using namespace std;
 
 StreamBuffer::StreamBuffer(const StreamBufferParams &p)
     : ClockedObject(p),
+      streamStats(this),
       streamIn(this),
       streamOut(this),
       statusIn(this),
@@ -62,8 +63,28 @@ StreamBuffer::StreamBuffer(const StreamBufferParams &p)
       statusAddr(p.status_address),
       statusSize(p.status_size),
       streamCycles(p.stream_cycles),
-      bandwidth(p.bandwidth)
+      bandwidth(p.bandwidth),
+      bufferOccupancy(this, "bufferOccupancy", statistics::units::Byte::get(),
+                      "Time-weighted buffered bytes")
 {}
+
+void
+StreamBuffer::init()
+{
+    ClockedObject::init();
+    if (streamIn.isConnected()) {
+        streamIn.sendRangeChange();
+    }
+    if (streamOut.isConnected()) {
+        streamOut.sendRangeChange();
+    }
+    if (statusIn.isConnected()) {
+        statusIn.sendRangeChange();
+    }
+    if (statusOut.isConnected()) {
+        statusOut.sendRangeChange();
+    }
+}
 
 bool
 StreamBuffer::canReadStream(size_t len)
@@ -90,6 +111,7 @@ StreamBuffer::tryReadStream(uint8_t *dst, size_t len)
 {
     if (buffer.size() >= len) {
         buffer.read(dst, len);
+        bufferOccupancy = buffer.size();
         return true;
     } else {
         return false;
@@ -101,6 +123,7 @@ StreamBuffer::tryWriteStream(uint8_t *src, size_t len)
 {
     if ((buffer.size() + len) <= fifoSize) {
         buffer.write(src, len);
+        bufferOccupancy = buffer.size();
         return true;
     } else {
         return false;
@@ -136,32 +159,16 @@ StreamBuffer::tvalid(size_t len, bool isRead)
 Tick
 StreamBuffer::streamRead(PacketPtr pkt)
 {
+    const auto size = pkt->getSize();
+    panic_if(size != 1 && size != 2 && size != 4 && size != 8,
+             "Unsupported stream read size %u", size);
+    streamStats.readPackets++;
+    streamStats.readBytes += pkt->getSize();
     DPRINTF(StreamBuffer,
             "A read request of size %d was received by this"
             " stream buffer\n",
             pkt->getSize());
-    uint8_t *buff = new uint8_t[pkt->getSize()];
-    readStream(buff, pkt->getSize());
-    uint64_t data = *(uint64_t *)buff;
-    delete[] buff;
-
-    switch (pkt->getSize()) {
-        case 1:
-            pkt->set<uint8_t>(data, endian);
-            break;
-        case 2:
-            pkt->set<uint16_t>(data, endian);
-            break;
-        case 4:
-            pkt->set<uint32_t>(data, endian);
-            break;
-        case 8:
-            pkt->set<uint64_t>(data, endian);
-            break;
-        default:
-            panic("Read size too big?\n");
-            break;
-    }
+    readStream(pkt->getPtr<uint8_t>(), pkt->getSize());
     Tick duration = pkt->getSize() * bandwidth;
     pkt->makeAtomicResponse();
     return duration;
@@ -170,6 +177,8 @@ StreamBuffer::streamRead(PacketPtr pkt)
 Tick
 StreamBuffer::streamWrite(PacketPtr pkt)
 {
+    streamStats.writePackets++;
+    streamStats.writeBytes += pkt->getSize();
     DPRINTF(StreamBuffer,
             "A write request of size %d was received by this"
             " stream buffer\n",
@@ -263,4 +272,5 @@ void
 StreamBuffer::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_CONTAINER(buffer);
+    bufferOccupancy = buffer.size();
 }

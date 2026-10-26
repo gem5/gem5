@@ -50,6 +50,8 @@
 class StreamBuffer : public ClockedObject
 {
   private:
+    friend class StreamResponsePortT<StreamBuffer>;
+    StreamStats streamStats;
     StreamResponsePortT<StreamBuffer> streamIn;
     StreamResponsePortT<StreamBuffer> streamOut;
     StatusPort<StreamBuffer> statusIn;
@@ -64,10 +66,12 @@ class StreamBuffer : public ClockedObject
     // Clock cycles from the next edge until a write is accepted.
     const Cycles streamCycles;
     const double bandwidth;
+    statistics::Average bufferOccupancy;
 
   public:
     PARAMS(StreamBuffer);
     StreamBuffer(const StreamBufferParams &p);
+    void init() override;
 
     size_t
     size() const
@@ -78,6 +82,7 @@ class StreamBuffer : public ClockedObject
     flush()
     {
         buffer.flush();
+        bufferOccupancy = 0;
     }
     bool canReadStream(size_t len);
     bool canWriteStream(size_t len);

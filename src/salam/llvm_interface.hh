@@ -72,6 +72,7 @@
 #include <llvm/Transforms/Utils/Cloning.h>
 
 // SALAM Includes
+#include "base/statistics.hh"
 #include "params/LLVMInterface.hh"
 #include "salam/HWModeling/hw_interface.hh"
 #include "salam/LLVMRead/basic_block.hh"
@@ -92,7 +93,6 @@ class LLVMInterface : public AccComputeUnit
     // The tick of this invocation's first compute pass.
     Tick firstPass = 0;
     int cycle;
-    int stalls;
 
     bool running;
     bool loadOpScheduled;
@@ -129,7 +129,6 @@ class LLVMInterface : public AccComputeUnit
         // Functional-unit tokens of computeQueue operations, by UID.
         std::map<uint64_t, SALAM::FUPool::Token> fuTokens;
         std::shared_ptr<SALAM::BasicBlock> previousBB;
-        HW_Cycle_Stats hw_cycle_stats;
         uint32_t scheduling_threshold;
         bool returned = false;
         bool lockstep;
@@ -255,8 +254,86 @@ class LLVMInterface : public AccComputeUnit
 
     std::vector<std::shared_ptr<SALAM::Function>> functions;
     std::vector<std::shared_ptr<SALAM::Value>> values;
-    // Ready operations that waited for a functional unit.
-    uint64_t fuDenials = 0;
+
+  public:
+    // Operation classes counted when issued and completed. Control is
+    // branches and returns. Phis are evaluated on block entry and not
+    // counted.
+    enum OpClass
+    {
+        ComputeOp,
+        LoadOp,
+        StoreOp,
+        CallOp,
+        ControlOp,
+        NumOpClasses
+    };
+
+    // What a compute pass did, the first that applies: issued an
+    // operation, had one denied a functional unit, waited for memory,
+    // waited for compute in flight, or none of these.
+    enum CycleCategory
+    {
+        IssueCycle,
+        FuStallCycle,
+        MemoryWaitCycle,
+        ComputeWaitCycle,
+        OtherCycle,
+        NumCycleCategories
+    };
+
+  private:
+    // Counts for the current statistics window. A statistics reset
+    // clears them; it changes nothing in the accelerator.
+    struct ExecStats : public statistics::Group
+    {
+        ExecStats(LLVMInterface *owner);
+        void regStats() override;
+
+        statistics::Scalar invocations;
+        statistics::Scalar cycles;
+        statistics::Vector cycleCategories;
+        statistics::Vector issued;
+        statistics::Vector completed;
+        statistics::Vector opcodesIssued;
+        statistics::Scalar fuDenials;
+        statistics::Scalar memoryOrderWaits;
+        statistics::Average reservedOps;
+        statistics::Average computeOps;
+        statistics::Average readOps;
+        statistics::Average writeOps;
+    } execStats;
+
+    // The same counts for the current invocation, updated together with
+    // execStats and unaffected by statistics resets.
+    struct InvocationTotals
+    {
+        Tick startTick = 0;
+        Tick finishTick = 0;
+        uint64_t cycles = 0;
+        uint64_t cycleCategories[NumCycleCategories] = {};
+        uint64_t issued[NumOpClasses] = {};
+        uint64_t completed[NumOpClasses] = {};
+        uint64_t fuDenials = 0;
+        uint64_t memoryOrderWaits = 0;
+    } totals;
+
+    // What the current compute pass has done so far.
+    struct PassEvents
+    {
+        bool issued = false;
+        bool fuDenied = false;
+        bool memoryOrderWait = false;
+    } pass;
+    void countCycleCategory();
+
+    void countIssue(OpClass cls, uint64_t opcode);
+    void countCompletion(OpClass cls);
+    void countFuDenial();
+    void countMemoryOrderWait();
+    // Record the operations waiting in, and in flight from, every
+    // active function.
+    void sampleOccupancy();
 
   protected:
     virtual bool

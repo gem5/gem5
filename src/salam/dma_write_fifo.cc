@@ -191,6 +191,9 @@ DmaWriteFifo::resumeEmptyFunctional()
 
         port.dmaAction(MemCmd::WriteReq, nextAddr, req_size, nullptr,
                        chunk.data(), 0, reqFlags);
+        if (packetStat) {
+            (*packetStat)++;
+        }
         nextAddr += req_size;
     }
 }
@@ -217,6 +220,9 @@ DmaWriteFifo::resumeEmptyTiming()
         buffer.read(event->data(), req_size);
         port.dmaAction(MemCmd::WriteReq, nextAddr, req_size, event.get(),
                        event->data(), 0, reqFlags);
+        if (packetStat) {
+            (*packetStat)++;
+        }
         nextAddr += req_size;
         size_pending += req_size;
 

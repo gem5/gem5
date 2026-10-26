@@ -112,6 +112,12 @@ class InstOpCodes : public SimObject
     {
         usage[OpCode]++;
     };
+    // Forget the counts of an earlier parse of the IR.
+    void
+    clear_usage()
+    {
+        usage.clear();
+    }
     uint64_t
     get_usage(uint64_t OpCode)
     {

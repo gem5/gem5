@@ -84,6 +84,8 @@ class FUPool
         return live.size();
     }
     uint32_t inFlight(uint32_t unit) const;
+    // Instances of a unit with at least one operation in flight.
+    uint32_t busyInstances(uint32_t unit) const;
 
   private:
     struct Instance

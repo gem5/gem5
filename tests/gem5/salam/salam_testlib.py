@@ -634,6 +634,28 @@ def run_fs_rejected(
     return test
 
 
+def read_stats(outdir):
+    # Every statistics dump in stats.txt, as a list of {name: value}.
+    dumps = []
+    with open(os.path.join(outdir, "stats.txt")) as f:
+        for line in f:
+            if "Begin Simulation Statistics" in line:
+                dumps.append({})
+            elif dumps and line.strip() and not line.startswith("-"):
+                fields = line.split()
+                try:
+                    dumps[-1][fields[0]] = float(fields[1])
+                except (IndexError, ValueError):
+                    pass
+    return dumps
+
+
+def read_simout(params):
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    with open(os.path.join(outdir, "simout.txt")) as f:
+        return outdir, f.read()
+
+
 class CountFileRegex(MatchFileRegex):
     # Requires exactly count matching lines across the files.
 
@@ -720,6 +742,8 @@ class SalamHarnessFixture(Fixture):
     # hw_config: optional cycle overrides for the "kernel" profile.
     # cache_size: if set, the accelerator gets a Cache var of that size.
     # clocks: if set, the cluster's Clocks item.
+    # host_options: macros for the host program, such as
+    #   {"STATS_RESET_AFTER_START": 1, "STATS_DUMPS_AT_END": 2}.
     # ir_patterns: regexes the generated kernel.ll must contain.
 
     def __init__(
@@ -735,6 +759,7 @@ class SalamHarnessFixture(Fixture):
         ir_patterns=(),
         cache_size=None,
         clocks=None,
+        host_options=None,
     ):
         super().__init__(name=name)
         self.gem5 = gem5
@@ -747,6 +772,7 @@ class SalamHarnessFixture(Fixture):
         self.ir_patterns = ir_patterns
         self.cache_size = cache_size
         self.clocks = clocks
+        self.host_options = dict(host_options or {})
         self.bench = "harness"
 
     def setup(self, testitem):
@@ -819,6 +845,7 @@ class SalamHarnessFixture(Fixture):
             "hw_config": self.hw_config,
             "cache_size": self.cache_size,
             "clocks": self.clocks,
+            "host_options": self.host_options,
             "copied": copied,
             "outputs": {
                 "hw/kernel.ll": sha256_file(self.ir),
@@ -855,7 +882,11 @@ class SalamHarnessFixture(Fixture):
                 f"#define N_IN {len(self.inputs)}\n"
                 f"#define N_OUT {self.n_out}\n"
                 f"#define N_RUNS {self.runs}\n"
-                f"static const int32_t inputs[] = {{{values}}};\n"
+                + "".join(
+                    f"#define {name} {value}\n"
+                    for name, value in sorted(self.host_options.items())
+                )
+                + f"static const int32_t inputs[] = {{{values}}};\n"
             )
 
     def _add_cache(self):

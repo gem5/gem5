@@ -70,6 +70,50 @@ constexpr uint8_t MmrClearRunBusyMask = 0xfc;
  * accelerators. It provides a set of memory-mapped registers, as well as
  * master ports for accessing both local busses/SPMs and system memory.
  ****************************************************************************/
+CommInterface::CommStats::CommStats(CommInterface *comm)
+    : statistics::Group(comm),
+      ADD_STAT(starts, statistics::units::Count::get(),
+               "Accelerator runs started by the run bit"),
+      ADD_STAT(finishes, statistics::units::Count::get(),
+               "Accelerator runs finished"),
+      ADD_STAT(requests, statistics::units::Count::get(),
+               "Memory operations from the accelerator, by direction"),
+      ADD_STAT(attempts, statistics::units::Count::get(),
+               "Packets offered to a port, retries included"),
+      ADD_STAT(accepted, statistics::units::Count::get(),
+               "Packets a port accepted"),
+      ADD_STAT(responses, statistics::units::Count::get(),
+               "Responses received"),
+      ADD_STAT(bytes, statistics::units::Byte::get(),
+               "Bytes in responses received")
+{}
+
+void
+CommInterface::CommStats::regStats()
+{
+    statistics::Group::regStats();
+    for (auto *vector :
+         {&requests, &attempts, &accepted, &responses, &bytes}) {
+        vector->init(2);
+        vector->subname(ReadDir, "read");
+        vector->subname(WriteDir, "write");
+    }
+}
+
+bool
+CommInterface::countedSend(RequestPort &port, PacketPtr pkt)
+{
+    // A send may complete synchronously and free the packet, so read
+    // it first.
+    Direction dir = pkt->isRead() ? ReadDir : WriteDir;
+    stats.attempts[dir]++;
+    bool sent = port.sendTimingReq(pkt);
+    if (sent) {
+        stats.accepted[dir]++;
+    }
+    return sent;
+}
+
 CommInterface::CommInterface(const CommInterfaceParams &p)
     : BasicPioDevice(p, p.pio_size),
       io_addr(p.pio_addr),
@@ -86,7 +130,8 @@ CommInterface::CommInterface(const CommInterfaceParams &p)
       tickEvent(this),
       cacheLineSize(p.cache_line_size),
       processCycles(p.process_cycles),
-      reset_spm(p.reset_spm)
+      reset_spm(p.reset_spm),
+      stats(this)
 {
     FLAG_OFFSET = 0;
     CONFIG_OFFSET = flag_size;
@@ -123,7 +168,8 @@ CommInterface::MemSidePort::recvReqRetry()
     if (debug()) {
         DPRINTF(CommInterface, "Got a retry...\n");
     }
-    while (outstandingPkts.size() && sendTimingReq(outstandingPkts.front())) {
+    while (outstandingPkts.size() &&
+           owner->countedSend(*this, outstandingPkts.front())) {
         if (debug()) {
             DPRINTF(CommInterface, "Unblocked, sent blocked packet.\n");
         }
@@ -139,7 +185,7 @@ CommInterface::MemSidePort::recvReqRetry()
 void
 CommInterface::MemSidePort::sendPacket(PacketPtr pkt)
 {
-    if (isStalled() || !sendTimingReq(pkt)) {
+    if (isStalled() || !owner->countedSend(*this, pkt)) {
         if (debug()) {
             DPRINTF(
                 CommInterface,
@@ -165,7 +211,8 @@ CommInterface::SPMPort::recvReqRetry()
     if (debug()) {
         DPRINTF(CommInterface, "Got a retry...\n");
     }
-    while (outstandingPkts.size() && sendTimingReq(outstandingPkts.front())) {
+    while (outstandingPkts.size() &&
+           owner->countedSend(*this, outstandingPkts.front())) {
         if (debug()) {
             DPRINTF(CommInterface, "Unblocked, sent blocked packet.\n");
         }
@@ -181,7 +228,7 @@ CommInterface::SPMPort::recvReqRetry()
 void
 CommInterface::SPMPort::sendPacket(PacketPtr pkt)
 {
-    if (isStalled() || !sendTimingReq(pkt)) {
+    if (isStalled() || !owner->countedSend(*this, pkt)) {
         if (debug()) {
             DPRINTF(
                 CommInterface,
@@ -204,7 +251,7 @@ CommInterface::RegPort::recvReqRetry()
 {
     assert(!outstandingPkts.empty());
     while (!outstandingPkts.empty() &&
-           sendTimingReq(outstandingPkts.front())) {
+           owner->countedSend(*this, outstandingPkts.front())) {
         outstandingPkts.pop();
         if (!owner->tickEvent.scheduled()) {
             owner->schedule(owner->tickEvent, owner->serviceEdge());
@@ -215,7 +262,7 @@ CommInterface::RegPort::recvReqRetry()
 bool
 CommInterface::RegPort::sendPacket(PacketPtr pkt)
 {
-    if (!outstandingPkts.empty() || !sendTimingReq(pkt)) {
+    if (!outstandingPkts.empty() || !owner->countedSend(*this, pkt)) {
         outstandingPkts.push(pkt);
         return false;
     }
@@ -225,6 +272,9 @@ CommInterface::RegPort::sendPacket(PacketPtr pkt)
 void
 CommInterface::recvPacket(PacketPtr pkt)
 {
+    Direction dir = pkt->isRead() ? ReadDir : WriteDir;
+    stats.responses[dir]++;
+    stats.bytes[dir] += pkt->getSize();
     if (pkt->isRead()) {
         MemoryRequest *readReq = findMemRequest(pkt, true);
         RequestPort *carrier = readReq->getCarrierPort();
@@ -322,6 +372,7 @@ CommInterface::checkMMR()
             *mmreg &= MmrClearRunMask;
             *mmreg |= MmrBusy;
             computationNeeded = true;
+            stats.starts++;
             cu->initialize();
         }
 
@@ -988,6 +1039,7 @@ CommInterface::tryWrite(RegPort *port)
 void
 CommInterface::enqueueRead(MemoryRequest *req)
 {
+    stats.requests[ReadDir]++;
     if (inRegRange(req->getAddress())) {
         // We want to immediately handle register requests
         // and bypass memory queues
@@ -1019,6 +1071,7 @@ CommInterface::enqueueRead(MemoryRequest *req)
 void
 CommInterface::enqueueWrite(MemoryRequest *req)
 {
+    stats.requests[WriteDir]++;
     if (inRegRange(req->getAddress())) {
         // We want to immediately handle register requests
         // and bypass memory queues
@@ -1051,6 +1104,7 @@ CommInterface::enqueueWrite(MemoryRequest *req)
 void
 CommInterface::finish()
 {
+    stats.finishes++;
     *mmreg &= MmrClearRunBusyMask;
     *mmreg |= MmrDone;
     computationNeeded = false;

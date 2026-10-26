@@ -50,6 +50,21 @@ constexpr uint8_t DmaDone = 0x04;
 
 } // anonymous namespace
 
+NoncoherentDma::DmaStats::DmaStats(NoncoherentDma *dma)
+    : statistics::Group(dma),
+      ADD_STAT(transfers, statistics::units::Count::get(),
+               "Transfers started"),
+      ADD_STAT(bytes, statistics::units::Byte::get(),
+               "Bytes of the transfers started"),
+      ADD_STAT(beats, statistics::units::Count::get(),
+               "Moves of up to max_req_size bytes from the read buffer to "
+               "the write buffer"),
+      ADD_STAT(writePackets, statistics::units::Count::get(),
+               "Write FIFO requests issued (may split into packets)"),
+      ADD_STAT(active, statistics::units::Ratio::get(),
+               "Fraction of the window with a transfer in progress")
+{}
+
 NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
     : DmaDevice(p),
       devname(p.devicename),
@@ -62,6 +77,7 @@ NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
       gic(p.gic),
       intNum(p.int_num),
       processCycles(p.process_cycles),
+      stats(this),
       tickEvent([this] { tick(); }, name()),
       accPort(this, sys, p.sid, p.ssid)
 {
@@ -73,6 +89,10 @@ NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
                                       maxReqSize, maxPending);
     accSideWriteFifo = new DmaWriteFifo(accPort, size_t(bufferSize / 2),
                                         maxReqSize, maxPending);
+    memSideWriteFifo->countPacketsIn(&stats.writePackets);
+    accSideWriteFifo->countPacketsIn(&stats.writePackets);
+    dmaPort.enablePacketStats(this, "memoryPackets");
+    accPort.enablePacketStats(this, "clusterPackets");
     readFifo = nullptr;
     writeFifo = nullptr;
     mmreg = new uint8_t[pioSize];
@@ -138,6 +158,9 @@ NoncoherentDma::tick()
         DPRINTF(NoncoherentDma, "SRC:0x%016x, DST:0x%016x, LEN:%d\n",
                 activeSrc, activeDst, writesLeft);
         start_time = curTick();
+        stats.transfers++;
+        stats.bytes += writesLeft;
+        stats.active = 1;
         readFifo = getActiveReadFifo();
         writeFifo = getActiveWriteFifo();
         readFifo->startFill(activeSrc, writesLeft);
@@ -155,12 +178,14 @@ NoncoherentDma::tick()
                 if (readFifo->tryGet(data, toWrite)) {
                     writeFifo->fill(data, toWrite);
                     writesLeft -= toWrite;
+                    stats.beats++;
                 }
                 delete[] data;
             }
         } else {
             if (!writeFifo->isActive()) {
                 running = false;
+                stats.active = 0;
                 *FLAGS &= ~DmaBusy;
                 *FLAGS |= DmaDone;
                 // raise interrupts

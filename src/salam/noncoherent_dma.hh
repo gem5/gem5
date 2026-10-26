@@ -42,6 +42,7 @@
 #ifndef __SALAM_NONCOHERENT_DMA_HH__
 #define __SALAM_NONCOHERENT_DMA_HH__
 
+#include "base/statistics.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/dma_device.hh"
 #include "mem/packet.hh"
@@ -77,6 +78,17 @@ class NoncoherentDma : public DmaDevice
     uint32_t intNum;
     // Clock cycles between transfer steps.
     const Cycles processCycles;
+
+    struct DmaStats : public statistics::Group
+    {
+        DmaStats(NoncoherentDma *dma);
+
+        statistics::Scalar transfers;
+        statistics::Scalar bytes;
+        statistics::Scalar beats;
+        statistics::Scalar writePackets;
+        statistics::Average active;
+    } stats;
 
     uint8_t *mmreg;
     uint8_t *FLAGS;

@@ -42,10 +42,36 @@
 #ifndef __SALAM_STREAM_PORT_HH__
 #define __SALAM_STREAM_PORT_HH__
 
+#include "base/statistics.hh"
 #include "mem/port.hh"
 #include "mem/tport.hh"
 
 using namespace gem5;
+
+// Accepted stream packets are beats, independently of memory-side DMA
+// packets. Attempts count timing sends including retries, not tvalid polls.
+struct StreamStats : public statistics::Group
+{
+    StreamStats(statistics::Group *parent)
+        : statistics::Group(parent, "stream"),
+          ADD_STAT(readAttempts, statistics::units::Count::get(),
+                   "Timing read attempts on stream ports, including retries"),
+          ADD_STAT(writeAttempts, statistics::units::Count::get(),
+                   "Timing write attempts on stream ports, including retries"),
+          ADD_STAT(readPackets, statistics::units::Count::get(),
+                   "Accepted stream read packets"),
+          ADD_STAT(writePackets, statistics::units::Count::get(),
+                   "Accepted stream write packets"),
+          ADD_STAT(readBytes, statistics::units::Byte::get(),
+                   "Bytes removed by accepted stream reads"),
+          ADD_STAT(writeBytes, statistics::units::Byte::get(),
+                   "Bytes inserted by accepted stream writes")
+    {}
+
+    statistics::Scalar readAttempts, writeAttempts;
+    statistics::Scalar readPackets, writePackets;
+    statistics::Scalar readBytes, writeBytes;
+};
 
 /** Forward declaration **/
 class StreamRequestPort;
@@ -124,6 +150,11 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
     bool
     recvTimingReq(PacketPtr pkt) override
     {
+        if (pkt->isRead()) {
+            device->streamStats.readAttempts++;
+        } else {
+            device->streamStats.writeAttempts++;
+        }
         // we should not get a new request after committing to retry the
         // current one, but unfortunately the CPU violates this rule, so
         // simply ignore it for now

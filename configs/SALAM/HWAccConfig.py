@@ -64,6 +64,5 @@ def AccConfig(acc, bench_file, cycle_counts):
     acc.hw_interface.inst_config = InstConfig.from_profile()
 
     acc.hw_interface.salam_power_model = SALAMPowerModel()
-    acc.hw_interface.hw_statistics = HWStatistics()
     acc.hw_interface.simulator_config = SimulatorConfig()
     acc.hw_interface.opcodes = InstOpCodes()

@@ -135,6 +135,16 @@ FUPool::inFlight(uint32_t unit) const
     return count;
 }
 
+uint32_t
+FUPool::busyInstances(uint32_t unit) const
+{
+    uint32_t count = 0;
+    for (const Instance &instance : unitFor(unit).instances) {
+        count += instance.inFlight > 0;
+    }
+    return count;
+}
+
 void
 FUPool::release(const Token &token)
 {

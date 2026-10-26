@@ -142,6 +142,19 @@ TEST(SalamFUPool, UnpipelinedBusyUnitNeedsARelease)
     EXPECT_EQ(pool.nextAdmission(Unit, 3), 3u);
 }
 
+TEST(SalamFUPool, PipelinedOperationsShareABusyInstance)
+{
+    FUPool pool = makePool(1, 1);
+    FUPool::Token a = pool.acquire(Unit, 0);
+    FUPool::Token b = pool.acquire(Unit, 1);
+    EXPECT_EQ(pool.inFlight(Unit), 2u);
+    EXPECT_EQ(pool.busyInstances(Unit), 1u);
+    pool.release(a);
+    EXPECT_EQ(pool.busyInstances(Unit), 1u);
+    pool.release(b);
+    EXPECT_EQ(pool.busyInstances(Unit), 0u);
+}
+
 TEST(SalamFUPool, DoubleReleasePanics)
 {
     FUPool pool = makePool(1, 0);

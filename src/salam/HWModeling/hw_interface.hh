@@ -45,13 +45,14 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "../common/macros.hh"
+#include "base/statistics.hh"
 #include "cycle_counts.hh"
 #include "fu_pool.hh"
-#include "hw_statistics.hh"
 #include "opcodes.hh"
 #include "params/HWInterface.hh"
 #include "salam/HWModeling/functional_units.hh"
@@ -71,7 +72,6 @@ class HWInterface : public SimObject
   public:
     CycleCounts *cycle_counts;
     FunctionalUnits *functional_units;
-    HWStatistics *hw_statistics;
     InstConfig *inst_config;
     InstOpCodes *opcodes;
     SALAMPowerModel *salam_power_model;
@@ -83,6 +83,12 @@ class HWInterface : public SimObject
     FunctionalUnitBase *findFunctionalUnit(uint64_t enum_value);
     // Admission to this accelerator's functional units.
     SALAM::FUPool fuPool;
+
+    // Record an admission, a release or a denial for a unit's
+    // statistics.
+    void fuAdmitted(uint32_t unit);
+    void fuReleased(uint32_t unit);
+    void fuDenied(uint32_t unit);
 
     // The functional units an accelerator has, resolved from the
     // hardware profile and the kernel's static graph.
@@ -112,6 +118,23 @@ class HWInterface : public SimObject
   private:
     bool inventoryResolved = false;
     FUInventory inventory;
+
+    // One functional unit's statistics, named by its alias. Instances
+    // and utilization are computed from the pool when dumped, so a
+    // statistics reset does not change them.
+    struct UnitStats : public statistics::Group
+    {
+        UnitStats(HWInterface *hw, FunctionalUnitBase *unit);
+
+        statistics::Value instances;
+        statistics::Scalar admissions;
+        statistics::Scalar denials;
+        statistics::Average inFlight;
+        statistics::Average busyInstances;
+        statistics::Value utilization;
+    };
+    std::map<uint32_t, std::unique_ptr<UnitStats>> unitStats;
+    void sampleUnit(uint32_t unit);
 };
 
 #endif //__HWMODEL_HW_MODEL_HH__

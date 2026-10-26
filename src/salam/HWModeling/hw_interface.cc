@@ -45,12 +45,70 @@ HWInterface::HWInterface(const HWInterfaceParams &params)
     : SimObject(params),
       cycle_counts(params.cycle_counts),
       functional_units(params.functional_units),
-      hw_statistics(params.hw_statistics),
       inst_config(params.inst_config),
       opcodes(params.opcodes),
       salam_power_model(params.salam_power_model),
       simulator_config(params.simulator_config)
-{}
+{
+    for (auto unit : functional_units->functional_unit_list) {
+        unitStats[unit->get_enum_value()] =
+            std::make_unique<UnitStats>(this, unit);
+    }
+}
+
+HWInterface::UnitStats::UnitStats(HWInterface *hw, FunctionalUnitBase *unit)
+    : statistics::Group(hw, unit->get_alias().c_str()),
+      ADD_STAT(instances, statistics::units::Count::get(),
+               "Instances of the unit"),
+      ADD_STAT(admissions, statistics::units::Count::get(),
+               "Operations admitted"),
+      ADD_STAT(denials, statistics::units::Count::get(),
+               "Times a ready operation found no instance free"),
+      ADD_STAT(inFlight, statistics::units::Count::get(),
+               "Time-weighted average of operations in flight"),
+      ADD_STAT(busyInstances, statistics::units::Count::get(),
+               "Time-weighted average of instances with an operation in "
+               "flight"),
+      ADD_STAT(utilization, statistics::units::Ratio::get(),
+               "Busy-instance time over instances times the window; 0 "
+               "with no instances")
+{
+    uint32_t id = unit->get_enum_value();
+    instances.functor([hw, id] {
+        return hw->fuPool.hasUnit(id) ? hw->fuPool.instances(id) : 0;
+    });
+    utilization.functor([this, hw, id] {
+        double n = hw->fuPool.hasUnit(id) ? hw->fuPool.instances(id) : 0;
+        return n ? busyInstances.result() / n : 0.0;
+    });
+}
+
+void
+HWInterface::sampleUnit(uint32_t unit)
+{
+    UnitStats &stats = *unitStats.at(unit);
+    stats.inFlight = fuPool.inFlight(unit);
+    stats.busyInstances = fuPool.busyInstances(unit);
+}
+
+void
+HWInterface::fuAdmitted(uint32_t unit)
+{
+    unitStats.at(unit)->admissions++;
+    sampleUnit(unit);
+}
+
+void
+HWInterface::fuReleased(uint32_t unit)
+{
+    sampleUnit(unit);
+}
+
+void
+HWInterface::fuDenied(uint32_t unit)
+{
+    unitStats.at(unit)->denials++;
+}
 
 FunctionalUnitBase *
 HWInterface::findFunctionalUnit(uint64_t enum_value)
