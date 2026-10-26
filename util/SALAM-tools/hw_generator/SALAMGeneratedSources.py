@@ -65,22 +65,6 @@ from SALAMClassGenerator import (
 
 _NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _SKIP_INSTRUCTIONS = ("any", "none")
-# Members named by HWInterface::availableFunctionalUnit and
-# clearFunctionalUnit. A smaller hardware profile does not require
-# them; a build that compiles that consumer does.
-REQUIRED_FU_ALIASES = (
-    "integer_adder",
-    "integer_multiplier",
-    "bit_shifter",
-    "bitwise_operations",
-    "float_adder",
-    "double_adder",
-    "float_multiplier",
-    "float_divider",
-    "double_multiplier",
-    "double_divider",
-    "bit_register",
-)
 
 
 class SourceConfigError(Exception):
@@ -114,6 +98,7 @@ class FunctionalUnit:
     ptr_sign: object
     ptr_apmode: object
     limit: object
+    initiation_interval: object
     instruction_names: tuple
     power_units: object
     energy_units: object
@@ -357,7 +342,6 @@ def write_content_files(root, outputs):
 def generate_sources_action(target, source, env):
     spec = load_source_config(env["SALAM_HW_CONFIG"])
     model = load_generated_sources(spec)
-    require_compatible_functional_units(model)
     outputs = generate_sources(model)
     marker = os.sep + "generated" + os.sep + "salam" + os.sep
     written = {}
@@ -375,16 +359,6 @@ def generate_sources_action(target, source, env):
         )
     for rel, text in outputs.items():
         _write_if_changed(written[rel], text)
-
-
-def require_compatible_functional_units(model):
-    present = set(model.fu_aliases)
-    missing = [name for name in REQUIRED_FU_ALIASES if name not in present]
-    if missing:
-        raise SourceConfigError(
-            "hardware profile is missing functional units required by "
-            "HWInterface: " + ", ".join(missing)
-        )
 
 
 def _discovered_fu_aliases(fu_dir):
@@ -436,6 +410,23 @@ def _load_functional_unit(fu_dir, alias):
         raise SourceConfigError(
             "FU alias " + str(declared) + " does not match " + path
         )
+    unknown = sorted(set(params) - _FU_PARAMETER_KEYS)
+    if unknown:
+        raise SourceConfigError(
+            "unknown functional unit parameter "
+            + ", ".join(str(key) for key in unknown)
+            + " in "
+            + path
+        )
+    for field in ("stages", "cycles", "limit"):
+        _require_uint32(params, field, path, minimum=0)
+    _require_uint32(params, "enum_value", path, minimum=1)
+    # An omitted initiation_interval is 0: not pipelined.
+    initiation_interval = 0
+    if "initiation_interval" in params:
+        initiation_interval = _require_uint32(
+            params, "initiation_interval", path, minimum=1
+        )
     instruction_names = params.get("instructions") or []
     if not isinstance(instruction_names, list):
         raise SourceConfigError("malformed instructions in " + path)
@@ -455,6 +446,7 @@ def _load_functional_unit(fu_dir, alias):
         ptr_sign=_datatype(params, "pointer", "sign"),
         ptr_apmode=_datatype(params, "pointer", "APMode"),
         limit=params.get("limit"),
+        initiation_interval=initiation_interval,
         instruction_names=tuple(instruction_names),
         power_units=units.get("power"),
         energy_units=units.get("energy"),
@@ -469,6 +461,42 @@ def _load_functional_unit(fu_dir, alias):
         area=power.get("area"),
         path_delay=power.get("path_delay"),
     )
+
+
+_FU_PARAMETER_KEYS = frozenset(
+    (
+        "alias",
+        "stages",
+        "cycles",
+        "enum_value",
+        "datatypes",
+        "instructions",
+        "limit",
+        "initiation_interval",
+    )
+)
+
+
+def _require_uint32(params, field, path, minimum):
+    # A required functional-unit field that fits a Param.UInt32.
+    if field not in params:
+        raise SourceConfigError("missing " + field + " in " + path)
+    value = params[field]
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not minimum <= value <= 2**32 - 1
+    ):
+        raise SourceConfigError(
+            field
+            + " must be an integer from "
+            + str(minimum)
+            + " to 4294967295 in "
+            + path
+            + ", not "
+            + repr(value)
+        )
+    return value
 
 
 def _datatype(params, group, field):
@@ -533,6 +561,7 @@ def _generate_functional_units_py(model):
                 ptr_sign=unit.ptr_sign,
                 ptr_apmode=unit.ptr_apmode,
                 limit=unit.limit,
+                initiation_interval=unit.initiation_interval,
                 power_units=unit.power_units,
                 energy_units=unit.energy_units,
                 time_units=unit.time_units,

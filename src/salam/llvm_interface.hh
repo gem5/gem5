@@ -122,6 +122,8 @@ class LLVMInterface : public AccComputeUnit
         std::map<uint64_t, std::shared_ptr<SALAM::Instruction>> writeQueue;
         std::map<MemoryRequest *, uint64_t> writeQueueMap;
         std::map<uint64_t, std::shared_ptr<SALAM::Instruction>> computeQueue;
+        // Functional-unit tokens of computeQueue operations, by UID.
+        std::map<uint64_t, SALAM::FUPool::Token> fuTokens;
         std::shared_ptr<SALAM::BasicBlock> previousBB;
         HW_Cycle_Stats hw_cycle_stats;
         uint32_t scheduling_threshold;
@@ -184,6 +186,8 @@ class LLVMInterface : public AccComputeUnit
         }
         bool mustWaitForOlder(
             std::list<std::shared_ptr<SALAM::Instruction>>::iterator pos);
+        bool admitToUnit(std::shared_ptr<SALAM::Instruction> inst,
+                         SALAM::FUPool::Token &token);
         inline bool
         writeUIDActive(uint64_t uid)
         {
@@ -247,6 +251,8 @@ class LLVMInterface : public AccComputeUnit
 
     std::vector<std::shared_ptr<SALAM::Function>> functions;
     std::vector<std::shared_ptr<SALAM::Value>> values;
+    // Ready operations that waited for a functional unit.
+    uint64_t fuDenials = 0;
 
   protected:
     virtual bool
@@ -260,6 +266,7 @@ class LLVMInterface : public AccComputeUnit
     LLVMInterface(const LLVMInterfaceParams &p);
     void tick();
     void constructStaticGraph();
+    void resolveFunctionalUnits();
     void startup();
     void initialize();
     void finalize();

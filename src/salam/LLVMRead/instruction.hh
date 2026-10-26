@@ -75,7 +75,6 @@ class Instruction : public Value
     uint64_t cycleCount;
     uint64_t currentCycle;
     uint64_t functional_unit = 0;
-    HWInterface *hw_interface;
 
   protected:
     // Each conditions entry is [id, OpCode, cycles].
@@ -187,11 +186,6 @@ class Instruction : public Value
     isCommitted()
     {
         return committed;
-    }
-    bool
-    hasFunctionalUnit()
-    {
-        return false;
     }
     bool
     debug()

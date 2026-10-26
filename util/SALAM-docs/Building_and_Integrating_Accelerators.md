@@ -422,13 +422,12 @@ selects a complete replacement profile. Paths in `CONFIG` are relative
 to that file. The build does not modify the profile YAML. It does not
 merge with the default hardware profile, scan `examples/`, or infer a
 technology node or cycle time. See **util/SALAM-docs/README_SALAM.md**
-for the eleven required aliases, for how to append a unit to
-`functional_unit_order`, and for the instruction entry fields.
+for how to append a unit to `functional_unit_order` and for the
+instruction entry fields.
 
-A linked SimObject class is not an instance. `configs/SALAM/HWAccConfig.py`
-must construct every unit the profile contains. Remapping a supported
-opcode is allowed. A new YAML instruction name does not add `compute()`
-support.
+`configs/SALAM/HWAccConfig.py` constructs every unit and instruction
+the profile contains. Remapping a supported opcode is allowed. A new
+YAML instruction name does not add `compute()` support.
 
 The workload `Profile` field selects the **config.yml**
 `hw_config` mapping. That mapping supplies per-kernel execution latency

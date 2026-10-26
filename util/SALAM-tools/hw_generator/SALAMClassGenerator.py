@@ -61,6 +61,7 @@ def generate_functional_units_declaration(units, cxx_header):
         parts.append(
             '(Parent.any, "' + unit + ' functional unit SimObject.")\n'
         )
+    parts.append(_from_profile_method("units", units))
     parts.append(
         "\n# AUTO-GENERATED CLASSES (See"
         " util/SALAM-docs/README_SALAM.md for details)\n"
@@ -86,6 +87,7 @@ def generate_functional_unit_declaration(
     ptr_sign,
     ptr_apmode,
     limit,
+    initiation_interval,
     power_units,
     energy_units,
     time_units,
@@ -201,6 +203,13 @@ def generate_functional_unit_declaration(
         "\tlimit = Param.UInt32("
         + str(limit)
         + ', "Default values set from '
+        + alias
+        + '.yml")\n'
+    )
+    parts.append(
+        "\tinitiation_interval = Param.UInt32("
+        + str(initiation_interval)
+        + ', "Cycles between admissions (0: not pipelined), from '
         + alias
         + '.yml")\n'
     )
@@ -342,6 +351,7 @@ def generate_fu_source(alias, classname):
         "\t\t\tparams.ptr_sign,\n"
         "\t\t\tparams.ptr_apmode,\n"
         "\t\t\tparams.limit,\n"
+        "\t\t\tparams.initiation_interval,\n"
         "\t\t\tparams.power_units,\n"
         "\t\t\tparams.energy_units,\n"
         "\t\t\tparams.time_units,\n"
@@ -447,6 +457,7 @@ def generate_fu_base_header():
     parts.append("\t\tstd::string _ptr_sign;\n")
     parts.append("\t\tbool _ptr_apmode;\n")
     parts.append("\t\tuint32_t _limit;\n")
+    parts.append("\t\tuint32_t _initiation_interval;\n")
     parts.append("\t\tstd::string _power_units;\n")
     parts.append("\t\tstd::string _energy_units;\n")
     parts.append("\t\tstd::string _time_units;\n")
@@ -459,8 +470,6 @@ def generate_fu_base_header():
     parts.append("\t\tdouble _leakage_power;\n")
     parts.append("\t\tdouble _area;\n")
     parts.append("\t\tdouble _path_delay;\n\n")
-    parts.append("\t\tuint64_t _available = 0;\n\n")
-    parts.append("\t\tuint64_t _in_use = 0;\n\n")
     parts.append("\tpublic:\n")
     parts.append("\t\tFunctionalUnitBase();\n")
     parts.append("\t\tFunctionalUnitBase( std::string alias,\n")
@@ -477,6 +486,7 @@ def generate_fu_base_header():
     parts.append("\t\t\tstd::string ptr_sign,\n")
     parts.append("\t\t\tbool ptr_apmode,\n")
     parts.append("\t\t\tuint32_t limit,\n")
+    parts.append("\t\t\tuint32_t initiation_interval,\n")
     parts.append("\t\t\tstd::string power_units,\n")
     parts.append("\t\t\tstd::string energy_units,\n")
     parts.append("\t\t\tstd::string time_units,\n")
@@ -503,6 +513,7 @@ def generate_fu_base_header():
     parts.append("\t\t\t_ptr_sign(ptr_sign),\n")
     parts.append("\t\t\t_ptr_apmode(ptr_apmode),\n")
     parts.append("\t\t\t_limit(limit),\n")
+    parts.append("\t\t\t_initiation_interval(initiation_interval),\n")
     parts.append("\t\t\t_power_units(power_units),\n")
     parts.append("\t\t\t_energy_units(energy_units),\n")
     parts.append("\t\t\t_time_units(time_units),\n")
@@ -530,6 +541,10 @@ def generate_fu_base_header():
     parts.append("\t\tbool get_ptr_apmode() { return _ptr_apmode; }\n")
     parts.append("\t\tuint32_t get_limit() { return _limit; }\n")
     parts.append(
+        "\t\tuint32_t get_initiation_interval()"
+        " { return _initiation_interval; }\n"
+    )
+    parts.append(
         "\t\tstd::string get_power_units() { return _power_units; }\n"
     )
     parts.append(
@@ -549,21 +564,6 @@ def generate_fu_base_header():
     parts.append("\t\tdouble get_leakage_power() { return _leakage_power; }\n")
     parts.append("\t\tdouble get_area() { return _area; }\n")
     parts.append("\t\tdouble get_path_delay() { return _path_delay; }\n")
-    parts.append("\t\tbool is_available()\n")
-    parts.append("\t\t{\n")
-    parts.append("\t\t\treturn (_available == 0 || _in_use < _available);\n")
-    parts.append("\t\t}\n")
-    parts.append("\t\tvoid use_functional_unit() { _in_use++; }\n")
-    parts.append("\t\tvoid clear_functional_unit() { _in_use--; }\n")
-    parts.append(
-        "\t\tvoid set_functional_unit_limit(uint64_t available)"
-        "{ _available = available; }\n"
-    )
-    parts.append("\t\tvoid inc_functional_unit_limit() { _available++; }\n")
-    parts.append(
-        "\t\tuint64_t get_functional_unit_limit()" "{ return _available; }\n\n"
-    )
-    parts.append("\t\tuint64_t get_in_use() { return _in_use; }\n")
     parts.append("};\n")
     parts.append("#endif // __HWMODEL_FUNCTIONAL_UNIT_BASE_HH__")
     return "".join(parts)
@@ -625,6 +625,29 @@ def generate_instconfig_declaration(inst_names):
             + str(inst_name)
             + ' instruction SimObject")\n'
         )
+    parts.append(_from_profile_method("config", inst_names))
+    return "".join(parts)
+
+
+def _from_profile_method(var, names):
+    # A classmethod building the profile's objects, each one new, so
+    # accelerators never share them.
+    parts = ["\n\t@classmethod\n", "\tdef from_profile(cls):\n"]
+    parts.append(
+        "\t\t# The hardware profile of this build, with new objects.\n"
+    )
+    parts.append("\t\t" + var + " = cls()\n")
+    for name in names:
+        parts.append(
+            "\t\t"
+            + var
+            + "."
+            + str(name)
+            + " = "
+            + simobject_classname(name)
+            + "()\n"
+        )
+    parts.append("\t\treturn " + var + "\n")
     return "".join(parts)
 
 

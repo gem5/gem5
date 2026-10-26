@@ -221,13 +221,6 @@ SALAM::Instruction::ready()
 bool
 SALAM::Instruction::launch()
 {
-    if (hasFunctionalUnit()) {
-        if (!hw_interface->availableFunctionalUnit(getFunctionalUnit())) {
-            return false;
-            std::cout << "Waiting on next available FU\n";
-        } else {
-        }
-    }
     launched = true;
     if (getCycleCount() == 0) { // Instruction ready to be committed
         if (dbg) {
@@ -264,9 +257,6 @@ SALAM::Instruction::commit()
         }
         if (dbg) {
             DPRINTFS(Runtime, owner, "||==commit================\n");
-        }
-        if (hasFunctionalUnit()) {
-            hw_interface->clearFunctionalUnit(getFunctionalUnit());
         }
         return true;
     } else {

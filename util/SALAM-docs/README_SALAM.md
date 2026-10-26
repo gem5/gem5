@@ -131,21 +131,16 @@ The workload `Profile` field selects the `hw_config` mapping that
 supplies per-kernel `runtime_cycles` through `CycleCounts`. That
 workload field is not the build-time hardware profile.
 
-### Required functional units
+### Functional unit construction
 
-Handwritten `HWInterface` and `configs/SALAM/HWAccConfig.py` require
-these aliases:
-
-`integer_adder`, `integer_multiplier`, `bit_shifter`,
-`bitwise_operations`, `float_adder`, `double_adder`,
-`float_multiplier`, `float_divider`, `double_multiplier`,
-`double_divider`, `bit_register`.
-
-Parameters may change, and a profile may add units. Those eleven
-aliases may not be omitted or renamed without editing handwritten
-`HWInterface`. Linking a new class does not create an instance.
-`HWAccConfig.py` must construct it, for example
-`acc.hw_interface.functional_units.float_adder = FloatAdder()`.
+`configs/SALAM/HWAccConfig.py` gives each accelerator the units and
+instructions of the profile the build used, through the generated
+`FunctionalUnits.from_profile()` and `InstConfig.from_profile()`.
+Each call creates new objects, so accelerators do not share them. A
+profile may add, remove or rename units without editing handwritten
+code. Every instruction's `functional_unit` must be the `enum_value`
+of a unit in the profile, or 0 for none; gem5 rejects an instruction
+in the IR that names any other value.
 
 ### Adding a functional unit
 
@@ -160,8 +155,65 @@ Remapping a supported opcode onto a functional unit is allowed. A new
 YAML instruction name does not add `compute()` support. Instruction
 execution stays in handwritten `src/salam/LLVMRead/instruction.cc`.
 
-`functional_unit_limit` is not an effective occupancy limit. The
-scheduler does not stall on functional-unit availability.
+For example, to run `fsub` on the example unit, copy
+`src/salam/hw_profiles/default/` and, in the copy:
+
+1. copy `src/salam/hw_profiles/examples/float_trig_sine/` into
+   `functional_units/`;
+2. remove `fsub` from the `instructions` list in
+   `functional_units/double_adder/double_adder.yml`;
+3. replace `- none` with `- fsub` in
+   `functional_units/float_trig_sine/float_trig_sine.yml`;
+4. append `float_trig_sine` to `functional_unit_order` in
+   `salam-hw-config.yml`.
+
+Build with `--salam-hw-config` set to the copy's
+`salam-hw-config.yml`. Each `fsub` then needs a `float_trig_sine`
+instance (enum 17); the `salam-kernel-fsub-remap` test (tag
+`fu-remap`) builds this profile.
+
+### Functional unit scheduling
+
+Each accelerator has its own functional units. A ready compute
+operation that names a unit issues only when an instance of that unit
+can admit it; otherwise it stays ready and waits. Loads, stores,
+branches, calls and phis never use a unit, and the generator's
+`functional_unit` for them must be 0.
+
+These unit parameters schedule it:
+
+- `limit` is the unit's instance count. `limit: 0` gives one instance
+  per static instruction that uses the unit in the top function and
+  the functions it reaches through direct calls; a function called
+  from several places counts once. A unit that no such instruction
+  uses has no instances, and any operation that needs it is rejected.
+- `initiation_interval`, if given, makes the unit pipelined: an
+  instance admits an operation once that many cycles have passed
+  since its previous admission, however many operations it has in
+  flight. Without it an instance admits one operation at a time, the
+  next once the previous completes. A zero-cycle operation is admitted
+  and released in the same cycle.
+
+Latency comes only from `CycleCounts` and the workload `hw_config`
+overrides. `cycles` and `stages` describe the unit, and the
+instruction entry's `runtime_cycles` and `functional_unit_limit` are
+copied into the generated classes; none of them changes when an
+operation completes or how many issue.
+
+With `lockstep_mode` (the default) the accelerator issues nothing new
+until its compute and memory queues are empty, so an
+`initiation_interval` shorter than the latency only overlaps
+operations with `lockstep_mode=False`.
+
+The `SALAMFUInventory` debug flag prints each unit's instance count
+when an accelerator starts and the number of times a ready operation
+waited for a unit when it finishes. The instance counts must be the
+same for every invocation.
+
+For example, three independent multiplies on one `integer_multiplier`
+instance with a latency of 4 issue 4 cycles apart. With
+`initiation_interval: 1` and `lockstep_mode=False` they issue in
+consecutive cycles.
 
 ### Instruction entries
 
@@ -178,8 +230,8 @@ instructions:
 ```
 
 - The key names the entry and its generated class (`add` becomes
-  `Add`), which `HWAccConfig.py` must instantiate. Adding an entry
-  does not add execution support. Execution is in
+  `Add`), which `InstConfig.from_profile()` instantiates. Adding an
+  entry does not add execution support. Execution is in
   `LLVMInterface::createInstruction()` and
   `src/salam/LLVMRead/instruction.cc`.
 - `opcode_num` is the LLVM `Instruction::getOpcode()` value from
@@ -193,7 +245,7 @@ instructions:
   units. To remap an instruction, move its name from one unit's list
   to another's.
 - `functional_unit_limit` is copied into the generated class. No
-  scheduling code reads it.
+  scheduling code reads it; the unit's `limit` sets its instances.
 - `runtime_cycles` is copied into the generated instruction
   configuration. It does not set execution latency. Execution uses
   `CycleCounts`, with overrides from the workload `hw_config` mapping

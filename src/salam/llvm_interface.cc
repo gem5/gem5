@@ -42,6 +42,9 @@
 // LLVMInterface Includes
 #include "salam/llvm_interface.hh"
 
+#include <set>
+
+#include "debug/SALAMFUInventory.hh"
 #include "llvm/Support/raw_ostream.h"
 
 LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
@@ -183,6 +186,11 @@ LLVMInterface::ActiveFunction::processQueues()
         }
 
         if ((queue_iter->second)->commit()) {
+            auto token = fuTokens.find(queue_iter->first);
+            if (token != fuTokens.end()) {
+                owner->hw->fuPool.release(token->second);
+                fuTokens.erase(token);
+            }
             (queue_iter->second)->reset();
             queue_iter = computeQueue.erase(queue_iter);
             hw_cycle_stats.compCommited++;
@@ -220,6 +228,7 @@ LLVMInterface::ActiveFunction::processQueues()
                 }
             }
             auto inst = *queue_iter;
+            SALAM::FUPool::Token token;
             if (dbg) {
                 DPRINTFS(Runtime, owner, "\n\t\t %s \n\t\t %s%s%s%d%s \n",
                          " |-[Reserve Queue]--------------",
@@ -343,10 +352,20 @@ LLVMInterface::ActiveFunction::processQueues()
                         } else {
                             ++queue_iter;
                         }
+                    } else if (!admitToUnit(inst, token)) {
+                        ++queue_iter;
                     } else {
                         auto computeStart =
                             std::chrono::high_resolution_clock::now();
-                        if (!(inst)->launch()) {
+                        if ((inst)->launch()) {
+                            // Completed at once: release its unit now.
+                            if (token.id != 0) {
+                                owner->hw->fuPool.release(token);
+                            }
+                        } else {
+                            if (token.id != 0) {
+                                fuTokens.emplace((inst)->getUID(), token);
+                            }
                             if (dbg) {
                                 DPRINTFS(Runtime, owner,
                                          "\t\t  | Added to Comp Queue: %s - "
@@ -383,8 +402,10 @@ LLVMInterface::ActiveFunction::processQueues()
 
     if (owner->hw->hw_statistics->use_cycle_tracking()) {
         auto hwStart = std::chrono::high_resolution_clock::now();
-        for (auto fu : hw->functional_units->functional_unit_list) {
-            std::cout << fu->get_alias() << " - " << fu->get_in_use() << "\n";
+        for (auto fu : owner->hw->functional_units->functional_unit_list) {
+            std::cout << fu->get_alias() << " - "
+                      << owner->hw->fuPool.inFlight(fu->get_enum_value())
+                      << "\n";
         }
 
         owner->hw->hw_statistics->updateHWStatsCycleEnd(owner->cycle);
@@ -792,6 +813,29 @@ LLVMInterface::ActiveFunction::mustWaitForOlder(
     return false;
 }
 
+// Admit a ready compute operation to its functional unit. False if
+// every instance is busy: the operation stays ready and is not issued.
+// An operation without a unit is admitted with an empty token.
+bool
+LLVMInterface::ActiveFunction::admitToUnit(
+    std::shared_ptr<SALAM::Instruction> inst, SALAM::FUPool::Token &token)
+{
+    uint32_t unit = inst->getFunctionalUnit();
+    if (unit == 0) {
+        return true;
+    }
+    SALAM::FUPool &pool = owner->hw->fuPool;
+    fatal_if(pool.instances(unit) == 0,
+             "%s: %s needs functional unit %d, which has no instances",
+             owner->name(), inst->getIRString(), unit);
+    if (!pool.canAccept(unit, curTick())) {
+        owner->fuDenials++;
+        return false;
+    }
+    token = pool.acquire(unit, curTick());
+    return true;
+}
+
 void
 LLVMInterface::ActiveFunction::launchWrite(
     std::shared_ptr<SALAM::Instruction> writeInst)
@@ -909,6 +953,7 @@ LLVMInterface::initialize()
     computeTime = std::chrono::seconds(0);
     hwTime = std::chrono::seconds(0);
     constructStaticGraph();
+    resolveFunctionalUnits();
     timeStart = std::chrono::high_resolution_clock::now();
     if (dbg) {
         DPRINTF(LLVMInterface, "=============================================="
@@ -965,6 +1010,10 @@ LLVMInterface::finalize()
     // Simulation Times
     simStop = std::chrono::high_resolution_clock::now();
     simTotal = simStop - timeStart;
+    panic_if(hw->fuPool.inFlight() != 0,
+             "%s: %d functional unit operations still in flight", name(),
+             hw->fuPool.inFlight());
+    DPRINTF(SALAMFUInventory, "%d functional unit denials\n", fuDenials);
     printResults();
     assert(activeFunctions.empty());
     for (auto &value : values) {
@@ -1232,6 +1281,69 @@ LLVMInterface::ActiveFunction::launch()
     scheduleBB(func->entry());
 }
 
+// Count each unit's instances. A unit with a nonzero limit has that
+// many. A unit with limit 0 has one per static instruction that uses
+// it in top and the functions top reaches through direct calls; a
+// function called from several places is counted once.
+void
+LLVMInterface::resolveFunctionalUnits()
+{
+    std::vector<std::shared_ptr<SALAM::Function>> reached;
+    std::set<SALAM::Function *> seen;
+    for (auto &function : functions) {
+        if (function->isTop()) {
+            reached.push_back(function);
+            seen.insert(function.get());
+        }
+    }
+    HWInterface::FUInventory inventory;
+    std::map<uint32_t, uint32_t> uses;
+    for (size_t i = 0; i < reached.size(); i++) {
+        for (auto &bb : *reached[i]->getBBList()) {
+            for (auto &inst : *bb->Instructions()) {
+                if (inst->isCall()) {
+                    auto call = std::dynamic_pointer_cast<SALAM::Call>(inst);
+                    auto callee = std::dynamic_pointer_cast<SALAM::Function>(
+                        call->getCalleeValue());
+                    if (callee && seen.insert(callee.get()).second) {
+                        reached.push_back(callee);
+                    }
+                }
+                uint32_t unit = inst->getFunctionalUnit();
+                if (unit == 0) {
+                    continue;
+                }
+                fatal_if(inst->isLoad() || inst->isStore() ||
+                             inst->isTerminator() || inst->isCall() ||
+                             inst->isPhi(),
+                         "%s: %s uses functional unit %d, but memory and "
+                         "control instructions cannot",
+                         name(), inst->getIRString(), unit);
+                uses[unit]++;
+                inventory.mapping.emplace_back(inst->getUID(), unit);
+            }
+        }
+    }
+    for (auto unit : hw->functional_units->functional_unit_list) {
+        uint32_t id = unit->get_enum_value();
+        uint32_t count = uses[id];
+        uint32_t instances = unit->get_limit() > 0 ? unit->get_limit() : count;
+        inventory.instances[id] = instances;
+        DPRINTF(SALAMFUInventory,
+                "%s (%d): %d instances, %d static instructions\n",
+                unit->get_alias(), id, instances, count);
+    }
+    hw->setInventory(inventory);
+    std::map<uint32_t, SALAM::FUPool::UnitConfig> pool;
+    for (auto unit : hw->functional_units->functional_unit_list) {
+        uint32_t id = unit->get_enum_value();
+        pool[id] = {inventory.instances.at(id),
+                    Tick(unit->get_initiation_interval()) * clock_period};
+    }
+    hw->fuPool.configure(pool);
+    fuDenials = 0;
+}
+
 std::shared_ptr<SALAM::Instruction>
 LLVMInterface::createInstruction(llvm::Instruction *inst, uint64_t id)
 {
@@ -1242,11 +1354,14 @@ LLVMInterface::createInstruction(llvm::Instruction *inst, uint64_t id)
     for (auto hw_inst : hw->inst_config->inst_list) {
         if (OpCode == hw_inst->get_opcode_num()) {
             functional_unit = hw_inst->get_functional_unit();
-            for (auto hw_fu : hw->functional_units->functional_unit_list) {
-                if (hw_fu->get_enum_value() == functional_unit) {
-                    hw_fu->inc_functional_unit_limit();
-                    break;
-                }
+            // 0 is no functional unit.
+            if (functional_unit != 0) {
+                FunctionalUnitBase *unit =
+                    hw->findFunctionalUnit(functional_unit);
+                fatal_if(!unit,
+                         "%s: instruction '%s' uses functional unit %d, "
+                         "which the hardware profile does not define",
+                         name(), inst->getOpcodeName(), functional_unit);
             }
             break;
         }

@@ -44,10 +44,13 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <map>
+#include <utility>
 #include <vector>
 
 #include "../common/macros.hh"
 #include "cycle_counts.hh"
+#include "fu_pool.hh"
 #include "hw_statistics.hh"
 #include "opcodes.hh"
 #include "params/HWInterface.hh"
@@ -76,8 +79,39 @@ class HWInterface : public SimObject
 
     HWInterface();
     HWInterface(const HWInterfaceParams &params);
-    bool availableFunctionalUnit(uint64_t functional_unit);
-    void clearFunctionalUnit(uint64_t functional_unit);
+    // The unit with this enum_value, or nullptr.
+    FunctionalUnitBase *findFunctionalUnit(uint64_t enum_value);
+    // Admission to this accelerator's functional units.
+    SALAM::FUPool fuPool;
+
+    // The functional units an accelerator has, resolved from the
+    // hardware profile and the kernel's static graph.
+    struct FUInventory
+    {
+        // Instances of each unit, by enum_value.
+        std::map<uint32_t, uint32_t> instances;
+        // (static instruction UID, enum_value) of each instruction
+        // that uses a unit.
+        std::vector<std::pair<uint64_t, uint32_t>> mapping;
+
+        bool
+        operator==(const FUInventory &other) const
+        {
+            return instances == other.instances && mapping == other.mapping;
+        }
+    };
+    // Record the inventory. Every later invocation must resolve the
+    // same one.
+    void setInventory(const FUInventory &resolved);
+    const FUInventory &
+    getInventory() const
+    {
+        return inventory;
+    }
+
+  private:
+    bool inventoryResolved = false;
+    FUInventory inventory;
 };
 
 #endif //__HWMODEL_HW_MODEL_HH__

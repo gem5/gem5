@@ -113,3 +113,50 @@ TestSuite(
         )
     ],
 )
+
+
+def from_profile_makes_new_objects(params):
+    # Two accelerators' units and instructions must be distinct objects,
+    # one for every parameter the generated container declares.
+    gem5 = params.fixtures["salam-gem5"]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    script = os.path.join(outdir, "from_profile.py")
+    with open(script, "w") as f:
+        f.write(
+            "from m5.objects import FunctionalUnits, InstConfig\n"
+            "from m5.SimObject import SimObject\n"
+            "for cls in (FunctionalUnits, InstConfig):\n"
+            "    a, b = cls.from_profile(), cls.from_profile()\n"
+            "    names = {\n"
+            "        name\n"
+            "        for name, param in cls._params.items()\n"
+            "        if isinstance(param.ptype, type)\n"
+            "        and issubclass(param.ptype, SimObject)\n"
+            "    }\n"
+            "    assert names, cls\n"
+            "    for obj in (a, b):\n"
+            "        assert set(obj._children.keys()) == names, cls\n"
+            "    for name in names:\n"
+            "        assert a._children[name] is not b._children[name], name\n"
+            "    print(cls.__name__, len(names), 'distinct')\n"
+        )
+    result = subprocess.run(
+        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+    )
+    with open(os.path.join(outdir, "simout.txt")) as f:
+        out = f.read()
+    if result.returncode != 0 or out.count(" distinct") != 2:
+        raise AssertionError(
+            f"from_profile() check failed (rc {result.returncode}); "
+            f"see {outdir}"
+        )
+
+
+TestSuite(
+    name="salam-from-profile",
+    fixtures=[_gem5, TempdirFixture()],
+    tags=[st.SALAM_TAG],
+    tests=[
+        TestFunction(from_profile_makes_new_objects, name="salam-from-profile")
+    ],
+)

@@ -248,7 +248,6 @@ def _expected_generated(tools, profile):
         "sys.path.insert(0, sys.argv[1])\n"
         "import SALAMGeneratedSources as g\n"
         "model = g.load_generated_sources(g.load_source_config(sys.argv[2]))\n"
-        "g.require_compatible_functional_units(model)\n"
         "out = g.generate_sources(model)\n"
         "print(json.dumps({k: hashlib.sha256(v.encode()).hexdigest()"
         " for k, v in out.items()}))\n"
@@ -549,7 +548,7 @@ def enable_check(bench):
     return edit
 
 
-def _fs_command(params, workload, wall, ticks, fs_args=()):
+def _fs_command(params, workload, wall, ticks, fs_args=(), gem5_args=()):
     gem5 = params.fixtures["salam-gem5"]
     wl = params.fixtures[workload]
     outdir = params.fixtures[constants.tempdir_fixture_name].path
@@ -562,6 +561,7 @@ def _fs_command(params, workload, wall, ticks, fs_args=()):
         outdir,
         "-re",
         "--silent-redirect",
+        *gem5_args,
         os.path.join(config.base_dir, "configs/SALAM/fs.py"),
         "--kernel=" + wl.elf,
         "--accpath=" + wl.accpath,
@@ -574,13 +574,14 @@ def _fs_command(params, workload, wall, ticks, fs_args=()):
     return command, env, outdir
 
 
-def run_fs(workload, wall, ticks, fs_args=()):
+def run_fs(workload, wall, ticks, fs_args=(), gem5_args=()):
     # Runs configs/SALAM/fs.py on a built workload; fs_args are extra
-    # fs.py options, such as --param overrides.
+    # fs.py options, such as --param overrides, and gem5_args are gem5
+    # options, such as --debug-flags.
 
     def test(params):
         command, env, _outdir = _fs_command(
-            params, workload, wall, ticks, fs_args
+            params, workload, wall, ticks, fs_args, gem5_args
         )
         log_call(
             params.log,
@@ -594,17 +595,30 @@ def run_fs(workload, wall, ticks, fs_args=()):
     return test
 
 
-def run_fs_rejected(workload, wall, ticks, regex):
+def run_fs_rejected(
+    workload, wall, ticks, regex, fs_args=(), config_regex=None
+):
     # Runs fs.py and requires gem5 to stop with an error matching regex,
-    # not by a timeout.
+    # not by a timeout. config_regex, if given, must match config.ini
+    # first: the configuration really holds what is being rejected.
 
     def test(params):
-        command, env, outdir = _fs_command(params, workload, wall, ticks)
+        command, env, outdir = _fs_command(
+            params, workload, wall, ticks, fs_args
+        )
         result = subprocess.run(command, env=env)
         if result.returncode in (0, 124, 137):
             raise AssertionError(
                 f"expected gem5 to reject the run, got {result.returncode}"
             )
+        if config_regex is not None:
+            ini = os.path.join(outdir, "config.ini")
+            if not os.path.isfile(ini) or not re.search(
+                config_regex, open(ini).read(), re.MULTILINE
+            ):
+                raise SalamTestError(
+                    f"precondition not met: no {config_regex!r} in config.ini"
+                )
         for name in ("simerr.txt", "simout.txt"):
             path = os.path.join(outdir, name)
             if os.path.isfile(path) and re.search(
@@ -614,6 +628,28 @@ def run_fs_rejected(workload, wall, ticks, regex):
         raise AssertionError(f"no {regex!r} in gem5 output")
 
     return test
+
+
+class CountFileRegex(MatchFileRegex):
+    # Requires exactly count matching lines across the files.
+
+    def __init__(self, regex, filenames, count):
+        super().__init__(regex, filenames)
+        self.count = count
+
+    def test(self, params):
+        tempdir = params.fixtures[constants.tempdir_fixture_name].path
+        found = 0
+        for fname in self.filenames:
+            with open(os.path.join(tempdir, fname)) as f:
+                found += sum(
+                    1 for line in f if any(r.search(line) for r in self.regex)
+                )
+        if found != self.count:
+            patterns = [r.pattern for r in self.regex]
+            raise AssertionError(
+                f"{patterns!r}: {found} lines, not {self.count}"
+            )
 
 
 class NoMatchFileRegex(MatchFileRegex):
@@ -647,6 +683,28 @@ def _copy_tracked(tools, paths, dest_for):
         shutil.copy2(os.path.join(config.base_dir, rel), dest)
         copied[rel] = sha256_file(dest)
     return copied
+
+
+class SalamProfileFixture(Fixture):
+    # Writes a copy of the default hardware profile, changed by
+    # edit(profile_dir), so that config_path is its salam-hw-config.yml.
+    # A SalamGem5Fixture for config_path then builds it.
+
+    def __init__(self, config_path, edit):
+        super().__init__(name="salam-profile")
+        self.config_path = config_path
+        self.edit = edit
+
+    def setup(self, testitem):
+        root = os.path.dirname(self.config_path)
+        if os.path.basename(self.config_path) != "salam-hw-config.yml":
+            raise SalamTestError(f"unexpected profile path {self.config_path}")
+        shutil.rmtree(root, ignore_errors=True)
+        shutil.copytree(
+            os.path.dirname(os.path.join(config.base_dir, DEFAULT_PROFILE)),
+            root,
+        )
+        self.edit(root)
 
 
 class SalamHarnessFixture(Fixture):

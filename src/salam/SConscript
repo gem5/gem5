@@ -78,9 +78,6 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
             env["SALAM_HW_CONFIG"]
         )
         generated = SALAMGeneratedSources.load_generated_sources(inputs)
-        SALAMGeneratedSources.require_compatible_functional_units(
-            generated
-        )
     except SALAMGeneratedSources.SourceConfigError as exc:
         error(str(exc))
     generated_dir = Dir("generated")
@@ -153,6 +150,12 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     for node in generated_cc:
         Source(node)
     Source("HWModeling/hw_interface.cc")
+    Source("HWModeling/fu_pool.cc")
+    GTest(
+        "HWModeling/fu_pool.test",
+        "HWModeling/fu_pool.test.cc",
+        "HWModeling/fu_pool.cc",
+    )
     Source("HWModeling/hw_statistics.cc")
     Source("HWModeling/opcodes.cc")
     Source("HWModeling/salam_power_model.cc")
@@ -168,6 +171,10 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     DebugFlag("RuntimeCompute")
     DebugFlag("RuntimeQueues")
     DebugFlag("SALAM_Debug")
+    DebugFlag(
+        "SALAMFUInventory",
+        "Functional unit instances resolved for each accelerator",
+    )
     DebugFlag("StreamBuffer")
     DebugFlag("StreamDma")
     DebugFlag("Trace")

@@ -44,7 +44,6 @@ from SALAMGeneratedSources import (
     generate_sources,
     load_generated_sources,
     load_source_config,
-    require_compatible_functional_units,
     write_content_files,
 )
 
@@ -65,7 +64,6 @@ def export_hw_sources(config_path, output_dir):
         )
     spec = load_source_config(os.path.abspath(config_path))
     model = load_generated_sources(spec)
-    require_compatible_functional_units(model)
     write_content_files(destination, generate_sources(model))
 
 

@@ -30,7 +30,9 @@
 # runs it, and checks the OUT words the host prints. Run explicitly:
 #   ./main.py run gem5/salam --include-tags salam
 
+import os
 import re
+import shutil
 
 import salam_testlib as st
 from testlib import *
@@ -55,11 +57,18 @@ def kernel_suite(
     ir_patterns=(),
     fs_args=(),
     cache_size=None,
+    simout_counts=(),
+    gem5_args=(),
+    gem5=None,
+    profile=None,
+    tags=(st.SALAM_TAG,),
 ):
     # expect/forbid: {index: value} checked for every run.
-    # fs_args: extra fs.py options for the run.
+    # fs_args, gem5_args: extra fs.py and gem5 options for the run.
     # cache_size: give the accelerator a Cache var of that size.
-    gem5 = st.SalamGem5Fixture()
+    # simout_counts: (label, regex, count): count matching simout lines.
+    # profile: a SalamProfileFixture to write before gem5 builds it.
+    gem5 = gem5 or st.SalamGem5Fixture()
     tempdir = TempdirFixture()
     n_out = n_out or max(list(expect) + [i for i, _ in forbid]) + 1
     harness = st.SalamHarnessFixture(
@@ -76,7 +85,13 @@ def kernel_suite(
     )
     tests = [
         TestFunction(
-            st.run_fs("salam-workload", KERNEL_WALL, KERNEL_TICKS, fs_args),
+            st.run_fs(
+                "salam-workload",
+                KERNEL_WALL,
+                KERNEL_TICKS,
+                fs_args,
+                gem5_args,
+            ),
             name=name,
         )
     ]
@@ -96,13 +111,20 @@ def kernel_suite(
                     out_regex(index, value, run), ["system.terminal"]
                 )
             )
+    for label, regex, count in simout_counts:
+        verifiers[label] = st.CountFileRegex(
+            re.compile(regex), ["simout.txt"], count
+        )
     tests += [
         v.instantiate_test(f"{name}-{label}") for label, v in verifiers.items()
     ]
+    fixtures = [gem5, tempdir, harness]
+    if profile is not None:
+        fixtures.insert(0, profile)
     return TestSuite(
         name=name,
-        fixtures=[gem5, tempdir, harness],
-        tags=[st.SALAM_TAG],
+        fixtures=fixtures,
+        tags=list(tags),
         tests=tests,
     )
 
@@ -117,12 +139,28 @@ kernel_suite(
 )
 
 
-def rejected_suite(name, kernel, inputs, hw_config, regex):
+def rejected_suite(
+    name,
+    kernel,
+    inputs,
+    regex,
+    hw_config=None,
+    fs_args=(),
+    config_regex=None,
+    ir_patterns=(),
+):
     # The run must stop with a diagnostic instead of executing.
     gem5 = st.SalamGem5Fixture()
     tempdir = TempdirFixture()
     harness = st.SalamHarnessFixture(
-        "salam-workload", gem5, tempdir, kernel, inputs, 1, hw_config=hw_config
+        "salam-workload",
+        gem5,
+        tempdir,
+        kernel,
+        inputs,
+        1,
+        hw_config=hw_config,
+        ir_patterns=ir_patterns,
     )
     return TestSuite(
         name=name,
@@ -131,7 +169,12 @@ def rejected_suite(name, kernel, inputs, hw_config, regex):
         tests=[
             TestFunction(
                 st.run_fs_rejected(
-                    "salam-workload", KERNEL_WALL, KERNEL_TICKS, regex
+                    "salam-workload",
+                    KERNEL_WALL,
+                    KERNEL_TICKS,
+                    regex,
+                    fs_args=fs_args,
+                    config_regex=config_regex,
                 ),
                 name=name,
             )
@@ -304,4 +347,199 @@ kernel_suite(
     inputs=[2, 3],
     expect={0: 5},
     cache_size=1024,
+)
+
+# An instruction whose functional unit the profile does not define is
+# rejected when the IR is read. The mapping comes from the generated
+# InstConfig parameters; override one so it names enum 99.
+INST_CONFIG = "system.harness_clstr.kernel.hw_interface.inst_config"
+rejected_suite(
+    "salam-kernel-unknown-functional-unit",
+    "phi_swap.c",
+    inputs=[3, 1, 2],
+    fs_args=[f"--param={INST_CONFIG}.icmp.functional_unit=99"],
+    config_regex=(
+        r"^\[" + re.escape(INST_CONFIG) + r"\.icmp\]\n(?:\w+=.*\n)*?"
+        r"functional_unit=99$"
+    ),
+    regex=r"instruction 'icmp' uses functional unit 99, which the "
+    r"hardware profile does not define",
+    ir_patterns=[r"= icmp "],
+)
+
+# Functional-unit instances. With limit 0 a unit has one instance per
+# static instruction that uses it in top and its direct callees: the
+# twice-called helper() counts once, the uncalled unused() not at all.
+# Every invocation resolves the same inventory.
+FU_UNITS = "system.harness_clstr.kernel.hw_interface.functional_units"
+INVENTORY_IR = [
+    r"call i32 @helper\(.*\n.*call i32 @helper\(",
+    r"define dso_local i32 @unused\(.*\n.*= shl ",
+]
+
+
+def inventory(alias, enum, instances, uses, runs):
+    return (
+        f"inventory-{alias}",
+        rf"llvm_interface: {alias} \({enum}\): {instances} instances, "
+        rf"{uses} static instructions$",
+        runs,
+    )
+
+
+kernel_suite(
+    "salam-kernel-fu-inventory",
+    "fu_inventory.c",
+    inputs=[9, 3],
+    expect={0: 6, 1: 10},
+    runs=3,
+    gem5_args=["--debug-flags=SALAMFUInventory"],
+    ir_patterns=INVENTORY_IR,
+    simout_counts=[
+        inventory("integer_adder", 1, 2, 2, 3),
+        inventory("integer_multiplier", 2, 1, 1, 3),
+        inventory("bitwise_operations", 4, 1, 1, 3),
+        inventory("bit_shifter", 3, 0, 0, 3),
+        inventory("float_adder", 5, 0, 0, 3),
+    ],
+)
+
+# A nonzero limit is the instance count.
+kernel_suite(
+    "salam-kernel-fu-limit",
+    "fu_inventory.c",
+    inputs=[9, 3],
+    expect={0: 6, 1: 10},
+    gem5_args=["--debug-flags=SALAMFUInventory"],
+    fs_args=[f"--param={FU_UNITS}.integer_adder.limit=5"],
+    ir_patterns=INVENTORY_IR,
+    simout_counts=[inventory("integer_adder", 1, 5, 2, 1)],
+)
+
+# Functional-unit scheduling: three independent multiplies are ready
+# together. With three multiplier instances all issue in the first
+# cycle (the base runtime for that latency L: 2, 3 and 6 cycles for L
+# 0, 1 and 4). With one instance the last issue is later by the
+# admission schedule: 2L when the unit is not pipelined or its
+# interval is L, 2 cycles with interval 1, 10 cycles with interval 5.
+# An interval shorter than the latency only overlaps without lockstep.
+MULTIPLIER = FU_UNITS + ".integer_multiplier"
+CYCLE_COUNTS = "system.harness_clstr.kernel.hw_interface.cycle_counts"
+LOCKSTEP = "system.harness_clstr.kernel.llvm_interface.lockstep_mode"
+for name, latency, limit, interval, lockstep, runtime, runs in (
+    ("l4-three", 4, 3, None, False, 6, 1),
+    ("l4-one", 4, 1, None, False, 6 + 8, 3),
+    ("l4-ii4", 4, 1, 4, False, 6 + 8, 1),
+    ("l4-ii1", 4, 1, 1, False, 6 + 2, 1),
+    ("l4-ii1-lockstep", 4, 1, 1, True, 6 + 8, 1),
+    ("l1-ii5", 1, 1, 5, False, 3 + 10, 1),
+    ("l0-one", 0, 1, None, False, 2, 1),
+    ("l0-ii5", 0, 1, 5, False, 2 + 10, 1),
+):
+    fs_args = [
+        f"--param={LOCKSTEP}={lockstep}",
+        f"--param={CYCLE_COUNTS}.mul={latency}",
+        f"--param={MULTIPLIER}.limit={limit}",
+    ]
+    if interval is not None:
+        fs_args.append(f"--param={MULTIPLIER}.initiation_interval={interval}")
+    kernel_suite(
+        f"salam-kernel-fu-sched-{name}",
+        "fu_sched.c",
+        inputs=[3, 4, 5],
+        expect={0: 9, 1: 16, 2: 25},
+        runs=runs,
+        fs_args=fs_args,
+        ir_patterns=[r"(?s)(= mul i32 .*){3}"],
+        simout_counts=[
+            ("runtime", rf"^\s*Runtime:\s+{runtime} cycles$", runs)
+        ],
+    )
+
+# Latency comes from CycleCounts (and workload overrides) only. The
+# profile's descriptive fields do not change it: with all of them set
+# to 9, the multiplies still take the default 1 cycle.
+kernel_suite(
+    "salam-kernel-fu-descriptive-fields",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    fs_args=[
+        f"--param={MULTIPLIER}.cycles=9",
+        f"--param={MULTIPLIER}.stages=9",
+        f"--param={INST_CONFIG}.mul.runtime_cycles=9",
+        f"--param={INST_CONFIG}.mul.functional_unit_limit=9",
+    ],
+    ir_patterns=[r"(?s)(= mul i32 .*){3}"],
+    simout_counts=[("runtime", r"^\s*Runtime:\s+3 cycles$", 1)],
+)
+
+# A remap profile moves fsub from double_adder to the float_trig_sine
+# example unit. It is built from a copy of the default profile, so it
+# replaces the default build: run its tag on its own,
+#   ./main.py run gem5/salam --include-tags fu-remap
+# and rebuild the default profile afterwards.
+FSUB_INPUTS = [0x40B00000, 0x40100000]  # 5.5, 2.25
+FSUB_OUT = 0x40500000  # 3.25
+FSUB_IR = [r"= fsub float "]
+REMAP_TAG = "fu-remap"
+
+kernel_suite(
+    "salam-kernel-fsub",
+    "fsub.c",
+    inputs=FSUB_INPUTS,
+    expect={0: FSUB_OUT},
+    gem5_args=["--debug-flags=SALAMFUInventory"],
+    ir_patterns=FSUB_IR,
+    simout_counts=[inventory("double_adder", 6, 1, 1, 1)],
+)
+
+
+def remap_fsub(profile):
+    import yaml
+
+    units = os.path.join(profile, "functional_units")
+    sine = os.path.join(units, "float_trig_sine")
+    shutil.copytree(
+        os.path.join(
+            config.base_dir, "src/salam/hw_profiles/examples/float_trig_sine"
+        ),
+        sine,
+    )
+    for alias, change in (
+        ("double_adder", lambda names: [n for n in names if n != "fsub"]),
+        ("float_trig_sine", lambda names: ["fsub"]),
+    ):
+        path = os.path.join(units, alias, alias + ".yml")
+        with open(path) as f:
+            document = yaml.safe_load(f)
+        params = document["functional_unit"]["parameters"]
+        params["instructions"] = change(params["instructions"])
+        with open(path, "w") as f:
+            yaml.safe_dump(document, f, sort_keys=False)
+    path = os.path.join(profile, "salam-hw-config.yml")
+    with open(path) as f:
+        document = yaml.safe_load(f)
+    document["functional_unit_order"].append("float_trig_sine")
+    with open(path, "w") as f:
+        yaml.safe_dump(document, f, sort_keys=False)
+
+
+REMAP_CONFIG = os.path.join(
+    config.build_dir, "salam-fu-remap-profile", "salam-hw-config.yml"
+)
+kernel_suite(
+    "salam-kernel-fsub-remap",
+    "fsub.c",
+    inputs=FSUB_INPUTS,
+    expect={0: FSUB_OUT},
+    gem5_args=["--debug-flags=SALAMFUInventory"],
+    ir_patterns=FSUB_IR,
+    gem5=st.SalamGem5Fixture(REMAP_CONFIG),
+    profile=st.SalamProfileFixture(REMAP_CONFIG, remap_fsub),
+    tags=(REMAP_TAG,),
+    simout_counts=[
+        inventory("float_trig_sine", 17, 1, 1, 1),
+        inventory("double_adder", 6, 0, 0, 1),
+    ],
 )
