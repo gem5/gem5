@@ -52,6 +52,12 @@ parser.add_argument("--accpath")
 parser.add_argument("--ruby", action="store_true")
 parser.add_argument("--attach-first", action="store_true")
 parser.add_argument("--device-kind", type=int)
+parser.add_argument("--dma-buffer-size", type=int)
+parser.add_argument("--dma-read-buffer-size", type=int)
+parser.add_argument("--dma-write-buffer-size", type=int)
+parser.add_argument("--dma-max-req-size", type=int)
+parser.add_argument("--dma-local-memory", action="store_true")
+parser.add_argument("--dma-bypass", action="store_true")
 parser.add_argument("--queue-timing", action="store_true")
 parser.add_argument("--stats-at", default="")
 args = parser.parse_args()
@@ -66,7 +72,10 @@ else:
 board = SALAMArmBoard(
     clk_freq="1GHz",
     processor=SimpleProcessor(
-        cpu_type=CPUTypes.TIMING, isa=ISA.ARM, num_cores=1, clk_freq="1GHz"
+        cpu_type=CPUTypes.ATOMIC if args.dma_bypass else CPUTypes.TIMING,
+        isa=ISA.ARM,
+        num_cores=1,
+        clk_freq="1GHz",
     ),
     # The program spans from 0 to above 2 GiB, and loading it needs at
     # least that much memory.
@@ -92,8 +101,19 @@ if args.device_kind is not None:
         range=AddrRange(0x2FF10000, size=4096),
         latency="10us",
         bandwidth="8MiB/s",
+        enable_backdoor=not args.dma_bypass,
     )
     board.test_memory.port = board.iobus.mem_side_ports
+    if args.dma_local_memory:
+        board.test_local_memory = SimpleMemory(
+            range=AddrRange(0x2FF11000, size=4096),
+            latency="10us",
+            bandwidth="8MiB/s",
+            enable_backdoor=not args.dma_bypass,
+        )
+        board.test_local_memory.port = (
+            board.harness_clstr.local_bus.mem_side_ports
+        )
     if args.device_kind == 0:
         board.harness_clstr.coherency_bus.header_latency = 10
     if args.device_kind == 1:
@@ -127,11 +147,31 @@ if args.device_kind is not None:
         board.test_stream_dma.status_out = board.iobus.mem_side_ports
         board.test_stream_dma.dma = hierarchy.membus.cpu_side_ports
 
+if args.device_kind in (0, 2):
+    dma = (
+        board.harness_clstr.dma
+        if args.device_kind == 0
+        else board.test_stream_dma
+    )
+    for field in (
+        "buffer_size",
+        "read_buffer_size",
+        "write_buffer_size",
+        "max_req_size",
+    ):
+        value = getattr(args, "dma_" + field)
+        if value is not None:
+            setattr(dma, field, value)
+
 if args.queue_timing:
     board.harness_clstr.out.access_cycles = 3
     board.harness_clstr.out.write_cycles = 3
 
 root = board._pre_instantiate()
+if args.dma_bypass:
+    from gem5.components.boards.mem_mode import MemMode
+
+    board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
 m5.instantiate()
 print("instantiated")
 

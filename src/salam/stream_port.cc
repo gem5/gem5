@@ -54,10 +54,7 @@ StreamRequestPort::~StreamRequestPort()
 void
 StreamRequestPort::bind(Port &peer)
 {
-    auto *stream_resp = dynamic_cast<StreamResponsePort *>(&peer);
-    if (stream_resp) {
-        _stream_resp = stream_resp;
-    }
+    _stream_resp = dynamic_cast<StreamResponsePort *>(&peer);
     RequestPort::bind(peer);
 }
 

@@ -123,6 +123,12 @@ class DmaWriteFifo : public Drainable, public Serializable
     {
         return buffer.size();
     }
+    /** Get the maximum amount of data the FIFO can hold. */
+    size_t
+    capacity() const
+    {
+        return buffer.capacity();
+    }
     /** Flush the FIFO */
     void
     flush()
@@ -205,6 +211,9 @@ class DmaWriteFifo : public Drainable, public Serializable
      * will <i>NOT</i> be called if that callback initiates a new DMA transfer.
      */
     virtual void onIdle() {};
+
+    /** Buffered bytes were consumed and more stream data can fit. */
+    virtual void onSpaceAvailable() {};
 
     /** @} */
   private: // Configuration

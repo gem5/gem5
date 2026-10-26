@@ -41,6 +41,8 @@
 
 #include "salam/noncoherent_dma.hh"
 
+#include <algorithm>
+
 namespace
 {
 
@@ -149,20 +151,31 @@ void
 NoncoherentDma::tick()
 {
     if (!running && (*FLAGS & DmaStart)) {
-        running = true;
-        *FLAGS &= ~DmaStart;
-        *FLAGS |= DmaBusy;
         activeSrc = *SRC;
         activeDst = *DST;
         writesLeft = *LEN;
+        readFifo = getActiveReadFifo();
+        writeFifo = getActiveWriteFifo();
+        // The controller moves a whole chunk between FIFOs in every
+        // memory mode, even when the DMA port completes synchronously.
+        const size_t request_size = std::min<size_t>(maxReqSize, writesLeft);
+        fatal_if(request_size > readFifo->capacity(),
+                 "%s: DMA transfer length %d requires a %u-byte chunk "
+                 "exceeding the selected read FIFO capacity of %u bytes",
+                 name(), writesLeft, request_size, readFifo->capacity());
+        fatal_if(request_size > writeFifo->capacity(),
+                 "%s: DMA transfer length %d requires a %u-byte chunk "
+                 "exceeding the selected write FIFO capacity of %u bytes",
+                 name(), writesLeft, request_size, writeFifo->capacity());
+        running = true;
+        *FLAGS &= ~DmaStart;
+        *FLAGS |= DmaBusy;
         DPRINTF(NoncoherentDma, "SRC:0x%016x, DST:0x%016x, LEN:%d\n",
                 activeSrc, activeDst, writesLeft);
         start_time = curTick();
         stats.transfers++;
         stats.bytes += writesLeft;
         stats.active = 1;
-        readFifo = getActiveReadFifo();
-        writeFifo = getActiveWriteFifo();
         readFifo->startFill(activeSrc, writesLeft);
         writeFifo->startEmpty(activeDst, writesLeft);
     }

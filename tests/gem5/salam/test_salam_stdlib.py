@@ -1064,3 +1064,291 @@ TestSuite(
     tags=[st.SALAM_TAG, "salam-queue-occupancy"],
     tests=[TestFunction(queue_occupancy, name="salam-queue-occupancy")],
 )
+
+
+# Exercise both NoncoherentDma routes with an ordinary ARM CPU requestor.
+# Each tuple specifies length, per-FIFO capacity and effective max request.
+_FIFO_CASES = []
+for _route, _route_name in (
+    (1, "memory-to-cluster"),
+    (2, "cluster-to-memory"),
+):
+    for _label, _length, _capacity, _maximum, _reject in (
+        ("fit", 128, 64, 64, False),
+        ("reject", 128, 64, 128, True),
+        ("short", 128, 128, 256, False),
+        ("partial-tail", 160, 64, 64, False),
+    ):
+        _FIFO_CASES.append(
+            (
+                f"noncoherent-{_route_name}-{_label}",
+                0,
+                _route,
+                _length,
+                _capacity,
+                _capacity,
+                _maximum,
+                _reject,
+                False,
+            )
+        )
+# Bypass still moves whole controller chunks. Partial refills must also
+# progress when consuming a chunk leaves less than one cache line free.
+for _route, _route_name in (
+    (1, "memory-to-cluster"),
+    (2, "cluster-to-memory"),
+):
+    for _label, _length, _capacity, _maximum, _reject in (
+        ("fit", 128, 64, 64, False),
+        ("reject", 128, 64, 128, True),
+        ("short", 32, 64, 128, False),
+        ("partial-refill", 128, 64, 48, False),
+        ("subline-fifo", 72, 32, 24, False),
+    ):
+        _FIFO_CASES.append(
+            (
+                f"noncoherent-{_route_name}-bypass-{_label}",
+                0,
+                _route,
+                _length,
+                _capacity,
+                _capacity,
+                _maximum,
+                _reject,
+                True,
+            )
+        )
+
+for (
+    _label,
+    _length,
+    _read_capacity,
+    _write_capacity,
+    _maximum,
+    _reject,
+    _bypass,
+) in (
+    ("fit", 128, 64, 64, 64, False, False),
+    ("exact", 128, 128, 128, 128, False, False),
+    ("read-reject", 128, 64, 128, 128, True, False),
+    ("write-reject", 128, 128, 64, 128, True, False),
+    ("short", 128, 128, 128, 256, False, False),
+    ("partial-tail", 160, 64, 64, 64, False, False),
+    ("bypass", 128, 64, 64, 128, False, True),
+):
+    _FIFO_CASES.append(
+        (
+            "stream-" + _label,
+            2,
+            0,
+            _length,
+            _read_capacity,
+            _write_capacity,
+            _maximum,
+            _reject,
+            _bypass,
+        )
+    )
+
+
+def dma_fifo_capacity(case):
+    _, kind, route, length, rd_size, wr_size, maximum, reject, bypass = case
+
+    def test(params):
+        options = ["--dma-max-req-size", str(maximum)]
+        if kind == 0:
+            options += [
+                "--dma-buffer-size",
+                str(2 * rd_size),
+                "--dma-local-memory",
+            ]
+        else:
+            options += [
+                "--dma-read-buffer-size",
+                str(rd_size),
+                "--dma-write-buffer-size",
+                str(wr_size),
+            ]
+        if bypass:
+            options.append("--dma-bypass")
+        result, outdir = _board_check(
+            params, "--device-kind", str(kind), *options
+        )
+        device = (
+            "board.harness_clstr.dma" if kind == 0 else "board.test_stream_dma"
+        )
+        out = _read(outdir, "simout.txt")
+        trace = re.findall(
+            r"^[ \t]*\d+: " + re.escape(device) + r"\.dma: (.*)$", out, re.M
+        )
+        if reject:
+            err = _read(outdir, "simerr.txt")
+            required = (
+                device,
+                f"transfer length {length}",
+                f"{min(length, maximum)}-byte chunk",
+                "FIFO capacity",
+                f"{min(rd_size, wr_size)} bytes",
+            )
+            if result.returncode == 0 or any(x not in err for x in required):
+                raise AssertionError(f"missing launch diagnostic: {outdir}")
+            if any("Starting DMA" in line for line in trace):
+                raise AssertionError("rejected transfer issued DMA work")
+            return
+        if result.returncode != 0:
+            raise AssertionError(f"DMA run failed; see {outdir}")
+        uart = _read(outdir, "board.terminal")
+        if (
+            "DEVICE_CHECK_PASSED" not in uart
+            or "DEVICE_CHECK_FAILED" in uart
+            or not re.search(st.M5_EXIT_REGEX, out, re.M)
+        ):
+            raise AssertionError(f"DMA payload/progress failed: {outdir}")
+        ini = configparser.ConfigParser()
+        ini.read(os.path.join(outdir, "config.ini"))
+        expected_mode = "atomic_noncaching" if bypass else "timing"
+        if ini.get("board", "mem_mode") != expected_mode:
+            raise AssertionError("DMA fixture selected the wrong FIFO mode")
+        dumps = st.read_stats(outdir)
+        if len(dumps) != 1:
+            raise AssertionError("missing DMA statistics")
+        stats = dumps[0]
+        groups = ["memoryPackets"]
+        if kind == 0:
+            groups.append("clusterPackets")
+        total_attempts = total_packets = 0
+        for direction in ("read", "write"):
+            command = direction.capitalize() + "Req"
+            responses = [
+                int(m.group(1))
+                for line in trace
+                if (
+                    m := re.match(
+                        "Received response "
+                        + command
+                        + r" for addr: .* size: (\d+) ",
+                        line,
+                    )
+                )
+            ]
+            if sum(responses) != length:
+                raise AssertionError(f"{direction} trace bytes != {length}")
+            packets = attempts = 0
+            for group in groups:
+                prefix = device + "." + group + "." + direction
+                packets += stats[prefix + "Packets"]
+                attempts += stats[prefix + "Attempts"]
+                if stats[prefix + "Packets"] != stats[prefix + "Responses"]:
+                    raise AssertionError("unmatched accepted DMA packets")
+                active = kind != 0 or (group == "clusterPackets") == (
+                    (route == 1) == (direction == "write")
+                )
+                expected_bytes = length if active else 0
+                if stats[prefix + "Bytes"] != expected_bytes:
+                    raise AssertionError(f"wrong selected FIFO: {prefix}")
+            if packets != len(responses):
+                raise AssertionError("DMA counters disagree with responses")
+            if not bypass:
+                sends = sum(
+                    line.startswith("Trying to send " + command)
+                    for line in trace
+                )
+                if attempts != sends:
+                    raise AssertionError("DMA attempt counter disagrees")
+                if packets != (length + 63) // 64:
+                    raise AssertionError("wrong cache-line packet count")
+            total_attempts += attempts
+            total_packets += packets
+        if bypass:
+            sends = sum(
+                line.startswith("Sending DMA for addr:") for line in trace
+            )
+            if total_attempts != sends or total_packets != sends:
+                raise AssertionError("atomic packet accounting disagrees")
+            if "Direct bypass startAddr=" not in out:
+                raise AssertionError("read bypass was not exercised")
+            if "KVM bypass write startAddr=" not in out:
+                raise AssertionError("write bypass was not exercised")
+            if kind == 0 and maximum == 48:
+                refills = [
+                    (int(size, 16), int(space, 16))
+                    for size, space in re.findall(
+                        r"Direct bypass startAddr=0x[0-9a-f]+ "
+                        r"xfer_size=(0x[0-9a-f]+) "
+                        r"fifo_space=(0x[0-9a-f]+)",
+                        out,
+                    )
+                ]
+                # The second read uses the 48 bytes released by the first
+                # controller move; its remaining 16 bytes are not lost.
+                if refills != [(64, 64), (48, 48), (16, 48)]:
+                    raise AssertionError(
+                        f"unexpected partial refills {refills}"
+                    )
+        else:
+            accepted = sum(line == "-- Done" for line in trace)
+            retries = sum(
+                line == "-- Failed, waiting for retry" for line in trace
+            )
+            if (
+                accepted != total_packets
+                or retries != total_attempts - total_packets
+            ):
+                raise AssertionError("DMA acceptance/retry trace disagrees")
+            if maximum == 256 and retries == 0:
+                raise AssertionError("short-transfer retry not exercised")
+        if kind == 0:
+            expected = {
+                "transfers": 1,
+                "bytes": length,
+                "beats": (length + maximum - 1) // maximum,
+                "writePackets": (length + maximum - 1) // maximum,
+            }
+        else:
+            expected = {
+                "transfers.readTransfers": 1,
+                "transfers.writeTransfers": 1,
+                "transfers.readFrames": 1,
+                "transfers.writeFrames": 1,
+                "transfers.readBytes": length,
+                "transfers.writeBytes": length,
+                "stream.readBytes": length,
+                "stream.writeBytes": length,
+                "stream.readPackets": length // 8,
+                "stream.writePackets": length // 4,
+            }
+        for counter, value in expected.items():
+            if stats[device + "." + counter] != value:
+                raise AssertionError(f"incorrect {device}.{counter}")
+
+    return test
+
+
+for _case in _FIFO_CASES:
+    _suffix, _kind, _route, _length, *_ = _case
+    _gem5 = st.SalamGem5Fixture()
+    _temp = TempdirFixture()
+    _name = "salam-dma-fifo-" + _suffix
+    TestSuite(
+        name=_name,
+        fixtures=[
+            _gem5,
+            _temp,
+            st.SalamHarnessFixture(
+                "salam-workload",
+                _gem5,
+                _temp,
+                "sanity.c",
+                [],
+                0,
+                host_options={
+                    "DEVICE_TEST_KIND": _kind,
+                    "DEVICE_TRANSFER_BYTES": _length,
+                    "DEVICE_DMA_ROUTE": _route,
+                    "DEVICE_INCREMENTAL_STREAM": 1,
+                },
+            ),
+        ],
+        tags=[st.SALAM_TAG, "salam-correctness", "salam-devices"],
+        tests=[TestFunction(dma_fifo_capacity(_case), name=_name)],
+    )

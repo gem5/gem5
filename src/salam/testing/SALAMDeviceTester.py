@@ -52,9 +52,13 @@ class SALAMDeviceTester(ClockedObject):
     cxx_class = "gem5::SALAMDeviceTester"
 
     port = RequestPort("Device under test")
+    fifo_port = RequestPort("Memory for the DMA read FIFO test")
     system = Param.System(Parent.any, "System providing requestor IDs")
     cxx_exports = [
         PyBindMethod("send"),
+        PyBindMethod("startReadFifo"),
+        PyBindMethod("readFifoBytes"),
+        PyBindMethod("readFifoState"),
         PyBindMethod("readOnNextWriteResponse"),
         PyBindMethod("functionalRead"),
         PyBindMethod("functionalWrite"),

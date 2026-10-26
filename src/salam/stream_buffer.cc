@@ -112,6 +112,7 @@ StreamBuffer::tryReadStream(uint8_t *dst, size_t len)
     if (buffer.size() >= len) {
         buffer.read(dst, len);
         bufferOccupancy = buffer.size();
+        notifyStreamReady();
         return true;
     } else {
         return false;
@@ -124,6 +125,7 @@ StreamBuffer::tryWriteStream(uint8_t *src, size_t len)
     if ((buffer.size() + len) <= fifoSize) {
         buffer.write(src, len);
         bufferOccupancy = buffer.size();
+        notifyStreamReady();
         return true;
     } else {
         return false;

@@ -42,6 +42,12 @@ volatile uint8_t *top = (uint8_t *)KERNEL;
 volatile int stage = 0;
 
 #ifdef DEVICE_TEST_KIND
+#ifndef DEVICE_TRANSFER_BYTES
+#define DEVICE_TRANSFER_BYTES 128
+#endif
+#ifndef DEVICE_DMA_ROUTE
+#define DEVICE_DMA_ROUTE 0
+#endif
 // MMIO payloads are fixed independently of the counters under test. The
 // test config places a slow memory at 0x2ff10000, a stream buffer at
 // 0x2ff20000, and a stream DMA at 0x2ff30000.
@@ -119,6 +125,11 @@ testDevices(void)
 {
     volatile uint32_t *src = (volatile uint32_t *)0x2ff10000;
     volatile uint32_t *dst = (volatile uint32_t *)0x2ff10100;
+    if (DEVICE_DMA_ROUTE == 1) {
+        dst = (volatile uint32_t *)0x2ff11000;
+    } else if (DEVICE_DMA_ROUTE == 2) {
+        src = (volatile uint32_t *)0x2ff11000;
+    }
     volatile uint64_t *stream = (volatile uint64_t *)0x2ff20000;
     volatile uint8_t *sdma = (volatile uint8_t *)0x2ff30000;
     volatile uint64_t *dma_stream = (volatile uint64_t *)0x2ff30020;
@@ -153,14 +164,14 @@ testDevices(void)
             return 1;
         }
     } else {
-        for (unsigned i = 0; i < 32; i++) {
+        for (unsigned i = 0; i < DEVICE_TRANSFER_BYTES / 4; i++) {
             src[i] = 17 * i + 3;
         }
         if (DEVICE_TEST_KIND == 0) {
             volatile uint8_t *dma = (volatile uint8_t *)DMA_Flags;
             setRegister(dma, 1, (uintptr_t)src, 8);
             setRegister(dma, 9, (uintptr_t)dst, 8);
-            setRegister(dma, 17, 128, 4);
+            setRegister(dma, 17, DEVICE_TRANSFER_BYTES, 4);
             *dma = 1;
 #ifdef DEVICE_RESET
             m5_dump_reset_stats(0, 0);
@@ -170,18 +181,20 @@ testDevices(void)
         } else {
             setRegister(sdma, 4, (uintptr_t)src, 8);
             setRegister(sdma, 12, (uintptr_t)dst, 8);
-            setRegister(sdma, 20, 128, 4);
+            setRegister(sdma, 20, DEVICE_TRANSFER_BYTES, 4);
             setRegister(sdma, 24, 1, 1);
             setRegister(sdma, 25, 1, 1);
-            setRegister(sdma, 26, 128, 4);
+            setRegister(sdma, 26, DEVICE_TRANSFER_BYTES, 4);
             setRegister(sdma, 30, 1, 1);
             setRegister(sdma, 31, 1, 1);
             *sdma = 3;
 #ifdef DEVICE_RESET
             m5_dump_reset_stats(0, 0);
 #endif
-            while (*dma_status < 128)
+#ifndef DEVICE_INCREMENTAL_STREAM
+            while (*dma_status < DEVICE_TRANSFER_BYTES)
                 ;
+#endif
 #ifdef DEVICE_READ_WIDTHS
             for (unsigned i = 0; i < 8; i++) {
                 uint64_t first, second;
@@ -190,7 +203,11 @@ testDevices(void)
                 writeStream(dma_stream, second);
             }
 #else
-            for (unsigned i = 0; i < 16; i++) {
+            for (unsigned i = 0; i < DEVICE_TRANSFER_BYTES / 8; i++) {
+#ifdef DEVICE_INCREMENTAL_STREAM
+                while (*dma_status < 8)
+                    ;
+#endif
                 uint64_t value = readStream(dma_stream);
                 writeStream(dma_stream, value);
             }
@@ -198,7 +215,7 @@ testDevices(void)
             while (*sdma & 12)
                 ;
         }
-        for (unsigned i = 0; i < 32; i++) {
+        for (unsigned i = 0; i < DEVICE_TRANSFER_BYTES / 4; i++) {
             if (dst[i] != 17 * i + 3) {
                 printf("DEVICE_CHECK_FAILED word %u\n", i);
                 m5_exit(0);

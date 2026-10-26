@@ -144,6 +144,51 @@ class StreamDma : public DmaDevice
     StreamResponsePortT<StreamDma> streamOut;
     StatusPort<StreamDma> statusIn;
     StatusPort<StreamDma> statusOut;
+    void
+    notifyStreamReady()
+    {
+        streamIn.notifyReady();
+        streamOut.notifyReady();
+    }
+
+    class ReadFifo : public DmaReadFifo
+    {
+      private:
+        StreamDma &owner;
+
+      protected:
+        void
+        onDataAvailable() override
+        {
+            owner.notifyStreamReady();
+        }
+
+      public:
+        ReadFifo(StreamDma &dev, DmaPort &port, size_t size,
+                 unsigned request_size, unsigned pending)
+            : DmaReadFifo(port, size, request_size, pending), owner(dev)
+        {}
+    };
+
+    class WriteFifo : public DmaWriteFifo
+    {
+      private:
+        StreamDma &owner;
+
+      protected:
+        void
+        onSpaceAvailable() override
+        {
+            owner.notifyStreamReady();
+        }
+
+      public:
+        WriteFifo(StreamDma &dev, DmaPort &port, size_t size,
+                  unsigned request_size, unsigned pending)
+            : DmaWriteFifo(port, size, request_size, pending), owner(dev)
+        {}
+    };
+
     DmaReadFifo *readFifo;
     DmaWriteFifo *writeFifo;
     Addr pioAddr;

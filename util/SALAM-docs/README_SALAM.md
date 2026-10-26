@@ -215,6 +215,36 @@ For instruction issue tracing, add `--debug-flags=SALAMIssue` before the
 configuration script on the gem5 command line. Tracing observes the same
 execution and accounting; it does not change scheduling.
 
+## DMA configuration
+
+A DMA's `Type` must be exactly `NonCoherent` or `Stream`. `Name` and
+`PIOMaster` are required. `BufferSize` and `MaxReqSize`, when supplied, must
+be positive integers in bytes; omitted values retain the device defaults.
+The default buffer capacity is 1024 bytes, and the default request limit is
+the parent system's cache-line size. Interrupt numbers are optional
+nonnegative integers: `InterruptNum` for a NonCoherent DMA, and `ReadInt`
+and `WriteInt` for a Stream DMA. Fields for the other DMA type are rejected.
+
+For a Stream DMA, `BufferSize` sets **both** its read and write buffer
+capacities, and `MaxReqSize` sets its actual DMA request limit. Earlier
+configuration code incorrectly used `BufferSize` as the stream width and
+ignored `MaxReqSize`. The stream width remains the device default of 8
+bytes; the maximum number of pending DMA requests remains 8. The PIO
+register span does not set that request count.
+
+NonCoherent DMA moves a complete request chunk between its two FIFOs.
+In every memory mode, `min(length, MaxReqSize)` must fit both FIFOs, each
+of which has half of `BufferSize`. The launch rejects an impossible chunk
+before either FIFO starts. Short transfers remain valid when their actual
+chunk fits even if `MaxReqSize` is larger than the capacity.
+
+Stream DMA applies this capacity check on its timing path. Its
+`atomic_noncaching` bypass path can transfer smaller stream beats and
+retains that behavior. The shared DMA read FIFO fills available space on
+the bypass path, including space smaller than a cache line, so an otherwise
+valid consumer chunk can make progress after a partial consumption.
+Timing requests retain their existing splitting and request-slot limits.
+
 ## Running the SALAM regression suites
 
 Install matching Clang/LLVM, the ARM bare-metal compiler and libraries

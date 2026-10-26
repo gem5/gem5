@@ -99,6 +99,19 @@ for case in (
     "spm-boundaries",
     "spm-order",
     "spm-blocked",
+    "stream-empty",
+    "stream-full",
+    "dma-fifo-bypass",
+    "dma-fifo-bypass-backdoor",
+    "dma-fifo-bypass-small",
+    "dma-fifo-bypass-small-backdoor",
+    "dma-fifo-timing",
+    "dma-two",
+    "dma-one",
+    "dma-tail",
+    "dma-atomic",
+    "dma-read-ready",
+    "dma-write-ready",
 ):
     name = "salam-device-" + case
     TestSuite(

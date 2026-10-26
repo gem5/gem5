@@ -43,8 +43,10 @@
 #ifndef __SALAM_TESTING_DEVICE_TESTER_HH__
 #define __SALAM_TESTING_DEVICE_TESTER_HH__
 
+#include <memory>
 #include <vector>
 
+#include "dev/dma_device.hh"
 #include "mem/port.hh"
 #include "params/SALAMDeviceTester.hh"
 #include "sim/clocked_object.hh"
@@ -71,6 +73,31 @@ class SALAMDeviceTester : public ClockedObject
         void recvReqRetry() override;
     } port;
 
+    class TestReadFifo : public DmaReadFifo
+    {
+      public:
+        TestReadFifo(DmaPort &port, size_t capacity, unsigned max_request)
+            : DmaReadFifo(port, capacity, max_request, 2)
+        {}
+
+        unsigned blocksEnded = 0;
+        unsigned dataNotifications = 0;
+
+      protected:
+        void
+        onEndOfBlock() override
+        {
+            ++blocksEnded;
+        }
+        void
+        onDataAvailable() override
+        {
+            ++dataNotifications;
+        }
+    };
+
+    DmaPort fifoPort;
+    std::unique_ptr<TestReadFifo> readFifo;
     const RequestorID requestorId;
     PacketPtr retryPkt = nullptr;
     SALAMDeviceTester *responseReader = nullptr;
@@ -94,6 +121,10 @@ class SALAMDeviceTester : public ClockedObject
     Port &getPort(const std::string &name,
                   PortID idx = InvalidPortID) override;
     bool send(bool read, Addr addr, unsigned size, uint64_t data);
+    void startReadFifo(Addr addr, unsigned size, unsigned capacity,
+                       unsigned max_request);
+    std::vector<uint8_t> readFifoBytes(unsigned size);
+    std::vector<uint64_t> readFifoState() const;
     void readOnNextWriteResponse(SALAMDeviceTester *reader, Addr addr,
                                  unsigned size);
     uint64_t functionalRead(Addr addr, unsigned size);

@@ -83,6 +83,13 @@ class StreamBuffer : public ClockedObject
     {
         buffer.flush();
         bufferOccupancy = 0;
+        notifyStreamReady();
+    }
+    void
+    notifyStreamReady()
+    {
+        streamIn.notifyReady();
+        streamOut.notifyReady();
     }
     bool canReadStream(size_t len);
     bool canWriteStream(size_t len);

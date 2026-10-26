@@ -154,6 +154,7 @@ DmaWriteFifo::resumeEmpty()
     }
 
     const bool old_eob(atEndOfBlock());
+    const size_t old_size = buffer.size();
 
     if (port.sys->bypassCaches()) {
         resumeEmptyFunctional();
@@ -163,6 +164,9 @@ DmaWriteFifo::resumeEmpty()
 
     if (!old_eob && atEndOfBlock()) {
         onEndOfBlock();
+    }
+    if (buffer.size() < old_size) {
+        onSpaceAvailable();
     }
 }
 
@@ -201,14 +205,11 @@ DmaWriteFifo::resumeEmptyFunctional()
 void
 DmaWriteFifo::resumeEmptyTiming()
 {
-    size_t size_pending(0);
-    for (auto &e : pendingRequests) {
-        size_pending += e->requestSize();
-    }
-
+    // In-flight request payloads have already been consumed from buffer.
+    // Only bytes still buffered constrain the next request's admission.
     while (!freeRequests.empty() && !atEndOfBlock()) {
         const size_t req_size(std::min(maxReqSize, endAddr - nextAddr));
-        if ((int64_t)(buffer.size() - size_pending - req_size) < 0) {
+        if (buffer.size() < req_size) {
             break;
         }
 
@@ -224,7 +225,6 @@ DmaWriteFifo::resumeEmptyTiming()
             (*packetStat)++;
         }
         nextAddr += req_size;
-        size_pending += req_size;
 
         pendingRequests.emplace_back(std::move(event));
     }

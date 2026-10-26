@@ -41,6 +41,8 @@
 
 #include "salam/stream_dma.hh"
 
+#include <algorithm>
+
 StreamDma::TransferStats::TransferStats(StreamDma *dma)
     : statistics::Group(dma, "transfers"),
       ADD_STAT(readTransfers, statistics::units::Count::get(),
@@ -89,9 +91,10 @@ StreamDma::StreamDma(const StreamDmaParams &p)
       bandwidth(p.bandwidth)
 {
     dmaPort.enablePacketStats(this, "memoryPackets");
-    readFifo = new DmaReadFifo(dmaPort, rdBufferSize, maxReqSize, maxPending);
+    readFifo =
+        new ReadFifo(*this, dmaPort, rdBufferSize, maxReqSize, maxPending);
     writeFifo =
-        new DmaWriteFifo(dmaPort, wrBufferSize, maxReqSize, maxPending);
+        new WriteFifo(*this, dmaPort, wrBufferSize, maxReqSize, maxPending);
     // The FIFO data aperture extends PIO space, not the register array.
     mmreg = new uint8_t[BUFFER_ACCESS_OFF]{};
     FLAGS = mmreg;
@@ -167,7 +170,33 @@ void
 StreamDma::tick()
 {
 
-    if (!rdRunning && ((*FLAGS & RD_START_MASK) == RD_START_MASK)) {
+    const bool start_read =
+        !rdRunning && ((*FLAGS & RD_START_MASK) == RD_START_MASK);
+    const bool start_write =
+        !wrRunning && ((*FLAGS & WR_START_MASK) == WR_START_MASK);
+    // Check both requested directions before either FIFO can issue traffic.
+    if (!sys->bypassCaches()) {
+        if (start_read) {
+            const size_t request_size =
+                std::min<size_t>(maxReqSize, *RD_FRAME_SIZE);
+            fatal_if(request_size > readFifo->capacity(),
+                     "%s: DMA transfer length %u requires a %u-byte chunk "
+                     "exceeding the read FIFO capacity of %u bytes",
+                     name(), *RD_FRAME_SIZE, request_size,
+                     readFifo->capacity());
+        }
+        if (start_write) {
+            const size_t request_size =
+                std::min<size_t>(maxReqSize, *WR_FRAME_SIZE);
+            fatal_if(request_size > writeFifo->capacity(),
+                     "%s: DMA transfer length %u requires a %u-byte chunk "
+                     "exceeding the write FIFO capacity of %u bytes",
+                     name(), *WR_FRAME_SIZE, request_size,
+                     writeFifo->capacity());
+        }
+    }
+
+    if (start_read) {
         rdRunning = true;
         transferStats.readTransfers++;
         transferStats.readActive = 1;
@@ -187,7 +216,7 @@ StreamDma::tick()
         readFifo->startFill(readPtr, readFrameSize);
     }
 
-    if (!wrRunning && ((*FLAGS & WR_START_MASK) == WR_START_MASK)) {
+    if (start_write) {
         wrRunning = true;
         transferStats.writeTransfers++;
         transferStats.writeActive = 1;

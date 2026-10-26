@@ -119,6 +119,8 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
   private:
     bool isBusy;
     bool retryReq;
+    size_t retrySize = 0;
+    bool retryRead = false;
 
     EventFunctionWrapper releaseEvent;
 
@@ -127,10 +129,7 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
     {
         assert(isBusy);
         isBusy = false;
-        if (retryReq) {
-            retryReq = false;
-            sendRetryReq();
-        }
+        notifyReady();
     }
 
   protected:
@@ -161,14 +160,12 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
         if (retryReq) {
             return false;
         }
-        // if we are busy with a read or write, remember that we have to
-        // retry
-        if (isBusy) {
+        // Retain only the readiness obligation, never the rejected packet.
+        // Both bandwidth release and FIFO changes can make it serviceable.
+        if (isBusy || !tvalid(pkt)) {
+            retrySize = pkt->getSize();
+            retryRead = pkt->isRead();
             retryReq = true;
-            return false;
-        }
-        // Make sure that the transfer is valid
-        if (!tvalid(pkt)) {
             return false;
         }
         // the SimpleTimingPort should not be used anywhere where there is
@@ -221,6 +218,16 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
     }
 
   public:
+    void
+    notifyReady()
+    {
+        if (retryReq && !isBusy && tvalid(retrySize, retryRead)) {
+            // A requester may resend immediately from recvReqRetry().
+            retryReq = false;
+            sendRetryReq();
+        }
+    }
+
     StreamResponsePortT(Device *dev)
         : StreamResponsePort(dev->name() + ".stream", dev),
           isBusy(false),
@@ -241,7 +248,7 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
 class StreamRequestPort : public RequestPort
 {
   private:
-    StreamResponsePort *_stream_resp;
+    StreamResponsePort *_stream_resp = nullptr;
 
   protected:
     //

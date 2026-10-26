@@ -49,6 +49,7 @@ namespace gem5
 SALAMDeviceTester::SALAMDeviceTester(const Params &p)
     : ClockedObject(p),
       port(name() + ".port", *this),
+      fifoPort(this, p.system),
       requestorId(p.system->getRequestorId(this)),
       responseRetryEvent([this] { retryResponse(); }, name())
 {}
@@ -56,7 +57,46 @@ SALAMDeviceTester::SALAMDeviceTester(const Params &p)
 Port &
 SALAMDeviceTester::getPort(const std::string &name, PortID idx)
 {
+    if (name == "fifo_port") {
+        return fifoPort;
+    }
     return name == "port" ? port : ClockedObject::getPort(name, idx);
+}
+
+void
+SALAMDeviceTester::startReadFifo(Addr addr, unsigned size, unsigned capacity,
+                                 unsigned max_request)
+{
+    panic_if(!size || !capacity || !max_request,
+             "Invalid DMA read FIFO test configuration");
+    panic_if(readFifo && (readFifo->isActive() || readFifo->size()),
+             "Restarting an active DMA read FIFO test");
+    readFifo = std::make_unique<TestReadFifo>(fifoPort, capacity, max_request);
+    readFifo->startFill(addr, size);
+}
+
+std::vector<uint8_t>
+SALAMDeviceTester::readFifoBytes(unsigned size)
+{
+    panic_if(!readFifo || !size || size > readFifo->capacity(),
+             "Invalid DMA read FIFO test access");
+    std::vector<uint8_t> bytes(size);
+    if (!readFifo->tryGet(bytes.data(), size)) {
+        bytes.clear();
+    }
+    return bytes;
+}
+
+std::vector<uint64_t>
+SALAMDeviceTester::readFifoState() const
+{
+    panic_if(!readFifo, "No DMA read FIFO test is active");
+    return {readFifo->size(),
+            readFifo->atEndOfBlock(),
+            readFifo->isActive(),
+            readFifo->blocksEnded,
+            readFifo->dataNotifications,
+            readFifo->drain() == DrainState::Drained};
 }
 
 PacketPtr
@@ -90,6 +130,16 @@ SALAMDeviceTester::send(bool read, Addr addr, unsigned size, uint64_t data)
 {
     panic_if(retryPkt, "Sending while waiting for request retry");
     return sendPacket(packet(read, addr, size, data));
+}
+
+void
+SALAMDeviceTester::readOnNextWriteResponse(SALAMDeviceTester *reader,
+                                           Addr addr, unsigned size)
+{
+    panic_if(responseReader || !reader, "Invalid response callback reader");
+    responseReader = reader;
+    responseReadAddress = addr;
+    responseReadSize = size;
 }
 
 uint64_t
