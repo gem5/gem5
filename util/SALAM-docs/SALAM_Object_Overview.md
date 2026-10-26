@@ -95,3 +95,15 @@ Conceptually, StreamDma is the “bridge” between memory-mapped buffers (syste
 Stream ports implement the availability-gated transfer semantics used by StreamBuffer and StreamDma connections. They enforce the "only transfer when data is available / space is available" behavior that distinguishes the stream path from normal memory ports.
 
 In SALAM, stream ports are exposed by the CommInterface so an accelerator datapath can participate in streaming producer/consumer patterns without treating streams as ordinary load/store memory accesses.
+
+## Statistics
+
+See [Statistics and reset windows](README_SALAM.md#statistics-and-reset-windows)
+for counter names, retry and completion semantics, active time, and buffer
+occupancy. The statistics window can cross a running accelerator or DMA
+transfer: a reset clears counters but preserves hardware state.
+
+For bare-metal systems assembled from standard library components, see the
+[standard library example](README_SALAM.md#standard-library-bare-metal-example).
+The legacy and standard library launchers share the embedded `gem5.salam`
+construction implementation.

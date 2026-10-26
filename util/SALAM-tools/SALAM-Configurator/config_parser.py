@@ -39,7 +39,12 @@
 
 import os
 
-import workload_config
+try:
+    # Embedded in gem5 as gem5.salam.config_parser.
+    from . import workload_config
+except ImportError:
+    # Run from util/SALAM-tools/SALAM-Configurator.
+    import workload_config
 import yaml
 
 

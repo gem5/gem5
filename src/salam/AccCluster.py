@@ -128,7 +128,11 @@ class AccCluster(Platform):
     def _connect_hwacc(self, hwacc):
         hwacc.pio = self.local_bus.mem_side_ports
 
-    def _connect_caches(self, system, options, l2coherent, cache_size=0):
+    def _connect_caches(
+        self, system, options, l2coherent, cache_size=0, membus=None
+    ):
+        # membus defaults to the system's; a board's may be elsewhere.
+        membus = membus if membus is not None else system.membus
         if options.acc_cache and (cache_size != 0):
             self.cluster_cache = ClusterCache()
             self.cluster_cache.size = cache_size
@@ -143,7 +147,7 @@ class AccCluster(Platform):
             if options.l2cache and l2coherent:
                 self.cluster_cache.mem_side = system.tol2bus.cpu_side_ports
             else:
-                self.cluster_cache.mem_side = system.membus.cpu_side_ports
+                self.cluster_cache.mem_side = membus.cpu_side_ports
             self.coherency_bus.mem_side_ports = self.cluster_cache.cpu_side
         else:
             if options.l2cache and l2coherent:
@@ -151,9 +155,7 @@ class AccCluster(Platform):
                     system.tol2bus.cpu_side_ports
                 )
             else:
-                self.coherency_bus.mem_side_ports = (
-                    system.membus.cpu_side_ports
-                )
+                self.coherency_bus.mem_side_ports = membus.cpu_side_ports
 
     def _connect_dma(self, system, dma):
         dma.pio = self.local_bus.mem_side_ports

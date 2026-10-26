@@ -160,3 +160,70 @@ TestSuite(
         TestFunction(from_profile_makes_new_objects, name="salam-from-profile")
     ],
 )
+
+
+def salam_modules_need_no_source_tree(params):
+    # The built gem5 carries the workload reader and cluster builder:
+    # with util/ and configs/ off the path, a script outside the source
+    # tree loads an external workload configuration through them.
+    gem5 = params.fixtures["salam-gem5"]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    work = os.path.join(outdir, "workload")
+    os.makedirs(work)
+    with open(os.path.join(work, "config.yml"), "w") as f:
+        f.write(
+            "acc_cluster:\n"
+            "    - Name: ext_clstr\n"
+            "    - Clocks:\n"
+            "          Compute: 50MHz\n"
+            "    - Accelerator:\n"
+            "          - Name: Kernel\n"
+            "            IrPath: hw/kernel.ll\n"
+            "            Profile: kernel\n"
+            "            PIOSize: 5\n"
+            "            PIOMaster: LocalBus\n"
+            "hw_config:\n"
+            "    kernel:\n"
+        )
+    script = os.path.join(outdir, "no_source_tree.py")
+    with open(script, "w") as f:
+        f.write(
+            "import sys\n"
+            "sys.path = [p for p in sys.path\n"
+            "            if 'SALAM-Configurator' not in p\n"
+            "            and 'configs' not in p]\n"
+            "for name in ('config_parser', 'workload_config', 'HWAcc'):\n"
+            "    try:\n"
+            "        __import__(name)\n"
+            "    except ImportError:\n"
+            "        continue\n"
+            "    raise SystemExit(name + ' came from the source tree')\n"
+            "from gem5.salam import cluster, config_parser\n"
+            "assert callable(cluster.build_clusters)\n"
+            f"(spec,) = config_parser.load_clusters({work!r})\n"
+            "print('loaded', spec.name, spec.clocks['Compute'])\n"
+        )
+    result = subprocess.run(
+        [gem5.path, "-d", outdir, "-re", script],
+        env=gem5.tools.env(),
+        cwd=outdir,
+    )
+    with open(os.path.join(outdir, "simout.txt")) as f:
+        out = f.read()
+    if result.returncode != 0 or "loaded ext_clstr 50MHz" not in out:
+        raise AssertionError(
+            f"embedded SALAM modules failed (rc {result.returncode}); "
+            f"see {outdir}"
+        )
+
+
+TestSuite(
+    name="salam-embedded-modules",
+    fixtures=[_gem5, TempdirFixture()],
+    tags=[st.SALAM_TAG],
+    tests=[
+        TestFunction(
+            salam_modules_need_no_source_tree, name="salam-embedded-modules"
+        )
+    ],
+)

@@ -26,8 +26,10 @@
 
 # Runs inside gem5: exits nonzero unless the binary has the SALAM objects.
 
+import json
 import sys
 
+import m5
 import m5.objects
 
 required = ("LLVMInterface", "CommInterface", "CycleCounts", "HWInterface")
@@ -36,3 +38,33 @@ if missing:
     print("missing SALAM SimObjects: " + ", ".join(missing))
     sys.exit(1)
 print("SALAM SimObjects present")
+
+
+if len(sys.argv) > 1:
+    expected = set(json.loads(sys.argv[1]))
+    modules = {"m5.objects.FunctionalUnits", "m5.objects.InstConfig"}
+    actual = {
+        name
+        for name, cls in vars(m5.objects).items()
+        if isinstance(cls, type) and cls.__module__ in modules
+    }
+    assert actual == expected, (
+        sorted(expected - actual),
+        sorted(actual - expected),
+    )
+    root = m5.objects.Root(full_system=False)
+    root.units = m5.objects.FunctionalUnits.from_profile()
+    root.instructions = m5.objects.InstConfig.from_profile()
+    m5.instantiate()
+    constructed = set()
+    for container in (root.units, root.instructions):
+        for obj in (container, *container._children.values()):
+            assert obj.getCCObject() is not None
+            constructed.add(type(obj).__name__)
+    assert constructed == expected, (
+        sorted(expected - constructed),
+        sorted(constructed - expected),
+    )
+    print(
+        f"SALAM profile: {len(constructed)} registered and constructed classes"
+    )

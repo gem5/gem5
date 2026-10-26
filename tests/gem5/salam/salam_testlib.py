@@ -258,6 +258,22 @@ def _expected_generated(tools, profile):
     return json.loads(text)
 
 
+def _expected_classes(tools, profile):
+    generator = os.path.join(config.base_dir, "util/SALAM-tools/hw_generator")
+    script = (
+        "import json, sys\n"
+        "sys.path.insert(0, sys.argv[1])\n"
+        "import SALAMGeneratedSources as g\n"
+        "model = g.load_generated_sources(g.load_source_config(sys.argv[2]))\n"
+        "print(json.dumps(model.fu_class_names + model.instruction_class_names))\n"
+    )
+    return json.loads(
+        _output(
+            [tools.python, "-c", script, generator, profile], env=tools.env()
+        )
+    )
+
+
 def _built_generated(build_dir):
     root = os.path.join(build_dir, "salam", "generated", "salam")
     built = {}
@@ -380,18 +396,16 @@ class SalamGem5Fixture(UniqueFixture):
 
     def _check_generated(self, expected):
         built = _built_generated(self.build_dir)
-        if built != expected:
-            missing = sorted(set(expected) - set(built))
-            extra = sorted(set(built) - set(expected))
-            changed = sorted(
-                k
-                for k in set(built) & set(expected)
-                if built[k] != expected[k]
-            )
+        missing = sorted(set(expected) - set(built))
+        changed = sorted(
+            k for k in set(built) & set(expected) if built[k] != expected[k]
+        )
+        # An earlier profile's files may remain. Current-profile contents
+        # and the executable's registered classes are what must match.
+        if missing or changed:
             raise SalamTestError(
                 "generated SALAM sources do not match profile "
-                f"{self.profile}: missing={missing[:5]} extra={extra[:5]} "
-                f"changed={changed[:5]}"
+                f"{self.profile}: missing={missing[:5]} changed={changed[:5]}"
             )
 
     def _needed_llvm(self):
@@ -409,6 +423,7 @@ class SalamGem5Fixture(UniqueFixture):
                 "-d",
                 os.path.join(self.build_dir, "salam-probe"),
                 probe,
+                json.dumps(_expected_classes(self.tools, self.profile)),
             ],
             time=None,
             env=self.tools.env(),
@@ -548,12 +563,24 @@ def enable_check(bench):
     return edit
 
 
+def _outdir(params, subdir=None):
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    return os.path.join(outdir, subdir) if subdir else outdir
+
+
 def _fs_command(
-    params, workload, wall, ticks, fs_args=(), gem5_args=(), wrapper=None
+    params,
+    workload,
+    wall,
+    ticks,
+    fs_args=(),
+    gem5_args=(),
+    wrapper=None,
+    subdir=None,
 ):
     gem5 = params.fixtures["salam-gem5"]
     wl = params.fixtures[workload]
-    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    outdir = _outdir(params, subdir)
     command = [
         gem5.tools.timeout,
         "--kill-after=30",
@@ -577,21 +604,74 @@ def _fs_command(
     return command, env, outdir
 
 
-def run_fs(workload, wall, ticks, fs_args=(), gem5_args=(), wrapper=None):
+def run_fs(
+    workload,
+    wall,
+    ticks,
+    fs_args=(),
+    gem5_args=(),
+    wrapper=None,
+    subdir=None,
+):
     # Runs configs/SALAM/fs.py on a built workload; fs_args are extra
     # fs.py options, such as --param overrides, gem5_args are gem5
     # options, such as --debug-flags, and wrapper is a config script that
-    # runs fs.py.
+    # runs fs.py. subdir, if given, is the output directory within the
+    # test's temporary directory.
 
     def test(params):
         command, env, _outdir = _fs_command(
-            params, workload, wall, ticks, fs_args, gem5_args, wrapper
+            params, workload, wall, ticks, fs_args, gem5_args, wrapper, subdir
         )
         log_call(
             params.log,
             command,
             time=params.time,
             env=env,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
+
+    return test
+
+
+STDLIB_EXAMPLE = "configs/example/gem5_library/salam/arm-baremetal-salam.py"
+NO_SOURCE_TREE = os.path.join(os.path.dirname(__file__), "no_source_tree.py")
+
+
+def run_stdlib(workload, wall, ticks, gem5_args=(), subdir=None):
+    # Runs the standard library SALAM example on a built workload, with
+    # the source tree's configs/ and util/ off the module path.
+
+    def test(params):
+        gem5 = params.fixtures["salam-gem5"]
+        wl = params.fixtures[workload]
+        command = [
+            gem5.tools.timeout,
+            "--kill-after=30",
+            str(wall),
+            gem5.path,
+            "-d",
+            _outdir(params, subdir),
+            "-re",
+            "--silent-redirect",
+            *gem5_args,
+            NO_SOURCE_TREE,
+            os.path.join(config.base_dir, STDLIB_EXAMPLE),
+            "--binary",
+            wl.elf,
+            "--accpath",
+            wl.accpath,
+            "--acccfg",
+            "config.yml",
+            "--max-ticks",
+            str(ticks),
+        ]
+        log_call(
+            params.log,
+            command,
+            time=params.time,
+            env=gem5.tools.env(),
             stdout=sys.stdout,
             stderr=sys.stderr,
         )

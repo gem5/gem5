@@ -442,7 +442,8 @@ When a SALAM workload is run, the run script places output under:
 
 The most common outputs to look at are:
 
-* `stats.txt`: gem5 statistics (and SALAM object stats if enabled/dumped).
+* `stats.txt`: gem5 and SALAM reset-window statistics; see
+  [counter semantics](README_SALAM.md#statistics-and-reset-windows).
 * `debug-trace.txt` (optional): if `run_system.sh --print` is used, stdout/stderr are redirected here.
 * `system.terminal` (if produced by the platform/scripts): the simulated UART/terminal output.
 

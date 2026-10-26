@@ -102,6 +102,134 @@ $M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
 
 With `BUILD=True` (the default), `run_system.sh` runs `make all` in `$ACC_BENCH_PATH/bfs` before launching gem5. To run the precompiled snapshot under `salam-benchmarks/workloads/` instead, point `ACC_BENCH_PATH` there and pass `--no-build`. To inspect the gem5 command line it constructs, see the **RUN_SCRIPT** variable in the shell file.
 
+## Standard library bare-metal example
+
+The standard library launcher uses the same embedded `gem5.salam`
+construction code as the legacy launcher. Build with `--with-salam`, then
+provide a built workload directory containing its ELF, IR, and YAML:
+
+```bash
+./build/ARM/gem5.opt -d m5out-stdlib \
+    configs/example/gem5_library/salam/arm-baremetal-salam.py \
+    --binary /path/to/bfs/sw/main.elf --accpath /path/to/bfs
+```
+
+`--acccfg` selects a YAML filename relative to `--accpath`; its default is
+`config.yml`. `--max-ticks` optionally bounds the simulation. The workload
+files can be outside the source checkout. The binary embeds the parsers
+and construction modules; it does not import them from `util/` or
+`configs/SALAM` at runtime. Copy the example script too when running away
+from the checkout.
+
+To construct another configuration, import `SALAMArmBoard` from
+`gem5.salam.board`, supply a processor, memory, and classic cache hierarchy
+with a `membus`, call `set_bare_metal_binary(path)`, then
+`attach_accelerators(workload_directory)`, before starting the simulator.
+Ruby hierarchies are rejected. The board enters the ARM ELF directly,
+without a Linux kernel, bootloader, or device tree. UART 0 terminates on
+end-of-transmission; the supplied workloads also use `m5_exit`.
+
+The example explicitly matches the legacy BFS launcher's CPU, caches,
+clocks, memory, platform, and bus connections. Board defaults alone do not
+imply timing parity. The parity suites use the same binary and workload
+artifacts, compare effective configurations first, and require exact
+architectural statistics, UART output, invocation cycles, and exit ticks.
+Only hierarchy labels, output paths, and host-performance measurements
+are excluded from that comparison.
+
+## Statistics and reset windows
+
+SALAM statistics are written to gem5's `stats.txt`. Counters report the
+current reset window. Resetting statistics does not reset the accelerator,
+change queued events, release functional units, or empty buffers. A
+response after a reset belongs to the new window even if its request was
+accepted before the reset. Consequently, requests and responses need not
+balance within an individual window.
+
+The accelerator's printed summary covers its current invocation, including
+work before a statistics reset. `Compute passes` counts scheduler passes,
+including the first and final pass. `Invocation duration` and `Runtime`
+measure elapsed simulator time from accepted launch to completion, in ticks
+and microseconds respectively. A pass count is not an elapsed-cycle count:
+14 passes on consecutive edges span 13 clock periods. The launch debug trace
+also reports the interval from the first compute pass separately. These
+per-invocation values are distinct from the reset-window counters. The printed area/power block is an **Uncalibrated area/power
+estimate**, not a calibrated hardware power prediction.
+
+Names below are relative to each object's path in `config.ini`:
+
+- `LLVMInterface`: `invocations`, `cycles`, `issued` and `completed` by
+  operation class, `opcodesIssued`, `fuDenials`, and `memoryOrderWaits`.
+  `reservedOps`, `computeOps`, `readOps`, and `writeOps` are time-weighted
+  occupancies.
+- `LLVMInterface.cycleCategories`: Each compute pass belongs to one category.
+  Priority is `issue`, `fuStall`, `memoryWait`, `computeWait`, then `other`.
+  These count passes, not simultaneous causes.
+- `HWInterface.<unit alias>`: `instances` is current inventory; `admissions`
+  and `denials` count scheduling decisions. `inFlight` and `busyInstances` are
+  time-weighted averages. `utilization` is busy-instance time divided by
+  instance count and window ticks, or zero with no instances.
+- `CommInterface`: `starts`, `finishes`, logical `requests`, send `attempts`,
+  `accepted` packets, `responses`, and response `bytes` distinguish operations
+  from retries and completion.
+- `NoncoherentDma`: `transfers` and `bytes` count starts and requested bytes;
+  `beats` counts FIFO-to-FIFO moves. The historical `writePackets` name counts
+  write FIFO requests, which may split at cache-line boundaries. `active` is
+  the time-weighted fraction with a transfer in progress.
+- DMA `memoryPackets` / `clusterPackets`: `readAttempts` / `writeAttempts`
+  include retries; `readPackets` / `writePackets` count downstream acceptance;
+  `readResponses` / `writeResponses` and `readBytes` / `writeBytes` count
+  completion. `clusterPackets` exists on `NoncoherentDma` for its
+  accelerator-side port. Direct atomic backdoor copies are not packets.
+- `StreamDma.transfers`: `readTransfers` / `writeTransfers` count starts;
+  `readFrames` / `writeFrames` count completed frames; `readBytes` /
+  `writeBytes` count requested frame bytes. `readActive` / `writeActive` are
+  time-weighted active fractions. Read means memory-to-stream; write means
+  stream-to-memory.
+- StreamBuffer / StreamDma `stream`: `readAttempts` / `writeAttempts` count
+  timing stream-port sends, including retries. `readPackets` / `writePackets`
+  count accepted beats; `readBytes` / `writeBytes` count FIFO data movement.
+  Availability polls are not attempts. Legacy StreamDma MMIO buffer accesses
+  count accepted data movement but are not stream-port attempts.
+- `StreamBuffer`: `bufferOccupancy` is time-weighted buffered bytes; it retains
+  the actual occupancy across a statistics reset.
+
+The average statistics retain current state at a reset while beginning a
+new integration interval. Multiplying an active fraction by its statistics
+window gives active time, subject to the text output's decimal precision.
+Packet counts can exceed logical operations because a transfer can split
+into multiple memory packets. Attempts can exceed accepted packets because
+of retries. Repeated dumps do not clear counters; use a reset to start a
+new window.
+
+For instruction issue tracing, add `--debug-flags=SALAMIssue` before the
+configuration script on the gem5 command line. Tracing observes the same
+execution and accounting; it does not change scheduling.
+
+## Running the SALAM regression suites
+
+Install matching Clang/LLVM, the ARM bare-metal compiler and libraries
+(`gcc-arm-none-eabi`, `libnewlib-arm-none-eabi`, and
+`libstdc++-arm-none-eabi-newlib`), and the normal gem5 dependencies. Tests
+build fresh checked workloads in temporary directories.
+
+```bash
+cd tests
+./main.py list gem5/salam --include-tags salam -q --suites \
+    > /tmp/salam-suites.txt
+./main.py run gem5/salam --include-tags salam -j 8
+python3 gem5/salam/check_salam_results.py /tmp/salam-suites.txt \
+    testing-results/results.xml gem5/salam
+```
+
+The checker rejects missing suites, skipped required tests, failures, and
+zero-test results. The suite includes source-import isolation with a
+negative control, checked BFS through both launchers, exact parity,
+functional-unit scheduling, clock changes, and statistics retry/reset
+coverage. Remap-profile tests use a separate tag and profile; see the
+hardware-profile section above. Use `--skip-build` only with an existing
+binary and matching build provenance.
+
 ## Hardware Profiles
 
 `--with-salam` uses the default hardware profile

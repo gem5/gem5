@@ -253,6 +253,19 @@ PySource('gem5.components.memory', 'gem5/components/memory/dramsim_3.py')
 if env['HAVE_DRAMSYS']:
     PySource('gem5.components.memory', 'gem5/components/memory/dramsys.py')
 
+if env['CONF']['USE_ARM_ISA'] and env['CONF'].get('WITH_SALAM', False):
+    PySource('gem5.salam', 'gem5/salam/__init__.py')
+    PySource('gem5.salam', 'gem5/salam/board.py')
+    PySource('gem5.salam', 'gem5/salam/cluster.py')
+    # The workload reader lives in util/SALAM-tools/SALAM-Configurator;
+    # embed copies made in the build directory.
+    for module in ('workload_config.py', 'config_parser.py'):
+        copied = env.Command(
+            'gem5/salam/' + module,
+            '#util/SALAM-tools/SALAM-Configurator/' + module,
+            Copy('$TARGET', '$SOURCE'))
+        PySource('gem5.salam', copied[0])
+
 PySource('gem5.components.memory', 'gem5/components/memory/simple.py')
 PySource('gem5.components.memory', 'gem5/components/memory/memory.py')
 PySource('gem5.components.memory', 'gem5/components/memory/single_channel.py')

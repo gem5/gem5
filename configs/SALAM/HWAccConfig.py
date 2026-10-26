@@ -37,32 +37,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import m5
-from m5.objects import *
-from m5.util import *
+# Kept for scripts that import AccConfig; see gem5.salam.cluster.
 
-
-def AccConfig(acc, bench_file, cycle_counts):
-    # Initialize LLVMInterface Objects
-    acc.llvm_interface = LLVMInterface()
-
-    # The IR path is only the resource location. Profile identity is
-    # resolved before this function runs.
-    acc.llvm_interface.in_file = bench_file
-
-    # Initialize HWInterface Objects
-    acc.hw_interface = HWInterface()
-    # Define HW Counts
-    acc.hw_interface.cycle_counts = CycleCounts()
-
-    if cycle_counts is not None:
-        for instruction, cycles in cycle_counts.items():
-            setattr(acc.hw_interface.cycle_counts, instruction, cycles)
-
-    # Functional units and instructions of the build's hardware profile.
-    acc.hw_interface.functional_units = FunctionalUnits.from_profile()
-    acc.hw_interface.inst_config = InstConfig.from_profile()
-
-    acc.hw_interface.salam_power_model = SALAMPowerModel()
-    acc.hw_interface.simulator_config = SimulatorConfig()
-    acc.hw_interface.opcodes = InstOpCodes()
+from gem5.salam.cluster import configure_accelerator as AccConfig
