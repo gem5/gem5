@@ -45,4 +45,4 @@ boot.o: Makefile
 	$(CPP) $(CPPFLAGS) boot.s | $(AS) $(ASFLAGS) -o boot.o
 
 clean:
-	rm -f *.o *.elf
+	rm -f $(OBJS) main.elf

@@ -529,6 +529,24 @@ def configure_llvm_for_salam(env):
     ):
         env.ParseConfig(flag_cmd)
 
+    # llvm-config also reports C99 compatibility macros that C++11 makes
+    # unnecessary. Applied to the whole build, they redefine macros that
+    # gem5 sources set themselves (src/gpu-compute does), and -Werror
+    # turns that into a build failure.
+    c99_macros = {
+        '__STDC_CONSTANT_MACROS',
+        '__STDC_FORMAT_MACROS',
+        '__STDC_LIMIT_MACROS',
+    }
+    def _define_name(define):
+        if isinstance(define, (list, tuple)):
+            return define[0]
+        return str(define).split('=', 1)[0]
+    env['CPPDEFINES'] = [
+        define for define in env.get('CPPDEFINES', [])
+        if _define_name(define) not in c99_macros
+    ]
+
     libdir = _llvm_out(llvm_config, '--libdir')
     env.Append(RPATH=libdir)
 
