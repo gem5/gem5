@@ -56,10 +56,9 @@ TaskMonitor::MonitorStats::MonitorStats(TaskMonitor *parent, size_t num_cpus)
     ADD_STAT(stealSuccesses, statistics::units::Count::get(),
               "Número de roubos sucedidos por contexto"),
     ADD_STAT(ticksInTask, statistics::units::Tick::get(),
-              "Quantidades de ticks para realizar a"
-              " task por contexto"),
+              "Quantidades de ticks dentro de tasks por contexto"),
     ADD_STAT(instsInTask, statistics::units::Count::get(),
-              "Quantidade de instruções executadas em"
+              "Quantidade de instruções executadas dentro de"
               " task por contexto"),
     ADD_STAT(instsOutside, statistics::units::Count::get(),
               "Quantidades de instruções executadas fora"
