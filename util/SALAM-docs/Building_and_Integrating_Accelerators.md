@@ -197,8 +197,6 @@ acc_cluster:
                 - Name: NODES
                   Type: RegisterBank
                   Size: 2048
-                  Ports: 1
-                  ReadyMode: false
 ```
 
 The full file also declares the `EDGES`, `LEVELS`, and `LEVELCOUNTS` RegisterBanks.
@@ -207,7 +205,7 @@ The full file also declares the `EDGES`, `LEVELS`, and `LEVELCOUNTS` RegisterBan
 
 The `hw_config` section provides per-kernel instruction timing. Each accelerator's `Profile` field names the key to use. For example, `Profile: bfs` selects the `bfs:` section. The IR path is only the location of the bitcode.
 
-Each listed instruction includes opcode and functional-unit metadata along with its execution latency. In the current flow, `AccConfig()` uses the `runtime_cycles` values from this section to configure per-kernel instruction timing. For example:
+Each listed instruction includes opcode and functional-unit metadata along with its execution latency. The `hw_config` mapping selected by `Profile` supplies per-instruction `runtime_cycles` overrides. `config_parser.resolve_cycle_counts()` extracts these values, and `AccConfig()` applies them to `CycleCounts`. Instructions without an override retain their defaults. The other fields follow the build-time `inst_list.yml` entry format described in [Instruction entries](README_SALAM.md#instruction-entries). For example:
 
 ```yaml
 hw_config:
@@ -227,6 +225,8 @@ hw_config:
 ```
 
 `Profile` selects the `hw_config` key. It does not have to equal the IR file name. The BFS example uses `bfs` for `hw/bfs.ll`.
+
+By default the `hw_config` mapping comes from the YAML document that declares the cluster. An `HWPath` field selects another YAML file containing `hw_config`. A relative `HWPath` is relative to the YAML file that declares it, not to the directory gem5 runs from. For example, `HWPath: timing/cycles.yml` in `configs/config.yml` selects `configs/timing/cycles.yml`. An accelerator `HWPath` applies to that accelerator. A cluster `HWPath` declared beside `SysPath` applies to the included clusters. `HWPath` selects workload timing; it is not the build-time `--salam-hw-config` hardware profile.
 
 ### Generated address header
 
@@ -422,8 +422,8 @@ selects a complete replacement profile. Paths in `CONFIG` are relative
 to that file. The build does not modify the profile YAML. It does not
 merge with the default hardware profile, scan `examples/`, or infer a
 technology node or cycle time. See **util/SALAM-docs/README_SALAM.md**
-for the eleven required aliases and for how to append a unit to
-`functional_unit_order`.
+for the eleven required aliases, for how to append a unit to
+`functional_unit_order`, and for the instruction entry fields.
 
 A linked SimObject class is not an instance. `configs/SALAM/HWAccConfig.py`
 must construct every unit the profile contains. Remapping a supported

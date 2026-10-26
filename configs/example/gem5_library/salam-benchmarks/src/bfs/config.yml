@@ -28,26 +28,18 @@ acc_cluster:
                 - Name: NODES
                   Type: RegisterBank
                   Size: 2048
-                  Ports: 1
-                  ReadyMode: false
           - Var:
                 - Name: EDGES
                   Type: RegisterBank
                   Size: 16384
-                  Ports: 1
-                  ReadyMode: false
           - Var:
                 - Name: LEVELS
                   Type: RegisterBank
                   Size: 256
-                  Ports: 1
-                  ReadyMode: false
           - Var:
                 - Name: LEVELCOUNTS
                   Type: RegisterBank
                   Size: 40
-                  Ports: 1
-                  ReadyMode: false
 hw_config:
     top:
     bfs:

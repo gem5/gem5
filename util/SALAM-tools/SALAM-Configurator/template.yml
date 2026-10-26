@@ -26,6 +26,7 @@ acc_cluster:
           - Name: # Acc name here (Required)
             IrPath: # Path for the IR file relative to ACC_BENCH_PATH (Required)
             Profile: # hw_config key for this accelerator (Required)
+            HWPath: # YAML file with hw_config, relative to this file (Optional)
       # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ll
             # ConfigPath is unsupported and rejected by the workload reader.
       # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ini
@@ -39,7 +40,7 @@ acc_cluster:
                 - Name: # Var name here (Required)
                   Type: # SPM
                   Size: # Size in Bytes (Required)
-                  Ports: # Number of ports to connect to parent Acc
+                  Ports: # Ports to parent Acc, a positive integer (Optional, default 1)
                   ResetOnRead: # True/False | Reset ready bit on private scratchpad memory read
                   ReadOnInvalid: # True/False | Enable reads on invalid memory segments when ready mode is used
                   WriteOnValid: # True/False | Enable writes on valid memory sectors when ready mode is used
@@ -48,7 +49,7 @@ acc_cluster:
                 - Name: # Var name here (Required)
                   Type: # SPM
                   Size: # Size in Bytes
-                  Ports: # Number of ports to connect to parent Acc
+                  Ports: # Ports to parent Acc, a positive integer (Optional, default 1)
                   Connections: # Define extra connections here with porting
         # e.g. SecondAcc:1,ThirdAccAcc:1
     # Stream Buffer Example
@@ -63,6 +64,7 @@ acc_cluster:
           - Var:
                 - Name: # Var name here (Required)
                   Type: # RegisterBank
+                  # Ports and ReadyMode are unsupported and rejected.
                   Size: # Register size in Bytes
                   Connections: # Define extra connections here with porting
         # e.g. SecondAcc:1,ThirdAccAcc:1

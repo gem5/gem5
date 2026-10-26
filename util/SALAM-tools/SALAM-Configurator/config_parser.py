@@ -37,6 +37,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
 import workload_config
 import yaml
 
@@ -45,16 +47,35 @@ def open_yaml(yml_path: str):
     return workload_config.load_documents(yml_path)
 
 
+def _resolve_path(declaring_file, path):
+    # A relative path is relative to the YAML file that declares it.
+    return os.path.normpath(
+        os.path.join(os.path.dirname(declaring_file), path)
+    )
+
+
 def parse_yaml(
     parent_config,
     base_address,
     working_dir: str,
     parent_path: str = None,
     hw_path: str = None,
+    hw_config_document=None,
 ):
     clusters = []
     # Load in each acc cluster and add it to the list
     for cluster_dict in parent_config:
+        # Each document starts from the inherited hw_config selection.
+        # hw_config_document is the YAML document whose inline hw_config
+        # was selected, or None when hw_path names an external file.
+        doc_hw_path = hw_path
+        doc_hw_document = hw_config_document
+        if (
+            doc_hw_document is None
+            and doc_hw_path is not None
+            and doc_hw_path == parent_path
+        ):
+            doc_hw_document = cluster_dict
         for list_type, params in cluster_dict.items():
             FOUND_SYS_PATH = False
             FOUND_HW_PATH = False
@@ -63,20 +84,28 @@ def parse_yaml(
                 for param in params:
                     if "SysPath" in param:
                         FOUND_SYS_PATH = True
-                        cur_config = open_yaml(
-                            yml_path=(working_dir + param["SysPath"])
+                        cur_path = os.path.abspath(
+                            working_dir + param["SysPath"]
                         )
-                        cur_path = working_dir + param["SysPath"]
-                    elif "HWPath" in param:
+                        cur_config = open_yaml(yml_path=cur_path)
+                    if "HWPath" in param:
                         FOUND_HW_PATH = True
-                        hw_path = working_dir + param["HWPath"]
-                    else:
+                        doc_hw_path = _resolve_path(
+                            parent_path, param["HWPath"]
+                        )
+                        doc_hw_document = (
+                            cluster_dict
+                            if doc_hw_path == parent_path
+                            else None
+                        )
+                    if "SysPath" not in param and "HWPath" not in param:
                         FOUND_DEVICE = True
                         cur_config = parent_config
-                        # Use the parent YAML path as the hardware profile
-                        # path unless this cluster overrides it with HWPath.
-                        if not FOUND_HW_PATH and hw_path is None:
-                            hw_path = parent_path
+                        # Use this document's inline hw_config unless an
+                        # HWPath already selected one.
+                        if not FOUND_HW_PATH and doc_hw_path is None:
+                            doc_hw_path = parent_path
+                            doc_hw_document = cluster_dict
             if FOUND_SYS_PATH and FOUND_DEVICE:
                 raise Exception(
                     "Found device definitions in a cluster with a"
@@ -89,7 +118,8 @@ def parse_yaml(
                     base_address=base_address,
                     working_dir=working_dir,
                     parent_path=cur_path,
-                    hw_path=hw_path,
+                    hw_path=doc_hw_path,
+                    hw_config_document=doc_hw_document,
                 )
                 clusters.extend(temp_cluster)
             elif FOUND_HW_PATH:
@@ -119,8 +149,9 @@ def parse_yaml(
                 base_address=base_address,
                 working_dir=working_dir,
                 config_path=parent_path,
-                hw_config_path=hw_path,
-                document_hw_config=cluster_dict.get("hw_config"),
+                hw_config_path=doc_hw_path,
+                hw_config_document=doc_hw_document,
+                document=cluster_dict,
             )
         )
         base_address = clusters[-1].top_address + (
@@ -136,7 +167,7 @@ def load_clusters(
 ):
     if not working_dir.endswith("/"):
         working_dir = working_dir + "/"
-    main_yml_path = working_dir + config_name
+    main_yml_path = os.path.abspath(working_dir + config_name)
     config = open_yaml(yml_path=main_yml_path)
     _, clusters = parse_yaml(
         parent_config=config,
@@ -157,7 +188,8 @@ class AccCluster:
         working_dir: str,
         config_path: str,
         hw_config_path: str = None,
-        document_hw_config=None,
+        hw_config_document=None,
+        document=None,
     ):
         self.name = name
         self.dmas = dmas
@@ -168,10 +200,12 @@ class AccCluster:
         # Do this to point the hardware configuration to the
         # sys config YAML file when HWPath isn't defined
         self.hw_config_path = hw_config_path
-        # hw_config mapping from the YAML document that defined this
-        # cluster. Cycle-count selection loads that mapping, or HWPath,
-        # before AccConfig receives cycle_counts.
-        self.document_hw_config = document_hw_config
+        # YAML document whose inline hw_config is selected, or None when
+        # hw_config_path names an external file.
+        self.hw_config_document = hw_config_document
+        # YAML document that defined this cluster. An accelerator HWPath
+        # naming config_path selects its inline hw_config.
+        self.document = document
         self.process_config(working_dir=working_dir)
 
     def process_config(self, working_dir):
@@ -303,6 +337,7 @@ class AccCluster:
             int_num = None
             ir_path = None
             hw_config_path = self.hw_config_path
+            hw_config_document = self.hw_config_document
             profile_name = None
             debug = False
 
@@ -326,7 +361,14 @@ class AccCluster:
                 if "Profile" in device_dict:
                     profile_name = device_dict["Profile"]
                 if "HWPath" in device_dict:
-                    hw_config_path = device_dict["HWPath"]
+                    hw_config_path = _resolve_path(
+                        self.config_path, device_dict["HWPath"]
+                    )
+                    hw_config_document = (
+                        self.document
+                        if hw_config_path == self.config_path
+                        else None
+                    )
                 if "PIOMaster" in device_dict:
                     pio_masters.extend(device_dict["PIOMaster"].split(","))
                 if "StreamIn" in device_dict:
@@ -408,6 +450,7 @@ class AccCluster:
                     profile_name=profile_name,
                     config_path=self.config_path,
                     hw_config_path=hw_config_path,
+                    hw_config_document=hw_config_document,
                     variables=variables,
                     debug=debug,
                 )
@@ -435,6 +478,7 @@ class Accelerator:
         profile_name: str,
         config_path: str,
         hw_config_path: str,
+        hw_config_document=None,
         variables=None,
         debug: bool = False,
     ):
@@ -453,6 +497,7 @@ class Accelerator:
         self.profile_name = profile_name
         self.config_path = config_path
         self.hw_config_path = hw_config_path
+        self.hw_config_document = hw_config_document
         self.variables = variables
         self.debug = debug
 
@@ -600,16 +645,12 @@ class CycleCountError(Exception):
         )
 
 
-def resolve_cycle_counts(
-    document_hw_config, hw_config_path, config_path, profile_name
-):
-    if hw_config_path != config_path:
-        hw_config = _load_external_hw_config(hw_config_path)
-        source = hw_config_path
+def resolve_cycle_counts(hw_config_document, hw_config_path, profile_name):
+    if hw_config_document is not None:
+        hw_config = hw_config_document.get("hw_config")
     else:
-        hw_config = document_hw_config
-        source = config_path
-    return _cycle_counts(hw_config, profile_name, source)
+        hw_config = _load_external_hw_config(hw_config_path)
+    return _cycle_counts(hw_config, profile_name, hw_config_path)
 
 
 def _cycle_counts(hw_config, profile_name, source):

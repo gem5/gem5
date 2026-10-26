@@ -163,6 +163,43 @@ execution stays in handwritten `src/salam/LLVMRead/instruction.cc`.
 `functional_unit_limit` is not an effective occupancy limit. The
 scheduler does not stall on functional-unit availability.
 
+### Instruction entries
+
+The profile's `instructions` file, `inst_list.yml` in the default
+profile, has one entry per instruction:
+
+```yaml
+instructions:
+    add:
+        functional_unit: 1
+        functional_unit_limit: 0
+        opcode_num: 13
+        runtime_cycles: 1
+```
+
+- The key names the entry and its generated class (`add` becomes
+  `Add`), which `HWAccConfig.py` must instantiate. Adding an entry
+  does not add execution support. Execution is in
+  `LLVMInterface::createInstruction()` and
+  `src/salam/LLVMRead/instruction.cc`.
+- `opcode_num` is the LLVM `Instruction::getOpcode()` value from
+  `llvm/IR/Instruction.def`. `createInstruction()` matches it to find
+  the entry's functional unit. It cannot define a new operation.
+- `functional_unit` is a functional unit's `enum_value`; 0 means none.
+  The generator sets this value in memory from the `enum_value` of the
+  unit whose `instructions` list contains the instruction. It does not
+  modify `inst_list.yml`. An instruction no unit lists keeps its
+  configured value. The generator rejects an instruction listed by two
+  units. To remap an instruction, move its name from one unit's list
+  to another's.
+- `functional_unit_limit` is copied into the generated class. No
+  scheduling code reads it.
+- `runtime_cycles` is copied into the generated instruction
+  configuration. It does not set execution latency. Execution uses
+  `CycleCounts`, with overrides from the workload `hw_config` mapping
+  that `Profile` selects. Instructions without an override keep the
+  `CycleCounts` defaults.
+
 ### Exporting generated sources
 
 `util/SALAM-tools/hw_generator/HWProfileGenerator.py` can write the

@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
 import sys
 
 import yaml
@@ -68,7 +69,9 @@ _SPM_KEYS = {
     "WriteOnValid",
     "Connections",
 }
-_REGISTER_KEYS = {"Name", "Type", "Size", "Ports", "ReadyMode", "Connections"}
+_REGISTER_KEYS = {"Name", "Type", "Size", "Connections"}
+# RegisterBank has no consumer for these fields.
+_UNSUPPORTED_REGISTER_KEYS = ("Ports", "ReadyMode")
 _STREAM_KEYS = {
     "Name",
     "Type",
@@ -265,6 +268,10 @@ def _validate_variable(variable, config_path, acc_name):
             var_type,
             f"unknown variable type {var_type!r}",
         )
+    if var_type == "RegisterBank":
+        for field in _UNSUPPORTED_REGISTER_KEYS:
+            if field in variable:
+                _unsupported(config_path, scope, field, variable[field])
     _reject_unknown(variable, allowed, scope, config_path, var_name)
     if var_type == "SPM":
         variable["Ports"] = _spm_ports(
@@ -278,28 +285,28 @@ def _validate_variable(variable, config_path, acc_name):
 def _spm_ports(value, config_path, var_name, omitted):
     if omitted:
         return 1
-    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+    ports = None
+    if isinstance(value, bool):
+        pass
+    elif isinstance(value, int):
+        ports = value
+    elif isinstance(value, float):
+        if math.isfinite(value) and value.is_integer():
+            ports = int(value)
+    elif isinstance(value, str):
+        try:
+            ports = int(value, 10)
+        except ValueError:
+            pass
+    if ports is None or ports < 1:
         raise WorkloadConfigError(
             config_path,
             f"variable {var_name}",
             "Ports",
             value,
-            f"invalid Ports={value!r}",
+            f"Ports must be a positive integer, got {value!r}",
         )
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, int):
-        return value
-    try:
-        return int(value, 10)
-    except ValueError as exc:
-        raise WorkloadConfigError(
-            config_path,
-            f"variable {var_name}",
-            "Ports",
-            value,
-            f"invalid Ports={value!r}",
-        ) from exc
+    return ports
 
 
 def _reject_unknown(mapping, allowed, scope, config_path, obj_name):
