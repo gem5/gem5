@@ -49,7 +49,7 @@ class RegisterBank(AbstractMemory):
     reg_port = ResponsePort("Responder port for private accelerator accesses")
     load_port = ResponsePort("Responder port for preloading the registers")
     access_cycles = Param.Cycles(
-        10, "Clock cycles to acknowledge a write or a load-port access"
+        10, "Minimum clock cycles for a write or a load-port response"
     )
     write_cycles = Param.Cycles(
         10, "Clock cycles until buffered writes become visible to reads"

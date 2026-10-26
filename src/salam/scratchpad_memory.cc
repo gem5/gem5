@@ -421,21 +421,22 @@ ScratchpadMemory::recvTimingReq(PacketPtr pkt, PortID recvPort,
         Tick when_to_send = edgeAtOrAfter(curTick() + receive_delay) +
                             cyclesToTicks(getLatency());
 
-        // typically this should be added at the end, so start the
-        // insertion sort with the last element, also make sure not to
-        // re-order in front of some existing packet with the same
-        // address, the latter is important as this memory effectively
-        // hands out exclusive copies (shared is not asserted)
+        // Insert before the first later response, without crossing an
+        // older access to the same address or a response awaiting retry.
         auto i = packetQueue.end();
-        --i;
-        while (i != packetQueue.begin() && when_to_send < i->tick &&
-               !i->pkt->matchAddr(pkt)) {
-            --i;
+        while (i != packetQueue.begin()) {
+            auto previous = std::prev(i);
+            if (when_to_send >= previous->tick ||
+                previous->pkt->matchAddr(pkt) ||
+                (previous == packetQueue.begin() &&
+                 retryResp[previous->origin])) {
+                break;
+            }
+            i = previous;
         }
-
-        // emplace inserts the element before the position pointed to by
-        // the iterator, so advance it one step
-        packetQueue.emplace(++i, pkt, when_to_send, idx);
+        packetQueue.emplace(i, pkt, when_to_send, idx);
+        DPRINTF(SALAMScratchpad, "response %#x ready at %d on port %d\n",
+                pkt->getAddr(), when_to_send, idx);
 
         scheduleNextResponse();
     } else {
@@ -492,12 +493,14 @@ ScratchpadMemory::dequeue()
 void
 ScratchpadMemory::scheduleNextResponse()
 {
-    if (packetQueue.empty() || dequeueEvent.scheduled() ||
-        retryResp[packetQueue.front().origin]) {
+    if (packetQueue.empty() || retryResp[packetQueue.front().origin]) {
         return;
     }
 
-    schedule(dequeueEvent, std::max(packetQueue.front().tick, curTick()));
+    const Tick ready = std::max(packetQueue.front().tick, curTick());
+    if (!dequeueEvent.scheduled() || ready < dequeueEvent.when()) {
+        reschedule(dequeueEvent, ready, true);
+    }
 }
 
 Tick

@@ -116,6 +116,11 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     SimObject("SimulatorConfig.py", sim_objects=["SimulatorConfig"])
 
 
+    SimObject(
+        "testing/SALAMDeviceTester.py", sim_objects=["SALAMDeviceTester"]
+    )
+    Source("testing/device_tester.cc")
+
     Source("comm_interface.cc")
     Source("acc_compute_unit.cc")
     Source("llvm_interface.cc")

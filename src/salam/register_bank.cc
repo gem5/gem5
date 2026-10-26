@@ -67,8 +67,11 @@ RegisterBank::RegisterBank(const RegisterBankParams &p)
       accessCycles(p.access_cycles),
       writeCycles(p.write_cycles),
       retryResp(false),
+      sendingResponse(false),
       dequeueEvent([this] { dequeue(); }, name()),
-      deltaEvent([this] { delta(); }, name())
+      // Publish the batch before either port's default-priority response
+      // event, including when both delays are zero on a clock edge.
+      deltaEvent([this] { delta(); }, name(), false, Event::Default_Pri - 1)
 {
     // Setup of the delta memory container
     int shm_fd = -1;
@@ -126,6 +129,12 @@ RegisterBank::registerAccess(PacketPtr pkt)
         uint8_t *hostAddr = deltaAddr + pkt->getAddr() - range.start();
         if (writeOK(pkt)) {
             if (deltaAddr) {
+                // Start each pending batch from the visible backing store.
+                // Functional initialization and restored memory need not have
+                // passed through registerAccess().
+                if (!deltaEvent.scheduled() && pmemAddr) {
+                    std::memcpy(deltaAddr, pmemAddr, range.size());
+                }
                 pkt->writeData(hostAddr);
                 DPRINTF(MemoryAccess, "%s wrote %i bytes to address %x\n",
                         __func__, pkt->getSize(), pkt->getAddr());
@@ -166,7 +175,13 @@ RegisterBank::recvAtomic(PacketPtr pkt)
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
                                      "is responding");
     registerAccess(pkt);
-    return accessLatency();
+    Tick latency = accessLatency();
+    if (pkt->isWrite() && deltaEvent.scheduled()) {
+        // Completion releases dependent loads. Acknowledgment must wait
+        // for this write's batch to reach the visible backing store.
+        latency = std::max(latency, deltaEvent.when() - curTick());
+    }
+    return latency;
 }
 
 Tick
@@ -185,14 +200,21 @@ RegisterBank::recvFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(name());
 
+    const bool write = pkt->isWrite();
     functionalAccess(pkt);
 
-    bool done = false;
-    auto p = packetQueue.begin();
-    // potentially update the packets in our packet queue as well
-    while (!done && p != packetQueue.end()) {
-        done = pkt->trySatisfyFunctional(p->pkt);
-        ++p;
+    if (pmemAddr && write) {
+        // Functional writes are immediately visible and supersede matching
+        // bytes in the pending delta, without starting a timing access.
+        pkt->writeData(deltaAddr + pkt->getAddr() - range.start());
+        for (auto &pending : packetQueue) {
+            pkt->trySatisfyFunctional(pending.pkt);
+        }
+        load.trySatisfyFunctional(pkt);
+    } else if (pmemAddr && pkt->isRead() && deltaEvent.scheduled()) {
+        // The delta includes the latest accepted writes, even before those
+        // writes become visible to ordinary timed register reads.
+        pkt->setData(deltaAddr + pkt->getAddr() - range.start());
     }
 
     pkt->popLabel();
@@ -212,35 +234,29 @@ RegisterBank::recvTimingReq(PacketPtr pkt)
     bool isRead = pkt->isRead();
 
     bool needsResponse = pkt->needsResponse();
-    Tick responseTime = curTick() + recvAtomic(pkt);
+    const Tick latency = recvAtomic(pkt);
+    Tick responseTime = curTick() + (isRead ? 0 : latency);
     if (needsResponse) {
         // recvAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
-        if (isRead) {
-            retryResp = !port.sendTimingResp(pkt);
-            if (!retryResp) {
-                return true;
-            }
-        }
-        // typically this should be added at the end, so start the
-        // insertion sort with the last element, also make sure not to
-        // re-order in front of some existing packet with the same
-        // address, the latter is important as this memory effectively
-        // hands out exclusive copies (shared is not asserted)
+        const bool immediate =
+            isRead && packetQueue.empty() && !retryResp && !sendingResponse;
         auto i = packetQueue.end();
-        --i;
-        while (i != packetQueue.begin() && responseTime < i->tick &&
-               !i->pkt->matchAddr(pkt)) {
-            --i;
+        while (i != packetQueue.begin()) {
+            auto previous = std::prev(i);
+            if (responseTime >= previous->tick ||
+                previous->pkt->matchAddr(pkt) ||
+                (previous == packetQueue.begin() && retryResp)) {
+                break;
+            }
+            i = previous;
         }
-
-        // emplace inserts the element before the position pointed to by
-        // the iterator, so advance it one step
-        packetQueue.emplace(++i, pkt, responseTime);
-
-        if (!retryResp && !dequeueEvent.scheduled()) {
-            schedule(dequeueEvent, packetQueue.back().tick);
+        packetQueue.emplace(i, pkt, responseTime);
+        if (immediate) {
+            dequeue();
+        } else {
+            scheduleNextResponse();
         }
     }
     return true;
@@ -251,22 +267,21 @@ RegisterBank::dequeue()
 {
     assert(!packetQueue.empty());
     DeferredPacket deferred_pkt = packetQueue.front();
+    packetQueue.pop_front();
 
+    // The requestor may delete the response and send its next request in
+    // this call stack. Do not leave the outgoing packet in the queue or
+    // allow a nested response to overwrite this send's retry state.
+    sendingResponse = true;
     retryResp = !port.sendTimingResp(deferred_pkt.pkt);
-    if (!retryResp) {
-        packetQueue.pop_front();
-
-        // if the queue is not empty, schedule the next dequeue event,
-        // otherwise signal that we are drained if we were asked to do so
-        if (!packetQueue.empty()) {
-            // if there were packets that got in-between then we
-            // already have an event scheduled, so use re-schedule
-            reschedule(dequeueEvent,
-                       std::max(packetQueue.front().tick, curTick()), true);
-        } else if (drainState() == DrainState::Draining) {
-            DPRINTF(Drain, "Draining of ScratchpadMemory complete\n");
-            signalDrainDone();
-        }
+    sendingResponse = false;
+    if (retryResp) {
+        packetQueue.push_front(deferred_pkt);
+    } else if (!packetQueue.empty()) {
+        scheduleNextResponse();
+    } else if (drainState() == DrainState::Draining) {
+        DPRINTF(Drain, "Draining of RegisterBank complete\n");
+        signalDrainDone();
     }
 }
 
@@ -280,7 +295,20 @@ void
 RegisterBank::recvRespRetry()
 {
     assert(retryResp);
-    dequeue();
+    retryResp = false;
+    scheduleNextResponse();
+}
+
+void
+RegisterBank::scheduleNextResponse()
+{
+    if (packetQueue.empty() || retryResp || sendingResponse) {
+        return;
+    }
+    const Tick ready = std::max(packetQueue.front().tick, curTick());
+    if (!dequeueEvent.scheduled() || ready < dequeueEvent.when()) {
+        reschedule(dequeueEvent, ready, true);
+    }
 }
 
 Port &

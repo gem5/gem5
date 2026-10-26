@@ -124,11 +124,15 @@ class RegisterBank : public AbstractMemory
         RegisterBank *memory;
 
       protected:
-        Tick
-        recvAtomic(PacketPtr pkt)
+        void
+        recvFunctional(PacketPtr pkt) override
         {
-            memory->registerAccess(pkt);
-            return memory->accessLatency();
+            memory->recvFunctional(pkt);
+        }
+        Tick
+        recvAtomic(PacketPtr pkt) override
+        {
+            return memory->recvAtomic(pkt);
         }
         AddrRangeList
         getAddrRanges() const override
@@ -154,7 +158,7 @@ class RegisterBank : public AbstractMemory
     /**
      * Latency of a delta cycle in the register bank
      */
-    // Clock cycles to acknowledge a write or a load-port access.
+    // Minimum clock cycles to acknowledge a write or a load-port access.
     const Cycles accessCycles;
     // Clock cycles until buffered writes become visible.
     const Cycles writeCycles;
@@ -170,18 +174,21 @@ class RegisterBank : public AbstractMemory
      * retry. This is only used as a check.
      */
     bool retryResp;
+    // Reentrant requests must queue until the active response returns.
+    bool sendingResponse;
 
     /**
      * Dequeue a packet from our internal packet queue and move it to
      * the port where it will be sent as soon as possible.
      */
     void dequeue();
+    void scheduleNextResponse();
     EventFunctionWrapper dequeueEvent;
 
     /**
      * Handle the delta cycle of the registers in the bank.
      * Copies updated data at deltaAddr to the storage buffer in pmemAddr.
-     * Calls dequeue() to send packet responses.
+     * Publication precedes responses due on the same clock edge.
      */
     void delta();
     EventFunctionWrapper deltaEvent;

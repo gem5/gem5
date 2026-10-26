@@ -1034,15 +1034,14 @@ for access, runtime in ((2, 5), (10, 5), (11, 6)):
         simout_counts=[("runtime", rf"^\s*Compute passes:\s+{runtime}$", 1)],
     )
 
-# Register-bank writes are acknowledged after access_cycles and become
-# visible after write_cycles. A load waits for the store's
-# acknowledgement, so it reads the stored value only if the write is
-# visible by then.
-# OUT starts at 0.
+# A register-bank store completes only after its batch becomes visible.
+# A dependent load must read the stored value with a shorter, equal, or
+# longer visibility delay than the ten-cycle minimum acknowledgment.
 REGS = "system.harness_clstr.out"
 for name, write_cycles, value in (
+    ("regbank-visible-early", 5, 9),
     ("regbank-visible", 10, 9),
-    ("regbank-not-yet-visible", 30, 0),
+    ("regbank-visible-late", 30, 9),
 ):
     kernel_suite(
         f"salam-kernel-{name}",
