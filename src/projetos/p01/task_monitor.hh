@@ -7,6 +7,7 @@
 #include "base/types.hh"
 #include "params/TaskMonitor.hh"
 #include "sim/sim_object.hh"
+#include "gem5/p01_task_events.h"
 
 namespace gem5
 {

@@ -10,7 +10,7 @@ class TaskMonitor(SimObject):
     cpus = VectorParam.BaseCPU("CPUs observadas, na ordem dos contextos")
 
     # Parametros do Histograma
-    max_ticks = Param.Latency("10000", "Valor máximo de ticks do histograma")
+    max_ticks = Param.Latency("10000ms", "Valor máximo de ticks do histograma")
     intervalo_faixas = Param.Unsigned(
         "1000", "Número do intervalo entre as faixas do histograma"
     )

@@ -24,6 +24,54 @@ void
 TaskMonitor::event(ContextID ctx, Tick when, uint64_t tipo, uint64_t arg) {
   DPRINTF(TaskMonitor, "ctx=%d, tick=%llu, tipo=%llu, arg=%llu",
                         ctx, when, tipo, arg);
+
+  if (ctx < 0 || ctx >= (ContextID)ctxs.size()) {
+    stats.invalidEvents++;
+    return;
+  }
+
+  ContextState &state = ctxs[ctx];
+
+  // arg varia pra cada case
+  switch (tipo)
+  {
+  case TASK_BEGIN:
+    if (not state.inTask) {
+      state.inTask = true;
+      state.taskID = arg; 
+      state.taskStart = when;
+    }
+    else stats.invalidEvents++; 
+    break;
+    
+  case TASK_END:
+    if (state.inTask) {
+      Tick inTaskTime = when - state.taskStart;
+      state.inTask = false;
+      stats.tasksExecuted[ctx]++;
+      stats.ticksInTask[ctx] += inTaskTime;
+      stats.taskDuration.sample(inTaskTime);
+    }
+    else stats.invalidEvents++; 
+    break;
+    
+  case STEAL_TRY:
+    if (not state.inTask) {
+      stats.stealAttempts[ctx]++;
+    }
+    else stats.invalidEvents++;
+    break;
+    
+  case STEAL_OK:
+    if (not state.inTask) {
+      stats.stealSuccesses[ctx]++;
+    }
+    else stats.invalidEvents++;
+    break;
+  
+  default:
+    stats.invalidEvents++;
+  }
 }
 
 void
