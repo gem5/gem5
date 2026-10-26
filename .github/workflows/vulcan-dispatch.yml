@@ -1,9 +1,10 @@
 ---
 name: 🔀 Vulcan Dispatch
 on:
-    pull_request:
+    pull_request_target:
         types:
             - opened
+            - synchronize
     issue_comment:
         types:
             - created
@@ -35,7 +36,7 @@ jobs:
     # For comments: only if PR comment, body begins with @VulcanToolkit, and is OWNER/MEMBER/COLLABORATOR
         if: |-
             (
-              github.event_name == 'pull_request'
+              github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
             ) || (
               github.event_name == 'issue_comment' &&
               github.event.issue.pull_request &&
@@ -45,8 +46,6 @@ jobs:
             )
         runs-on: ubuntu-latest
         permissions:
-            contents: read
-            issues: write
             pull-requests: write
         outputs:
             command: ${{ steps.extract_command.outputs.command }}
@@ -56,33 +55,22 @@ jobs:
             requested_pr_review: ${{ steps.extract_command.outputs.requested_pr_review }}
             requested_commit_review: ${{ steps.extract_command.outputs.requested_commit_review }}
         steps:
-            - name: Mint identity token
-              id: mint_identity_token
-              if: |-
-                  ${{ vars.APP_ID }}
-              uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # ratchet:actions/create-github-app-token@v2
-              with:
-                  app-id: ${{ vars.APP_ID }}
-                  private-key: ${{ secrets.APP_PRIVATE_KEY }}
-                  permission-contents: read
-                  permission-issues: write
-                  permission-pull-requests: write
             - name: Extract command
               id: extract_command
               uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # ratchet:actions/github-script@v9
               env:
-                  EVENT_TYPE: ${{ github.event_name }}.${{ github.event.action }}
+                  EVENT_NAME: ${{ github.event_name }}
                   REQUEST: ${{ github.event.comment.body || github.event.review.body || github.event.issue.body }}
               with:
                   script: |
-                      const eventType = process.env.EVENT_TYPE;
+                      const eventName = process.env.EVENT_NAME;
                       const request = process.env.REQUEST;
                       core.setOutput('request', request);
 
                       const review_regex = new RegExp("@VulcanToolkit /review( (?<type>full|pr|commits))?( (?<context>.*))?");
                       const review_match = request.match(review_regex);
 
-                      if (eventType === 'pull_request.opened') {
+                      if (eventName === 'pull_request' || eventName === 'pull_request_target') {
                         core.setOutput('command', 'review');
                         core.setOutput('requested_pr_review', 'true');
                         core.setOutput('requested_commit_review', 'false');
@@ -104,8 +92,10 @@ jobs:
                         core.setOutput('command', 'fallthrough');
                       }
             - name: Acknowledge request
+              if: |-
+                  ${{ github.event_name == 'issue_comment' }}
               env:
-                  GITHUB_TOKEN: ${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}
+                  GITHUB_TOKEN: ${{ github.token }}
                   ISSUE_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
                   MESSAGE: |-
                       🤖 Hi @${{ github.actor }}, I've received your request (${{ steps.extract_command.outputs.command }}), and I'm working on it now. You can track my progress [in the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
@@ -118,11 +108,9 @@ jobs:
         needs: dispatch
         if: |-
             ${{ needs.dispatch.outputs.command == 'review' }}
-        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@f5c369fabff266742fdaaf3774063a38815d818a # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.0
+        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@0f1ca599206aa67fdd65f78a00a73c1a696d5a63 # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.4
         permissions:
             contents: read
-            id-token: write
-            issues: write
             pull-requests: write
         with:
             additional_context: ${{ needs.dispatch.outputs.additional_context }}
@@ -130,7 +118,6 @@ jobs:
             requested_commit_review: ${{ needs.dispatch.outputs.requested_commit_review }}
         secrets:
             gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
-            github-token: ${{ secrets.GITHUB_TOKEN }}
     fallthrough:
         needs:
             - dispatch
@@ -139,24 +126,11 @@ jobs:
             ${{ always() && !cancelled() && (failure() || needs.dispatch.outputs.command == 'fallthrough') }}
         runs-on: ubuntu-latest
         permissions:
-            contents: read
-            issues: write
             pull-requests: write
         steps:
-            - name: Mint identity token
-              id: mint_identity_token
-              if: |-
-                  ${{ vars.APP_ID }}
-              uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # ratchet:actions/create-github-app-token@v2
-              with:
-                  app-id: ${{ vars.APP_ID }}
-                  private-key: ${{ secrets.APP_PRIVATE_KEY }}
-                  permission-contents: read
-                  permission-issues: write
-                  permission-pull-requests: write
             - name: Send failure comment
               env:
-                  GITHUB_TOKEN: ${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}
+                  GITHUB_TOKEN: ${{ github.token }}
                   ISSUE_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
                   MESSAGE: |-
                       🤖 I'm sorry @${{ github.actor }}, but I was unable to process your request. Please [see the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
