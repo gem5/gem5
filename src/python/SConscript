@@ -259,7 +259,7 @@ if env['CONF']['USE_ARM_ISA'] and env['CONF'].get('WITH_SALAM', False):
     PySource('gem5.salam', 'gem5/salam/cluster.py')
     # The workload reader lives in util/SALAM-tools/SALAM-Configurator;
     # embed copies made in the build directory.
-    for module in ('workload_config.py', 'config_parser.py'):
+    for module in ('workload_config.py', 'config_parser.py', 'power_model.py'):
         copied = env.Command(
             'gem5/salam/' + module,
             '#util/SALAM-tools/SALAM-Configurator/' + module,

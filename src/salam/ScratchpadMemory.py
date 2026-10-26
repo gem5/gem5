@@ -38,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.AbstractMemory import AbstractMemory
+from m5.objects.SALAMPowerModel import SALAMPowerModel
 from m5.params import *
 from m5.proxy import *
 
@@ -45,6 +46,9 @@ from m5.proxy import *
 class ScratchpadMemory(AbstractMemory):
     type = "ScratchpadMemory"
     cxx_header = "salam/scratchpad_memory.hh"
+    ppa = Param.SALAMPowerModel(
+        SALAMPowerModel(), "Physical memory characterization and accounting"
+    )
 
     port = ResponsePort("Generic response port")
     spm_ports = VectorResponsePort(

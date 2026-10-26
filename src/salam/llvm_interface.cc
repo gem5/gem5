@@ -39,7 +39,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// LLVMInterface Includes
 #include "salam/llvm_interface.hh"
 
 #include <functional>
@@ -48,7 +47,16 @@
 #include "debug/SALAMFUInventory.hh"
 #include "debug/SALAMIssue.hh"
 #include "debug/SALAMLaunch.hh"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/Support/raw_ostream.h"
+
+namespace
+{
+
+constexpr const char *OpClassNames[] = {"compute", "load", "store", "call",
+                                        "control"};
+
+} // anonymous namespace
 
 LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
     : AccComputeUnit(p),
@@ -96,8 +104,6 @@ void
 LLVMInterface::ExecStats::regStats()
 {
     statistics::Group::regStats();
-    static const char *classes[NumOpClasses] = {"compute", "load", "store",
-                                                "call", "control"};
     static const char *categories[NumCycleCategories] = {
         "issue", "fuStall", "memoryWait", "computeWait", "other"};
     cycleCategories.init(NumCycleCategories);
@@ -107,7 +113,7 @@ LLVMInterface::ExecStats::regStats()
     for (auto *vector : {&issued, &completed}) {
         vector->init(NumOpClasses);
         for (int i = 0; i < NumOpClasses; i++) {
-            vector->subname(i, classes[i]);
+            vector->subname(i, OpClassNames[i]);
         }
     }
     opcodesIssued.init(llvm::Instruction::OtherOpsEnd)
@@ -137,23 +143,10 @@ LLVMInterface::countCycleCategory()
     pass = PassEvents();
 }
 
-namespace
-{
-
-const char *
-opClassName(int cls)
-{
-    static const char *names[] = {"compute", "load", "store", "call",
-                                  "control"};
-    return names[cls];
-}
-
-} // anonymous namespace
-
 void
 LLVMInterface::countIssue(OpClass cls, uint64_t opcode)
 {
-    DPRINTF(SALAMIssue, "issue %s %s\n", opClassName(cls),
+    DPRINTF(SALAMIssue, "issue %s %s\n", OpClassNames[cls],
             opcode < llvm::Instruction::OtherOpsEnd
                 ? llvm::Instruction::getOpcodeName(opcode)
                 : "?");
@@ -168,9 +161,8 @@ LLVMInterface::countIssue(OpClass cls, uint64_t opcode)
 void
 LLVMInterface::countCompletion(OpClass cls)
 {
-    DPRINTF(SALAMIssue, "complete %s\n", opClassName(cls));
+    DPRINTF(SALAMIssue, "complete %s\n", OpClassNames[cls]);
     execStats.completed[cls]++;
-    totals.completed[cls]++;
 }
 
 void
@@ -188,7 +180,6 @@ LLVMInterface::countMemoryOrderWait()
     DPRINTF(SALAMIssue, "wait: older memory access\n");
     pass.memoryOrderWait = true;
     execStats.memoryOrderWaits++;
-    totals.memoryOrderWaits++;
 }
 
 void
@@ -749,9 +740,6 @@ LLVMInterface::constructStaticGraph()
      engine.
     ************************************************************************/
     auto parseStart = std::chrono::high_resolution_clock::now();
-    // Every invocation parses the IR again; count its opcodes once.
-    hw->opcodes->clear_usage();
-
     if (dbg) {
         DPRINTF(LLVMInterface, "Constructing Static Dependency Graph\n");
     }
@@ -862,6 +850,39 @@ LLVMInterface::constructStaticGraph()
     }
     if (functions.size() == 1) {
         functions.front()->setTop(true);
+    }
+
+    const auto &layout = m->getDataLayout();
+    auto typeName = [&layout](llvm::Type *type) -> std::string {
+        if (type->isVoidTy()) {
+            return "v";
+        }
+        if (type->isPointerTy()) {
+            return "p" + std::to_string(layout.getPointerTypeSizeInBits(type));
+        }
+        if (type->isIntegerTy()) {
+            return "i" + std::to_string(type->getIntegerBitWidth());
+        }
+        if (type->isFloatTy() || type->isDoubleTy()) {
+            return "f" + std::to_string(type->getScalarSizeInBits());
+        }
+        return "unavailable";
+    };
+    for (const auto &entry : vmap) {
+        entry.second->setStorageType(typeName(entry.first->getType()));
+        if (auto *instruction =
+                llvm::dyn_cast<llvm::Instruction>(entry.first)) {
+            std::string signature;
+            for (const auto &operand : instruction->operands()) {
+                if (!signature.empty()) {
+                    signature += ',';
+                }
+                signature += typeName(operand->getType());
+            }
+            signature += "->" + typeName(instruction->getType());
+            std::static_pointer_cast<SALAM::Instruction>(entry.second)
+                ->setPPASignature(signature);
+        }
     }
 
     // Detect Loop Latches
@@ -1022,6 +1043,15 @@ LLVMInterface::ActiveFunction::admitToUnit(
 {
     uint32_t unit = inst->getFunctionalUnit();
     if (unit == 0) {
+        // PHIs route incoming SSA values through this admission path,
+        // but have no datapath unit, as in resolveFunctionalUnits(). Their
+        // operand reads and result writes are observed independently.
+        // Observation never binds a scheduling resource for unit zero.
+        if (!inst->isPhi()) {
+            owner->hw->salam_power_model->unboundOperation(
+                llvm::Instruction::getOpcodeName(inst->getOpode()),
+                inst->getPPASignature());
+        }
         return true;
     }
     SALAM::FUPool &pool = owner->hw->fuPool;
@@ -1035,6 +1065,10 @@ LLVMInterface::ActiveFunction::admitToUnit(
     }
     token = pool.acquire(unit, curTick());
     owner->hw->fuAdmitted(unit);
+    owner->hw->salam_power_model->operation(
+        owner->hw->findFunctionalUnit(unit)->get_alias(),
+        llvm::Instruction::getOpcodeName(inst->getOpode()),
+        inst->getPPASignature());
     return true;
 }
 
@@ -1173,6 +1207,7 @@ LLVMInterface::initialize()
         DPRINTF(LLVMInterface, "=============================================="
                                "==================\n");
     }
+    hw->salam_power_model->beginInvocation(curTick());
     launchTopFunction();
 
     if (dbg) {
@@ -1236,6 +1271,7 @@ void
 LLVMInterface::finalize()
 {
     totals.finishTick = curTick();
+    hw->salam_power_model->finishInvocation(curTick());
     // Simulation Times
     simStop = std::chrono::high_resolution_clock::now();
     simTotal = simStop - timeStart;
@@ -1263,86 +1299,9 @@ LLVMInterface::finalize()
 void
 LLVMInterface::printResults()
 {
-    std::map<uint64_t, uint64_t> totals_reads;
-    std::map<uint64_t, uint64_t> totals_writes;
-
     std::cout << "*********************************************" << std::endl;
     std::cout << name() << std::endl;
-
-    for (auto it : values) {
-        if (it->isInstruction()) {
-            if (it->getReg()) {
-                totals_reads[it->getOpode()] += it->getReg()->getReads();
-                totals_writes[it->getOpode()] += it->getReg()->getWrites();
-            }
-        }
-    }
-
-    // Uncalibrated area and power estimate: fixed per-unit area and
-    // per-access power coefficients, counted by LLVM opcode. They are
-    // not derived from the hardware profile or a technology node.
-    constexpr double AdderArea = 1.794430e+02;
-    constexpr double AdderReadPower = 2.380803e-03;
-    constexpr double AdderWritePower = 8.115300e-03 + 6.162853e-03;
-    constexpr double BitwiseArea = 5.036996e+01;
-    constexpr double BitwiseReadPower = 6.111633e-04;
-    constexpr double BitwiseWritePower = 1.680942e-03 + 1.322420e-03;
-    constexpr double MultiplierArea = 4.595000e+03;
-    constexpr double MultiplierReadPower = 4.817683e-02;
-    constexpr double MultiplierWritePower = 5.725752e-01 + 8.662890e-01;
-    constexpr double RegisterBits = 32;
-    constexpr double RegisterArea = 5.981433e+00;
-    constexpr double RegisterReadPower = 7.395312e-05;
-    constexpr double RegisterWritePower = 1.322600e-03 + 1.792126e-04;
-    auto usage = [this](uint64_t opcode) {
-        return hw->opcodes->get_usage(opcode);
-    };
-
-    double adder_area = (usage(13) + usage(20) + usage(15)) * AdderArea;
-    double adder_reads = (totals_reads[13] + totals_reads[15]);
-    double adder_writes = (totals_writes[13] + totals_writes[15]);
-    double adder_power_static = adder_reads * AdderReadPower;
-    double adder_power_dynamic = adder_writes * AdderWritePower;
-
-    double bitwise_area = (usage(29) + usage(30) + usage(25) + usage(26) +
-                           usage(27) + usage(28)) *
-                          BitwiseArea;
-    double bitwise_reads =
-        (totals_reads[25] + totals_reads[26] + totals_reads[27] +
-         totals_reads[28] + totals_reads[29] + totals_reads[30]);
-    double bitwise_writes =
-        (totals_writes[25] + totals_writes[26] + totals_writes[27] +
-         totals_writes[28] + totals_writes[29] + totals_writes[30]);
-    double bitwise_power_static = bitwise_reads * BitwiseReadPower;
-    double bitwise_power_dynamic = bitwise_writes * BitwiseWritePower;
-
-    double multiplier_area =
-        (usage(17) + usage(19) + usage(20)) * MultiplierArea;
-    double multiplier_reads =
-        totals_reads[17] + totals_reads[19] + totals_reads[20];
-    double multiplier_writes =
-        totals_writes[17] + totals_writes[19] + totals_writes[20];
-    double multiplier_power_static = multiplier_reads * MultiplierReadPower;
-    double multiplier_power_dynamic = multiplier_writes * MultiplierWritePower;
-
-    double reg_area = usage(34) * RegisterBits * RegisterArea;
-    double reg_reads = totals_reads[34] * RegisterBits;
-    double reg_writes = totals_writes[34] * RegisterBits;
-    double register_power_static = reg_reads * RegisterReadPower;
-    double register_power_dynamic = reg_writes * RegisterWritePower;
-
-    double total_area = adder_area + bitwise_area + multiplier_area + reg_area;
-    double total_power_static = adder_power_static + bitwise_power_static +
-                                multiplier_power_static +
-                                register_power_static;
-    double total_power_dynamic = adder_power_dynamic + bitwise_power_dynamic +
-                                 multiplier_power_dynamic +
-                                 register_power_dynamic;
-
-    std::cout << "Uncalibrated area/power estimate:\n";
-    std::cout << "Total Area: " << total_area;
-    std::cout << "\nTotal Power Static: " << total_power_static << "\n";
-    std::cout << "\nTotal Power Dynamic: " << total_power_dynamic << "\n";
+    hw->salam_power_model->printInvocation(std::cout);
 
     // Compute clock period in nanoseconds.
     double cycle_time = clockPeriod() / sim_clock::as_float::ns;
@@ -1472,10 +1431,6 @@ LLVMInterface::printResults()
 }
 
 void
-LLVMInterface::dumpQueues()
-{}
-
-void
 LLVMInterface::launchFunction(std::shared_ptr<SALAM::Function> callee,
                               std::shared_ptr<SALAM::Instruction> caller)
 {
@@ -1525,6 +1480,7 @@ LLVMInterface::ActiveFunction::launch()
             uint64_t argSizeInBytes = arg->getSizeInBytes();
             uint64_t regValue = comm->getGlobalVar(argOffset, argSizeInBytes);
             arg->setRegisterValue(regValue);
+            arg->publishStorage();
             argOffset += argSizeInBytes;
         }
     } else {
@@ -1536,6 +1492,7 @@ LLVMInterface::ActiveFunction::launch()
         }
         for (auto i = 0; i < callerArgs.size(); i++) {
             funcArgs.at(i)->setRegisterValue(callerArgs.at(i).getOpRegister());
+            funcArgs.at(i)->publishStorage();
         }
     }
     func->addInstance();
@@ -1560,6 +1517,7 @@ LLVMInterface::resolveFunctionalUnits()
     }
     HWInterface::FUInventory inventory;
     std::map<uint32_t, uint32_t> uses;
+    std::map<uint32_t, SALAMPowerModel::Operations> operations;
     for (size_t i = 0; i < reached.size(); i++) {
         for (auto &bb : *reached[i]->getBBList()) {
             for (auto &inst : *bb->Instructions()) {
@@ -1573,6 +1531,18 @@ LLVMInterface::resolveFunctionalUnits()
                 }
                 uint32_t unit = inst->getFunctionalUnit();
                 if (unit == 0) {
+                    if (!(inst->isLoad() || inst->isStore() ||
+                          inst->isTerminator() || inst->isReturn() ||
+                          inst->isCall() || inst->isPhi())) {
+                        const std::string identity =
+                            std::string("fu:unbound:") +
+                            llvm::Instruction::getOpcodeName(
+                                inst->getOpode()) +
+                            ":" + inst->getPPASignature();
+                        hw->salam_power_model->markStaticIncomplete(identity);
+                        hw->salam_power_model->markIncomplete(identity +
+                                                              ":energy");
+                    }
                     continue;
                 }
                 fatal_if(inst->isLoad() || inst->isStore() ||
@@ -1582,6 +1552,11 @@ LLVMInterface::resolveFunctionalUnits()
                          "control instructions cannot",
                          name(), inst->getIRString(), unit);
                 uses[unit]++;
+                operations[unit].push_back(
+                    {llvm::Instruction::getOpcodeName(inst->getOpode()),
+                     inst->getPPASignature(),
+                     double(cyclesToTicks(Cycles(inst->getCycleCount()))) /
+                         sim_clock::as_float::s});
                 inventory.mapping.emplace_back(inst->getUID(), unit);
             }
         }
@@ -1596,6 +1571,7 @@ LLVMInterface::resolveFunctionalUnits()
                 unit->get_alias(), id, instances, count);
     }
     hw->setInventory(inventory);
+    configurePowerModel(reached, inventory, operations);
     std::map<uint32_t, SALAM::FUPool::UnitConfig> pool;
     for (auto unit : hw->functional_units->functional_unit_list) {
         uint32_t id = unit->get_enum_value();
@@ -1603,6 +1579,65 @@ LLVMInterface::resolveFunctionalUnits()
                     cyclesToTicks(Cycles(unit->get_initiation_interval()))};
     }
     hw->fuPool.configure(pool, clockPeriod());
+}
+
+void
+LLVMInterface::configurePowerModel(
+    const std::vector<std::shared_ptr<SALAM::Function>> &reached,
+    const HWInterface::FUInventory &inventory,
+    const std::map<uint32_t, SALAMPowerModel::Operations> &operations)
+{
+    auto *model = hw->salam_power_model;
+    const SALAMPowerModel::Operations no_operations;
+    for (auto *unit : hw->functional_units->functional_unit_list) {
+        const auto id = unit->get_enum_value();
+        const auto found = operations.find(id);
+        model->configureFunctionalUnit(
+            unit->get_alias(), inventory.instances.at(id),
+            found == operations.end() ? no_operations : found->second,
+            double(cyclesToTicks(Cycles(unit->get_initiation_interval()))) /
+                sim_clock::as_float::s,
+            double(clockPeriod()) / sim_clock::as_float::s);
+    }
+    std::set<SALAM::Register *> storage;
+    std::map<std::string, uint64_t> slots;
+    auto addStorage = [&](const std::shared_ptr<SALAM::Value> &value) {
+        if (!model->isEnabled() || !value->getReg() || value->isConstant()) {
+            return;
+        }
+        const auto type = value->getStorageType();
+        if (type.size() < 2 || type == "unavailable" || type == "v") {
+            model->markStaticIncomplete(
+                "register:unsupported_materialized_type");
+            model->markIncomplete("register:unsupported_materialized_type");
+            return;
+        }
+        const unsigned bits = std::stoul(type.substr(1));
+        if (!bits || bits > 64) {
+            model->markStaticIncomplete("register:unsupported_width:" + type);
+            model->markIncomplete("register:unsupported_width:" + type);
+            return;
+        }
+        if (storage.insert(value->getReg().get()).second) {
+            slots[type]++;
+        }
+        value->setStorageCallbacks(
+            [model, type] { model->registerRead(type); },
+            [model, type] { model->registerWrite(type); });
+    };
+    for (auto &function : reached) {
+        // The runtime has one backing slot per reachable SSA value and
+        // permits one active instance of each function. Clones share it.
+        for (auto &argument : *function->getArguments()) {
+            addStorage(argument);
+        }
+        for (auto &bb : *function->getBBList()) {
+            for (auto &instruction : *bb->Instructions()) {
+                addStorage(instruction);
+            }
+        }
+    }
+    model->configureRegisters(slots);
 }
 
 std::shared_ptr<SALAM::Instruction>
@@ -1619,7 +1654,6 @@ LLVMInterface::createInstruction(llvm::Instruction *inst, uint64_t id)
               ss.str().c_str());
     }
     uint64_t OpCode = inst->Instruction::getOpcode();
-    hw->opcodes->update_usage(OpCode);
 
     uint64_t functional_unit = 0;
     for (auto hw_inst : hw->inst_config->inst_list) {

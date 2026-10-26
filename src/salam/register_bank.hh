@@ -47,6 +47,7 @@
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 #include "mem/tport.hh"
+#include "salam/HWModeling/salam_power_model.hh"
 
 using namespace gem5;
 using namespace memory;
@@ -55,6 +56,9 @@ using namespace memory;
 
 class RegisterBank : public AbstractMemory
 {
+  private:
+    SALAMPowerModel *ppa;
+
   public:
     PARAMS(RegisterBank);
     RegisterBank(const RegisterBankParams &p);

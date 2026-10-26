@@ -171,6 +171,46 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                     workload_config.load_documents(path)
                 self.assertEqual(ctx.exception.path, path)
 
+    def test_memory_characterization_is_relative_to_declaring_yaml(self):
+        for kind in ("SPM", "RegisterBank"):
+            with self.subTest(kind=kind):
+                fields = [
+                    "- Name: S",
+                    f"  Type: {kind}",
+                    "  Size: 64",
+                    "  Characterization: coefficients/storage.yml",
+                ]
+                if kind == "SPM":
+                    fields.append("  Connections: Kernel:1")
+                self.config(
+                    hw_config=["hw_config:", "    k:"], variables=[fields]
+                )
+                clusters = config_parser.load_clusters(self.root)
+                variables = [
+                    v for c in clusters for a in c.accs for v in a.variables
+                ]
+                self.assertEqual(len(variables), 1)
+                self.assertEqual(
+                    variables[0].characterization,
+                    os.path.join(self.root, "coefficients", "storage.yml"),
+                )
+
+    def test_memory_characterization_must_be_a_nonempty_path(self):
+        for value in ("''", "null", "true", "5"):
+            with self.subTest(value=value):
+                self.rejects(
+                    "Characterization must name an offline record",
+                    variables=[
+                        [
+                            "- Name: S",
+                            "  Type: SPM",
+                            "  Size: 64",
+                            "  Connections: Kernel:1",
+                            f"  Characterization: {value}",
+                        ]
+                    ],
+                )
+
     def test_tracked_bfs_configs_load(self):
         for kind in ("src", "workloads"):
             root = os.path.join(_BENCH, kind, "bfs")

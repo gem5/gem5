@@ -70,9 +70,10 @@ _SPM_KEYS = {
     "ResetOnRead",
     "ReadOnInvalid",
     "WriteOnValid",
+    "Characterization",
     "Connections",
 }
-_REGISTER_KEYS = {"Name", "Type", "Size"}
+_REGISTER_KEYS = {"Name", "Type", "Size", "Characterization"}
 # RegisterBank has no consumer for Ports or ReadyMode. Its single
 # reg_port connects to the owning accelerator only, so extra
 # Connections cannot be honored.
@@ -743,6 +744,16 @@ def _validate_variable(variable, config_path, acc_name):
             if field in variable:
                 _unsupported(config_path, scope, field, variable[field])
     _reject_unknown(variable, allowed, scope, config_path, var_name)
+    if "Characterization" in variable:
+        reference = variable["Characterization"]
+        if not isinstance(reference, str) or not reference.strip():
+            raise WorkloadConfigError(
+                config_path,
+                scope,
+                "Characterization",
+                reference,
+                "Characterization must name an offline record",
+            )
     if var_type in ("SPM", "RegisterBank"):
         variable["Size"] = _positive_bytes(
             variable.get("Size"), config_path, scope, "Size"

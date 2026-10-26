@@ -75,6 +75,7 @@ class Instruction : public Value
     uint64_t cycleCount;
     uint64_t currentCycle;
     uint64_t functional_unit = 0;
+    std::string ppaSignature;
 
   protected:
     // Each conditions entry is [id, OpCode, cycles].
@@ -198,6 +199,16 @@ class Instruction : public Value
     getOperands()
     {
         return &operands;
+    }
+    void
+    setPPASignature(const std::string &signature)
+    {
+        ppaSignature = signature;
+    }
+    const std::string &
+    getPPASignature() const
+    {
+        return ppaSignature;
     }
     uint64_t
     getFunctionalUnit()

@@ -42,7 +42,9 @@ def simobject_classname(alias):
     return "".join(word.capitalize() for word in alias.split("_"))
 
 
-def generate_functional_units_declaration(units, cxx_header):
+def generate_functional_units_declaration(
+    units, cxx_header, characterization=None
+):
     parts = []
     parts.append(
         "# AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md"
@@ -62,6 +64,8 @@ def generate_functional_units_declaration(units, cxx_header):
             '(Parent.any, "' + unit + ' functional unit SimObject.")\n'
         )
     parts.append(_from_profile_method("units", units))
+    parts.append("\n\t@classmethod\n\tdef characterization(cls):\n")
+    parts.append("\t\treturn " + repr(characterization or {}) + "\n")
     parts.append(
         "\n# AUTO-GENERATED CLASSES (See"
         " util/SALAM-docs/README_SALAM.md for details)\n"

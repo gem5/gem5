@@ -54,6 +54,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "salam/latency_sample.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -92,6 +93,7 @@ tracePacket(System *sys, const char *label, PacketPtr pkt)
 
 ScratchpadMemory::ScratchpadMemory(const ScratchpadMemoryParams &p)
     : AbstractMemory(p),
+      ppa(p.ppa),
       readyMode(p.ready_mode),
       readOnInvalid(p.read_on_invalid),
       writeOnValid(p.write_on_valid),
@@ -188,6 +190,7 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 
     if (pkt->cmd == MemCmd::SwapReq) {
+        ppa->unknownStorageAccess(true, "memory:atomic_access_physical_model");
         if (pkt->isAtomicOp()) {
             if (pmemAddr) {
                 pkt->setData(hostAddr);
@@ -255,6 +258,7 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
             pkt->setData(hostAddr);
         }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
+        ppa->accountStorageAccess(*pkt, range.start());
         stats.numReads[pkt->req->requestorId()]++;
         stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
         if (pkt->req->isInstFetch()) {
@@ -275,6 +279,7 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
             }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
+            ppa->accountStorageAccess(*pkt, range.start());
             stats.numWrites[pkt->req->requestorId()]++;
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
         }
@@ -311,6 +316,34 @@ ScratchpadMemory::init()
         port.sendRangeChange();
     }
     initial = true;
+    ppa->configureStorage(name(), range.size(),
+                          spm_ports.size() + port.isConnected());
+    if (ppa->isEnabled() && ppa->wordBytes()) {
+        fatal_if(!ppa->storagePhysical().empty() &&
+                     ppa->storagePhysical() != "sram",
+                 "%s: SPM characterization must describe SRAM", name());
+        // Check the shortest configured response without sampling the RNG.
+        // CACTI access latency and cycle interval are separate lower bounds;
+        // neither changes this memory's scheduling.
+        const double latency =
+            double(cyclesToTicks(accessCycles)) / sim_clock::as_float::s;
+        if (ppa->minimumAccessLatency() > latency) {
+            ppa->markIncomplete("memory:configured_access_latency");
+        }
+        // A one-byte request touches a whole physical word. With RMW and
+        // a wider word it needs both a read and a write on the same port.
+        // Check this worst request-to-service ratio against per-byte
+        // bandwidth, without assuming extra ports or a bank distribution.
+        const unsigned accesses =
+            ppa->wordBytes() > 1 && ppa->maskModel() == "read_modify_write"
+                ? 2
+                : 1;
+        const double interval =
+            double(Tick(bandwidth)) / sim_clock::as_float::s;
+        if (accesses * ppa->minimumAccessInterval() > interval) {
+            ppa->markIncomplete("memory:configured_service_rate");
+        }
+    }
 }
 
 Tick
@@ -329,6 +362,8 @@ ScratchpadMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
     Tick latency = recvAtomic(pkt);
 
     if (backdoor.ptr()) {
+        // Later direct accesses bypass packet service accounting.
+        ppa->markIncomplete("memory:backdoor_activity_unobserved");
         _backdoor = &backdoor;
     }
     return latency;

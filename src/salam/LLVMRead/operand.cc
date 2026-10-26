@@ -316,6 +316,7 @@ SALAM::Operand::Operand(const SALAM::Operand &copy_val)
 {
     lockedValue = copy_val.lockedValue;
     set = copy_val.set;
+    captureObserved = copy_val.captureObserved;
 }
 
 // copy constructor from base
@@ -336,11 +337,15 @@ SALAM::Operand::operator=(SALAM::Operand &copy_val)
 {
     uid = copy_val.uid;
     returnReg = copy_val.returnReg;
+    storageType = copy_val.storageType;
+    storageRead = copy_val.storageRead;
+    storageWrite = copy_val.storageWrite;
     valueTy = copy_val.valueTy;
     size = copy_val.size;
     pointerBits = copy_val.getPointerBits();
     lockedValue = copy_val.lockedValue;
     set = copy_val.set;
+    captureObserved = copy_val.captureObserved;
     return *this;
 }
 
@@ -383,6 +388,10 @@ void
 SALAM::Operand::updateOperandRegister()
 {
     assert(lockedValue);
+    if (!*captureObserved) {
+        captureStorage();
+        *captureObserved = true;
+    }
     if (lockedValue->isPtr()) {
         lockedValue->writePtrData(returnReg->getPtrData(true),
                                   getSizeInBytes());

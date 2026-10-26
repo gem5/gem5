@@ -54,6 +54,7 @@
 #include "debug/Drain.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -62,6 +63,7 @@ using namespace std;
 
 RegisterBank::RegisterBank(const RegisterBankParams &p)
     : AbstractMemory(p),
+      ppa(p.ppa),
       port(name() + ".reg_port", this),
       load(name() + ".load_port", this),
       accessCycles(p.access_cycles),
@@ -123,6 +125,7 @@ RegisterBank::registerAccess(PacketPtr pkt)
         if (pmemAddr) {
             pkt->setData(hostAddr);
         }
+        ppa->accountStorageAccess(*pkt, range.start());
         stats.numReads[pkt->req->requestorId()]++;
         stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
     } else if (pkt->isWrite()) {
@@ -141,6 +144,7 @@ RegisterBank::registerAccess(PacketPtr pkt)
             }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
+            ppa->accountStorageAccess(*pkt, range.start());
             stats.numWrites[pkt->req->requestorId()]++;
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
             if (!deltaEvent.scheduled()) {
@@ -167,6 +171,22 @@ RegisterBank::init()
     if (load.isConnected()) {
         load.sendRangeChange();
     }
+    ppa->configureStorage(name(), range.size(),
+                          port.isConnected() + load.isConnected());
+    fatal_if(ppa->isEnabled() && !ppa->storagePhysical().empty() &&
+                 ppa->storagePhysical() != "flip_flop",
+             "%s: RegisterBank characterization must describe flip-flops",
+             name());
+    fatal_if(ppa->isEnabled() && ppa->maskModel() == "read_modify_write",
+             "%s: flip-flop read-modify-write is unsupported", name());
+    // Private reads respond immediately; load-port latency does not make
+    // this service compatible with a positive physical access latency.
+    if (ppa->isEnabled() && ppa->minimumAccessLatency() > 0) {
+        ppa->markIncomplete("memory:immediate_RegisterBank_read_latency");
+    }
+    if (ppa->isEnabled() && ppa->minimumAccessInterval() > 0) {
+        ppa->markIncomplete("memory:unbounded_RegisterBank_service_rate");
+    }
 }
 
 Tick
@@ -190,6 +210,8 @@ RegisterBank::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
     Tick latency = recvAtomic(pkt);
 
     if (backdoor.ptr()) {
+        // Later direct accesses bypass packet service accounting.
+        ppa->markIncomplete("memory:backdoor_activity_unobserved");
         _backdoor = &backdoor;
     }
     return latency;

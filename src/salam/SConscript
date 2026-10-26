@@ -89,6 +89,7 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
         File(inputs.instructions),
         File("#util/SALAM-tools/hw_generator/SALAMGeneratedSources.py"),
         File("#util/SALAM-tools/hw_generator/SALAMClassGenerator.py"),
+        File("#util/SALAM-tools/SALAM-Configurator/power_model.py"),
         Value("\n".join(generated.generated_paths())),
     ]
     sources.extend(File(path) for path in generated.fu_input_paths)
@@ -114,7 +115,6 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     SimObject("InstOpCodes.py", sim_objects=["InstOpCodes"])
     SimObject("SALAMPowerModel.py", sim_objects=["SALAMPowerModel"])
     SimObject("SimulatorConfig.py", sim_objects=["SimulatorConfig"])
-
 
     SimObject(
         "testing/SALAMDeviceTester.py", sim_objects=["SALAMDeviceTester"]
@@ -145,6 +145,7 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
         "LLVMRead/value.test",
         "LLVMRead/value.test.cc",
         "LLVMRead/value.cc",
+        "LLVMRead/operand.cc",
         "LLVMRead/registers.cc",
         "LLVMRead/debug_flags.cc",
         with_tag("gem5 trace"),
@@ -163,6 +164,18 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     )
     Source("HWModeling/opcodes.cc")
     Source("HWModeling/salam_power_model.cc")
+    GTest(
+        "HWModeling/salam_power_model.test",
+        "HWModeling/salam_power_model.test.cc",
+        with_tag("gem5 trace"),
+    )
+    GTest(
+        "storage_access.test",
+        "storage_access.test.cc",
+        "../mem/packet.cc",
+        "../sim/bufval.cc",
+        with_tag("gem5 trace"),
+    )
     Source("HWModeling/simulator_config.cc")
 
     DebugFlag("CommInterface")

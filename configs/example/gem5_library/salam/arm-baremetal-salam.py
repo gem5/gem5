@@ -89,6 +89,12 @@ parser.add_argument(
 parser.add_argument(
     "--max-ticks", type=int, default=None, help="Stop after this tick."
 )
+parser.add_argument(
+    "--param",
+    action="append",
+    default=[],
+    help="Override a child SimObject parameter relative to the board.",
+)
 args = parser.parse_args()
 
 processor = SimpleProcessor(
@@ -181,6 +187,10 @@ board.attach_accelerators(args.accpath, args.acccfg)
 # The platform has no built-in storage controller; the legacy
 # configuration adds an IDE controller without disks.
 board.add_pci_device(IdeController(disks=[]))
+
+# Use gem5's existing command-line parameter mechanism after the accelerator
+# children exist and before the simulator instantiates their C++ objects.
+board.apply_config(args.param)
 
 simulator = Simulator(board=board)
 simulator.run(max_ticks=args.max_ticks)

@@ -44,6 +44,7 @@
 
 #include <llvm-c/Core.h>
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <vector>
@@ -88,6 +89,9 @@ class Value
     std::shared_ptr<SALAM::Register> returnReg;
     bool dbg = false;
     bool inst = false;
+    std::string storageType;
+    std::function<void()> storageRead;
+    std::function<void()> storageWrite;
 
     void addRegister(llvm::Type *irtype, bool isTracked = true);
     void addAPIntRegister(const uint64_t &val);
@@ -188,6 +192,38 @@ class Value
     // tracked registers
     // If you'd like to avoid incrementing write counters, directly pull
     // the register and use its appropriate write function
+    // Metadata is observational: execution retains its existing register size.
+    void
+    setStorageType(const std::string &type)
+    {
+        storageType = type;
+    }
+    const std::string &
+    getStorageType() const
+    {
+        return storageType;
+    }
+    void
+    setStorageCallbacks(std::function<void()> read,
+                        std::function<void()> write)
+    {
+        storageRead = std::move(read);
+        storageWrite = std::move(write);
+    }
+    void
+    captureStorage() const
+    {
+        if (storageRead) {
+            storageRead();
+        }
+    }
+    void
+    publishStorage() const
+    {
+        if (storageWrite) {
+            storageWrite();
+        }
+    }
     void setRegisterValue(const uint64_t data);
     void setRegisterValue(uint8_t *data);
     void setRegisterValue(bool data);

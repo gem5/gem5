@@ -417,6 +417,10 @@ class AccCluster:
                         varParams = dict(var)
                         varParams["Address"] = top_address
                         varParams["AccName"] = name
+                        if "Characterization" in varParams:
+                            varParams["Characterization"] = _resolve_path(
+                                self.config_path, varParams["Characterization"]
+                            )
 
                         if varParams["Type"] == "Stream":
                             aligned_inc = int(var["StreamSize"] + 4) + (
@@ -623,6 +627,7 @@ class Variable:
     def __init__(self, **kwargs):
         # Read the type first
         self.type = kwargs.get("Type")
+        self.characterization = kwargs.get("Characterization")
         if self.type == "SPM":
             self.connections = []
             # Read in SPM args

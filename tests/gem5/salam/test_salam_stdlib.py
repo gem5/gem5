@@ -530,7 +530,9 @@ def parity_stats(outdir, stdlib):
     return dumps
 
 
-def legacy_stdlib_parity(params, expected_output=("Check Passed",)):
+def legacy_stdlib_parity(
+    params, expected_output=("Check Passed",), model_override=False
+):
     import json
 
     tempdir = params.fixtures[constants.tempdir_fixture_name].path
@@ -542,10 +544,26 @@ def legacy_stdlib_parity(params, expected_output=("Check Passed",)):
     for directory, _, files in os.walk(workload.accpath):
         artifacts += [os.path.join(directory, f) for f in sorted(files)]
     before = {p: st.sha256_file(p) for p in artifacts}
-    st.run_fs("salam-workload", BFS_WALL, BFS_TICKS, subdir="legacy")(params)
-    st.run_stdlib("salam-workload", BFS_WALL, BFS_TICKS, subdir="stdlib")(
-        params
+    relative_model = "harness_clstr.kernel.hw_interface.salam_power_model"
+    assignments = (
+        [relative_model + ".enabled=False", relative_model + ".strict=True"]
+        if model_override
+        else []
     )
+    st.run_fs(
+        "salam-workload",
+        BFS_WALL,
+        BFS_TICKS,
+        subdir="legacy",
+        fs_args=["--param=system." + item for item in assignments],
+    )(params)
+    st.run_stdlib(
+        "salam-workload",
+        BFS_WALL,
+        BFS_TICKS,
+        subdir="stdlib",
+        config_args=["--param=" + item for item in assignments],
+    )(params)
     after = {p: st.sha256_file(p) for p in artifacts}
     if before != after:
         raise AssertionError("binary or workload changed between launchers")
@@ -554,6 +572,15 @@ def legacy_stdlib_parity(params, expected_output=("Check Passed",)):
 
     legacy = os.path.join(tempdir, "legacy")
     stdlib = os.path.join(tempdir, "stdlib")
+    if model_override:
+        for directory, prefix in ((legacy, "system."), (stdlib, "board.")):
+            ini = configparser.ConfigParser(interpolation=None)
+            ini.read(os.path.join(directory, "config.ini"))
+            section = prefix + relative_model
+            if ini.getboolean(section, "enabled") or not ini.getboolean(
+                section, "strict"
+            ):
+                raise AssertionError("model parameter overrides not applied")
     different = parity_difference(
         parity_config(legacy, False), parity_config(stdlib, True)
     )
@@ -1352,3 +1379,26 @@ for _case in _FIFO_CASES:
         tags=[st.SALAM_TAG, "salam-correctness", "salam-devices"],
         tests=[TestFunction(dma_fifo_capacity(_case), name=_name)],
     )
+
+
+_param_gem5 = st.SalamGem5Fixture()
+_param_temp = TempdirFixture()
+TestSuite(
+    name="salam-stdlib-parameters",
+    fixtures=[
+        _param_gem5,
+        _param_temp,
+        st.SalamHarnessFixture(
+            "salam-workload", _param_gem5, _param_temp, "sanity.c", [2, 3], 1
+        ),
+    ],
+    tags=[st.SALAM_TAG],
+    tests=[
+        TestFunction(
+            lambda params: legacy_stdlib_parity(
+                params, ("RUN[0] OUT[0]=5",), model_override=True
+            ),
+            name="salam-stdlib-parameters",
+        )
+    ],
+)

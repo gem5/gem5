@@ -57,6 +57,7 @@
 #include <ratio>
 #include <type_traits>
 #include <typeinfo>
+#include <vector>
 
 // LLVM Includes
 #include <llvm-c/Core.h>
@@ -304,8 +305,7 @@ class LLVMInterface : public AccComputeUnit
         statistics::Average writeOps;
     } execStats;
 
-    // The same counts for the current invocation, updated together with
-    // execStats and unaffected by statistics resets.
+    // Invocation summary counts, unaffected by statistics resets.
     struct InvocationTotals
     {
         Tick startTick = 0;
@@ -313,9 +313,7 @@ class LLVMInterface : public AccComputeUnit
         uint64_t cycles = 0;
         uint64_t cycleCategories[NumCycleCategories] = {};
         uint64_t issued[NumOpClasses] = {};
-        uint64_t completed[NumOpClasses] = {};
         uint64_t fuDenials = 0;
-        uint64_t memoryOrderWaits = 0;
     } totals;
 
     // What the current compute pass has done so far.
@@ -326,6 +324,10 @@ class LLVMInterface : public AccComputeUnit
         bool memoryOrderWait = false;
     } pass;
     void countCycleCategory();
+    void configurePowerModel(
+        const std::vector<std::shared_ptr<SALAM::Function>> &reached,
+        const HWInterface::FUInventory &inventory,
+        const std::map<uint32_t, SALAMPowerModel::Operations> &operations);
 
     void countIssue(OpClass cls, uint64_t opcode);
     void countCompletion(OpClass cls);
@@ -369,7 +371,6 @@ class LLVMInterface : public AccComputeUnit
     void launchWrite(MemoryRequest *memReq, ActiveFunction *func);
     std::shared_ptr<SALAM::Instruction>
     createInstruction(llvm::Instruction *inst, uint64_t id);
-    void dumpQueues();
     uint32_t
     getSchedulingThreshold()
     {

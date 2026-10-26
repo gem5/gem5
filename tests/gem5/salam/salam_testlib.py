@@ -639,7 +639,9 @@ STDLIB_EXAMPLE = "configs/example/gem5_library/salam/arm-baremetal-salam.py"
 NO_SOURCE_TREE = os.path.join(os.path.dirname(__file__), "no_source_tree.py")
 
 
-def run_stdlib(workload, wall, ticks, gem5_args=(), subdir=None):
+def run_stdlib(
+    workload, wall, ticks, gem5_args=(), subdir=None, config_args=()
+):
     # Runs the standard library SALAM example on a built workload, with
     # the source tree's configs/ and util/ off the module path.
 
@@ -666,6 +668,7 @@ def run_stdlib(workload, wall, ticks, gem5_args=(), subdir=None):
             "config.yml",
             "--max-ticks",
             str(ticks),
+            *config_args,
         ]
         log_call(
             params.log,

@@ -47,6 +47,7 @@
 #include "base/random.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
+#include "salam/HWModeling/salam_power_model.hh"
 
 using namespace gem5;
 using namespace memory;
@@ -145,6 +146,9 @@ class ScratchpadRequestPort : public RequestPort
 
 class ScratchpadMemory : public AbstractMemory
 {
+  private:
+    SALAMPowerModel *ppa;
+
   protected:
     bool readyMode;
     bool readOnInvalid;

@@ -109,11 +109,6 @@ class HWInterface : public SimObject
     // Record the inventory. Every later invocation must resolve the
     // same one.
     void setInventory(const FUInventory &resolved);
-    const FUInventory &
-    getInventory() const
-    {
-        return inventory;
-    }
 
   private:
     bool inventoryResolved = false;

@@ -65,6 +65,8 @@ class Operand : public Value
   private:
     std::shared_ptr<SALAM::Register> lockedValue;
     bool set = false;
+    // Copies alias the same captured payload and the same observation flag.
+    std::shared_ptr<bool> captureObserved = std::make_shared<bool>(false);
 
   protected:
     class Operand_Debugger : public Debugger

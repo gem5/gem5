@@ -39,6 +39,7 @@
 
 
 import copy
+import importlib.util
 import os
 import re
 from dataclasses import dataclass
@@ -63,8 +64,24 @@ from SALAMClassGenerator import (
     simobject_classname,
 )
 
+_power_path = os.path.join(
+    os.path.dirname(__file__), "..", "SALAM-Configurator", "power_model.py"
+)
+_power_spec = importlib.util.spec_from_file_location(
+    "salam_power_input", _power_path
+)
+power_model = importlib.util.module_from_spec(_power_spec)
+_power_spec.loader.exec_module(power_model)
+
 _NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _SKIP_INSTRUCTIONS = ("any", "none")
+# Ownership entries retain SALAM names; characterization uses LLVM opcodes.
+_LLVM_OPERATION_NAMES = {
+    "and_inst": "and",
+    "or_inst": "or",
+    "xor_inst": "xor",
+    "gep": "getelementptr",
+}
 
 
 class SourceConfigError(Exception):
@@ -112,6 +129,8 @@ class FunctionalUnit:
     leakage_power: object
     area: object
     path_delay: object
+    characterization: dict
+    characterization_path: str | None
 
     @property
     def class_name(self):
@@ -146,7 +165,12 @@ class GeneratedSources:
 
     @property
     def fu_input_paths(self):
-        return tuple(unit.path for unit in self.functional_units)
+        return tuple(
+            path
+            for unit in self.functional_units
+            for path in (unit.path, unit.characterization_path)
+            if path
+        )
 
     @property
     def fu_class_names(self):
@@ -430,6 +454,39 @@ def _load_functional_unit(fu_dir, alias):
     instruction_names = params.get("instructions") or []
     if not isinstance(instruction_names, list):
         raise SourceConfigError("malformed instructions in " + path)
+    characterization = power_model.normalize({"version": 1, "records": []})
+    characterization_path = None
+    if "characterization" in power:
+        reference = power["characterization"]
+        if not isinstance(reference, str) or not reference.strip():
+            raise SourceConfigError(
+                "invalid characterization reference: " + path
+            )
+        characterization_path = os.path.abspath(
+            os.path.join(os.path.dirname(path), reference)
+        )
+        try:
+            characterization = power_model.load(characterization_path)
+        except (OSError, power_model.CharacterizationError) as exc:
+            raise SourceConfigError(str(exc)) from exc
+        operation_names = {
+            _LLVM_OPERATION_NAMES.get(name, name) for name in instruction_names
+        }
+        for binding in characterization["keys"]:
+            if binding.startswith("fu:") and binding != "fu:" + alias:
+                raise SourceConfigError(
+                    "characterization FU alias mismatch: " + binding
+                )
+            if binding.startswith("op:"):
+                _, unit_alias, operation, _ = binding.split(":", 3)
+                if unit_alias != alias or operation not in operation_names:
+                    raise SourceConfigError(
+                        "characterization operation mismatch: " + binding
+                    )
+            if binding == "memory":
+                raise SourceConfigError(
+                    "memory characterization is not a FU input"
+                )
     return FunctionalUnit(
         alias=alias,
         path=os.path.abspath(path),
@@ -460,6 +517,8 @@ def _load_functional_unit(fu_dir, alias):
         leakage_power=power.get("leakage_power"),
         area=power.get("area"),
         path_delay=power.get("path_delay"),
+        characterization=characterization,
+        characterization_path=characterization_path,
     )
 
 
@@ -540,6 +599,9 @@ def _generate_functional_units_py(model):
     text = generate_functional_units_declaration(
         list(model.fu_aliases),
         "salam/HWModeling/functional_units.hh",
+        power_model.merge(
+            unit.characterization for unit in model.functional_units
+        ),
     )
     parts = [text]
     for unit in model.functional_units:

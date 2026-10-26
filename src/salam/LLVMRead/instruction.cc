@@ -250,6 +250,9 @@ SALAM::Instruction::commit()
         DPRINTFS(Runtime, owner, "||  Current Cycle: %i\n", getCurrentCycle());
     }
     if (getCurrentCycle() == getCycleCount()) { // Inst ready to be committed
+        if (!committed) {
+            publishStorage();
+        }
         signalUsers();
         committed = true;
         if (dbg) {

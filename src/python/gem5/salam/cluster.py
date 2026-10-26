@@ -48,6 +48,7 @@ from m5.params import AddrRange
 
 from . import (
     config_parser,
+    power_model,
     workload_config,
 )
 
@@ -287,6 +288,8 @@ def _attach_variable(clstr, var):
         spmRange = AddrRange(var.address, var.address + var.size)
         setattr(clstr, var.name.lower(), ScratchpadMemory(range=spmRange))
         spm = getattr(clstr, var.name.lower())
+        if var.characterization:
+            spm.ppa = SALAMPowerModel(**power_model.load(var.characterization))
         spm.conf_table_reported = False
         spm.ready_mode = var.readyMode
         spm.reset_on_scratchpad_read = var.resetOnRead
@@ -300,6 +303,8 @@ def _attach_variable(clstr, var):
         regRange = AddrRange(var.address, var.address + var.size)
         setattr(clstr, var.name.lower(), RegisterBank(range=regRange))
         reg = getattr(clstr, var.name.lower())
+        if var.characterization:
+            reg.ppa = SALAMPowerModel(**power_model.load(var.characterization))
         reg.load_port = clstr.local_bus.mem_side_ports
         for con in var.connections:
             getattr(clstr, con.conName.lower()).reg = reg.reg_port
@@ -341,6 +346,8 @@ def configure_accelerator(acc, bench_file, cycle_counts):
     acc.hw_interface.functional_units = FunctionalUnits.from_profile()
     acc.hw_interface.inst_config = InstConfig.from_profile()
 
-    acc.hw_interface.salam_power_model = SALAMPowerModel()
+    acc.hw_interface.salam_power_model = SALAMPowerModel(
+        **FunctionalUnits.characterization()
+    )
     acc.hw_interface.simulator_config = SimulatorConfig()
     acc.hw_interface.opcodes = InstOpCodes()

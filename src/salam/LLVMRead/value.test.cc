@@ -33,10 +33,12 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <vector>
 
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Type.h"
+#include "salam/LLVMRead/operand.hh"
 #include "salam/LLVMRead/value.hh"
 
 namespace
@@ -135,4 +137,74 @@ TEST(SalamValueRegister, UnalignedBuffers)
     auto value = makeValue(llvm::Type::getInt32Ty(ctx));
     value->setRegisterValue(odd);
     EXPECT_EQ(value->getUIntRegValue(), 0x12345678u);
+}
+
+TEST(SalamValueRegister, OperandCopiesShareOnlyTheirCaptureObservation)
+{
+    llvm::LLVMContext ctx;
+    auto value = makeValue(llvm::Type::getInt32Ty(ctx));
+    value->setStorageType("i32");
+    unsigned reads = 0;
+    unsigned writes = 0;
+    value->setStorageCallbacks([&] { ++reads; }, [&] { ++writes; });
+    value->setRegisterValue(uint64_t(17));
+    SALAM::Operand original(value);
+    SALAM::Operand copy(original);
+    std::vector<SALAM::Operand> operands;
+    operands.reserve(1);
+    operands.push_back(copy);
+    // Force reallocation: both elements still alias the captured payload.
+    operands.push_back(original);
+    operands[0].updateOperandRegister();
+    original.updateOperandRegister();
+    copy.updateOperandRegister();
+    operands[1].updateOperandRegister();
+    EXPECT_EQ(reads, 1);
+    EXPECT_EQ(writes, 0);
+    EXPECT_EQ(operands[0].getStorageType(), "i32");
+    EXPECT_EQ(operands[0].getUIntRegValue(), 17);
+    EXPECT_EQ(value->getReg()->getReads(), 4);
+    EXPECT_EQ(value->getReg()->getWrites(), 1);
+
+    // A new dynamic operand captures anew, even from the same SSA slot.
+    SALAM::Operand next(value);
+    value->setRegisterValue(uint64_t(29));
+    next.updateOperandRegister();
+    EXPECT_EQ(reads, 2);
+    EXPECT_EQ(next.getUIntRegValue(), 29);
+    EXPECT_EQ(copy.getUIntRegValue(), 17);
+    EXPECT_EQ(value->getReg()->getReads(), 5);
+    EXPECT_EQ(value->getReg()->getWrites(), 2);
+}
+
+TEST(SalamValueRegister, OperandAssignmentPropagatesStorageMetadata)
+{
+    llvm::LLVMContext ctx;
+    auto source = makeValue(llvm::Type::getInt16Ty(ctx));
+    auto destination = makeValue(llvm::Type::getInt32Ty(ctx));
+    source->setStorageType("i16");
+    destination->setStorageType("i32");
+    unsigned sourceReads = 0;
+    unsigned sourceWrites = 0;
+    unsigned destinationReads = 0;
+    unsigned destinationWrites = 0;
+    source->setStorageCallbacks([&] { ++sourceReads; },
+                                [&] { ++sourceWrites; });
+    destination->setStorageCallbacks([&] { ++destinationReads; },
+                                     [&] { ++destinationWrites; });
+    source->setRegisterValue(uint64_t(23));
+    SALAM::Operand from(source);
+    SALAM::Operand to(destination);
+    to = from;
+    EXPECT_EQ(to.getStorageType(), "i16");
+    to.updateOperandRegister();
+    from.updateOperandRegister();
+    to.publishStorage();
+    EXPECT_EQ(to.getUIntRegValue(), 23);
+    EXPECT_EQ(sourceReads, 1);
+    EXPECT_EQ(sourceWrites, 1);
+    EXPECT_EQ(destinationReads, 0);
+    EXPECT_EQ(destinationWrites, 0);
+    EXPECT_EQ(source->getReg()->getReads(), 2);
+    EXPECT_EQ(source->getReg()->getWrites(), 1);
 }

@@ -43,7 +43,6 @@
 #define __HWMODEL_INSTOPCODES_HH__
 
 #include <cstdint>
-#include <map>
 
 #include "params/InstOpCodes.hh"
 #include "sim/sim_object.hh"
@@ -103,26 +102,8 @@ class InstOpCodes : public SimObject
     uint32_t fdiv_inst;
     uint32_t frem_inst;
 
-    std::map<int, int> usage;
-
     InstOpCodes();
     InstOpCodes(const InstOpCodesParams &p);
-    void
-    update_usage(uint64_t OpCode)
-    {
-        usage[OpCode]++;
-    };
-    // Forget the counts of an earlier parse of the IR.
-    void
-    clear_usage()
-    {
-        usage.clear();
-    }
-    uint64_t
-    get_usage(uint64_t OpCode)
-    {
-        return usage[OpCode];
-    }
 };
 
 #endif //__HWMODEL_INSTOPCODES_HH__

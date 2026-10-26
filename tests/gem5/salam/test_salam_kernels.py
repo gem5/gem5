@@ -35,6 +35,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 
 import salam_testlib as st
 from testlib import *
@@ -152,7 +153,9 @@ def kernel_suite(
         extra_tests = tuple(extra_tests) + (
             ("invocation-duration", check_invocation_duration),
         )
-        tags = tuple(tags) + ("salam-invocation-duration",)
+        # Custom profiles run separately from the default SALAM binary.
+        if st.SALAM_TAG in tags:
+            tags = tuple(tags) + ("salam-invocation-duration",)
     # expect/forbid: {index: value} checked for every run.
     # fs_args, gem5_args: extra fs.py and gem5 options for the run.
     # cache_size: give the accelerator a Cache var of that size.
@@ -963,6 +966,329 @@ kernel_suite(
 )
 
 
+def characterize_bitwise(profile):
+    import yaml
+
+    # Exercise the generated profile's established ownership aliases while
+    # the characterization records use actual LLVM operation names.
+    units = os.path.join(profile, "functional_units")
+    path = os.path.join(units, "bitwise_operations", "bitwise_operations.yml")
+    with open(path) as stream:
+        document = yaml.safe_load(stream)
+    unit = document["functional_unit"]
+    if unit["parameters"]["instructions"] != [
+        "and_inst",
+        "or_inst",
+        "xor_inst",
+    ]:
+        raise AssertionError("bitwise profile ownership aliases changed")
+    unit["parameters"]["limit"] = 1
+    unit["power_model"]["characterization"] = "synthetic-ppa.json"
+    with open(path, "w") as stream:
+        yaml.safe_dump(document, stream, sort_keys=False)
+
+    source = {
+        "revision": "synthetic-test",
+        "path": "tests/gem5/salam/test_salam_kernels.py",
+        "row": "characterize_bitwise",
+        "sha256": st.sha256_file(
+            os.path.join(
+                config.base_dir, "tests/gem5/salam/test_salam_kernels.py"
+            )
+        ),
+        "library": "synthetic",
+        "datatype": "32-bit integer",
+        "implementation": "controlled test coefficients only",
+        "synthetic": True,
+    }
+
+    def quantity(value, unit):
+        return {"value": value, "unit": unit, "status": "characterized"}
+
+    records = [
+        {
+            "key": "fu:bitwise_operations",
+            "id": "synthetic-bitwise",
+            "source": source,
+            "signatures": ["i32,i32->i32"],
+            "area": quantity(10, "um2"),
+            "leakage": quantity(2, "uW"),
+            "constraints": {
+                "minimum_latency_s": 0,
+                "minimum_issue_interval_s": 0,
+                "pipelined": False,
+            },
+        }
+    ]
+    for operation, energy in (("and", 5), ("or", 7), ("xor", 11)):
+        records.append(
+            {
+                "key": f"op:bitwise_operations:{operation}:i32,i32->i32",
+                "id": "synthetic-bitwise",
+                "source": source,
+                "event": quantity(energy, "pJ"),
+            }
+        )
+    records.append(
+        {
+            "key": "register:i32",
+            "id": "synthetic-ssa-i32",
+            "source": source,
+            "area": quantity(2, "um2"),
+            "leakage": quantity(0.5, "uW"),
+            "read": quantity(3, "pJ"),
+            "write": quantity(7, "pJ"),
+        }
+    )
+    with open(
+        os.path.join(os.path.dirname(path), "synthetic-ppa.json"), "w"
+    ) as stream:
+        json.dump({"version": 1, "records": records}, stream, indent=2)
+
+
+def check_generated_bitwise_ppa(params):
+    import math
+
+    outdir, text = st.read_simout(params)
+    model_path = "system.harness_clstr.kernel.hw_interface.salam_power_model"
+    comm = "system.harness_clstr.kernel"
+    hw = comm + ".hw_interface"
+
+    def read(path):
+        with open(path) as stream:
+            return stream.read()
+
+    config_document = json.loads(read(os.path.join(outdir, "config.json")))
+    hardware = config_document["system"]["harness_clstr"]["kernel"][
+        "hw_interface"
+    ]
+    selected = hardware["salam_power_model"]
+    expected_keys = [
+        "fu:bitwise_operations",
+        "op:bitwise_operations:and:i32,i32->i32",
+        "op:bitwise_operations:or:i32,i32->i32",
+        "op:bitwise_operations:xor:i32,i32->i32",
+        "register:i32",
+    ]
+    if selected["keys"] != expected_keys or selected["ids"] != [
+        "synthetic-bitwise",
+        "synthetic-bitwise",
+        "synthetic-bitwise",
+        "synthetic-bitwise",
+        "synthetic-ssa-i32",
+    ]:
+        raise AssertionError(
+            "generated profile selected different PPA records"
+        )
+    expected_coefficients = {
+        "event_j": [0, 5 * 1e-12, 7 * 1e-12, 11 * 1e-12, 0],
+        "area_um2": [10, 0, 0, 0, 2],
+        "leakage_w": [2 * 1e-6, 0, 0, 0, 0.5 * 1e-6],
+        "read_j": [0, 0, 0, 0, 3 * 1e-12],
+        "write_j": [0, 0, 0, 0, 7 * 1e-12],
+    }
+    for field, expected in expected_coefficients.items():
+        if selected[field] != expected:
+            raise AssertionError(f"generated {field} values differ")
+    if not selected["enabled"] or not selected["strict"]:
+        raise AssertionError(
+            "generated-profile test requires strict enabled PPA"
+        )
+    if not all(
+        json.loads(value)["synthetic"] for value in selected["sources"]
+    ):
+        raise AssertionError("generated synthetic provenance was lost")
+    if hardware["functional_units"]["bitwise_operations"]["limit"] != 1:
+        raise AssertionError("test must use one shared physical bitwise FU")
+
+    entries = []
+    for block in text.split("   PPA model: ")[1:]:
+        if block.splitlines()[0] != model_path:
+            continue
+        values = dict(re.findall(r"^   PPA ([^:]+): (.+)$", block, re.M))
+        if values.get("scope", "").startswith("invocation:"):
+            entries.append(values)
+    if len(entries) != 1:
+        raise AssertionError(
+            "expected one generated-profile invocation report"
+        )
+    entry = entries[0]
+    for key, expected in {
+        "coverage area/dynamic/leakage": "1/1/1; approximate=0",
+        "FU timing compatibility": "compatible",
+        "operand reads/bits": "5/160",
+        "result writes/bits": "5/160",
+        "missing event count": "0",
+        "SSA slots": "i32=5",
+    }.items():
+        if entry.get(key) != expected:
+            raise AssertionError(
+                f"generated-profile {key}: {entry.get(key)} != {expected}"
+            )
+    ticks = re.findall(r"^\s*Invocation duration:\s+(\d+) ticks$", text, re.M)
+    if len(ticks) != 1:
+        raise AssertionError("expected one invocation duration")
+    elapsed = int(ticks[0]) / 1e12
+    # One and/or/xor event; five materialized i32 slots, reads, and writes.
+    dynamic = (5 + 7 + 11 + 5 * 3 + 5 * 7) * 1e-12
+    area = 10 + 5 * 2
+    leakage = (2 + 5 * 0.5) * 1e-6 * elapsed
+    expected_quantities = {
+        "known area (um^2)": (area, 1e-12),
+        "known dynamic energy (J)": (dynamic, 1e-24),
+        "known leakage energy (J)": (leakage, 1e-24),
+        "known total energy (J)": (dynamic + leakage, 1e-24),
+        "elapsed seconds": (elapsed, 1e-20),
+    }
+    if elapsed <= 0:
+        raise AssertionError(
+            "the nonzero-latency bitwise graph must take time"
+        )
+    expected_quantities["known average power (W)"] = (
+        (dynamic + leakage) / elapsed,
+        1e-18,
+    )
+    for key, (expected, absolute) in expected_quantities.items():
+        if not math.isclose(
+            float(entry[key]), expected, rel_tol=1e-12, abs_tol=absolute
+        ):
+            raise AssertionError(
+                f"generated-profile {key}: {entry[key]} != {expected}"
+            )
+
+    stats = st.read_stats(outdir)
+    if not stats:
+        raise AssertionError("missing generated-profile statistics")
+    counts = {
+        comm + ".llvm_interface.opcodesIssued::" + op: 1
+        for op in ("and", "or", "xor")
+    }
+    counts[hw + ".bitwise_operations.admissions"] = 3
+    counts[hw + ".bitwise_operations.instances"] = 1
+    for key, expected in counts.items():
+        if stats[-1].get(key) != expected:
+            raise AssertionError(
+                f"generated-profile count {key}: {stats[-1].get(key)} != {expected}"
+            )
+
+    workload = params.fixtures["salam-workload"]
+    artifacts = {
+        "binary": params.fixtures["salam-gem5"].path,
+        "elf": workload.elf,
+        "ir": workload.ir,
+        "yaml": os.path.join(workload.accpath, "config.yml"),
+    }
+    before = {name: st.sha256_file(path) for name, path in artifacts.items()}
+    if (
+        before["binary"] != workload.manifest["gem5_sha256"]
+        or before["elf"] != workload.manifest["outputs"]["sw/main.elf"]
+        or before["ir"] != workload.manifest["outputs"]["hw/kernel.ll"]
+    ):
+        raise AssertionError("enabled run's fixed artifacts changed")
+    disabled_args = [
+        f"--param={model_path}.enabled=False",
+        f"--param={model_path}.strict=True",
+    ]
+    disabled_args += [
+        f"--param=getattr(system.harness_clstr, {name!r}).ppa.enabled=False"
+        for name in ("in", "out", "mem")
+    ]
+    command, env, disabled = st._fs_command(
+        params,
+        "salam-workload",
+        KERNEL_WALL,
+        KERNEL_TICKS,
+        disabled_args,
+        ["--debug-flags=SALAMLaunch"],
+        subdir="disabled",
+    )
+    completed = subprocess.run(command, env=env)
+    if completed.returncode:
+        raise AssertionError(
+            f"disabled generated-profile run failed: {completed.returncode}"
+        )
+    after = {name: st.sha256_file(path) for name, path in artifacts.items()}
+    if before != after:
+        raise AssertionError("on/off runs did not retain identical artifacts")
+    disabled_config = json.loads(read(os.path.join(disabled, "config.json")))
+
+    def without_enabled(value):
+        if isinstance(value, dict):
+            return {
+                key: without_enabled(child)
+                for key, child in value.items()
+                if not (
+                    key == "enabled" and value.get("type") == "SALAMPowerModel"
+                )
+            }
+        if isinstance(value, list):
+            return [without_enabled(child) for child in value]
+        return value
+
+    if without_enabled(config_document) != without_enabled(disabled_config):
+        raise AssertionError(
+            "PPA mode changed effective hardware configuration"
+        )
+    disabled_text = read(os.path.join(disabled, "simout.txt"))
+    if not re.search(st.M5_EXIT_REGEX, disabled_text, re.M):
+        raise AssertionError("disabled generated-profile run did not finish")
+    if "   PPA model: " in disabled_text:
+        raise AssertionError("disabled PPA emitted a report")
+    terminal = read(os.path.join(outdir, "system.terminal"))
+    if terminal != read(os.path.join(disabled, "system.terminal")):
+        raise AssertionError("generated PPA changed payloads")
+    if not re.search(out_regex(0, 22).pattern, terminal, re.M) or re.search(
+        out_regex(0, 23).pattern, terminal, re.M
+    ):
+        raise AssertionError("bitwise output or negative control failed")
+    events = r"launch accepted at .+|finished at .+|Exiting @ tick .+"
+    enabled_events = re.findall(events, text)
+    if not enabled_events or enabled_events != re.findall(
+        events, disabled_text
+    ):
+        raise AssertionError("generated PPA changed launch/completion timing")
+    other = st.read_stats(disabled)
+    if len(stats) != len(other):
+        raise AssertionError("generated PPA changed statistics dump count")
+    for left, right in zip(stats, other):
+        for key in left.keys() | right.keys():
+            if key.startswith("host") or any(
+                part in key for part in (".salam_power_model.", ".ppa.")
+            ):
+                continue
+            a, b = left.get(key), right.get(key)
+            if a != b and not (
+                isinstance(a, float)
+                and isinstance(b, float)
+                and math.isnan(a)
+                and math.isnan(b)
+            ):
+                raise AssertionError(
+                    f"generated PPA changed {key}: {a} != {b}"
+                )
+    evidence = {
+        "keys": expected_keys,
+        "ids": selected["ids"],
+        "expected": {
+            "output": 22,
+            "area_um2": area,
+            "dynamic_j": dynamic,
+            "leakage_w": 4.5e-6,
+            "opcode_events": {op: 1 for op in ("and", "or", "xor")},
+        },
+        "observed_invocation": entry,
+        "expected_counts": counts,
+        "artifact_sha256": before,
+        "selected_coefficients": expected_coefficients,
+        "on_off_observations_equal": True,
+        "on_off_effective_configuration_equal": True,
+    }
+    with open(
+        os.path.join(outdir, "generated-profile-ppa.json"), "w"
+    ) as stream:
+        json.dump(evidence, stream, indent=2)
+
+
 def remap_fsub(profile):
     import yaml
 
@@ -992,10 +1318,30 @@ def remap_fsub(profile):
     with open(path, "w") as f:
         yaml.safe_dump(document, f, sort_keys=False)
 
+    characterize_bitwise(profile)
+
 
 REMAP_CONFIG = os.path.join(
     config.build_dir, "salam-fu-remap-profile", "salam-hw-config.yml"
 )
+
+
+# Both custom-profile suites share one input snapshot and one built binary.
+# A repeated suite setup must not recreate inputs underneath that binary.
+class RemapProfile(st.SalamProfileFixture):
+    def __init__(self):
+        super().__init__(REMAP_CONFIG, remap_fsub)
+        self._profile_lock = threading.Lock()
+        self._profile_ready = False
+
+    def setup(self, testitem):
+        with self._profile_lock:
+            if not self._profile_ready:
+                super().setup(testitem)
+                self._profile_ready = True
+
+
+REMAP_PROFILE = RemapProfile()
 kernel_suite(
     "salam-kernel-fsub-remap",
     "fsub.c",
@@ -1004,13 +1350,33 @@ kernel_suite(
     gem5_args=["--debug-flags=SALAMFUInventory"],
     ir_patterns=FSUB_IR,
     gem5=st.SalamGem5Fixture(REMAP_CONFIG),
-    profile=st.SalamProfileFixture(REMAP_CONFIG, remap_fsub),
+    profile=REMAP_PROFILE,
     tags=(REMAP_TAG,),
     simout_counts=[
         inventory("float_trig_sine", 17, 1, 1, 1),
         inventory("double_adder", 6, 0, 0, 1),
     ],
 )
+
+kernel_suite(
+    "salam-kernel-bitwise-generated-ppa",
+    "bitwise_ppa.ll.in",
+    inputs=[85, 15],
+    expect={0: 22},
+    forbid=[(0, 23)],
+    ir_patterns=[r"= and i32 ", r"= or i32 ", r"= xor i32 "],
+    fs_args=[
+        "--param=system.harness_clstr.kernel.hw_interface.salam_power_model.strict=True"
+    ],
+    gem5_args=["--debug-flags=SALAMLaunch"],
+    gem5=st.SalamGem5Fixture(REMAP_CONFIG),
+    profile=REMAP_PROFILE,
+    tags=(REMAP_TAG, "ppa-profile"),
+    extra_tests=[
+        ("characterization-and-equivalence", check_generated_bitwise_ppa)
+    ],
+)
+
 
 # Launch timing. The run bit is checked on the next edge of the
 # cluster's compute clock (100 MHz by default) and the first compute
@@ -1586,10 +1952,13 @@ for name, kernel, inputs, expect, fs_args, runs, counts in (
 # categories add up to its runtime.
 def summaries_per_invocation(params):
     _outdir, out = st.read_simout(params)
-    blocks = out.split("Uncalibrated area/power estimate:")[1:]
+    blocks = out.split("PPA scope: invocation")[1:]
     if len(blocks) != 3:
         raise AssertionError(f"{len(blocks)} summaries, not 3")
-    areas = {re.search(r"Total Area: (\S+)", b).group(1) for b in blocks}
+    areas = {
+        re.search(r"PPA known area \(um\^2\): (\S+)", b).group(1)
+        for b in blocks
+    }
     if len(areas) != 1:
         raise AssertionError(f"area changes between invocations: {areas}")
     for block in blocks:

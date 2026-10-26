@@ -38,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.AbstractMemory import AbstractMemory
+from m5.objects.SALAMPowerModel import SALAMPowerModel
 from m5.params import *
 from m5.proxy import *
 
@@ -45,6 +46,9 @@ from m5.proxy import *
 class RegisterBank(AbstractMemory):
     type = "RegisterBank"
     cxx_header = "salam/register_bank.hh"
+    ppa = Param.SALAMPowerModel(
+        SALAMPowerModel(), "Physical memory characterization and accounting"
+    )
 
     reg_port = ResponsePort("Responder port for private accelerator accesses")
     load_port = ResponsePort("Responder port for preloading the registers")

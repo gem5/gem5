@@ -61,6 +61,9 @@ SALAM::Value::Value(const Value &copy_val)
 {
     uid = copy_val.uid;
     returnReg = copy_val.returnReg;
+    storageType = copy_val.storageType;
+    storageRead = copy_val.storageRead;
+    storageWrite = copy_val.storageWrite;
     valueTy = copy_val.valueTy;
     size = copy_val.size;
     pointerBits = copy_val.pointerBits;
@@ -74,6 +77,9 @@ SALAM::Value::Value(std::shared_ptr<SALAM::Value> copy_val)
 {
     uid = copy_val->getUID();
     returnReg = copy_val->getReg();
+    storageType = copy_val->storageType;
+    storageRead = copy_val->storageRead;
+    storageWrite = copy_val->storageWrite;
     valueTy = copy_val->getType();
     size = copy_val->getSize();
     pointerBits = copy_val->getPointerBits();
@@ -89,6 +95,9 @@ SALAM::Value::operator=(Value &copy_val)
 {
     uid = copy_val.uid;
     returnReg = copy_val.returnReg;
+    storageType = copy_val.storageType;
+    storageRead = copy_val.storageRead;
+    storageWrite = copy_val.storageWrite;
     valueTy = copy_val.valueTy;
     size = copy_val.size;
     pointerBits = copy_val.pointerBits;

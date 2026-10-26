@@ -27,6 +27,7 @@
 
 # Functional-unit fields in SALAM hardware profiles.
 
+import ast
 import os
 import shutil
 import sys
@@ -85,6 +86,291 @@ class FunctionalUnitFieldTest(unittest.TestCase):
     def assertRejected(self, pattern, **changes):
         self.edit("integer_adder", **changes)
         with self.assertRaisesRegex(g.SourceConfigError, pattern):
+            self.load()
+
+    def bind_characterization(self, alias, filename):
+        path = os.path.join(
+            self.profile, "functional_units", alias, alias + ".yml"
+        )
+        with open(path) as handle:
+            document = yaml.safe_load(handle)
+        document["functional_unit"]["power_model"][
+            "characterization"
+        ] = filename
+        with open(path, "w") as handle:
+            yaml.safe_dump(document, handle, sort_keys=False)
+        return path
+
+    def synthetic_characterization(self, name):
+        source = {
+            "revision": "synthetic-test",
+            "path": "profile characterization fixture",
+            "row": name,
+            "sha256": "0" * 64,
+            "library": "synthetic",
+            "datatype": "storage bit" if name == "register" else "i32",
+            "implementation": "test only",
+            "proxy_for": "synthetic static-coverage fixture",
+            "synthetic": True,
+        }
+        identity = "test-" + name
+        physical = {
+            "key": "register:bit" if name == "register" else "fu:" + name,
+            "id": identity,
+            "source": source,
+            "area": {"value": 10, "unit": "um2", "status": "proxy"},
+            "leakage": {"value": 2, "unit": "uW", "status": "proxy"},
+        }
+        records = [physical]
+        if name == "register":
+            physical["read"] = {"status": "unavailable"}
+            physical["write"] = {"status": "unavailable"}
+        else:
+            physical["signatures"] = ["i32,i32->i32"]
+            for operation in ("add", "sub"):
+                records.append(
+                    {
+                        "key": f"op:{name}:{operation}:i32,i32->i32",
+                        "id": identity,
+                        "source": source,
+                        "event": {"status": "unavailable"},
+                    }
+                )
+        target = os.path.join(self.profile, name + "-ppa.yml")
+        with open(target, "w") as handle:
+            yaml.safe_dump(
+                {"version": 1, "records": records}, handle, sort_keys=False
+            )
+        return target
+
+    def test_characterization_is_embedded_without_source_files(self):
+        record = self.synthetic_characterization("integer_adder")
+        self.bind_characterization(
+            "integer_adder", "../../integer_adder-ppa.yml"
+        )
+        model = self.load()
+        self.assertIn(record, model.fu_input_paths)
+        expected = g.power_model.load(record)
+        text = g.generate_sources(model)["FunctionalUnits.py"]
+        shutil.rmtree(self.profile)
+        tree = ast.parse(text)
+        cls = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.ClassDef)
+            and node.name == "FunctionalUnits"
+        )
+        method = next(
+            node
+            for node in cls.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "characterization"
+        )
+        # The generated model contains data, not an input-file lookup.
+        self.assertEqual(len(method.body), 1)
+        self.assertEqual(ast.literal_eval(method.body[0].value), expected)
+
+    def operation_characterization(
+        self, alias, operation, signature, physical_signature=None
+    ):
+        source = {
+            "revision": "synthetic-test",
+            "path": "profile operation binding fixture",
+            "row": "unit",
+            "sha256": "0" * 64,
+            "library": "synthetic",
+            "datatype": signature,
+            "implementation": "test only",
+            "synthetic": True,
+        }
+        document = {
+            "version": 1,
+            "records": [
+                {
+                    "key": "fu:" + alias,
+                    "id": "test-operation",
+                    "source": source,
+                    "signatures": [physical_signature or signature],
+                    "area": {
+                        "value": 10,
+                        "unit": "um2",
+                        "status": "characterized",
+                    },
+                },
+                {
+                    "key": f"op:{alias}:{operation}:{signature}",
+                    "id": "test-operation",
+                    "source": source,
+                    "event": {
+                        "value": 5,
+                        "unit": "pJ",
+                        "status": "characterized",
+                    },
+                },
+            ],
+        }
+        path = os.path.join(self.profile, "operation-ppa.yml")
+        with open(path, "w") as handle:
+            yaml.safe_dump(document, handle, sort_keys=False)
+        return path
+
+    def test_characterization_operation_aliases_are_embedded(self):
+        for alias, owned, operation, signature in (
+            ("bitwise_operations", "and_inst", "and", "i32,i32->i32"),
+            ("bitwise_operations", "or_inst", "or", "i32,i32->i32"),
+            ("bitwise_operations", "xor_inst", "xor", "i32,i32->i32"),
+            ("integer_adder", "gep", "getelementptr", "p32,i32->p32"),
+            ("integer_adder", "add", "add", "i32,i32->i32"),
+            ("integer_multiplier", "mul", "mul", "i32,i32->i32"),
+        ):
+            with self.subTest(operation=operation):
+                self.reset()
+                # Ownership keeps SALAM spelling, including the explicit
+                # GEP assignment absent from the default profile.
+                self.edit(alias, instructions=[owned])
+                record = self.operation_characterization(
+                    alias, operation, signature
+                )
+                self.bind_characterization(alias, "../../operation-ppa.yml")
+                model = self.load()
+                self.assertIn(record, model.fu_input_paths)
+                self.assertEqual(
+                    self.unit(model, alias).instruction_names, (owned,)
+                )
+                instruction = next(
+                    item for item in model.instructions if item.name == owned
+                )
+                self.assertEqual(
+                    instruction.functional_unit,
+                    self.unit(model, alias).enum_value,
+                )
+                expected = g.power_model.load(record)
+                self.assertIn(
+                    f"op:{alias}:{operation}:{signature}", expected["keys"]
+                )
+                text = g.generate_sources(model)["FunctionalUnits.py"]
+                shutil.rmtree(self.profile)
+                tree = ast.parse(text)
+                cls = next(
+                    node
+                    for node in tree.body
+                    if isinstance(node, ast.ClassDef)
+                    and node.name == "FunctionalUnits"
+                )
+                method = next(
+                    node
+                    for node in cls.body
+                    if isinstance(node, ast.FunctionDef)
+                    and node.name == "characterization"
+                )
+                # The generated model contains data, not an input lookup.
+                self.assertEqual(len(method.body), 1)
+                self.assertEqual(
+                    ast.literal_eval(method.body[0].value), expected
+                )
+
+    def test_characterization_binding_rejects_a_different_unit(self):
+        self.synthetic_characterization("integer_adder")
+        self.bind_characterization(
+            "integer_multiplier", "../../integer_adder-ppa.yml"
+        )
+        with self.assertRaisesRegex(g.SourceConfigError, "FU alias mismatch"):
+            self.load()
+
+    def test_characterization_binding_rejects_unimplemented_operation(self):
+        cases = [
+            # Correct LLVM names still require ownership by this FU.
+            (
+                "integer_adder",
+                "mul",
+                "i32,i32->i32",
+                None,
+                "operation mismatch",
+            ),
+            (
+                "integer_adder",
+                "and",
+                "i32,i32->i32",
+                None,
+                "operation mismatch",
+            ),
+            (
+                "integer_adder",
+                "getelementptr",
+                "p32,i32->p32",
+                None,
+                "operation mismatch",
+            ),
+            # Do not generalize the four known aliases to arbitrary names.
+            (
+                "integer_adder",
+                "add",
+                "i32,i32->i32",
+                ["add_inst"],
+                "operation mismatch",
+            ),
+            (
+                "integer_adder",
+                "add_unknown",
+                "i32,i32->i32",
+                None,
+                "unsupported FU operation binding",
+            ),
+            # LLVM operation/signature validation remains authoritative.
+            (
+                "bitwise_operations",
+                "and",
+                "f32,f32->f32",
+                None,
+                "incompatible operation/signature",
+            ),
+        ]
+        # Coefficient keys must use LLVM spelling, not SALAM ownership names.
+        for operation in ("and_inst", "or_inst", "xor_inst", "gep"):
+            cases.append(
+                (
+                    "bitwise_operations",
+                    operation,
+                    "i32,i32->i32",
+                    None,
+                    "unsupported FU operation binding",
+                )
+            )
+        for alias, operation, signature, owned, error in cases:
+            with self.subTest(operation=operation, owned=owned):
+                self.reset()
+                if owned is not None:
+                    self.edit(alias, instructions=owned)
+                self.operation_characterization(alias, operation, signature)
+                self.bind_characterization(alias, "../../operation-ppa.yml")
+                with self.assertRaisesRegex(g.SourceConfigError, error):
+                    self.load()
+
+        self.reset()
+        self.operation_characterization(
+            "bitwise_operations", "and", "i64,i64->i64", "i32,i32->i32"
+        )
+        self.bind_characterization(
+            "bitwise_operations", "../../operation-ppa.yml"
+        )
+        with self.assertRaisesRegex(
+            g.SourceConfigError,
+            "signature incompatible with physical implementation",
+        ):
+            self.load()
+
+    def test_duplicate_register_binding_is_rejected_across_units(self):
+        self.synthetic_characterization("register")
+        for alias in ("integer_adder", "integer_multiplier"):
+            self.bind_characterization(alias, "../../register-ppa.yml")
+        with self.assertRaisesRegex(
+            g.power_model.CharacterizationError, "duplicate"
+        ):
+            g.generate_sources(self.load())
+
+    def test_missing_characterization_reference_is_not_ignored(self):
+        self.bind_characterization("integer_adder", "missing.yml")
+        with self.assertRaisesRegex(g.SourceConfigError, "missing.yml"):
             self.load()
 
     def test_default_profile_is_not_pipelined(self):
