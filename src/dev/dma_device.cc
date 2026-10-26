@@ -56,6 +56,57 @@
 namespace gem5
 {
 
+DmaPort::PacketStats::PacketStats(statistics::Group *parent, const char *name)
+    : statistics::Group(parent, name),
+      ADD_STAT(readAttempts, statistics::units::Count::get(),
+               "Read packet send attempts, including retries"),
+      ADD_STAT(writeAttempts, statistics::units::Count::get(),
+               "Write packet send attempts, including retries"),
+      ADD_STAT(readPackets, statistics::units::Count::get(),
+               "Read packets accepted by the downstream port"),
+      ADD_STAT(writePackets, statistics::units::Count::get(),
+               "Write packets accepted by the downstream port"),
+      ADD_STAT(readResponses, statistics::units::Count::get(),
+               "Read packet responses received"),
+      ADD_STAT(writeResponses, statistics::units::Count::get(),
+               "Write packet responses received"),
+      ADD_STAT(readBytes, statistics::units::Byte::get(),
+               "Bytes in read packet responses"),
+      ADD_STAT(writeBytes, statistics::units::Byte::get(),
+               "Bytes acknowledged by write packet responses")
+{}
+
+void
+DmaPort::enablePacketStats(statistics::Group *parent, const char *name)
+{
+    panic_if(packetStats, "DMA packet statistics already enabled");
+    packetStats = std::make_unique<PacketStats>(parent, name);
+}
+
+void
+DmaPort::countAttempt(bool is_read)
+{
+    if (packetStats) {
+        if (is_read) {
+            packetStats->readAttempts++;
+        } else {
+            packetStats->writeAttempts++;
+        }
+    }
+}
+
+void
+DmaPort::countPacket(bool is_read)
+{
+    if (packetStats) {
+        if (is_read) {
+            packetStats->readPackets++;
+        } else {
+            packetStats->writePackets++;
+        }
+    }
+}
+
 DmaPort::DmaPort(ClockedObject *dev, System *s,
                  std::optional<uint32_t> sid, std::optional<uint32_t> ssid)
     : RequestPort(dev->name() + ".dma"),
@@ -67,6 +118,15 @@ DmaPort::DmaPort(ClockedObject *dev, System *s,
 void
 DmaPort::handleRespPacket(PacketPtr pkt, Tick delay)
 {
+    if (packetStats) {
+        if (pkt->isRead()) {
+            packetStats->readResponses++;
+            packetStats->readBytes += pkt->getSize();
+        } else {
+            packetStats->writeResponses++;
+            packetStats->writeBytes += pkt->getSize();
+        }
+    }
     // Should always see a response with a sender state.
     assert(pkt->isResponse());
     warn_if(pkt->isError(), "Response pkt error.");
@@ -272,7 +332,10 @@ DmaPort::trySendTimingReq()
     // Check if this was the last packet now, since hypothetically the packet
     // response may come immediately, and state may be deleted.
     bool last = state->gen.last();
+    const bool is_read = pkt->isRead();
+    countAttempt(is_read);
     if (sendTimingReq(pkt)) {
+        countPacket(is_read);
         pendingCount++;
     } else {
         retryPending = true;
@@ -306,6 +369,8 @@ DmaPort::sendAtomicReq(DmaReqState *state)
     DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
             state->gen.addr(), state->gen.size());
     pendingCount++;
+    countAttempt(pkt->isRead());
+    countPacket(pkt->isRead());
     Tick lat = sendAtomic(pkt);
 
     // Check if we're done, since handleResp may delete state.
@@ -329,6 +394,8 @@ DmaPort::sendAtomicBdReq(DmaReqState *state)
                 state->gen.addr(), state->gen.size());
 
         MemBackdoorPtr bd = nullptr;
+        countAttempt(pkt->isRead());
+        countPacket(pkt->isRead());
         Tick lat = sendAtomicBackdoor(pkt, bd);
 
         // If we got a backdoor, record it.

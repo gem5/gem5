@@ -48,6 +48,7 @@
 #include "base/addr_range_map.hh"
 #include "base/chunk_generator.hh"
 #include "base/circlebuf.hh"
+#include "base/statistics.hh"
 #include "dev/io_device.hh"
 #include "mem/backdoor.hh"
 #include "params/DmaDevice.hh"
@@ -63,6 +64,19 @@ class DmaPort : public RequestPort, public Drainable
 {
   protected:
     AddrRangeMap<MemBackdoorPtr, 1> memBackdoors;
+
+    struct PacketStats : public statistics::Group
+    {
+        PacketStats(statistics::Group *parent, const char *name);
+        statistics::Scalar readAttempts, writeAttempts;
+        statistics::Scalar readPackets, writePackets;
+        statistics::Scalar readResponses, writeResponses;
+        statistics::Scalar readBytes, writeBytes;
+    };
+    std::unique_ptr<PacketStats> packetStats;
+
+    void countAttempt(bool is_read);
+    void countPacket(bool is_read);
 
     /**
      * Take the first request on the transmit list and attempt to send a timing
@@ -163,6 +177,9 @@ class DmaPort : public RequestPort, public Drainable
     void handleResp(DmaReqState *state, Addr addr, Addr size, Tick delay=0);
 
   public:
+    /** Enable optional packet accounting, without changing DMA scheduling. */
+    void enablePacketStats(statistics::Group *parent, const char *name);
+
     /** The device that owns this port. */
     ClockedObject *const device;
 
