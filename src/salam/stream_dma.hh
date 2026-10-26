@@ -151,7 +151,8 @@ class StreamDma : public DmaDevice
     Addr streamSize;
     Addr statusAddr;
     Addr statusSize;
-    Tick memDelay;
+    // Clock cycles between service passes.
+    const Cycles processCycles;
     size_t rdBufferSize;
     size_t wrBufferSize;
     unsigned maxPending;

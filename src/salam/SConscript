@@ -151,6 +151,7 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
         Source(node)
     Source("HWModeling/hw_interface.cc")
     Source("HWModeling/fu_pool.cc")
+    GTest("latency_sample.test", "latency_sample.test.cc", "../base/random.cc")
     GTest(
         "HWModeling/fu_pool.test",
         "HWModeling/fu_pool.test.cc",
@@ -171,6 +172,14 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     DebugFlag("RuntimeCompute")
     DebugFlag("RuntimeQueues")
     DebugFlag("SALAM_Debug")
+    DebugFlag(
+        "SALAMScratchpad",
+        "Scratchpad latency samples and rejected requests",
+    )
+    DebugFlag(
+        "SALAMLaunch",
+        "Accelerator launch and first compute pass timing",
+    )
     DebugFlag(
         "SALAMFUInventory",
         "Functional unit instances resolved for each accelerator",

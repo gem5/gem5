@@ -77,7 +77,11 @@ class CommInterface(BasicPioDevice):
     )
     gic = Param.BaseGic(Parent.any, "Gic on which to trigger interrupts")
     int_num = Param.Int32(-1, "Interrupt number that connects to GIC")
-    clock_period = Param.Int(10, "Clock period in ns")
+    process_cycles = Param.Cycles(
+        1,
+        "Compute cycles between passes that service memory requests; a "
+        "request issued while idle waits this long",
+    )
     premap_data = Param.Bool(
         False,
         "Whether or not the memory read/write locations for data predefined",

@@ -45,6 +45,7 @@
 #include <set>
 
 #include "debug/SALAMFUInventory.hh"
+#include "debug/SALAMLaunch.hh"
 #include "llvm/Support/raw_ostream.h"
 
 LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
@@ -52,10 +53,8 @@ LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
       filename(p.in_file),
       topName(p.top_name),
       scheduling_threshold(p.sched_threshold),
-      clock_period(p.clock_period),
       lockstep(p.lockstep_mode)
 {
-    clock_period = clock_period * 1000;
     dbg = comm->debug();
 }
 
@@ -450,6 +449,7 @@ LLVMInterface::tick()
                 "*****");
     }
     cycle++;
+    lastPass = curTick();
 
     // Process Queues in Active Functions
     for (auto func_iter = activeFunctions.begin();
@@ -470,7 +470,7 @@ LLVMInterface::tick()
     }
     //////////////// Schedule Next Cycle ////////////////////////
     if (running && !tickEvent.scheduled()) {
-        schedule(tickEvent, curTick() + clock_period); // * process_delay);
+        schedule(tickEvent, clockEdge(Cycles(1)));
     }
     auto tickStop = std::chrono::high_resolution_clock::now();
     simTime = simTime + (tickStop - tickStart);
@@ -972,7 +972,19 @@ LLVMInterface::initialize()
     running = true;
     cycle = 0;
     stalls = 0;
-    tick();
+    // The first compute pass is on the first compute edge at or after
+    // the launch, or the next one if a pass already ran on that edge.
+    Tick first = clockEdge(Cycles(0));
+    if (first == lastPass) {
+        first = clockEdge(Cycles(1));
+    }
+    DPRINTF(SALAMLaunch,
+            "launch accepted at %d; first compute pass at %d "
+            "(period %d)\n",
+            curTick(), first, clockPeriod());
+    firstPass = first;
+    panic_if(tickEvent.scheduled(), "%s: launched while running", name());
+    schedule(tickEvent, first);
 }
 
 void
@@ -1014,6 +1026,8 @@ LLVMInterface::finalize()
              "%s: %d functional unit operations still in flight", name(),
              hw->fuPool.inFlight());
     DPRINTF(SALAMFUInventory, "%d functional unit denials\n", fuDenials);
+    DPRINTF(SALAMLaunch, "finished at %d after %d cycles (%d ticks)\n",
+            curTick(), cycle, curTick() - firstPass);
     printResults();
     assert(activeFunctions.empty());
     for (auto &value : values) {
@@ -1099,7 +1113,8 @@ LLVMInterface::printResults()
     std::cout << "\nTotal Power Static: " << total_power_static << "\n";
     std::cout << "\nTotal Power Dynamic: " << total_power_dynamic << "\n";
 
-    Tick cycle_time = clock_period / 1000;
+    // Compute clock period in nanoseconds.
+    double cycle_time = clockPeriod() / sim_clock::as_float::ns;
 
     auto hwTimingMS =
         std::chrono::duration_cast<std::chrono::milliseconds>(hwTime);
@@ -1338,7 +1353,7 @@ LLVMInterface::resolveFunctionalUnits()
     for (auto unit : hw->functional_units->functional_unit_list) {
         uint32_t id = unit->get_enum_value();
         pool[id] = {inventory.instances.at(id),
-                    Tick(unit->get_initiation_interval()) * clock_period};
+                    cyclesToTicks(Cycles(unit->get_initiation_interval()))};
     }
     hw->fuPool.configure(pool);
     fuDenials = 0;

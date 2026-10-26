@@ -76,6 +76,12 @@ class CommInterface : public BasicPioDevice
     bool debugEnabled;
 
   public:
+    // The service pass process_cycles after now, on a compute edge.
+    Tick
+    serviceEdge() const
+    {
+        return clockEdge(processCycles);
+    }
     bool
     debug()
     {
@@ -308,7 +314,11 @@ class CommInterface : public BasicPioDevice
         CommInterface *comm;
 
       public:
-        TickEvent(CommInterface *_comm) : Event(CPU_Tick_Pri), comm(_comm) {}
+        // Service passes run before the compute pass on the same edge:
+        // a request a compute pass issues waits for a later service
+        // pass, never one on its own edge.
+        TickEvent(CommInterface *_comm) : Event(CPU_Tick_Pri - 1), comm(_comm)
+        {}
         void
         process()
         {
@@ -423,8 +433,11 @@ class CommInterface : public BasicPioDevice
     uint8_t *mmreg;
 
     bool processingDone;
-    int processDelay;
-    float clock_period;
+    // Compute cycles from a request, response or retry to the next
+    // service pass. While requests are outstanding the passes repeat
+    // at this interval, so a new request is taken by the next pass;
+    // one issued when the interface is idle waits exactly this long.
+    const Cycles processCycles;
 
     bool reset_spm;
 
@@ -463,11 +476,6 @@ class CommInterface : public BasicPioDevice
     }
 
     uint64_t getGlobalVar(unsigned offset, unsigned size);
-    int
-    getProcessDelay()
-    {
-        return processDelay;
-    }
     virtual int
     getReadPorts()
     {

@@ -62,6 +62,9 @@ def kernel_suite(
     gem5=None,
     profile=None,
     tags=(st.SALAM_TAG,),
+    clocks=None,
+    ticks=KERNEL_TICKS,
+    wrapper=None,
 ):
     # expect/forbid: {index: value} checked for every run.
     # fs_args, gem5_args: extra fs.py and gem5 options for the run.
@@ -82,15 +85,17 @@ def kernel_suite(
         hw_config=hw_config,
         ir_patterns=ir_patterns,
         cache_size=cache_size,
+        clocks=clocks,
     )
     tests = [
         TestFunction(
             st.run_fs(
                 "salam-workload",
                 KERNEL_WALL,
-                KERNEL_TICKS,
+                ticks,
                 fs_args,
                 gem5_args,
+                wrapper,
             ),
             name=name,
         )
@@ -542,4 +547,192 @@ kernel_suite(
         inventory("float_trig_sine", 17, 1, 1, 1),
         inventory("double_adder", 6, 0, 0, 1),
     ],
+)
+
+# Launch timing. The run bit is checked on the next edge of the
+# cluster's compute clock (100 MHz by default) and the first compute
+# pass runs on that edge, for every invocation. At 50 MHz the edges are
+# 20 ns apart and the kernel takes the same number of cycles.
+COMPUTE_CLOCK = "system.harness_clstr.compute_clk_domain.clock"
+for name, fs_args, period, edge in (
+    ("launch-100mhz", [], 10000, r"\d*0000"),
+    (
+        "launch-50mhz",
+        [f"--param={COMPUTE_CLOCK}='50MHz'"],
+        20000,
+        r"\d*[02468]0000",
+    ),
+):
+    kernel_suite(
+        f"salam-kernel-{name}",
+        "sanity.c",
+        inputs=[2, 3],
+        expect={0: 5},
+        runs=2,
+        fs_args=fs_args,
+        gem5_args=["--debug-flags=SALAMLaunch"],
+        simout_counts=[
+            ("checked-on-edge", rf"run bit written; checked at {edge}$", 2),
+            (
+                "first-pass-on-acceptance",
+                rf"launch accepted at ({edge}); first compute pass at \1 "
+                rf"\(period {period}\)$",
+                2,
+            ),
+            ("cycles", r"^\s*Runtime:\s+3 cycles$", 2),
+        ],
+    )
+
+# CommInterface service passes. A scratchpad load issued while the
+# CommInterface is idle is serviced process_cycles compute cycles
+# later, answered 2 ns after that and seen by the next compute pass;
+# the add and the register-bank store take 3 more cycles: 4 + n cycles.
+COMM = "system.harness_clstr.kernel"
+for cycles in (1, 2, 4):
+    kernel_suite(
+        f"salam-kernel-service-{cycles}",
+        "spm_load.c",
+        inputs=[0],
+        expect={0: 1},
+        fs_args=[f"--param={COMM}.process_cycles={cycles}"],
+        ir_patterns=[r"= load volatile i32, (i32\*|ptr) inttoptr"],
+        simout_counts=[
+            ("runtime", rf"^\s*Runtime:\s+{4 + cycles} cycles$", 1)
+        ],
+    )
+
+# Scratchpad latency variation. Each scratchpad keeps one generator,
+# seeded by gem5, and draws once per serviced access: the extra cycles
+# are the default-seeded generator's successive values (4, 0, 2 over
+# [0, 5]; see latency_sample.test). A slow scratchpad rejects the second
+# load once; the rejection draws nothing, and a second invocation
+# continues the sequence. No variation, no draws.
+SPM = "system.harness_clstr.mem"
+SLOW_SPM = f"--param={SPM}.bandwidth='200MiB/s'"
+SAMPLE = r"mem: latency sample \d+ \(extra \d+\) cycles$"
+REJECTED = r"mem: port 1 busy: request rejected$"
+for name, variation, runs, counts in (
+    (
+        "spm-latency-var",
+        5,
+        1,
+        [
+            ("samples", SAMPLE, 2),
+            ("first", r"latency sample 6 \(extra 4\) cycles$", 1),
+            ("second", r"latency sample 2 \(extra 0\) cycles$", 1),
+            ("rejected", REJECTED, 1),
+        ],
+    ),
+    (
+        "spm-latency-var-runs",
+        5,
+        2,
+        [
+            ("samples", SAMPLE, 4),
+            ("third", r"latency sample 4 \(extra 2\) cycles$", 1),
+        ],
+    ),
+    (
+        "spm-latency-fixed",
+        0,
+        1,
+        [("samples", SAMPLE, 0), ("rejected", REJECTED, 1)],
+    ),
+):
+    kernel_suite(
+        f"salam-kernel-{name}",
+        "spm_two_loads.c",
+        inputs=[0],
+        expect={0: 0},
+        runs=runs,
+        fs_args=[f"--param={SPM}.access_cycles_var={variation}", SLOW_SPM],
+        gem5_args=["--debug-flags=SALAMScratchpad"],
+        simout_counts=counts,
+    )
+
+# Scratchpad access time. The response is ready access_cycles fabric
+# cycles (1 ns) after the request arrives on a compute edge, and the next
+# compute pass (10 ns later) sees it: up to 10 cycles costs nothing more
+# than the default 2, 11 costs one compute cycle.
+for access, runtime in ((2, 5), (10, 5), (11, 6)):
+    kernel_suite(
+        f"salam-kernel-spm-access-{access}",
+        "spm_load.c",
+        inputs=[0],
+        expect={0: 1},
+        fs_args=[f"--param={SPM}.access_cycles={access}"],
+        simout_counts=[("runtime", rf"^\s*Runtime:\s+{runtime} cycles$", 1)],
+    )
+
+# Register-bank writes are acknowledged after access_cycles and become
+# visible after write_cycles. A load waits for the store's
+# acknowledgement, so it reads the stored value only if the write is
+# visible by then.
+# OUT starts at 0.
+REGS = "system.harness_clstr.out"
+for name, write_cycles, value in (
+    ("regbank-visible", 10, 9),
+    ("regbank-not-yet-visible", 30, 0),
+):
+    kernel_suite(
+        f"salam-kernel-{name}",
+        "regbank_rw.c",
+        inputs=[9],
+        expect={0: value},
+        fs_args=[f"--param={REGS}.write_cycles={write_cycles}"],
+        ir_patterns=[r"store volatile i32 %\d+, (i32\*|ptr) inttoptr"],
+    )
+
+# Cluster clocks from the workload's Clocks item. A controlled compute
+# interval, one multiplier taking three 4-cycle multiplies one after
+# another, takes the same 14 cycles at any compute clock: 13 periods
+# from the first pass to the last, 130000 ticks at 100 MHz, twice that
+# at 50 MHz, and ten times as many 0.1 ps ticks at a 10 THz tick
+# resolution.
+ONE_MULTIPLIER = [
+    f"--param={LOCKSTEP}=False",
+    f"--param={CYCLE_COUNTS}.mul=4",
+    f"--param={MULTIPLIER}.limit=1",
+]
+for name, clocks, ticks, wrapper, limit in (
+    ("clocks-compute-100mhz", {"Compute": "100MHz"}, 130000, None, None),
+    ("clocks-compute-50mhz", {"Compute": "50MHz"}, 260000, None, None),
+    (
+        "clocks-tick-resolution",
+        None,
+        1300000,
+        os.path.join(os.path.dirname(__file__), "tick_resolution.py"),
+        100000000000,
+    ),
+):
+    kernel_suite(
+        f"salam-kernel-{name}",
+        "fu_sched.c",
+        inputs=[3, 4, 5],
+        expect={0: 9, 1: 16, 2: 25},
+        fs_args=ONE_MULTIPLIER,
+        gem5_args=["--debug-flags=SALAMLaunch"],
+        clocks=clocks,
+        wrapper=wrapper,
+        ticks=limit or KERNEL_TICKS,
+        simout_counts=[
+            (
+                "elapsed",
+                rf"finished at \d+ after 14 cycles \({ticks} ticks\)$",
+                1,
+            )
+        ],
+    )
+
+# A slower fabric clock lengthens the idle scratchpad load: at 100 MHz
+# the scratchpad's 2 cycles take 20 ns (one more compute cycle) and the
+# register bank's 10-cycle write acknowledgement takes 100 ns (nine
+# more): 5 + 1 + 9 cycles.
+kernel_suite(
+    "salam-kernel-clocks-fabric-100mhz",
+    "spm_load.c",
+    inputs=[0],
+    expect={0: 1},
+    clocks={"Fabric": "100MHz"},
+    simout_counts=[("runtime", r"^\s*Runtime:\s+15 cycles$", 1)],
 )

@@ -25,12 +25,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
+import re
 import sys
 
 import yaml
 
 _DOCUMENT_KEYS = {"acc_cluster", "hw_config"}
-_CLUSTER_KEYS = {"Name", "DMA", "Accelerator", "SysPath", "HWPath"}
+_CLUSTER_KEYS = {"Name", "DMA", "Accelerator", "SysPath", "HWPath", "Clocks"}
+# A cluster's clock domains: frequency or period strings.
+DEFAULT_CLOCKS = {"Compute": "100MHz", "Fabric": "1GHz"}
+_CLOCK = re.compile(r"^(\d+(?:\.\d+)?)(THz|GHz|MHz|kHz|Hz|s|ms|us|ns|ps)$")
 _DMA_KEYS = {
     "Name",
     "MaxReqSize",
@@ -250,7 +254,37 @@ def _validate_cluster_list(cluster_items, config_path):
             )
         if "Accelerator" in item:
             _validate_accelerator(item["Accelerator"], config_path)
+        if "Clocks" in item:
+            parse_clocks(item["Clocks"], config_path)
     _validate_connection_targets(cluster_items, config_path)
+
+
+def parse_clocks(clocks, config_path):
+    # The cluster's Compute and Fabric clocks, each a positive frequency
+    # ("100MHz") or period ("10ns"), with defaults for those omitted.
+    if not isinstance(clocks, dict):
+        raise WorkloadConfigError(
+            config_path,
+            "cluster",
+            "Clocks",
+            clocks,
+            "Clocks must be a mapping of Compute and Fabric clocks",
+        )
+    _reject_unknown(clocks, DEFAULT_CLOCKS, "cluster", config_path, "Clocks")
+    parsed = dict(DEFAULT_CLOCKS)
+    for name, value in clocks.items():
+        match = _CLOCK.match(value) if isinstance(value, str) else None
+        if match is None or float(match.group(1)) <= 0:
+            raise WorkloadConfigError(
+                config_path,
+                "cluster",
+                f"Clocks.{name}",
+                value,
+                f"Clocks {name} must be a positive frequency such as "
+                f"'100MHz' or a period such as '10ns'",
+            )
+        parsed[name] = value
+    return parsed
 
 
 def _validate_device_group(device, scope, allowed, config_path):
@@ -307,9 +341,14 @@ def _validate_accelerator(accelerator, config_path):
         )
         for field in _LEGACY_ACCEL_KEYS:
             if field in entry:
+                hint = (
+                    "; set the cluster's Clocks Compute clock instead"
+                    if field == "ClockPeriod_ns"
+                    else ""
+                )
                 print(
                     f"SALAM config: {config_path}: accelerator {name}: "
-                    f"ignoring {field}",
+                    f"ignoring {field}{hint}",
                     file=sys.stderr,
                 )
         for variable in entry.get("Var", []) or []:

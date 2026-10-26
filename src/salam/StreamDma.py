@@ -57,7 +57,9 @@ class StreamDma(DmaDevice):
     status_out = ResponsePort("Stream buffer status port")
     status_addr = Param.Addr("Address for accessing buffer status")
     status_size = Param.Addr(4, "Size of the buffer status register")
-    mem_delay = Param.Latency("1ns", "Buffer read time")
+    process_cycles = Param.Cycles(
+        1, "Clock cycles between servicing stream transfers"
+    )
     read_buffer_size = Param.UInt64(1024, "Read buffer size")
     write_buffer_size = Param.UInt64(1024, "Write buffer size")
     max_pending = Param.Unsigned(8, "Maximum number of pending DMA reads")

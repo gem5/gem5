@@ -136,11 +136,16 @@ def parse_yaml(
         cluster_name = None
         dmas = []
         accs = []
+        clocks = dict(workload_config.DEFAULT_CLOCKS)
         for list_type, devices in cluster_dict.items():
             if list_type == "acc_cluster":
                 for device in devices:
                     if "Name" in device:
                         cluster_name = device["Name"]
+                    if "Clocks" in device:
+                        clocks = workload_config.parse_clocks(
+                            device["Clocks"], parent_path
+                        )
                     if "DMA" in device:
                         dmas.append(device)
                     if "Accelerator" in device:
@@ -159,6 +164,7 @@ def parse_yaml(
                 hw_config_document=doc_hw_document,
                 hw_config_source=doc_hw_source,
                 document=cluster_dict,
+                clocks=clocks,
             )
         )
         base_address = clusters[-1].top_address + (
@@ -198,8 +204,11 @@ class AccCluster:
         hw_config_document=None,
         hw_config_source: str = None,
         document=None,
+        clocks=None,
     ):
         self.name = name
+        # Compute and Fabric clock strings for the cluster's domains.
+        self.clocks = dict(clocks or workload_config.DEFAULT_CLOCKS)
         self.dmas = dmas
         self.accs = accs
         self.base_address = base_address

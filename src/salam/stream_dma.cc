@@ -55,7 +55,7 @@ StreamDma::StreamDma(const StreamDmaParams &p)
       streamSize(p.stream_size),
       statusAddr(p.status_addr),
       statusSize(p.status_size),
-      memDelay(p.mem_delay),
+      processCycles(p.process_cycles),
       rdBufferSize(p.read_buffer_size),
       wrBufferSize(p.write_buffer_size),
       maxPending(p.max_pending),
@@ -222,7 +222,7 @@ StreamDma::tick()
 
     running = rdRunning || wrRunning;
     if (!tickEvent.scheduled() && running) {
-        schedule(tickEvent, nextCycle());
+        schedule(tickEvent, clockEdge(processCycles));
     }
 }
 
@@ -282,7 +282,7 @@ StreamDma::read(PacketPtr pkt)
     }
 
     if (!tickEvent.scheduled()) {
-        schedule(tickEvent, nextCycle());
+        schedule(tickEvent, clockEdge(processCycles));
     }
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -308,7 +308,7 @@ StreamDma::write(PacketPtr pkt)
     }
 
     if (!tickEvent.scheduled()) {
-        schedule(tickEvent, nextCycle());
+        schedule(tickEvent, clockEdge(processCycles));
     }
     pkt->makeAtomicResponse();
     return pioDelay;

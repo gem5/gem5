@@ -228,6 +228,43 @@ hw_config:
 
 By default the `hw_config` mapping comes from the YAML document that declares the cluster. An `HWPath` field selects another YAML file containing `hw_config`. A relative `HWPath` is relative to the YAML file that declares it, not to the directory gem5 runs from. For example, `HWPath: timing/cycles.yml` in `configs/config.yml` selects `configs/timing/cycles.yml`. An accelerator `HWPath` applies to that accelerator. A cluster `HWPath` declared beside `SysPath` applies to the included clusters. `HWPath` selects workload timing; it is not the build-time `--salam-hw-config` hardware profile.
 
+### Set the cluster clocks
+
+Each cluster has two clock domains. Its accelerators' `CommInterface` and `LLVMInterface` run on the **Compute** clock (100 MHz by default). Its local bus, DMAs, stream DMAs and buffers, scratchpads and register banks run on the **Fabric** clock (1 GHz by default). The coherency bus and cluster cache stay on the system clock. An optional `Clocks` item in the cluster's list sets either clock as a frequency or a period:
+
+```yaml
+acc_cluster:
+    - Name: bfs_clstr
+    - Clocks:
+          Compute: 50MHz
+          Fabric: 2ns
+```
+
+Each domain runs at a fixed frequency; there is no DVFS. The accelerator `ClockPeriod_ns` field is ignored with a warning; use `Clocks` instead.
+
+The timing rules on these clocks are:
+
+- The host's run bit is seen at the compute edge after the one on or following its write, and the first compute pass runs on that edge. Each pass schedules the next compute edge.
+- An instruction issued on compute edge k with latency L completes on edge k + L.
+- A `CommInterface` services memory requests every `process_cycles` compute cycles while any are outstanding; a request issued while it is idle waits exactly `process_cycles`. Its service pass runs before the compute pass on the same edge. Responses complete when they arrive, and the next compute pass sees them.
+- A scratchpad response is ready `access_cycles` fabric cycles after the first fabric edge at or after the request arrives, plus a uniformly drawn extra of up to `access_cycles_var` cycles. Each scratchpad keeps one random generator, seeded by gem5's seed, and draws once per serviced access.
+- A register bank acknowledges a write `access_cycles` fabric cycles after the edge and makes buffered writes visible `write_cycles` after it; reads complete at once. A load that follows a store to the same register reads the stored value only if `write_cycles` does not exceed `access_cycles`.
+- PIO latencies (`pio_delay`, `pio_latency`) stay in time units.
+
+These parameters replace the earlier time-based ones:
+
+| Object | Before | Now |
+|---|---|---|
+| `LLVMInterface` | `clock_period` (ns) | the cluster's Compute clock |
+| `CommInterface` | `clock_period` (ns) | `process_cycles`, compute cycles (1) |
+| `NoncoherentDma` | `clock_period` (ns) | `process_cycles`, fabric cycles between steps of up to `max_req_size` bytes (10) |
+| `StreamDma` | `mem_delay` (unused) | `process_cycles`, fabric cycles (1) |
+| `ScratchpadMemory` | `latency` (2 ns), `latency_var` (0 ns) | `access_cycles` (2), `access_cycles_var` (0), fabric cycles |
+| `RegisterBank` | `delta_time` (10 ns) | `access_cycles` (10), `write_cycles` (10), fabric cycles |
+| `StreamBuffer` | `stream_latency` (1 ns) | `stream_cycles`, fabric cycles (1) |
+
+With the default clocks each parameter keeps its earlier duration; what changed is that launches, service passes and responses now fall on clock edges. The `SALAMLaunch` debug flag prints each launch and completion, with the cycles and ticks taken.
+
 ### Generated address header
 
 SALAM regenerates a header file that defines the MMIO address map for the cluster. In BFS, this is:

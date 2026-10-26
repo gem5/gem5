@@ -61,7 +61,7 @@ StreamBuffer::StreamBuffer(const StreamBufferParams &p)
       streamSize(p.stream_size),
       statusAddr(p.status_address),
       statusSize(p.status_size),
-      streamDelay(p.stream_latency),
+      streamCycles(p.stream_cycles),
       bandwidth(p.bandwidth)
 {}
 
@@ -179,7 +179,7 @@ StreamBuffer::streamWrite(PacketPtr pkt)
     writeStream(data, pkt->getSize());
     delete[] data;
     pkt->makeAtomicResponse();
-    return streamDelay;
+    return clockEdge(streamCycles) - curTick();
 }
 
 Tick

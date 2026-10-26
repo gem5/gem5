@@ -128,7 +128,7 @@ class RegisterBank : public AbstractMemory
         recvAtomic(PacketPtr pkt)
         {
             memory->registerAccess(pkt);
-            return memory->getDeltaTime();
+            return memory->accessLatency();
         }
         AddrRangeList
         getAddrRanges() const override
@@ -154,7 +154,10 @@ class RegisterBank : public AbstractMemory
     /**
      * Latency of a delta cycle in the register bank
      */
-    const Tick deltaTime;
+    // Clock cycles to acknowledge a write or a load-port access.
+    const Cycles accessCycles;
+    // Clock cycles until buffered writes become visible.
+    const Cycles writeCycles;
     /**
      * Internal (unbounded) storage to mimic the delay caused by the
      * delta timing of writes. Note that this is where the packet spends
@@ -189,10 +192,11 @@ class RegisterBank : public AbstractMemory
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
     void init() override;
+    // Ticks from now to the edge access cycles away.
     Tick
-    getDeltaTime()
+    accessLatency()
     {
-        return deltaTime;
+        return clockEdge(accessCycles) - curTick();
     }
 
   protected:

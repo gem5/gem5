@@ -66,6 +66,21 @@ def makeHWAcc(options, system):
 
 
 def _attach_cluster(options, system, clstr, spec):
+    # The accelerators' compute clock (the cluster's Clocks Compute).
+    # Their CommInterfaces and, through them, their LLVMInterfaces run on
+    # it.
+    clstr.compute_voltage_domain = VoltageDomain()
+    clstr.compute_clk_domain = SrcClockDomain(
+        clock=spec.clocks["Compute"],
+        voltage_domain=clstr.compute_voltage_domain,
+    )
+    # The clock of the cluster's local bus, DMAs, streams and memories
+    # (Clocks Fabric).
+    clstr.fabric_voltage_domain = VoltageDomain()
+    clstr.fabric_clk_domain = SrcClockDomain(
+        clock=spec.clocks["Fabric"],
+        voltage_domain=clstr.fabric_voltage_domain,
+    )
     system.iobus.mem_side_ports = clstr.local_bus.cpu_side_ports
     clstr._connect_caches(system, options, l2coherent=False)
     gic = system.realview.gic
@@ -81,6 +96,18 @@ def _attach_cluster(options, system, clstr, spec):
         _attach_accelerator(clstr, acc, gic)
     for acc in spec.accs:
         _connect_accelerator(clstr, acc)
+
+    clstr.local_bus.clk_domain = clstr.fabric_clk_domain
+    fabric = (
+        NoncoherentDma,
+        StreamDma,
+        StreamBuffer,
+        ScratchpadMemory,
+        RegisterBank,
+    )
+    for child in clstr._children.values():
+        if isinstance(child, fabric):
+            child.clk_domain = clstr.fabric_clk_domain
 
 
 def _attach_noncoherent_dma(clstr, dma, gic):
@@ -159,6 +186,7 @@ def _attach_accelerator(clstr, acc, gic):
                 pio_size=acc.size,
             ),
         )
+    getattr(clstr, acc.name).clk_domain = clstr.compute_clk_domain
     AccConfig(getattr(clstr, acc.name), ir, cycle_counts)
 
 

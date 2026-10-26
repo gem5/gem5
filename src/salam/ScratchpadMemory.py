@@ -50,8 +50,14 @@ class ScratchpadMemory(AbstractMemory):
     spm_ports = VectorResponsePort(
         "Response ports for private acclerator SPM accesses"
     )
-    latency = Param.Latency("2ns", "Request to response latency")
-    latency_var = Param.Latency("0ns", "Request to response latency variance")
+    access_cycles = Param.Cycles(
+        2, "Clock cycles from a request's arrival to its response"
+    )
+    access_cycles_var = Param.Cycles(
+        0,
+        "Upper bound of a uniformly drawn extra latency, in clock cycles, "
+        "added to each access",
+    )
     ready_mode = Param.Bool(False, "Use ready mode for scratchpad memory")
     read_on_invalid = Param.Bool(
         False,

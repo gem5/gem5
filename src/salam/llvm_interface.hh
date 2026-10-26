@@ -86,7 +86,11 @@ class LLVMInterface : public AccComputeUnit
     std::string filename;
     std::string topName;
     uint32_t scheduling_threshold;
-    int32_t clock_period;
+    // The tick of the last compute pass, so a new invocation does not
+    // run a second pass on the same edge.
+    Tick lastPass = MaxTick;
+    // The tick of this invocation's first compute pass.
+    Tick firstPass = 0;
     int cycle;
     int stalls;
 

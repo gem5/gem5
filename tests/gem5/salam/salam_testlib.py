@@ -548,7 +548,9 @@ def enable_check(bench):
     return edit
 
 
-def _fs_command(params, workload, wall, ticks, fs_args=(), gem5_args=()):
+def _fs_command(
+    params, workload, wall, ticks, fs_args=(), gem5_args=(), wrapper=None
+):
     gem5 = params.fixtures["salam-gem5"]
     wl = params.fixtures[workload]
     outdir = params.fixtures[constants.tempdir_fixture_name].path
@@ -562,6 +564,7 @@ def _fs_command(params, workload, wall, ticks, fs_args=(), gem5_args=()):
         "-re",
         "--silent-redirect",
         *gem5_args,
+        *([wrapper] if wrapper else []),
         os.path.join(config.base_dir, "configs/SALAM/fs.py"),
         "--kernel=" + wl.elf,
         "--accpath=" + wl.accpath,
@@ -574,14 +577,15 @@ def _fs_command(params, workload, wall, ticks, fs_args=(), gem5_args=()):
     return command, env, outdir
 
 
-def run_fs(workload, wall, ticks, fs_args=(), gem5_args=()):
+def run_fs(workload, wall, ticks, fs_args=(), gem5_args=(), wrapper=None):
     # Runs configs/SALAM/fs.py on a built workload; fs_args are extra
-    # fs.py options, such as --param overrides, and gem5_args are gem5
-    # options, such as --debug-flags.
+    # fs.py options, such as --param overrides, gem5_args are gem5
+    # options, such as --debug-flags, and wrapper is a config script that
+    # runs fs.py.
 
     def test(params):
         command, env, _outdir = _fs_command(
-            params, workload, wall, ticks, fs_args, gem5_args
+            params, workload, wall, ticks, fs_args, gem5_args, wrapper
         )
         log_call(
             params.log,
@@ -715,6 +719,7 @@ class SalamHarnessFixture(Fixture):
     # generated defines (such as "IN + 8"); n_out: OUT words printed.
     # hw_config: optional cycle overrides for the "kernel" profile.
     # cache_size: if set, the accelerator gets a Cache var of that size.
+    # clocks: if set, the cluster's Clocks item.
     # ir_patterns: regexes the generated kernel.ll must contain.
 
     def __init__(
@@ -729,6 +734,7 @@ class SalamHarnessFixture(Fixture):
         hw_config=None,
         ir_patterns=(),
         cache_size=None,
+        clocks=None,
     ):
         super().__init__(name=name)
         self.gem5 = gem5
@@ -740,6 +746,7 @@ class SalamHarnessFixture(Fixture):
         self.hw_config = hw_config
         self.ir_patterns = ir_patterns
         self.cache_size = cache_size
+        self.clocks = clocks
         self.bench = "harness"
 
     def setup(self, testitem):
@@ -757,6 +764,8 @@ class SalamHarnessFixture(Fixture):
         self._write_inputs()
         if self.cache_size is not None:
             self._add_cache()
+        if self.clocks is not None:
+            self._add_clocks()
         shim = os.path.join(self.root, "bin")
         os.makedirs(shim)
         os.symlink(tools.clang, os.path.join(shim, "clang"))
@@ -809,6 +818,7 @@ class SalamHarnessFixture(Fixture):
             "inputs": self.inputs,
             "hw_config": self.hw_config,
             "cache_size": self.cache_size,
+            "clocks": self.clocks,
             "copied": copied,
             "outputs": {
                 "hw/kernel.ll": sha256_file(self.ir),
@@ -858,6 +868,17 @@ class SalamHarnessFixture(Fixture):
         for item in document["acc_cluster"]:
             if "Accelerator" in item:
                 item["Accelerator"].append({"Var": [cache]})
+        with open(path, "w") as f:
+            f.write("---\n")
+            yaml.safe_dump(document, f, sort_keys=False)
+
+    def _add_clocks(self):
+        import yaml
+
+        path = os.path.join(self.accpath, "config.yml")
+        with open(path) as f:
+            document = yaml.safe_load(f)
+        document["acc_cluster"].append({"Clocks": dict(self.clocks)})
         with open(path, "w") as f:
             f.write("---\n")
             yaml.safe_dump(document, f, sort_keys=False)

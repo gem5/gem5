@@ -61,7 +61,8 @@ class StreamBuffer : public ClockedObject
     Addr streamSize;
     Addr statusAddr;
     Addr statusSize;
-    Tick streamDelay;
+    // Clock cycles from the next edge until a write is accepted.
+    const Cycles streamCycles;
     const double bandwidth;
 
   public:

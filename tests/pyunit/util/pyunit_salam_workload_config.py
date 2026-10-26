@@ -78,8 +78,9 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
             f.write("\n".join(lines) + "\n")
         return path
 
-    def config(self, hw_config=(), accel_extra=(), variables=()):
+    def config(self, hw_config=(), accel_extra=(), variables=(), clocks=()):
         lines = ["acc_cluster:", "    - Name: clstr"]
+        lines += list(clocks)
         lines += _accelerator("Kernel", accel_extra)
         for var in variables:
             lines += _variable(var)
@@ -256,6 +257,62 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
             [("Kernel", 1), ("other", 2)],
         )
 
+    def clocks(self, lines):
+        self.config(clocks=lines)
+        (cluster,) = config_parser.load_clusters(self.root)
+        return cluster.clocks
+
+    def test_clocks_default_and_override(self):
+        self.assertEqual(
+            self.clocks([]), {"Compute": "100MHz", "Fabric": "1GHz"}
+        )
+        self.assertEqual(
+            self.clocks(["    - Clocks:", "          Compute: 50MHz"]),
+            {"Compute": "50MHz", "Fabric": "1GHz"},
+        )
+        self.assertEqual(
+            self.clocks(
+                [
+                    "    - Clocks:",
+                    "          Compute: 2.5ns",
+                    "          Fabric: 2GHz",
+                ]
+            ),
+            {"Compute": "2.5ns", "Fabric": "2GHz"},
+        )
+
+    def test_clocks_rejections(self):
+        for lines, message in (
+            (["    - Clocks: 100MHz"], "Clocks must be a mapping"),
+            (
+                ["    - Clocks:", "          Memory: 1GHz"],
+                "unknown field 'Memory' on Clocks",
+            ),
+            (
+                ["    - Clocks:", "          Compute: 100"],
+                "Clocks Compute must be a positive frequency",
+            ),
+            (
+                ["    - Clocks:", "          Fabric: 0GHz"],
+                "Clocks Fabric must be a positive frequency",
+            ),
+            (
+                ["    - Clocks:", "          Compute: 100 MHz"],
+                "Clocks Compute must be a positive frequency",
+            ),
+            (
+                ["    - Clocks:", "          Compute: 10"],
+                "Clocks Compute must be a positive frequency",
+            ),
+        ):
+            with self.subTest(lines=lines):
+                self.config(clocks=lines)
+                with self.assertRaises(
+                    workload_config.WorkloadConfigError
+                ) as ctx:
+                    config_parser.load_clusters(self.root)
+                self.assertIn(message, str(ctx.exception))
+
     def test_legacy_accelerator_keys_are_ignored_with_a_warning(self):
         self.config(
             hw_config=["hw_config:", "    k:"],
@@ -265,7 +322,10 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
         with contextlib.redirect_stderr(stderr):
             self.counts()
         self.assertIn("ignoring TopName", stderr.getvalue())
-        self.assertIn("ignoring ClockPeriod_ns", stderr.getvalue())
+        self.assertIn(
+            "ignoring ClockPeriod_ns; set the cluster's Clocks Compute clock",
+            stderr.getvalue(),
+        )
 
     def test_cycle_count_params_match_simobject(self):
         path = os.path.join(_ROOT, "src", "salam", "CycleCounts.py")

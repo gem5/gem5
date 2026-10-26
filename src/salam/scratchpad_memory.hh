@@ -44,6 +44,7 @@
 
 #include <vector>
 
+#include "base/random.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 
@@ -256,15 +257,22 @@ class ScratchpadMemory : public AbstractMemory
     std::vector<SPMPort *> spm_ports;
 
     /**
-     * Latency from that a request is accepted until the response is
-     * ready to be sent.
+     * Clock cycles from the first edge at or after a request arrives
+     * until its response is ready.
      */
-    const Tick latency;
+    const Cycles accessCycles;
 
     /**
-     * Fudge factor added to the latency.
+     * Upper bound of the uniformly drawn extra cycles added to each
+     * access.
      */
-    const Tick latency_var;
+    const Cycles accessCyclesVar;
+
+    /**
+     * Generator for accessCyclesVar samples, kept for this memory's
+     * life so that successive accesses draw successive values.
+     */
+    mutable gem5::Random::RandomPtr rng = gem5::Random::genRandom();
 
     /**
      * Internal (unbounded) storage to mimic the delay caused by the
@@ -321,7 +329,9 @@ class ScratchpadMemory : public AbstractMemory
      *
      * @return the latency seen by the current packet
      */
-    Tick getLatency() const;
+    Cycles getLatency() const;
+    // The first clock edge at or after tick t.
+    Tick edgeAtOrAfter(Tick t) const;
 
     /**
      * Upstream caches need this packet until true is returned, so

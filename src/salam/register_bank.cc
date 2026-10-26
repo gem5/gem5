@@ -64,7 +64,8 @@ RegisterBank::RegisterBank(const RegisterBankParams &p)
     : AbstractMemory(p),
       port(name() + ".reg_port", this),
       load(name() + ".load_port", this),
-      deltaTime(p.delta_time),
+      accessCycles(p.access_cycles),
+      writeCycles(p.write_cycles),
       retryResp(false),
       dequeueEvent([this] { dequeue(); }, name()),
       deltaEvent([this] { delta(); }, name())
@@ -134,7 +135,7 @@ RegisterBank::registerAccess(PacketPtr pkt)
             stats.numWrites[pkt->req->requestorId()]++;
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
             if (!deltaEvent.scheduled()) {
-                schedule(deltaEvent, curTick() + deltaTime);
+                schedule(deltaEvent, clockEdge(writeCycles));
             }
         }
     } else {
@@ -165,7 +166,7 @@ RegisterBank::recvAtomic(PacketPtr pkt)
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
                                      "is responding");
     registerAccess(pkt);
-    return deltaTime;
+    return accessLatency();
 }
 
 Tick

@@ -89,6 +89,43 @@ bfs_suite(
     },
 )
 
+
+def set_clocks(clocks):
+    # Give the BFS cluster a Clocks item.
+    def edit(src):
+        import yaml
+
+        path = os.path.join(src, "bfs", "config.yml")
+        with open(path) as f:
+            document = yaml.safe_load(f)
+        document["acc_cluster"].append({"Clocks": dict(clocks)})
+        with open(path, "w") as f:
+            f.write("---\n")
+            yaml.safe_dump(document, f, sort_keys=False)
+
+    return edit
+
+
+# The checked results do not depend on the cluster clocks.
+bfs_suite(
+    "salam-bfs-check-clocks",
+    [
+        st.enable_check("bfs"),
+        set_clocks({"Compute": "50MHz", "Fabric": "500MHz"}),
+    ],
+    {
+        "passed": verifier.MatchFileRegex(
+            re.compile(r"^Check Passed$"), ["system.terminal"]
+        ),
+        "no-mismatch": st.NoMatchFileRegex(
+            re.compile(r"^(Mismatch|Check Failed)"), ["system.terminal"]
+        ),
+        "m5-exit": verifier.MatchFileRegex(
+            re.compile(st.M5_EXIT_REGEX), ["simout.txt"]
+        ),
+    },
+)
+
 bfs_suite(
     "salam-bfs-negative-control",
     [st.enable_check("bfs"), wrong_expected_count],

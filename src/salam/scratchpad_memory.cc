@@ -45,12 +45,15 @@
 #include <cstdlib>
 #include <iomanip>
 
+#include "base/intmath.hh"
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/MemoryAccess.hh"
+#include "debug/SALAMScratchpad.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "salam/latency_sample.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -95,8 +98,8 @@ ScratchpadMemory::ScratchpadMemory(const ScratchpadMemoryParams &p)
       resetOnScratchpadRead(p.reset_on_scratchpad_read),
       initial(true),
       port(name() + ".port", *this),
-      latency(p.latency),
-      latency_var(p.latency_var),
+      accessCycles(p.access_cycles),
+      accessCyclesVar(p.access_cycles_var),
       bandwidth(p.bandwidth),
       dequeueEvent([this] { dequeue(); }, name())
 {
@@ -317,7 +320,7 @@ ScratchpadMemory::recvAtomic(PacketPtr pkt, bool validateAccess)
                                      "is responding");
 
     scratchpadAccess(pkt, validateAccess);
-    return getLatency();
+    return cyclesToTicks(getLatency());
 }
 
 Tick
@@ -374,6 +377,7 @@ ScratchpadMemory::recvTimingReq(PacketPtr pkt, PortID recvPort,
     // retry
     if (isBusy[idx]) {
         retryReq[idx] = true;
+        DPRINTF(SALAMScratchpad, "port %d busy: request rejected\n", idx);
         return false;
     }
 
@@ -404,14 +408,18 @@ ScratchpadMemory::recvTimingReq(PacketPtr pkt, PortID recvPort,
     // go ahead and deal with the packet and put the response in the
     // queue if there is one
     bool needsResponse = pkt->needsResponse();
-    recvAtomic(pkt, validateAccess);
+    // The access itself; its latency is sampled once, below.
+    scratchpadAccess(pkt, validateAccess);
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         // recvAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
 
-        Tick when_to_send = curTick() + receive_delay + getLatency();
+        // Ready access cycles after the first edge at or after the
+        // request arrives.
+        Tick when_to_send = edgeAtOrAfter(curTick() + receive_delay) +
+                            cyclesToTicks(getLatency());
 
         // typically this should be added at the end, so start the
         // insertion sort with the last element, also make sure not to
@@ -493,12 +501,24 @@ ScratchpadMemory::scheduleNextResponse()
 }
 
 Tick
+ScratchpadMemory::edgeAtOrAfter(Tick t) const
+{
+    Tick edge = clockEdge();
+    if (t > edge) {
+        edge += divCeil(t - edge, clockPeriod()) * clockPeriod();
+    }
+    return edge;
+}
+
+Cycles
 ScratchpadMemory::getLatency() const
 {
-    return latency +
-           (latency_var
-                ? gem5::Random::genRandom()->random<Tick>(0, latency_var)
-                : 0);
+    Cycles sampled(SALAM::sampleLatency(*rng, accessCycles, accessCyclesVar));
+    if (accessCyclesVar) {
+        DPRINTF(SALAMScratchpad, "latency sample %d (extra %d) cycles\n",
+                uint64_t(sampled), uint64_t(sampled - accessCycles));
+    }
+    return sampled;
 }
 
 void

@@ -75,7 +75,8 @@ class NoncoherentDma : public DmaDevice
     unsigned maxReqSize;
     BaseGic *gic;
     uint32_t intNum;
-    int clock_period;
+    // Clock cycles between transfer steps.
+    const Cycles processCycles;
 
     uint8_t *mmreg;
     uint8_t *FLAGS;
