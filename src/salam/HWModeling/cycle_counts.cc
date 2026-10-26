@@ -111,4 +111,11 @@ CycleCounts::CycleCounts(const CycleCountsParams &p)
              "%s: CycleCounts load and store must be 0 (got %u and %u); "
              "memory latency comes from the memory system",
              name(), p.load, p.store);
+    // Supported terminators transfer control outside the timed compute
+    // queue. Reject ineffective latency settings on direct configurations
+    // as well as through the workload YAML validator.
+    fatal_if(p.br != 0 || p.ret != 0 || p.switch_inst != 0,
+             "%s: CycleCounts br, ret and switch_inst must be 0 "
+             "(got %u, %u and %u); terminator latency is not modeled",
+             name(), p.br, p.ret, p.switch_inst);
 }

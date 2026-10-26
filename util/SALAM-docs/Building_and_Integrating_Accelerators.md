@@ -240,7 +240,7 @@ acc_cluster:
           Fabric: 2ns
 ```
 
-Each domain runs at a fixed frequency; there is no DVFS. The accelerator `ClockPeriod_ns` field is ignored with a warning; use `Clocks` instead.
+Each domain runs at a fixed frequency; there is no DVFS. The unsupported accelerator `ClockPeriod_ns` field is rejected; use cluster `Clocks.Compute` instead.
 
 The timing rules on these clocks are:
 
@@ -481,3 +481,46 @@ scons build/ARM/gem5.opt --with-salam \
 The same workload structure used for BFS—kernel source under `hw/`, a host program under `sw/`, and a `config.yml` that describes the cluster and timing—applies to other kernels as well (for example GEMM or stencil). Once that pattern is familiar, adding a new accelerator is largely a matter of writing a new kernel and updating the YAML, rather than rebuilding the system from scratch. Multiple kernels can also be placed in one AccCluster and connected through shared local memories and DMA, which makes it practical to assemble end-to-end workloads such as MobileNet from a set of cooperating accelerators.
 
 Additional SALAM benchmarks beyond the in-tree BFS example will be made available later through gem5 Resources.
+
+
+### Workload field validation
+
+Memory `Size`, stream `StreamSize`, and explicit `BufferSize` values are
+positive integer bytes. `StreamSize` is required; an omitted stream
+`BufferSize` uses the `StreamBuffer` default of 256 bytes. Cache `Size`
+also accepts integer strings and binary-prefix strings such as `32Ki` or
+`32k`, without a `B` suffix. These forms are normalized to integer bytes.
+SPM boolean fields accept YAML booleans, 0/1, and gem5's boolean strings
+(`true`/`false`, `t`/`f`, `yes`/`no`, `y`/`n`, `1`/`0`). Defaults are
+`ReadyMode=false`, `ResetOnRead=true`, `ReadOnInvalid=false`, and
+`WriteOnValid=true`.
+
+Names start with a letter and contain letters, digits, or underscores.
+DMA and accelerator names, and non-cache variable names, share a
+case-insensitive child namespace. Cache ownership names preserve case.
+Collisions with existing system or cluster attributes are rejected.
+Stream-buffer `InCon` and `OutCon` are required and connect both buffer
+endpoints to accelerators in the same cluster. Accelerator `StreamIn`
+and `StreamOut` name streaming DMAs; each DMA direction has one owner.
+One accelerator may own both distinct directions. Buffer endpoints
+cannot also be listed in `StreamIn` or `StreamOut`. `PIOMaster` and
+`LocalSlaves` support only `LocalBus` (also spelled `local_bus`, with
+case ignored). Named direct PIO links cannot share the required bus
+connection. These restrictions apply to workload YAML; programmatic SimObject
+construction configures ports directly. Repeated explicit YAML keys and
+repeated scalar fields across accelerator entries are rejected. YAML
+merge precedence and explicit overrides of merged values are preserved.
+
+`IrPath` and `SysPath` are relative to the top workload directory;
+`HWPath` and memory `Characterization` paths are relative to their
+declaring YAML file. Absolute paths are accepted. Included `SysPath`
+files retain the top workload directory for IR and further system paths.
+`TopName` and `ClockPeriod_ns` are unsupported and rejected: use the
+`top` entry function and cluster `Clocks.Compute` respectively. Removing
+these previously ignored keys does not change the effective default clock.
+
+The ARM cluster builder allocates devices in
+`[0x2f000000, 0x30000000)`, before the platform's PCI configuration region.
+It rejects allocations outside this range. The parser also rejects
+64-bit address overflow; the existing 64-byte allocation alignment is
+unchanged.

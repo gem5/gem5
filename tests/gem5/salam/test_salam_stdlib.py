@@ -164,6 +164,159 @@ TestSuite(
 )
 
 
+def schema_parameters(kind):
+    def check(params):
+        import yaml
+
+        harness = params.fixtures["salam-workload"]
+        path = os.path.join(harness.accpath, "config.yml")
+        with open(path) as stream:
+            document = yaml.safe_load(stream)
+        items = document["acc_cluster"]
+        for item in items:
+            if "DMA" in item:
+                for dma in item["DMA"]:
+                    dma.pop("BufferSize", None)
+                    dma.pop("MaxReqSize", None)
+            if "Accelerator" not in item:
+                continue
+            acc = item["Accelerator"]
+            acc[0]["IrPath"] = harness.ir
+            for entry in acc:
+                for variable in entry.get("Var", []):
+                    if variable["Type"] == "SPM":
+                        variable.update(
+                            ReadyMode="false",
+                            ResetOnRead="0",
+                            ReadOnInvalid="yes",
+                            WriteOnValid="n",
+                        )
+                        if kind == "range":
+                            variable["Size"] = 0x1000000
+            acc.append(
+                {
+                    "Var": [
+                        {
+                            "Name": "Flow",
+                            "Type": "Stream",
+                            "StreamSize": 8,
+                            "InCon": "Kernel",
+                            "OutCon": "Other",
+                        },
+                        {
+                            "Name": (
+                                "cache_size"
+                                if kind == "collision"
+                                else "Cache"
+                            ),
+                            "Type": "Cache",
+                            "Size": "32Ki",
+                        },
+                    ]
+                }
+            )
+            acc[0]["StreamIn"] = "sDMA"
+            acc[0]["StreamOut"] = "SDMA"
+        items.extend(
+            [
+                {
+                    "DMA": [
+                        {
+                            "Name": "sdma",
+                            "Type": "Stream",
+                            "PIOMaster": "localbus",
+                            "BufferSize": 512,
+                            "MaxReqSize": 32,
+                        }
+                    ]
+                },
+                {
+                    "Accelerator": [
+                        {
+                            "Name": "Other",
+                            "IrPath": harness.ir,
+                            "Profile": "kernel",
+                            "PIOSize": 5,
+                            "PIOMaster": "LocalBus",
+                        }
+                    ]
+                },
+            ]
+        )
+        with open(path, "w") as stream:
+            yaml.safe_dump(document, stream, sort_keys=False)
+        result, outdir = _board_check(params)
+        if kind != "parameters":
+            message = (
+                "exceed the supported ARM workload address range"
+                if kind == "range"
+                else "collides with a cluster attribute"
+            )
+            if result.returncode == 0 or message not in _read(
+                outdir, "simerr.txt"
+            ):
+                raise AssertionError(
+                    f"missing schema rejection {message}; see {outdir}"
+                )
+            return
+        if result.returncode != 0:
+            raise AssertionError(f"schema construction failed; see {outdir}")
+        ini = configparser.ConfigParser(interpolation=None, strict=False)
+        ini.optionxform = str
+        ini.read(os.path.join(outdir, "config.ini"))
+        cluster = "board.harness_clstr."
+        expected = {
+            ("flow", "buffer_size"): "256",
+            ("flow", "stream_size"): "8",
+            ("Cache", "size"): "32768",
+            ("mem", "ready_mode"): "false",
+            ("mem", "reset_on_scratchpad_read"): "false",
+            ("mem", "read_on_invalid"): "true",
+            ("mem", "write_on_valid"): "false",
+            ("dma", "buffer_size"): "1024",
+            ("dma", "max_req_size"): "64",
+            ("sdma", "read_buffer_size"): "512",
+            ("sdma", "write_buffer_size"): "512",
+            ("sdma", "max_req_size"): "32",
+            ("sdma", "stream_size"): "8",
+            ("kernel.llvm_interface", "in_file"): harness.ir,
+        }
+        for (child, field), value in expected.items():
+            actual = ini.get(cluster + child, field, fallback=None)
+            if actual != value:
+                raise AssertionError(
+                    f"{child}.{field}={actual!r}, expected {value!r}"
+                )
+        for child, field, endpoint in (
+            ("flow", "stream_in", "kernel.stream"),
+            ("flow", "stream_out", "other.stream"),
+            ("sdma", "stream_in", "kernel.stream"),
+            ("sdma", "stream_out", "kernel.stream"),
+        ):
+            actual = ini.get(cluster + child, field)
+            if not actual.startswith(cluster + endpoint + "["):
+                raise AssertionError(f"{child}.{field} connected to {actual}")
+
+    return check
+
+
+for kind in ("parameters", "range", "collision"):
+    gem5 = st.SalamGem5Fixture()
+    tempdir = TempdirFixture()
+    TestSuite(
+        name=f"salam-stdlib-schema-{kind}",
+        fixtures=[
+            gem5,
+            tempdir,
+            st.SalamHarnessFixture(
+                "salam-workload", gem5, tempdir, "sanity.c", [2, 3], 1
+            ),
+        ],
+        tags=[st.SALAM_TAG, "salam-correctness"],
+        tests=[TestFunction(schema_parameters(kind), name=f"schema-{kind}")],
+    )
+
+
 BFS_WALL = 300
 BFS_TICKS = 4000000000
 

@@ -12,22 +12,18 @@ acc_cluster:
           - Name: Top
             IrPath: hw/top.ll
             Profile: top
-            TopName: top
             PIOSize: 37
             InterruptNum: 68
             PIOMaster: LocalBus
             LocalSlaves: LocalBus
             Debug: false
-            ClockPeriod_ns: 0.1
     - Accelerator:
           - Name: bfs
             IrPath: hw/bfs.ll
             Profile: bfs
-            TopName: top
             Debug: false
             PIOSize: 5
             PIOMaster: LocalBus
-            ClockPeriod_ns: 0.1
           - Var:
                 - Name: NODES
                   Type: RegisterBank

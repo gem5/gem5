@@ -40,12 +40,16 @@
 # Accelerator cluster construction shared by configs/SALAM and the gem5
 # standard library. It is embedded in gem5 builds with SALAM.
 
+import os
 from types import SimpleNamespace
 
 from m5.objects import *
 from m5.params import AddrRange
 
-from . import config_parser
+from . import (
+    config_parser,
+    workload_config,
+)
 
 
 class AcceleratorCache(Cache):
@@ -73,6 +77,27 @@ def build_clusters(
     options = SimpleNamespace(acc_cache=acc_cache, l2cache=l2cache)
     clusters = config_parser.load_clusters(working_dir, config_name)
     for spec in clusters:
+        if (
+            spec.base_address < workload_config.WORKLOAD_ADDR_START
+            or spec.top_address > workload_config.WORKLOAD_ADDR_END
+        ):
+            raise workload_config.WorkloadConfigError(
+                spec.config_path,
+                f"cluster {spec.name}",
+                "Size",
+                spec.top_address - spec.base_address,
+                "allocated devices exceed the supported ARM workload "
+                "address range [0x2f000000, 0x30000000)",
+            )
+        if hasattr(system, spec.name.lower()):
+            raise workload_config.WorkloadConfigError(
+                spec.config_path,
+                "cluster",
+                "Name",
+                spec.name,
+                f"Name {spec.name!r} collides with a system attribute",
+            )
+    for spec in clusters:
         setattr(system, spec.name.lower(), AccCluster())
         clstr = getattr(system, spec.name.lower())
         _attach_cluster(options, system, clstr, spec, membus)
@@ -99,6 +124,21 @@ def _attach_cluster(options, system, clstr, spec, membus=None):
     clstr._connect_caches(system, options, l2coherent=False, membus=membus)
     gic = system.realview.gic
 
+    children = [(obj.name, obj.name) for obj in spec.dmas + spec.accs]
+    children.extend(
+        (var.name if var.type == "Cache" else var.name.lower(), var.name)
+        for acc in spec.accs
+        for var in acc.variables
+    )
+    for child, name in children:
+        if hasattr(clstr, child):
+            raise workload_config.WorkloadConfigError(
+                spec.config_path,
+                f"cluster {spec.name}",
+                "Name",
+                name,
+                f"Name {name!r} collides with a cluster attribute",
+            )
     for dma in spec.dmas:
         if dma.dmaType == "Stream":
             _attach_stream_dma(clstr, dma, gic)
@@ -135,8 +175,10 @@ def _attach_noncoherent_dma(clstr, dma, gic):
     setattr(clstr, dma.name, NoncoherentDma(**params))
     obj = getattr(clstr, dma.name)
     obj.cluster_dma = clstr.local_bus.cpu_side_ports
-    obj.max_req_size = dma.maxReq
-    obj.buffer_size = dma.size
+    if dma.maxReq is not None:
+        obj.max_req_size = dma.maxReq
+    if dma.size is not None:
+        obj.buffer_size = dma.size
     obj.dma = clstr.coherency_bus.cpu_side_ports
     if dma.pio_masters is not None:
         for master in dma.pio_masters:
@@ -152,12 +194,15 @@ def _attach_stream_dma(clstr, dma, gic):
             status_addr=dma.statusAddress,
             pio_size=dma.pio,
             gic=gic,
-            max_pending=dma.pio,
         ),
     )
     obj = getattr(clstr, dma.name)
     obj.stream_addr = dma.address + dma.pio
-    obj.stream_size = dma.size
+    if dma.size is not None:
+        obj.read_buffer_size = dma.size
+        obj.write_buffer_size = dma.size
+    if dma.maxReq is not None:
+        obj.max_req_size = dma.maxReq
     obj.pio_delay = "1ns"
     if dma.rd_int != None:
         obj.rd_int = dma.rd_int
@@ -170,7 +215,7 @@ def _attach_stream_dma(clstr, dma, gic):
 
 
 def _attach_accelerator(clstr, acc, gic):
-    ir = acc.working_dir + "/" + acc.ir_path
+    ir = os.path.normpath(os.path.join(acc.working_dir, acc.ir_path))
     cycle_counts = config_parser.resolve_cycle_counts(
         acc.hw_config_document,
         acc.hw_config_path,
@@ -227,16 +272,14 @@ def _connect_accelerator(clstr, acc):
 
 def _attach_variable(clstr, var):
     if var.type == "Stream":
-        setattr(
-            clstr,
-            var.name.lower(),
-            StreamBuffer(
-                stream_address=var.address,
-                status_address=var.statusAddress,
-                stream_size=var.streamSize,
-                buffer_size=var.bufferSize,
-            ),
+        params = dict(
+            stream_address=var.address,
+            status_address=var.statusAddress,
+            stream_size=var.streamSize,
         )
+        if var.bufferSize is not None:
+            params["buffer_size"] = var.bufferSize
+        setattr(clstr, var.name.lower(), StreamBuffer(**params))
         buf = getattr(clstr, var.name.lower())
         getattr(clstr, var.inCon).stream = buf.stream_in
         getattr(clstr, var.outCon).stream = buf.stream_out
@@ -261,7 +304,9 @@ def _attach_variable(clstr, var):
         for con in var.connections:
             getattr(clstr, con.conName.lower()).reg = reg.reg_port
     elif var.type == "Cache":
-        setattr(clstr, var.name, AcceleratorCache(size=str(var.size) + "B"))
+        # Keep normalized integer bytes in the workload model; MemorySize
+        # expects a unit-bearing string at the SimObject boundary.
+        setattr(clstr, var.name, AcceleratorCache(size=f"{var.size}B"))
         cache = getattr(clstr, var.name)
         cache.mem_side = clstr.coherency_bus.cpu_side_ports
         cache.cpu_side = getattr(clstr, var.accName.lower()).local

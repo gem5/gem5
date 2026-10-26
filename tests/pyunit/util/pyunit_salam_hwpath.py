@@ -148,3 +148,60 @@ class SalamHWPathTestSuite(unittest.TestCase):
     def test_file_errors_omit_missing_profile(self):
         err = config_parser.CycleCountError("x.yml", None, "bad file")
         self.assertEqual(str(err), "SALAM config: x.yml: bad file")
+
+    def test_nested_paths_keep_their_documented_bases(self):
+        _write(
+            self.root, "config.yml", "acc_cluster:\n    - SysPath: sub/c.yml\n"
+        )
+        _write(
+            self.root,
+            "sub/c.yml",
+            "acc_cluster:\n    - SysPath: leaf/d.yml\n      HWPath: cycles.yml\n",
+        )
+        _write(self.root, "sub/cycles.yml", _timing(7))
+        _write(
+            self.root,
+            "leaf/d.yml",
+            _cluster([("a", [])]) + "          - Var:\n"
+            "                - Name: Buffer\n"
+            "                  Type: SPM\n"
+            "                  Size: 64\n"
+            "                  Characterization: coefficients/mem.yml\n",
+        )
+        acc = _counts(self.root)["a"]
+        self.assertEqual(acc.working_dir, self.root)
+        self.assertEqual(acc.ir_path, "hw/a.ll")
+        self.assertEqual(self.resolve(acc), {"add": 7})
+        self.assertEqual(
+            acc.variables[0].characterization,
+            os.path.join(self.root, "leaf/coefficients/mem.yml"),
+        )
+        self.assertEqual(
+            acc.hw_config_path, os.path.join(self.root, "sub/cycles.yml")
+        )
+
+    def test_absolute_config_and_resource_paths(self):
+        included = _write(self.root, "sub/c.yml", _cluster([("a", [])]))
+        main = _write(
+            self.root,
+            "entry.yml",
+            f"acc_cluster:\n    - SysPath: {included}\n",
+        )
+        (cluster,) = config_parser.load_clusters(self.root, main)
+        self.assertEqual(cluster.accs[0].config_path, included)
+        cycles = _write(self.root, "cycles.yml", _timing(9))
+        _write(
+            self.root, "config.yml", _cluster([("a", [f"HWPath: {cycles}"])])
+        )
+        self.assertEqual(self.resolve(_counts(self.root)["a"]), {"add": 9})
+
+    def test_recursive_syspath_is_a_configuration_error(self):
+        _write(
+            self.root,
+            "config.yml",
+            "acc_cluster:\n    - SysPath: config.yml\n",
+        )
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "recursive SysPath"
+        ):
+            _counts(self.root)

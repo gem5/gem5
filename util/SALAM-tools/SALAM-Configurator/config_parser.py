@@ -45,7 +45,6 @@ try:
 except ImportError:
     # Run from util/SALAM-tools/SALAM-Configurator.
     import workload_config
-import yaml
 
 
 def open_yaml(yml_path: str):
@@ -67,7 +66,18 @@ def parse_yaml(
     hw_path: str = None,
     hw_config_document=None,
     hw_config_source: str = None,
+    _include_stack=(),
 ):
+    current = os.path.realpath(parent_path) if parent_path else None
+    if current in _include_stack:
+        raise workload_config.WorkloadConfigError(
+            parent_path,
+            "cluster",
+            "SysPath",
+            parent_path,
+            "recursive SysPath inclusion is unsupported",
+        )
+    _include_stack = _include_stack + (current,)
     clusters = []
     # Load in each acc cluster and add it to the list
     for cluster_dict in parent_config:
@@ -93,7 +103,7 @@ def parse_yaml(
                     if "SysPath" in param:
                         FOUND_SYS_PATH = True
                         cur_path = os.path.abspath(
-                            working_dir + param["SysPath"]
+                            os.path.join(working_dir, param["SysPath"])
                         )
                         cur_config = open_yaml(yml_path=cur_path)
                     if "HWPath" in param:
@@ -131,6 +141,7 @@ def parse_yaml(
                     hw_path=doc_hw_path,
                     hw_config_document=doc_hw_document,
                     hw_config_source=doc_hw_source,
+                    _include_stack=_include_stack,
                 )
                 clusters.extend(temp_cluster)
             elif FOUND_HW_PATH:
@@ -172,8 +183,13 @@ def parse_yaml(
                 clocks=clocks,
             )
         )
-        base_address = clusters[-1].top_address + (
-            64 - (int(clusters[-1].top_address) % 64)
+        end = clusters[-1].top_address
+        base_address = _advance_address(
+            end,
+            64 - end % 64,
+            parent_path,
+            f"cluster {cluster_name}",
+            "Name",
         )
         if (int(base_address) % 64) != 0:
             print("Address Alignment Error: " + hex(base_address))
@@ -183,9 +199,16 @@ def parse_yaml(
 def load_clusters(
     working_dir, config_name="config.yml", base_address=0x2F000000
 ):
-    if not working_dir.endswith("/"):
-        working_dir = working_dir + "/"
-    main_yml_path = os.path.abspath(working_dir + config_name)
+    working_dir = os.path.abspath(working_dir)
+    main_yml_path = os.path.abspath(os.path.join(working_dir, config_name))
+    if type(base_address) is not int or not 0 <= base_address < (1 << 64):
+        raise workload_config.WorkloadConfigError(
+            main_yml_path,
+            "cluster",
+            "base_address",
+            base_address,
+            "base_address must be an unsigned 64-bit integer",
+        )
     config = open_yaml(yml_path=main_yml_path)
     _, clusters = parse_yaml(
         parent_config=config,
@@ -193,7 +216,37 @@ def load_clusters(
         working_dir=working_dir,
         parent_path=main_yml_path,
     )
+    names = set()
+    for cluster in clusters:
+        child = cluster.name.lower()
+        if child in names:
+            raise workload_config.WorkloadConfigError(
+                cluster.config_path,
+                "cluster",
+                "Name",
+                cluster.name,
+                f"duplicate cluster Name {cluster.name!r}",
+            )
+        names.add(child)
     return clusters
+
+
+def _advance_address(address, increment, path, scope, field):
+    if address < 0 or increment > (1 << 64) - 1 - address:
+        raise workload_config.WorkloadConfigError(
+            path,
+            scope,
+            field,
+            increment,
+            f"{field} allocation exceeds the 64-bit address space",
+        )
+    return address + increment
+
+
+def _reserve(address, size, path, scope, field):
+    # Preserve the existing extra 64-byte boundary even for aligned sizes.
+    increment = size + (64 - size % 64)
+    return _advance_address(address, increment, path, scope, field)
 
 
 class AccCluster:
@@ -237,117 +290,60 @@ class AccCluster:
         acc_class = []
         top_address = self.base_address
 
-        # Parse DMAs
+        # DMA records have already passed the shared workload validator.
         for dma in self.dmas:
-            for device_dict in dma["DMA"]:
-                # Decide whether the DMA is NonCoherent or Stream
-                if "NonCoherent" in device_dict["Type"]:
+            for device in dma["DMA"]:
+                params = dict(
+                    name=device["Name"],
+                    pio_masters=device["PIOMaster"].split(","),
+                    address=top_address,
+                    dmaType=device["Type"],
+                    size=device.get("BufferSize"),
+                    maxReq=device.get("MaxReqSize"),
+                )
+                if device["Type"] == "NonCoherent":
                     pio_size = 21
-                    pio_masters = []
-                    if "PIOMaster" in device_dict:
-                        pio_masters.extend(device_dict["PIOMaster"].split(","))
-                    if "InterruptNum" in device_dict:
-                        dma_class.append(
-                            DMA(
-                                name=device_dict["Name"],
-                                pio=pio_size,
-                                pio_masters=pio_masters,
-                                address=top_address,
-                                dmaType=device_dict["Type"],
-                                int_num=device_dict["InterruptNum"],
-                                size=device_dict["BufferSize"],
-                                maxReq=device_dict["MaxReqSize"],
-                            )
+                    dma_class.append(
+                        DMA(
+                            pio=pio_size,
+                            int_num=device.get("InterruptNum"),
+                            **params,
                         )
-                    else:
-                        dma_class.append(
-                            DMA(
-                                name=device_dict["Name"],
-                                pio=pio_size,
-                                pio_masters=pio_masters,
-                                address=top_address,
-                                dmaType=device_dict["Type"],
-                                size=device_dict["BufferSize"],
-                                maxReq=device_dict["MaxReqSize"],
-                            )
-                        )
-                    aligned_inc = int(pio_size) + (64 - (int(pio_size) % 64))
-                    top_address = top_address + aligned_inc
-                elif "Stream" in device_dict["Type"]:
-                    pio_size = 32
-                    statusSize = 4
-                    pio_masters = []
-
-                    alignedStatusInc = int(statusSize) + (
-                        64 - (int(statusSize) % 64)
                     )
-                    aligned_inc = int(pio_size) + (64 - (int(pio_size) % 64))
-
-                    statusAddress = top_address + aligned_inc
-
-                    if "PIOMaster" in device_dict:
-                        pio_masters.extend(device_dict["PIOMaster"].split(","))
-                    # Can come back and get rid of this if/else tree
-                    if "ReadInt" in device_dict:
-                        if "WriteInt" in device_dict:
-                            dma_class.append(
-                                StreamDMA(
-                                    name=device_dict["Name"],
-                                    pio=pio_size,
-                                    pio_masters=pio_masters,
-                                    address=top_address,
-                                    statusAddress=statusAddress,
-                                    dmaType=device_dict["Type"],
-                                    rd_int=device_dict["ReadInt"],
-                                    wr_int=device_dict["WriteInt"],
-                                    size=device_dict["BufferSize"],
-                                )
-                            )
-                        else:
-                            dma_class.append(
-                                StreamDMA(
-                                    name=device_dict["Name"],
-                                    pio=pio_size,
-                                    pio_masters=pio_masters,
-                                    address=top_address,
-                                    statusAddress=statusAddress,
-                                    dmaType=device_dict["Type"],
-                                    rd_int=device_dict["ReadInt"],
-                                    wr_int=None,
-                                    size=device_dict["BufferSize"],
-                                )
-                            )
-                    elif "WriteInt" in device_dict:
-                        dma_class.append(
-                            StreamDMA(
-                                name=device_dict["Name"],
-                                pio=pio_size,
-                                pio_masters=pio_masters,
-                                address=top_address,
-                                statusAddress=statusAddress,
-                                dmaType=device_dict["Type"],
-                                rd_int=None,
-                                wr_int=device_dict["WriteInt"],
-                                size=device_dict["BufferSize"],
-                            )
+                    top_address = _reserve(
+                        top_address,
+                        pio_size,
+                        self.config_path,
+                        f"DMA {device['Name']}",
+                        "PIOSize",
+                    )
+                else:
+                    pio_size = 32
+                    status_size = 4
+                    aligned_inc = pio_size + (64 - pio_size % 64)
+                    dma_class.append(
+                        StreamDMA(
+                            pio=pio_size,
+                            statusAddress=top_address + aligned_inc,
+                            rd_int=device.get("ReadInt"),
+                            wr_int=device.get("WriteInt"),
+                            **params,
                         )
-                    else:
-                        dma_class.append(
-                            StreamDMA(
-                                name=device_dict["Name"],
-                                pio=pio_size,
-                                pio_masters=pio_masters,
-                                address=top_address,
-                                statusAddress=statusAddress,
-                                dmaType=device_dict["Type"],
-                                rd_int=None,
-                                wr_int=None,
-                                size=device_dict["BufferSize"],
-                            )
-                        )
-
-                    # Increment Top Address
-                    top_address = top_address + aligned_inc + alignedStatusInc
+                    )
+                    data_end = _reserve(
+                        top_address,
+                        pio_size,
+                        self.config_path,
+                        f"DMA {device['Name']}",
+                        "PIOSize",
+                    )
+                    top_address = _reserve(
+                        data_end,
+                        status_size,
+                        self.config_path,
+                        f"DMA {device['Name']}",
+                        "PIOSize",
+                    )
         # Parse Accelerators
         for acc in self.accs:
             name = None
@@ -378,7 +374,13 @@ class AccCluster:
                     pio_size = device_dict["PIOSize"] + (
                         64 - (device_dict["PIOSize"] % 64)
                     )
-                    top_address = top_address + pio_size
+                    top_address = _reserve(
+                        top_address,
+                        device_dict["PIOSize"],
+                        self.config_path,
+                        f"accelerator {name}",
+                        "PIOSize",
+                    )
                     if ((top_address + pio_size) % 64) != 0:
                         print("Acc Error: " + hex(pio_address))
                 if "IrPath" in device_dict:
@@ -430,7 +432,13 @@ class AccCluster:
                             aligned_inc = int(var["Size"]) + (
                                 64 - (int(var["Size"]) % 64)
                             )
-                            top_address = top_address + aligned_inc
+                            top_address = _reserve(
+                                top_address,
+                                var["Size"],
+                                self.config_path,
+                                f"variable {var['Name']}",
+                                "Size",
+                            )
                         elif "Stream" in var["Type"]:
                             statusSize = 4
                             aligned_inc = int(var["StreamSize"] + 4) + (
@@ -439,14 +447,31 @@ class AccCluster:
                             status_inc = int(statusSize) + (
                                 64 - (int(statusSize) % 64)
                             )
-                            top_address = (
-                                top_address + aligned_inc + status_inc
+                            data_end = _reserve(
+                                top_address,
+                                var["StreamSize"] + 4,
+                                self.config_path,
+                                f"variable {var['Name']}",
+                                "StreamSize",
+                            )
+                            top_address = _reserve(
+                                data_end,
+                                statusSize,
+                                self.config_path,
+                                f"variable {var['Name']}",
+                                "StreamSize",
                             )
                         elif "RegisterBank" in var["Type"]:
                             aligned_inc = int(var["Size"]) + (
                                 64 - (int(var["Size"]) % 64)
                             )
-                            top_address = top_address + aligned_inc
+                            top_address = _reserve(
+                                top_address,
+                                var["Size"],
+                                self.config_path,
+                                f"variable {var['Name']}",
+                                "Size",
+                            )
                         elif "Cache" in var["Type"]:
                             # Don't need to change anything for cache
                             top_address = top_address
@@ -542,7 +567,8 @@ class StreamDMA:
         dmaType: str,
         rd_int: int = None,
         wr_int: int = None,
-        size: int = 64,
+        size: int = None,
+        maxReq: int = None,
     ):
         self.name = name.lower()
         self.pio = pio
@@ -553,12 +579,11 @@ class StreamDMA:
         self.dmaType = dmaType
         self.rd_int = rd_int
         self.wr_int = wr_int
-
-        for master in self.pio_masters:
-            count = 0
-            if "localbus" in master.lower():
-                pio_masters[count] = "local_bus"
-                count += 1
+        self.maxReq = maxReq
+        self.pio_masters = [
+            "local_bus" if master.lower() == "localbus" else master.lower()
+            for master in pio_masters
+        ]
 
 
 class DMA:
@@ -570,8 +595,8 @@ class DMA:
         address: int,
         dmaType: str,
         int_num=None,
-        size: int = 64,
-        maxReq: int = 4,
+        size: int = None,
+        maxReq: int = None,
     ):
         self.name = name.lower()
         self.pio = pio
@@ -582,11 +607,10 @@ class DMA:
         self.int_num = int_num
         self.maxReq = maxReq
 
-        for master in self.pio_masters:
-            count = 0
-            if "localbus" in master.lower():
-                pio_masters[count] = "local_bus"
-                count += 1
+        self.pio_masters = [
+            "local_bus" if master.lower() == "localbus" else master.lower()
+            for master in pio_masters
+        ]
 
 
 class PortedConnection:
@@ -703,22 +727,22 @@ def _cycle_counts(hw_config, profile_name, source):
 
 def _load_external_hw_config(path, source=None):
     try:
-        stream = open(path, encoding="utf-8")
-    except OSError as exc:
-        # Report the file that declared HWPath, not just the missing one.
+        documents = [
+            document
+            for document in workload_config.read_yaml(path)
+            if document is not None
+        ]
+    except workload_config.WorkloadConfigError as exc:
+        if not isinstance(exc.__cause__, OSError):
+            raise
+        cause = exc.__cause__
         raise workload_config.WorkloadConfigError(
             source or path,
             "HWPath",
             "HWPath",
             path,
-            f"cannot read HWPath file {path}: {exc.strerror}",
-        ) from exc
-    with stream:
-        documents = [
-            document
-            for document in yaml.safe_load_all(stream)
-            if document is not None
-        ]
+            f"cannot read HWPath file {path}: {cause.strerror}",
+        ) from cause
     if len(documents) != 1 or not isinstance(documents[0], dict):
         raise CycleCountError(
             path, None, "HWPath file must contain one YAML document"

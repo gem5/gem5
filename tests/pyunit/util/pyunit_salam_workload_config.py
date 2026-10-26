@@ -32,6 +32,8 @@ import sys
 import tempfile
 import unittest
 
+import yaml
+
 _ROOT = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), *[os.pardir] * 3)
 )
@@ -105,6 +107,69 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
             self.counts()
         self.assertIn(message, str(ctx.exception))
         return ctx.exception
+
+    def test_rejects_duplicate_explicit_yaml_keys(self):
+        for content in (
+            "hw_config: {k: null, k: null}",
+            "hw_config: {k: {instructions: {add: {runtime_cycles: 1, "
+            "runtime_cycles: 2}}}}",
+            "hw_config: {k: &k {instructions: {}, instructions: {}}}",
+            "hw_config: {k: {<<: {instructions: {}}, <<: {instructions: {}}}}",
+        ):
+            with self.subTest(content=content):
+                path = self.write("duplicate.yml", [content])
+                with self.assertRaisesRegex(
+                    workload_config.WorkloadConfigError,
+                    "duplicate explicit key",
+                ) as ctx:
+                    workload_config.load_documents(path)
+                self.assertEqual(ctx.exception.path, path)
+                self.assertIn("line 1", str(ctx.exception))
+        path = self.write("cycles.yml", ["hw_config: {k: null, k: null}"])
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "duplicate explicit key"
+        ):
+            config_parser.resolve_cycle_counts(None, path, "k")
+
+    def test_yaml_merges_keep_precedence_without_sharing_mutable_records(self):
+        path = self.write(
+            "merges.yml",
+            [
+                "hw_config:",
+                "  first: &first {instructions: {add: {runtime_cycles: 2}}}",
+                "  second: &second {instructions: {add: {runtime_cycles: 3}}}",
+                "  merged: {<<: [*first, *second]}",
+                "  explicit:",
+                "    <<: *first",
+                "    instructions: {add: {runtime_cycles: 5}}",
+                "  alias: *first",
+            ],
+        )
+        (document,) = workload_config.load_documents(path)
+        nodes = document["hw_config"]
+        self.assertEqual(
+            nodes["merged"]["instructions"]["add"]["runtime_cycles"], 2
+        )
+        self.assertEqual(
+            nodes["explicit"]["instructions"]["add"]["runtime_cycles"], 5
+        )
+        nodes["alias"]["instructions"]["add"]["runtime_cycles"] = 9
+        self.assertEqual(
+            nodes["first"]["instructions"]["add"]["runtime_cycles"], 2
+        )
+        self.assertEqual(
+            nodes["merged"]["instructions"]["add"]["runtime_cycles"], 2
+        )
+
+    def test_yaml_errors_have_workload_diagnostics(self):
+        for content in ("hw_config: [", "hw_config: &self {k: *self}"):
+            with self.subTest(content=content):
+                path = self.write("invalid.yml", [content])
+                with self.assertRaises(
+                    workload_config.WorkloadConfigError
+                ) as ctx:
+                    workload_config.load_documents(path)
+                self.assertEqual(ctx.exception.path, path)
 
     def test_tracked_bfs_configs_load(self):
         for kind in ("src", "workloads"):
@@ -201,6 +266,27 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                 )
         self.config(hw_config=self._entry("load", "runtime_cycles: 0"))
         self.assertEqual(self.counts()["kernel"], {"load": 0})
+
+    def test_rejects_terminator_latency(self):
+        for name in ("br", "ret", "switch_inst"):
+            with self.subTest(name=name):
+                self.rejects(
+                    f"nonzero runtime_cycles for {name!r} is not supported",
+                    hw_config=self._entry(name, "runtime_cycles: 7"),
+                )
+                self.config(hw_config=self._entry(name, "runtime_cycles: 0"))
+                self.assertEqual(self.counts()["kernel"], {name: 0})
+        self.config(hw_config=self._entry("call", "runtime_cycles: 7"))
+        self.assertEqual(self.counts()["kernel"], {"call": 7})
+
+    def test_external_hwpath_rejects_terminator_latency(self):
+        self.write("t/cycles.yml", self._entry("br", "runtime_cycles: 7"))
+        err = self.rejects(
+            "terminator latency is not modeled",
+            accel_extra=["HWPath: t/cycles.yml"],
+            hw_config=["hw_config:", "    k:"],
+        )
+        self.assertEqual(err.path, os.path.join(self.root, "t", "cycles.yml"))
 
     def test_external_hwpath_uses_the_same_rules(self):
         self.write("t/cycles.yml", self._entry("add", "runtime_cycles: -2"))
@@ -304,6 +390,14 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                 ["    - Clocks:", "          Compute: 10"],
                 "Clocks Compute must be a positive frequency",
             ),
+            (
+                ["    - Clocks:", '          Compute: "100MHz\\n"'],
+                "Clocks Compute must be a positive frequency",
+            ),
+            (
+                ["    - Clocks:", '          Fabric: "10ns\\n"'],
+                "Clocks Fabric must be a positive frequency",
+            ),
         ):
             with self.subTest(lines=lines):
                 self.config(clocks=lines)
@@ -313,19 +407,446 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                     config_parser.load_clusters(self.root)
                 self.assertIn(message, str(ctx.exception))
 
-    def test_legacy_accelerator_keys_are_ignored_with_a_warning(self):
+    def test_legacy_accelerator_keys_are_rejected(self):
+        for field, value, hint in (
+            ("TopName", "top", "entry function is top"),
+            ("ClockPeriod_ns", "0.1", "Clocks.Compute"),
+        ):
+            with self.subTest(field=field):
+                err = self.rejects(
+                    f"unsupported field {field}",
+                    hw_config=["hw_config:", "    k:"],
+                    accel_extra=[f"{field}: {value}"],
+                )
+                self.assertEqual(err.field, field)
+                self.assertIn(hint, str(err))
+
+    def variable(self, kind, **fields):
+        record = {"Name": "V", "Type": kind, **fields}
         self.config(
             hw_config=["hw_config:", "    k:"],
-            accel_extra=["TopName: top", "ClockPeriod_ns: 0.1"],
+            variables=[yaml.safe_dump([record], sort_keys=False).splitlines()],
         )
-        stderr = io.StringIO()
-        with contextlib.redirect_stderr(stderr):
-            self.counts()
-        self.assertIn("ignoring TopName", stderr.getvalue())
-        self.assertIn(
-            "ignoring ClockPeriod_ns; set the cluster's Clocks Compute clock",
-            stderr.getvalue(),
+        cluster = config_parser.load_clusters(self.root)[0]
+        return cluster.accs[0].variables[0]
+
+    def test_memory_sizes_require_positive_integer_bytes(self):
+        for kind in ("SPM", "RegisterBank"):
+            for value in (None, 0, -1, True, 1.5, "64", 1 << 64):
+                with self.subTest(kind=kind, value=value):
+                    with self.assertRaises(
+                        workload_config.WorkloadConfigError
+                    ) as ctx:
+                        self.variable(kind, Size=value)
+                    self.assertEqual(ctx.exception.field, "Size")
+            self.assertEqual(self.variable(kind, Size=17).size, 17)
+            with self.assertRaises(workload_config.WorkloadConfigError):
+                self.variable(kind)
+
+    def test_cache_size_keeps_supported_prefix_forms(self):
+        for value, expected in (
+            (32768, 32768),
+            ("32768", 32768),
+            ("32Ki", 32768),
+            ("32k", 32768),
+            ("0x8000", 32768),
+            ("1Mi", 1 << 20),
+            ("+32Ki", 32768),
+            ("0o40Ki", 32768),
+            ("0b100000Ki", 32768),
+        ):
+            with self.subTest(value=value):
+                self.assertEqual(
+                    self.variable("Cache", Size=value).size, expected
+                )
+        for value in (None, 0, -1, True, 1.5, "1.5Ki", "32KiB", "1KB"):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(
+                    workload_config.WorkloadConfigError, "Cache Size"
+                ):
+                    self.variable("Cache", Size=value)
+
+    def test_spm_flags_normalize_without_truthiness(self):
+        fields = {
+            "ReadyMode": "readyMode",
+            "ResetOnRead": "resetOnRead",
+            "ReadOnInvalid": "readOnInvalid",
+            "WriteOnValid": "writeOnValid",
+        }
+        default = self.variable("SPM", Size=64)
+        self.assertEqual(
+            [getattr(default, name) for name in fields.values()],
+            [False, True, False, True],
         )
+        for field, attr in fields.items():
+            for value, expected in (
+                (True, True),
+                (False, False),
+                (1, True),
+                (0, False),
+                ("yes", True),
+                ("FALSE", False),
+                ("t", True),
+                ("0", False),
+            ):
+                with self.subTest(field=field, value=value):
+                    self.assertIs(
+                        getattr(
+                            self.variable("SPM", Size=64, **{field: value}),
+                            attr,
+                        ),
+                        expected,
+                    )
+            for value in (None, "nonsense", 2, [], 1.0):
+                with self.subTest(field=field, value=value):
+                    with self.assertRaises(
+                        workload_config.WorkloadConfigError
+                    ) as ctx:
+                        self.variable("SPM", Size=64, **{field: value})
+                    self.assertEqual(ctx.exception.field, field)
+
+    def test_stream_sizes_defaults_and_endpoints(self):
+        fields = dict(StreamSize=8, InCon="KERNEL", OutCon="Other")
+        stream = self.variable("Stream", **fields)
+        self.assertEqual((stream.streamSize, stream.bufferSize), (8, None))
+        self.assertEqual((stream.inCon, stream.outCon), ("kernel", "other"))
+        self.assertEqual(
+            self.variable("Stream", **fields, BufferSize=512).bufferSize, 512
+        )
+        for field in ("StreamSize", "BufferSize"):
+            for value in (None, 0, -1, True, 1.5, "8", 1 << 64):
+                with self.subTest(field=field, value=value):
+                    bad = dict(fields, **{field: value})
+                    with self.assertRaises(
+                        workload_config.WorkloadConfigError
+                    ) as ctx:
+                        self.variable("Stream", **bad)
+                    self.assertEqual(ctx.exception.field, field)
+        for field in ("InCon", "OutCon"):
+            for value in (None, "", "Ghost", 1):
+                with self.subTest(field=field, value=value):
+                    with self.assertRaises(
+                        workload_config.WorkloadConfigError
+                    ) as ctx:
+                        self.variable(
+                            "Stream", **dict(fields, **{field: value})
+                        )
+                    self.assertEqual(ctx.exception.field, field)
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "StreamSize"
+        ):
+            self.variable("Stream", InCon="Kernel", OutCon="Other")
+
+    def test_variable_names_and_child_collisions(self):
+        for name in (None, "", "a.b", "bad-name", "_private", 1):
+            with self.subTest(name=name):
+                with self.assertRaises(
+                    workload_config.WorkloadConfigError
+                ) as ctx:
+                    self.variable("SPM", Name=name, Size=64)
+                self.assertEqual(ctx.exception.field, "Name")
+        for name in ("Kernel", "other", "Local_Bus", "compute_clk_domain"):
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(
+                    workload_config.WorkloadConfigError, "collides"
+                ):
+                    self.variable("SPM", Name=name, Size=64)
+        # Caches retain their existing case-sensitive ownership name.
+        self.assertEqual(
+            self.variable("Cache", Name="Kernel", Size="32Ki").name, "Kernel"
+        )
+
+    def test_containers_and_repeated_fields_have_schema_errors(self):
+        self.config(hw_config=["hw_config:", "    k:"])
+        path = os.path.join(self.root, "config.yml")
+        with open(path) as f:
+            original = yaml.safe_load(f)
+        import copy
+
+        for value in (None, {}, "bad", 3):
+            document = copy.deepcopy(original)
+            document["acc_cluster"][1]["Accelerator"].append({"Var": value})
+            self.write("config.yml", yaml.safe_dump(document).splitlines())
+            with self.assertRaisesRegex(
+                workload_config.WorkloadConfigError, "Var must be a list"
+            ):
+                config_parser.load_clusters(self.root)
+        for field, value in (
+            ("Name", "Again"),
+            ("PIOSize", 5),
+            ("Profile", "k"),
+        ):
+            document = copy.deepcopy(original)
+            document["acc_cluster"][1]["Accelerator"].append({field: value})
+            self.write("config.yml", yaml.safe_dump(document).splitlines())
+            with self.assertRaisesRegex(
+                workload_config.WorkloadConfigError, f"duplicate {field}"
+            ):
+                config_parser.load_clusters(self.root)
+        for container in (None, {}, 1):
+            self.write(
+                "config.yml",
+                yaml.safe_dump({"acc_cluster": container}).splitlines(),
+            )
+            with self.assertRaisesRegex(
+                workload_config.WorkloadConfigError,
+                "acc_cluster must be a list",
+            ):
+                config_parser.load_clusters(self.root)
+
+    def test_allocation_overflow_is_rejected_before_construction(self):
+        self.config(hw_config=["hw_config:", "    k:"])
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "64-bit address"
+        ):
+            config_parser.load_clusters(self.root, base_address=(1 << 64) - 32)
+        for base in (-1, True, 1 << 64):
+            with self.subTest(base=base):
+                with self.assertRaises(workload_config.WorkloadConfigError):
+                    config_parser.load_clusters(self.root, base_address=base)
+        # The parser can describe a custom location; the ARM builder
+        # separately checks its supported routing aperture.
+        self.assertEqual(
+            config_parser.load_clusters(self.root, base_address=0x1000)[
+                0
+            ].base_address,
+            0x1000,
+        )
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "64-bit address"
+        ):
+            self.variable("SPM", Size=(1 << 64) - 1)
+
+    def test_unaligned_custom_base_keeps_intercluster_alignment(self):
+        self.config(hw_config=["hw_config:", "    k:"])
+        path = os.path.join(self.root, "config.yml")
+        with open(path) as stream:
+            original = stream.read()
+        second = original.replace("Name: clstr", "Name: second")
+        self.write("config.yml", (original + "\n---\n" + second).splitlines())
+        first, second = config_parser.load_clusters(
+            self.root, base_address=0x1003
+        )
+        self.assertEqual(first.top_address, 0x1083)
+        self.assertEqual(second.base_address, 0x10C0)
+
+    def test_stream_targets_reject_bound_buffers(self):
+        self.config(
+            hw_config=["hw_config:", "    k:"],
+            variables=[
+                [
+                    "- Name: Flow",
+                    "  Type: Stream",
+                    "  StreamSize: 8",
+                    "  InCon: Kernel",
+                    "  OutCon: Other",
+                ]
+            ],
+        )
+        path = os.path.join(self.root, "config.yml")
+        with open(path) as stream:
+            document = yaml.safe_load(stream)
+        other = document["acc_cluster"][2]["Accelerator"][0]
+        for field in ("StreamIn", "StreamOut"):
+            with self.subTest(field=field):
+                other[field] = "FLOW"
+                self.write("config.yml", yaml.safe_dump(document).splitlines())
+                with self.assertRaises(
+                    workload_config.WorkloadConfigError
+                ) as ctx:
+                    config_parser.load_clusters(self.root)
+                self.assertEqual(ctx.exception.field, field)
+                self.assertIn("unsupported target", str(ctx.exception))
+                del other[field]
+
+    def connection_config(self, kernel=None, other=None):
+        path = self.config(hw_config=["hw_config:", "    k:"])
+        with open(path) as stream:
+            document = yaml.safe_load(stream)
+        items = document["acc_cluster"]
+        items[1]["Accelerator"][0].update(kernel or {})
+        items[2]["Accelerator"][0].update(other or {})
+        items.append(
+            {
+                "DMA": [
+                    {
+                        "Name": name,
+                        "Type": kind,
+                        "PIOMaster": "LocalBus",
+                    }
+                    for name, kind in (
+                        ("NDMA", "NonCoherent"),
+                        ("SDMA", "Stream"),
+                    )
+                ]
+            }
+        )
+        self.write("config.yml", yaml.safe_dump(document).splitlines())
+        return config_parser.load_clusters(self.root)[0]
+
+    def test_local_slaves_require_local_bus(self):
+        for target in ("LocalBus", "localbus", "LOCAL_BUS"):
+            with self.subTest(target=target):
+                cluster = self.connection_config({"LocalSlaves": target})
+                self.assertEqual(
+                    cluster.accs[0].local_connections, ["LocalBus"]
+                )
+        for target in ("Kernel", "Other", "NDMA", "SDMA"):
+            with self.subTest(target=target):
+                with self.assertRaises(
+                    workload_config.WorkloadConfigError
+                ) as ctx:
+                    self.connection_config({"LocalSlaves": target})
+                self.assertEqual(ctx.exception.field, "LocalSlaves")
+                self.assertIn("unsupported target", str(ctx.exception))
+
+    def test_stream_dma_directions_can_have_distinct_owners(self):
+        cluster = self.connection_config(
+            {"StreamIn": "sDMA"}, {"StreamOut": "SDMA"}
+        )
+        self.assertEqual(cluster.accs[0].stream_in, ["sdma"])
+        self.assertEqual(cluster.accs[1].stream_out, ["sdma"])
+        cluster = self.connection_config(
+            {"StreamIn": "sDMA", "StreamOut": "SDMA"}
+        )
+        self.assertEqual(cluster.accs[0].stream_in, ["sdma"])
+        self.assertEqual(cluster.accs[0].stream_out, ["sdma"])
+
+    def test_stream_dma_direction_rejects_duplicate_owners(self):
+        for field in ("StreamIn", "StreamOut"):
+            for kernel, other in (
+                ({field: "SDMA"}, {field: "sdma"}),
+                ({field: "SDMA,sdma"}, {}),
+            ):
+                with self.subTest(field=field, kernel=kernel, other=other):
+                    with self.assertRaises(
+                        workload_config.WorkloadConfigError
+                    ) as ctx:
+                        self.connection_config(kernel, other)
+                    self.assertEqual(ctx.exception.field, field)
+                    self.assertIn("already connected", str(ctx.exception))
+
+    def test_duplicate_cluster_and_accelerator_names(self):
+        self.config(hw_config=["hw_config:", "    k:"])
+        path = os.path.join(self.root, "config.yml")
+        with open(path) as f:
+            original = yaml.safe_load(f)
+        original["acc_cluster"].extend(
+            [
+                {
+                    "Accelerator": [
+                        {
+                            "Name": "KERNEL",
+                            "Profile": "k",
+                            "IrPath": "hw/k.ll",
+                            "PIOSize": 5,
+                            "PIOMaster": "LocalBus",
+                        }
+                    ]
+                }
+            ]
+        )
+        self.write("config.yml", yaml.safe_dump(original).splitlines())
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "collides"
+        ):
+            config_parser.load_clusters(self.root)
+        self.config(hw_config=["hw_config:", "    k:"])
+        with open(path) as f:
+            text = f.read()
+        self.write("config.yml", (text + "\n---\n" + text).splitlines())
+        with self.assertRaisesRegex(
+            workload_config.WorkloadConfigError, "duplicate cluster Name"
+        ):
+            config_parser.load_clusters(self.root)
+
+    def dma(self, dma_type, **fields):
+        record = {
+            "Name": "dma",
+            "Type": dma_type,
+            "PIOMaster": "LocalBus",
+            **fields,
+        }
+        self.write(
+            "config.yml",
+            yaml.safe_dump(
+                {"acc_cluster": [{"Name": "cluster"}, {"DMA": [record]}]}
+            ).splitlines(),
+        )
+        return config_parser.load_clusters(self.root)[0].dmas[0]
+
+    def test_dma_defaults_and_explicit_fields(self):
+        for dma_type in ("NonCoherent", "Stream"):
+            with self.subTest(dma_type=dma_type):
+                dma = self.dma(dma_type)
+                self.assertIsNone(dma.size)
+                self.assertIsNone(dma.maxReq)
+                dma = self.dma(dma_type, BufferSize=512, MaxReqSize=64)
+                self.assertEqual(dma.size, 512)
+                self.assertEqual(dma.maxReq, 64)
+        self.assertEqual(self.dma("NonCoherent", InterruptNum=0).int_num, 0)
+        dma = self.dma("Stream", ReadInt=0, WriteInt=211)
+        self.assertEqual((dma.rd_int, dma.wr_int), (0, 211))
+
+    def test_dma_rejects_invalid_types_and_fields(self):
+        for dma_type in ("Typo", "NonCoherent-extra", "Stream-extra", None, 1):
+            with self.subTest(dma_type=dma_type):
+                with self.assertRaisesRegex(
+                    workload_config.WorkloadConfigError,
+                    "Type must be NonCoherent or Stream",
+                ):
+                    self.dma(dma_type)
+        for dma_type, field in (
+            ("NonCoherent", "ReadInt"),
+            ("NonCoherent", "WriteInt"),
+            ("Stream", "InterruptNum"),
+        ):
+            with self.subTest(dma_type=dma_type, field=field):
+                with self.assertRaisesRegex(
+                    workload_config.WorkloadConfigError,
+                    f"unsupported field {field}",
+                ):
+                    self.dma(dma_type, **{field: 1})
+        for field in ("Name", "PIOMaster"):
+            for value in (None, "", True, 1):
+                with self.subTest(field=field, value=value):
+                    with self.assertRaisesRegex(
+                        workload_config.WorkloadConfigError,
+                        f"{field} must be a nonempty string",
+                    ):
+                        self.dma("NonCoherent", **{field: value})
+
+    def test_dma_rejects_invalid_numeric_fields(self):
+        for dma_type in ("NonCoherent", "Stream"):
+            for field, upper in (
+                ("BufferSize", 1 << 64),
+                ("MaxReqSize", 1 << 32),
+            ):
+                for value in (0, -1, True, 1.5, "64", None, upper):
+                    with self.subTest(
+                        dma_type=dma_type, field=field, value=value
+                    ):
+                        with self.assertRaises(
+                            workload_config.WorkloadConfigError
+                        ) as ctx:
+                            self.dma(dma_type, **{field: value})
+                        self.assertEqual(ctx.exception.field, field)
+                        self.assertEqual(
+                            ctx.exception.path,
+                            os.path.join(self.root, "config.yml"),
+                        )
+        for dma_type, field in (
+            ("NonCoherent", "InterruptNum"),
+            ("Stream", "ReadInt"),
+            ("Stream", "WriteInt"),
+        ):
+            for value in (-1, True, 1.5, "200", None, 1 << 32):
+                with self.subTest(dma_type=dma_type, field=field, value=value):
+                    with self.assertRaisesRegex(
+                        workload_config.WorkloadConfigError,
+                        f"{field} must be an integer",
+                    ):
+                        self.dma(dma_type, **{field: value})
 
     def test_cycle_count_params_match_simobject(self):
         path = os.path.join(_ROOT, "src", "salam", "CycleCounts.py")

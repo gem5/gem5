@@ -115,6 +115,66 @@ TestSuite(
 )
 
 
+def cycle_counts_checks_control_latency(params):
+    gem5 = params.fixtures["salam-gem5"]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    for instruction in ("br", "ret", "switch_inst", "call"):
+        for cycles in (0, 7):
+            run_dir = os.path.join(outdir, f"{instruction}-{cycles}")
+            os.makedirs(run_dir)
+            script = os.path.join(run_dir, "cycle_counts.py")
+            with open(script, "w") as f:
+                f.write(
+                    "import m5\n"
+                    "from m5.objects import CycleCounts, Root\n"
+                    "root = Root(full_system=False)\n"
+                    "root.cycle_counts = CycleCounts(**"
+                    f"{{{instruction!r}: {cycles}}})\n"
+                    "m5.instantiate()\n"
+                    "print('CycleCounts instantiated')\n"
+                )
+            result = subprocess.run(
+                [gem5.path, "-d", run_dir, "-re", script],
+                env=gem5.tools.env(),
+            )
+            with open(os.path.join(run_dir, "simerr.txt")) as f:
+                err = f.read()
+            if cycles and instruction != "call":
+                if (
+                    result.returncode == 0
+                    or "terminator latency is not modeled" not in err
+                    or instruction not in err
+                ):
+                    raise AssertionError(
+                        f"CycleCounts({instruction}={cycles}) was not "
+                        f"rejected with its diagnostic; see {run_dir}"
+                    )
+            else:
+                with open(os.path.join(run_dir, "simout.txt")) as f:
+                    out = f.read()
+                if (
+                    result.returncode != 0
+                    or "CycleCounts instantiated" not in out
+                ):
+                    raise AssertionError(
+                        f"CycleCounts({instruction}={cycles}) failed; "
+                        f"see {run_dir}"
+                    )
+
+
+TestSuite(
+    name="salam-cycle-counts-control-latency",
+    fixtures=[_gem5, TempdirFixture()],
+    tags=[st.SALAM_TAG, "salam-correctness"],
+    tests=[
+        TestFunction(
+            cycle_counts_checks_control_latency,
+            name="salam-cycle-counts-control-latency",
+        )
+    ],
+)
+
+
 def from_profile_makes_new_objects(params):
     # Two accelerators' units and instructions must be distinct objects,
     # one for every parameter the generated container declares.
@@ -224,6 +284,280 @@ TestSuite(
     tests=[
         TestFunction(
             salam_modules_need_no_source_tree, name="salam-embedded-modules"
+        )
+    ],
+)
+
+
+def dma_config_constructs_devices(params):
+    gem5 = params.fixtures["salam-gem5"]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    records = []
+    for dma_type, prefix in (("NonCoherent", "nc"), ("Stream", "stream")):
+        for suffix, sizes in (
+            ("default", {}),
+            ("explicit", {"BufferSize": 512, "MaxReqSize": 64}),
+            ("buffer", {"BufferSize": 256}),
+            ("request", {"MaxReqSize": 32}),
+        ):
+            record = {
+                "Name": f"{prefix}_{suffix}",
+                "Type": dma_type,
+                "PIOMaster": "LocalBus",
+                **sizes,
+            }
+            if suffix == "explicit":
+                record.update(
+                    {"InterruptNum": 68}
+                    if dma_type == "NonCoherent"
+                    else {"ReadInt": 0, "WriteInt": 255}
+                )
+            records.append(record)
+    with open(os.path.join(outdir, "config.yml"), "w") as f:
+        yaml.safe_dump(
+            {"acc_cluster": [{"Name": "clstr"}, {"DMA": records}]}, f
+        )
+    script = os.path.join(outdir, "dma_config.py")
+    with open(script, "w") as f:
+        f.write(
+            "from m5.objects import (IOXBar, NoncoherentDma, Root, "
+            "StreamDma, System, SystemXBar, VExpress_GEM5_V1)\n"
+            "from gem5.salam.cluster import build_clusters\n"
+            "root = Root(full_system=False)\n"
+            "root.system = system = System(cache_line_size=128)\n"
+            "system.iobus = IOXBar()\n"
+            "system.membus = SystemXBar()\n"
+            "system.realview = VExpress_GEM5_V1()\n"
+            f"build_clusters(system, {outdir!r})\n"
+            f"records = {records!r}\n"
+            "for record in records:\n"
+            "    dma = getattr(system.clstr, record['Name'])\n"
+            "    stream = record['Type'] == 'Stream'\n"
+            "    assert isinstance(dma, StreamDma if stream "
+            "else NoncoherentDma)\n"
+            "    capacity = record.get('BufferSize', 1024)\n"
+            "    request = record.get('MaxReqSize', 128)\n"
+            "    assert int(dma.max_req_size.unproxy(dma)) == request\n"
+            "    assert int(dma.max_pending) == 8\n"
+            "    if stream:\n"
+            "        assert int(dma.read_buffer_size) == capacity\n"
+            "        assert int(dma.write_buffer_size) == capacity\n"
+            "        assert int(dma.stream_size) == 8\n"
+            "        assert int(dma.rd_int) == record.get('ReadInt', 210)\n"
+            "        assert int(dma.wr_int) == record.get('WriteInt', 211)\n"
+            "    else:\n"
+            "        assert int(dma.buffer_size) == capacity\n"
+            "        assert int(dma.int_num) == "
+            "record.get('InterruptNum', 200)\n"
+            "    print(record['Name'], capacity, request, 'checked')\n"
+        )
+    result = subprocess.run(
+        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+    )
+    with open(os.path.join(outdir, "simout.txt")) as f:
+        out = f.read()
+    if result.returncode != 0 or out.count(" checked") != len(records):
+        raise AssertionError(
+            f"constructed DMA configuration failed; see {outdir}"
+        )
+
+
+TestSuite(
+    name="salam-dma-config",
+    fixtures=[_gem5, TempdirFixture()],
+    tags=[st.SALAM_TAG, "salam-correctness"],
+    tests=[
+        TestFunction(dma_config_constructs_devices, name="salam-dma-config")
+    ],
+)
+
+
+def cache_config_constructs_devices(params):
+    # Exercise accepted workload spellings through real MemorySize params.
+    gem5 = params.fixtures["salam-gem5"]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    cases = (
+        (32768, 32768),
+        ("32768", 32768),
+        ("32Ki", 32768),
+        ("32k", 32768),
+        ("0x8000", 32768),
+        ("1Mi", 1048576),
+        ("+32Ki", 32768),
+        ("0o40Ki", 32768),
+        ("0b100000Ki", 32768),
+    )
+    cluster = [{"Name": "clstr"}]
+    for index, (value, _) in enumerate(cases):
+        cluster.append(
+            {
+                "Accelerator": [
+                    {
+                        "Name": f"kernel_{index}",
+                        "IrPath": "hw/kernel.ll",
+                        "Profile": "kernel",
+                        "PIOSize": 5,
+                        "PIOMaster": "LocalBus",
+                    },
+                    {
+                        "Var": [
+                            {
+                                "Name": f"cache_{index}",
+                                "Type": "Cache",
+                                "Size": value,
+                            }
+                        ]
+                    },
+                ]
+            }
+        )
+    with open(os.path.join(outdir, "config.yml"), "w") as f:
+        yaml.safe_dump(
+            {"acc_cluster": cluster, "hw_config": {"kernel": None}}, f
+        )
+    script = os.path.join(outdir, "cache_config.py")
+    with open(script, "w") as f:
+        f.write(
+            "from m5.objects import (IOXBar, Root, System, "
+            "SystemXBar, VExpress_GEM5_V1)\n"
+            "from gem5.salam.cluster import AcceleratorCache, "
+            "build_clusters\n"
+            "root = Root(full_system=False)\n"
+            "root.system = system = System()\n"
+            "system.iobus = IOXBar()\n"
+            "system.membus = SystemXBar()\n"
+            "system.realview = VExpress_GEM5_V1()\n"
+            f"build_clusters(system, {outdir!r})\n"
+            f"cases = {cases!r}\n"
+            "for index, (value, expected) in enumerate(cases):\n"
+            "    cache = getattr(system.clstr, f'cache_{index}')\n"
+            "    assert isinstance(cache, AcceleratorCache), "
+            "(value, type(cache))\n"
+            "    assert int(cache.size) == expected, "
+            "(value, cache.size, expected)\n"
+            "    print(repr(value), expected, 'checked')\n"
+        )
+    result = subprocess.run(
+        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+    )
+    with open(os.path.join(outdir, "simout.txt")) as f:
+        out = f.read()
+    if result.returncode != 0 or out.count(" checked") != len(cases):
+        raise AssertionError(
+            f"constructed cache configuration failed; see {outdir}"
+        )
+
+
+TestSuite(
+    name="salam-cache-config",
+    fixtures=[_gem5, TempdirFixture()],
+    tags=[st.SALAM_TAG, "salam-correctness"],
+    tests=[
+        TestFunction(
+            cache_config_constructs_devices, name="salam-cache-config"
+        )
+    ],
+)
+
+
+def connection_config_constructs_devices(params):
+    # Exercise actual embedded SimObject parameter and port construction.
+    # This does not instantiate or simulate the configured accelerators.
+    gem5 = params.fixtures["salam-gem5"]
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    items = [
+        {"Name": "clstr"},
+        {"Clocks": {"Compute": "100MHz", "Fabric": "10ns"}},
+        {
+            "DMA": [
+                {"Name": name, "Type": kind, "PIOMaster": "local_bus"}
+                for name, kind in (
+                    ("ndma", "NonCoherent"),
+                    ("same", "Stream"),
+                    ("split", "Stream"),
+                )
+            ]
+        },
+    ]
+    for name, connections in (
+        ("A", {"StreamIn": "SAME", "StreamOut": "same"}),
+        ("B", {"StreamIn": "split"}),
+        ("C", {"StreamOut": "SPLIT"}),
+    ):
+        fields = {
+            "Name": name,
+            "IrPath": "unused.ll",
+            "Profile": "k",
+            "PIOSize": 5,
+            "PIOMaster": "LocalBus",
+            "LocalSlaves": "LOCAL_BUS",
+            **connections,
+        }
+        if name == "B":
+            fields["Var"] = [
+                {
+                    "Name": "Flow",
+                    "Type": "Stream",
+                    "StreamSize": 8,
+                    "InCon": "B",
+                    "OutCon": "C",
+                }
+            ]
+        items.append({"Accelerator": [fields]})
+    with open(os.path.join(outdir, "config.yml"), "w") as stream:
+        yaml.safe_dump(
+            {"acc_cluster": items, "hw_config": {"k": None}}, stream
+        )
+    script = os.path.join(outdir, "connection_config.py")
+    with open(script, "w") as stream:
+        stream.write(
+            "from m5.objects import (IOXBar, Root, System, SystemXBar, "
+            "VExpress_GEM5_V1)\n"
+            "from gem5.salam.cluster import build_clusters\n"
+            "root = Root(full_system=False)\n"
+            "root.system = system = System(cache_line_size=128)\n"
+            "system.iobus = IOXBar()\n"
+            "system.membus = SystemXBar()\n"
+            "system.realview = VExpress_GEM5_V1()\n"
+            f"build_clusters(system, {outdir!r})\n"
+            "c = system.clstr\n"
+            "for obj in (c.ndma, c.same, c.split, c.a, c.b, c.c):\n"
+            "    assert obj.pio.peer.simobj is c.local_bus\n"
+            "for obj in (c.a, c.b, c.c):\n"
+            "    assert obj.local[0].peer.simobj is c.local_bus\n"
+            "assert c.same.stream_in.peer.simobj is c.a\n"
+            "assert c.same.stream_out.peer.simobj is c.a\n"
+            "assert len(c.a.stream) == 2\n"
+            "assert c.split.stream_in.peer.simobj is c.b\n"
+            "assert c.split.stream_out.peer.simobj is c.c\n"
+            "assert c.flow.stream_in.peer.simobj is c.b\n"
+            "assert c.flow.stream_out.peer.simobj is c.c\n"
+            "for clock in (c.compute_clk_domain, c.fabric_clk_domain):\n"
+            "    assert abs(clock.clock[0].value - 1e-8) < 1e-20\n"
+            "print('SALAM connection configuration checked')\n"
+        )
+    result = subprocess.run(
+        [gem5.path, "-d", outdir, "-re", script],
+        env=gem5.tools.env(),
+        timeout=60,
+    )
+    with open(os.path.join(outdir, "simout.txt")) as stream:
+        output = stream.read()
+    marker = "SALAM connection configuration checked"
+    if result.returncode != 0 or output.splitlines().count(marker) != 1:
+        raise AssertionError(
+            f"constructed connection configuration failed; see {outdir}"
+        )
+
+
+TestSuite(
+    name="salam-connection-config",
+    fixtures=[_gem5, TempdirFixture()],
+    tags=[st.SALAM_TAG, "salam-correctness"],
+    tests=[
+        TestFunction(
+            connection_config_constructs_devices,
+            name="salam-connection-config",
         )
     ],
 )
