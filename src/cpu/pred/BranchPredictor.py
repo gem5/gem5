@@ -47,6 +47,7 @@ from m5.objects.ReplacementPolicies import *
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import *
+from m5.util import fatal
 
 
 class BranchType(Enum):
@@ -240,7 +241,7 @@ if any(
             while cpu is not None and not isinstance(cpu, BaseCPU):
                 cpu = cpu.get_parent()
             if cpu is None:
-                raise RuntimeError("RUNLTS must be a child of a BaseCPU")
+                fatal("RUNLTS must be a child of a BaseCPU")
             self.getCCObject().setProbeTarget(cpu.getCCObject())
 
 

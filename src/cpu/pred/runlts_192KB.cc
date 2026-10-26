@@ -92,6 +92,7 @@
 #include <vector>
 
 #include "base/compiler.hh"
+#include "base/logging.hh"
 #include "config/use_arm_isa.hh"
 #include "config/use_riscv_isa.hh"
 #include "config/use_x86_isa.hh"
@@ -2448,7 +2449,12 @@ RUNLTS::threadState(ThreadID tid)
 
 void
 RUNLTS::setProbeTarget(BaseCPU *target)
-{ cpuProbeManager = target->getProbeManager(); }
+{
+    warn_if_once(!dynamic_cast<o3::CPU *>(target),
+                 "RUNLTS receives pipeline events only from O3CPU. "
+                 "Register values are not available to RUNLTS on this CPU.");
+    cpuProbeManager = target->getProbeManager();
+}
 
 void
 RUNLTS::regProbeListeners()
