@@ -190,11 +190,11 @@ _EXTENSION_REGISTRY = {
     "V": {"implemented": True},
     "Za128rs": {"implemented": False},
     "Za64rs": {"implemented": False},
-    "Zaamo": {"implemented": False},
+    "Zaamo": {"implemented": True},
     "Zabha": {"implemented": False},
     "Zacas": {"implemented": False},
     "Zalasr": {"implemented": False},
-    "Zalrsc": {"implemented": False},
+    "Zalrsc": {"implemented": True},
     "Zama16b": {"implemented": False},
     "Zawrs": {"implemented": False},
     "Zba": {"implemented": True},
@@ -253,7 +253,7 @@ _EXTENSION_REGISTRY = {
     "Zkt": {"implemented": False},
     "Zmmul": {"implemented": False},
     "Ztso": {"implemented": False},
-    "Zvbb": {"implemented": False},
+    "Zvbb": {"implemented": True},
     "Zvbc": {"implemented": True},
     "Zve32f": {"implemented": True},
     "Zve32x": {"implemented": True},
@@ -523,10 +523,10 @@ class RiscvISA(BaseISA):
 
     riscv_profile = Param.RiscvProfile(
         "RVA23S64",
-        "RISC-V application profile used for extension reporting. Profile "
-        "selection does not gate instruction decoding or execution; it only "
-        "selects which supported mandatory profile extensions gem5 reports "
-        "to software.",
+        "RISC-V application profile used to select reported extensions and "
+        "ISA width. The selected extensions also drive existing feature "
+        "checks, including vector availability. This does not provide "
+        "comprehensive enforcement of the profile's instruction set.",
     )
     extra_extensions = VectorParam.String(
         [
@@ -698,7 +698,8 @@ class RiscvISA(BaseISA):
             for extension in effective
             if self._is_supported(extension)
         }
-
+        if {"Zaamo", "Zalrsc"}.issubset(reportable):
+            reportable.add("A")
         if {"Zba", "Zbb", "Zbs"}.issubset(reportable):
             reportable.add("B")
         if "C" in reportable:
@@ -742,6 +743,8 @@ class RiscvISA(BaseISA):
 
         reported_extensions = self.get_reported_extensions()
         suppressed_extensions = set()
+        if "A" in reported_extensions:
+            suppressed_extensions.update(("Zaamo", "Zalrsc"))
         if "B" in reported_extensions:
             suppressed_extensions.update(("Zba", "Zbb", "Zbs"))
         if "C" in reported_extensions:

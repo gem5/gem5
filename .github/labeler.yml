@@ -73,15 +73,15 @@ cpu-simple:
 
 dependencies:
     - changed-files:
-          - any-glob-to-any-file: util/gem5-resources-manager/requirements.txt
+          - any-glob-to-any-file: ['**/requirements.txt', requirements.txt, optional-requirements.txt, pyproject.toml]
 
 dev:
     - changed-files:
-          - all-globs-to-any-file: [src/dev/**, '!src/dev/arm/**', '!src/dev/hsa/**', '!src/dev/virtio/**']
+          - all-globs-to-any-file: [src/dev/**, '!src/dev/amdgpu/**', '!src/dev/arm/**', '!src/dev/hsa/**', '!src/dev/virtio/**']
 
 dev-amdgpu:
     - changed-files:
-          - all-globs-to-any-file: src/dev/amdgpu/**
+          - any-glob-to-any-file: src/dev/amdgpu/**
 
 dev-arm:
     - changed-files:
@@ -97,7 +97,8 @@ dev-virtio:
 
 doc:
     - changed-files:
-          - any-glob-to-any-file: [CODE-OF-CONDUCT.md, CONTRIBUTING.md, COPYING, KCONFIG.md, LICENSE, MAINTAINERS.yaml, RELEASE-NOTES.md, TESTING.md]
+          - any-glob-to-any-file: [CODE-OF-CONDUCT.md, CONTRIBUTING.md, COPYING, KCONFIG.md, LICENSE, MAINTAINERS.yaml, RELEASE-NOTES.md, TESTING.md, docs/**,
+                src/doc/**]
           - all-globs-to-any-file: ['**/README.md', '!tests/gem5/**/README.md'] # Don't apply the `doc` label for changes to README files for tests
 
 mem-dram:
@@ -134,7 +135,7 @@ gpu-compute:
 
 learning-gem5:
     - changed-files:
-          - any-glob-to-any-file: src/learning_gem5/**
+          - any-glob-to-any-file: [src/learning_gem5/**, configs/learning_gem5/**]
 
 mem:
     - changed-files:
@@ -152,6 +153,10 @@ mem-ruby:
     - changed-files:
           - all-globs-to-any-file: [src/mem/ruby/**, '!src/mem/ruby/network/garnet/**']
 
+misc:
+    - changed-files:
+          - any-glob-to-any-file: .agents/**
+
 python:
     - changed-files:
           - all-globs-to-any-file: [src/python/**, '!src/python/gem5/resources/**', '!src/python/gem5/**']
@@ -162,7 +167,7 @@ resources:
 
 scons:
     - changed-files:
-          - any-glob-to-any-file: SConstruct
+          - any-glob-to-any-file: [SConstruct, build_opts/**, build_tools/**, site_scons/**]
 
 sim:
     - changed-files:
@@ -188,11 +193,11 @@ system-arm:
 
 systemc:
     - changed-files:
-          - any-glob-to-any-file: src/systemc/**
+          - any-glob-to-any-file: [src/systemc/**, util/systemc/**, util/tlm/**]
 
 tests:
     - changed-files:
-          - any-glob-to-any-file: tests/**
+          - any-glob-to-any-file: [tests/**, src/test_objects/**]
 
 util:
     - changed-files:
