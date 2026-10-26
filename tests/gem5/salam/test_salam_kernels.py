@@ -245,6 +245,7 @@ def rejected_suite(
     fs_args=(),
     config_regex=None,
     ir_patterns=(),
+    tags=(st.SALAM_TAG,),
 ):
     # The run must stop with a diagnostic instead of executing.
     gem5 = st.SalamGem5Fixture()
@@ -262,7 +263,7 @@ def rejected_suite(
     return TestSuite(
         name=name,
         fixtures=[gem5, tempdir, harness],
-        tags=[st.SALAM_TAG],
+        tags=list(tags),
         tests=[
             TestFunction(
                 st.run_fs_rejected(
@@ -276,6 +277,111 @@ def rejected_suite(
                 name=name,
             )
         ],
+    )
+
+
+class FloatConstantHarness(st.SalamHarnessFixture):
+    def __init__(self, gem5, tempdir, operation):
+        super().__init__(
+            "salam-workload",
+            gem5,
+            tempdir,
+            f"float-constant-{operation}.ll.in",
+            [],
+            3,
+        )
+        self.operation = operation
+
+    def _place_kernel(self, tools):
+        header = os.path.join(self.accpath, "harness_clstr_hw_defines.h")
+        with open(header) as stream:
+            defines = dict(
+                re.findall(r"#define (\w+) (0x[0-9a-fA-F]+)", stream.read())
+            )
+        out = int(defines["OUT"], 16)
+        int_ptr = "i32*" if tools.llvm_major < 15 else "ptr"
+        float_ptr = "float*" if tools.llvm_major < 15 else "ptr"
+        offset = -1 if self.operation == "sitofp" else 1
+        # Equal 64-bit pointer/index widths make the negative GEP yield -4
+        # after ptrtoint. The GEP is deliberately not inbounds.
+        integer = (
+            f"ptrtoint ({int_ptr} getelementptr "
+            f"(i32, {int_ptr} null, i64 {offset}) to i64)"
+        )
+        expression = {
+            "uitofp": f"uitofp (i64 {integer} to float)",
+            "sitofp": f"sitofp (i64 {integer} to float)",
+            "fptrunc": (
+                "fptrunc (double uitofp "
+                f"(i64 {integer} to double) to float)"
+            ),
+            "literal": "4.000000e+00",
+        }[self.operation]
+        ir = (
+            'target datalayout = "e-p:64:64-i64:64-n32:64-S128"\n'
+            'target triple = "armv7-pc-none-eabi"\n'
+            "define void @top() {\n"
+            f"  store volatile float {expression}, {float_ptr} "
+            f"inttoptr (i64 {out} to {float_ptr})\n"
+            f"  store volatile i32 305419896, {int_ptr} "
+            f"inttoptr (i64 {out + 4} to {int_ptr})\n"
+            f"  store volatile i32 2309737967, {int_ptr} "
+            f"inttoptr (i64 {out + 8} to {int_ptr})\n"
+            "  ret void\n}\n"
+        )
+        with open(os.path.join(self.accpath, "hw", "kernel.ll"), "w") as f:
+            f.write(ir)
+
+
+def check_float_constant(operation):
+    def check(params):
+        if (
+            params.fixtures["salam-gem5"].tools.llvm_major >= 18
+            and operation != "literal"
+        ):
+            # LLVM 18 removed these ConstantExpr forms. Check the parser
+            # diagnostic rather than claiming execution coverage for them.
+            st.run_fs_rejected(
+                "salam-workload",
+                KERNEL_WALL,
+                KERNEL_TICKS,
+                r"(?:uitofp|sitofp|fptrunc) constexprs are no longer supported",
+            )(params)
+            return
+        st.run_fs("salam-workload", KERNEL_WALL, KERNEL_TICKS)(params)
+        outdir, simout = st.read_simout(params)
+        if not re.search(st.M5_EXIT_REGEX, simout, re.M):
+            raise AssertionError("float constant kernel did not exit normally")
+        with open(os.path.join(outdir, "system.terminal")) as stream:
+            words = re.findall(
+                r"^RUN\[0\] OUT\[(\d+)\]=-?\d+ 0x([0-9a-f]{8})$",
+                stream.read(),
+                re.M,
+            )
+        expected = [
+            ("0", "c0800000" if operation == "sitofp" else "40800000"),
+            ("1", "12345678"),
+            ("2", "89abcdef"),
+        ]
+        if words != expected:
+            raise AssertionError(f"float constant words {words} != {expected}")
+
+    return check
+
+
+for operation in ("uitofp", "sitofp", "fptrunc", "literal"):
+    gem5 = st.SalamGem5Fixture()
+    tempdir = TempdirFixture()
+    name = f"salam-kernel-float-constant-{operation}"
+    TestSuite(
+        name=name,
+        fixtures=[
+            gem5,
+            tempdir,
+            FloatConstantHarness(gem5, tempdir, operation),
+        ],
+        tags=[st.SALAM_TAG, "salam-correctness", "salam-float-constant"],
+        tests=[TestFunction(check_float_constant(operation), name=name)],
     )
 
 
@@ -313,7 +419,59 @@ kernel_suite(
     inputs=[5, 2],
     expect={0: 35, 1: 7},
     ir_patterns=[r"call i32 @g\(", r"call i32 @f\("],
+    tags=(st.SALAM_TAG, "salam-correctness"),
 )
+
+
+def check_call_handoff(latency):
+    def check(params):
+        outdir, out = st.read_simout(params)
+        returns = list(
+            map(int, re.findall(r"^(\d+): .*issue control ret$", out, re.M))
+        )
+        calls = list(
+            map(int, re.findall(r"^(\d+): .*complete call$", out, re.M))
+        )
+        period = int(re.search(r"period (\d+)\)", out)[1])
+        # Each run has one callee return, then its caller's return. The
+        # caller processes completion on subsequent passes: one handoff
+        # pass plus the configured number of call-latency passes.
+        if len(returns) != 4 or len(calls) != 2:
+            raise AssertionError("call/return did not complete once per run")
+        for returned, completed in zip(returns[::2], calls):
+            if completed - returned != (latency + 1) * period:
+                raise AssertionError("call completion violated return handoff")
+        stats = st.read_stats(outdir)[-1]
+        for field in ("issued::call", "completed::call"):
+            if (
+                stats["system.harness_clstr.kernel.llvm_interface." + field]
+                != 2
+            ):
+                raise AssertionError("call accounting differs from trace")
+
+    return check
+
+
+for call_latency in (0, 1, 3):
+    for call_lockstep in (False, True):
+        kernel_suite(
+            f"salam-kernel-call-handoff-{call_latency}-{call_lockstep}",
+            "call_return.c",
+            inputs=[5],
+            expect={0: 16, 1: 17},
+            runs=2,
+            hw_config={
+                "instructions": {"call": {"runtime_cycles": call_latency}}
+            },
+            fs_args=[
+                "--param=system.harness_clstr.kernel.llvm_interface."
+                f"lockstep_mode={call_lockstep}",
+            ],
+            gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
+            extra_tests=[("return-handoff", check_call_handoff(call_latency))],
+            tags=(st.SALAM_TAG, "salam-correctness"),
+        )
+
 
 # Phis at a block entry read their incoming values simultaneously.
 PHI_PATTERN = r"= phi i32 \[ %\d+, %\d+ \], \[ %\d+, %\d+ \]"
@@ -513,24 +671,120 @@ kernel_suite(
     simout_counts=[inventory("integer_adder", 1, 5, 2, 1)],
 )
 
+
+def parallel_multiply_tail(latency):
+    def check(params):
+        outdir, out = st.read_simout(params)
+        starts = re.findall(
+            r"launch accepted at (\d+); first compute pass at (\d+) "
+            r"\(period (\d+)\)",
+            out,
+        )
+        if len(starts) != 1:
+            raise AssertionError("expected one traced invocation")
+        start, first, period = map(int, starts[0])
+        if first != start:
+            raise AssertionError("first pass differs from launch acceptance")
+        events = []
+        for position, line in enumerate(out.splitlines()):
+            match = re.match(r"^\s*(\d+): .*\.llvm_interface: (.*)$", line)
+            if match:
+                events.append((position, int(match[1]), match[2]))
+        issues = [t for _, t, text in events if text == "issue compute mul"]
+        completes = [t for _, t, text in events if text == "complete compute"]
+        compute_end = start + latency * period
+        if issues != [start] * 3 or completes != [compute_end] * 3:
+            raise AssertionError(
+                f"parallel multiply timing: issues={issues}, "
+                f"completes={completes}, start={start}, "
+                f"latency={latency}, period={period}"
+            )
+        stores = []
+        memory_completes = {}
+        for position, tick, text in events:
+            match = re.fullmatch(
+                r"memory issue store uid (\d+) address (0x[0-9a-f]+) "
+                r"volatile (\d)",
+                text,
+            )
+            if match:
+                stores.append(
+                    (
+                        position,
+                        tick,
+                        int(match[1]),
+                        int(match[2], 16),
+                        int(match[3]),
+                    )
+                )
+            match = re.fullmatch(r"memory complete uid (\d+)", text)
+            if match:
+                memory_completes[int(match[1])] = (position, tick)
+        if len(stores) != 3:
+            raise AssertionError(f"expected three output stores: {stores}")
+        previous_completion = -1
+        observed = []
+        for index, store in enumerate(stores):
+            position, tick, uid, address, volatile = store
+            completion = memory_completes.get(uid)
+            expected_issue = compute_end + index * period
+            if (
+                (tick, address, volatile)
+                != (expected_issue, 0x2F000100 + 4 * index, 1)
+                or completion is None
+                or completion[1] != expected_issue + period
+                or completion[0] <= position
+                or position <= previous_completion
+            ):
+                raise AssertionError(
+                    f"volatile store {index}: issue={stores[index]}, "
+                    f"completion={completion}, expected tick={expected_issue}"
+                )
+            previous_completion = completion[0]
+            observed.append(
+                dict(
+                    uid=uid,
+                    address=address,
+                    issued=tick,
+                    completed=completion[1],
+                )
+            )
+        path = os.path.join(outdir, "parallel-multiply-tail.json")
+        with open(path, "w") as f:
+            json.dump(
+                dict(
+                    latency=latency,
+                    period=period,
+                    issues=issues,
+                    completes=completes,
+                    stores=observed,
+                ),
+                f,
+                indent=2,
+            )
+
+    return check
+
+
 # Functional-unit scheduling: three independent multiplies are ready
-# together. With three multiplier instances all issue in the first
-# cycle (the base runtime for that latency L: 2, 3 and 6 cycles for L
-# 0, 1 and 4). With one instance the last issue is later by the
-# admission schedule: 2L when the unit is not pipelined or its
-# interval is L, 2 cycles with interval 1, 10 cycles with interval 5.
+# together. All three can issue in the first pass, but their volatile
+# output stores complete in order, one per later pass. With simultaneous
+# results at latency L, the last store completes at L + 3 cycles and the
+# invocation takes L + 4 inclusive passes. With one instance, results
+# spaced at least one cycle apart overlap this store tail: the last issue
+# is delayed by 2L for interval L, 2 cycles for interval 1, or 10 for 5.
 # An interval shorter than the latency only overlaps without lockstep.
 MULTIPLIER = FU_UNITS + ".integer_multiplier"
 CYCLE_COUNTS = "system.harness_clstr.kernel.hw_interface.cycle_counts"
 LOCKSTEP = "system.harness_clstr.kernel.llvm_interface.lockstep_mode"
 for name, latency, limit, interval, lockstep, runtime, runs in (
-    ("l4-three", 4, 3, None, False, 6, 1),
+    ("l4-three", 4, 3, None, False, 8, 1),
     ("l4-one", 4, 1, None, False, 6 + 8, 3),
     ("l4-ii4", 4, 1, 4, False, 6 + 8, 1),
     ("l4-ii1", 4, 1, 1, False, 6 + 2, 1),
     ("l4-ii1-lockstep", 4, 1, 1, True, 6 + 8, 1),
     ("l1-ii5", 1, 1, 5, False, 3 + 10, 1),
-    ("l0-one", 0, 1, None, False, 2, 1),
+    ("l0-one", 0, 1, None, False, 4, 1),
     ("l0-ii5", 0, 1, 5, False, 2 + 10, 1),
 ):
     fs_args = [
@@ -540,6 +794,7 @@ for name, latency, limit, interval, lockstep, runtime, runs in (
     ]
     if interval is not None:
         fs_args.append(f"--param={MULTIPLIER}.initiation_interval={interval}")
+    trace_tail = name in ("l4-three", "l0-one")
     kernel_suite(
         f"salam-kernel-fu-sched-{name}",
         "fu_sched.c",
@@ -551,6 +806,19 @@ for name, latency, limit, interval, lockstep, runtime, runs in (
         simout_counts=[
             ("runtime", rf"^\s*Compute passes:\s+{runtime}$", runs)
         ],
+        gem5_args=(
+            ["--debug-flags=SALAMIssue,SALAMLaunch"] if trace_tail else []
+        ),
+        extra_tests=(
+            [("multiply-tail", parallel_multiply_tail(latency))]
+            if trace_tail
+            else []
+        ),
+        tags=(
+            (st.SALAM_TAG, "salam-correctness")
+            if trace_tail
+            else (st.SALAM_TAG,)
+        ),
     )
 
 # Latency comes from CycleCounts (and workload overrides) only. The
@@ -568,7 +836,10 @@ kernel_suite(
         f"--param={INST_CONFIG}.mul.functional_unit_limit=9",
     ],
     ir_patterns=[r"(?s)(= mul i32 .*){3}"],
-    simout_counts=[("runtime", r"^\s*Compute passes:\s+3$", 1)],
+    simout_counts=[("runtime", r"^\s*Compute passes:\s+5$", 1)],
+    gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
+    extra_tests=[("multiply-tail", parallel_multiply_tail(1))],
+    tags=(st.SALAM_TAG, "salam-correctness"),
 )
 
 # A remap profile moves fsub from double_adder to the float_trig_sine
@@ -697,12 +968,18 @@ for cycles in (1, 2, 4):
 # seeded by gem5, and draws once per serviced access: the extra cycles
 # are the default-seeded generator's successive values (4, 0, 2 over
 # [0, 5]; see latency_sample.test). A slow scratchpad rejects the second
-# load once; the rejection draws nothing, and a second invocation
+# ordinary load once; the rejection draws nothing, and a second invocation
 # continues the sequence. No variation, no draws.
 SPM = "system.harness_clstr.mem"
 SLOW_SPM = f"--param={SPM}.bandwidth='200MiB/s'"
 SAMPLE = r"mem: latency sample \d+ \(extra \d+\) cycles$"
 REJECTED = r"mem: port 1 busy: request rejected$"
+# Require exactly two ordinary scalar loads: volatile loads serialize and
+# vector loads change both the packet count and the sampler sequence.
+SPM_LOADS_IR = [
+    r"(?ms)\A(?!(?:.*?^\s*%\S+ = load ){3})"
+    r"(?:.*?^\s*%\S+ = load i32, (?:i32\*|ptr) inttoptr){2}"
+]
 for name, variation, runs, counts in (
     (
         "spm-latency-var",
@@ -739,6 +1016,7 @@ for name, variation, runs, counts in (
         runs=runs,
         fs_args=[f"--param={SPM}.access_cycles_var={variation}", SLOW_SPM],
         gem5_args=["--debug-flags=SALAMScratchpad"],
+        ir_patterns=SPM_LOADS_IR,
         simout_counts=counts,
     )
 
@@ -949,9 +1227,11 @@ kernel_suite(
 
 # Cycle categories, derived pass by pass. Three 4-cycle multiplies:
 # with three multipliers, pass 1 issues the loads and multiplies,
-# passes 2-4 wait for them, pass 5 issues the stores, pass 6 the
-# return. With one multiplier the waiting multiplies are denied it in
-# passes 2-4 and 6-8, and the last one computes alone in 10-12. An
+# passes 2-4 wait for them, passes 5-7 each issue one volatile store,
+# and pass 8 returns after the final store completes: five issuing
+# passes and three compute waits. With one multiplier the waiting
+# multiplies are denied it in passes 2-4 and 6-8, and the last one
+# computes alone in 10-12. An
 # idle scratchpad load waits for memory while it is in flight: one
 # pass at the default 2 cycles, 15 passes when the scratchpad takes 150.
 def categories(expected):
@@ -978,7 +1258,7 @@ for name, kernel, fs_args, expected in (
             f"--param={CYCLE_COUNTS}.mul=4",
             f"--param={MULTIPLIER}.limit=3",
         ],
-        dict(ONE_PASS, issue=3, computeWait=3),
+        dict(ONE_PASS, issue=5, computeWait=3),
     ),
     (
         "one-multiplier",
@@ -1001,6 +1281,11 @@ for name, kernel, fs_args, expected in (
         expect={0: 9, 1: 16, 2: 25} if kernel == "fu_sched.c" else {0: 1},
         fs_args=fs_args,
         extra_tests=[("categories", categories(expected))],
+        tags=(
+            (st.SALAM_TAG, "salam-correctness")
+            if name == "three-multipliers"
+            else (st.SALAM_TAG,)
+        ),
     )
 
 
@@ -1190,6 +1475,7 @@ for name, kernel, inputs, expect, fs_args, runs, counts in (
         expect=expect,
         runs=runs,
         fs_args=fs_args,
+        ir_patterns=SPM_LOADS_IR if name == "rejected" else (),
         extra_tests=[("memory-interface", comm_stats(counts))],
     )
 
@@ -1267,4 +1553,229 @@ kernel_suite(
     expect={0: 9, 1: 16, 2: 25},
     fs_args=ONE_MULTIPLIER,
     extra_tests=[("same-stats", same_stats_with_tracing)],
+)
+
+
+# Observe volatile execution order, not just final RAM contents. Ordinary
+# independent accesses remain able to issue during a stalled volatile op.
+def check_volatile_order(params):
+    _outdir, out = st.read_simout(params)
+    issues = re.compile(
+        r"memory issue (load|store) uid (\d+) address (0x[0-9a-f]+) "
+        r"volatile ([01])"
+    )
+    completes = re.compile(r"memory complete uid (\d+)")
+    outstanding = set()
+    volatile_addresses = []
+    all_addresses = []
+    for line in out.splitlines():
+        match = completes.search(line)
+        if match:
+            outstanding.discard(int(match[1]))
+        match = issues.search(line)
+        if match:
+            address = int(match[3], 16)
+            all_addresses.append(address)
+            if match[4] == "1":
+                if outstanding:
+                    raise AssertionError("volatile operation overtook a peer")
+                outstanding.add(int(match[2]))
+                volatile_addresses.append(address)
+    expected = [
+        0x2F000080,
+        0x2F000100,
+        0x2F000084,
+        0x2F000088,
+        0x2F000104,
+        0x2F00008C,
+        0x2F000108,
+        0x2F00010C,
+    ]
+    if volatile_addresses != expected or outstanding:
+        raise AssertionError(f"volatile execution order: {volatile_addresses}")
+    if all_addresses.index(0x2F000120) >= all_addresses.index(0x2F000100):
+        raise AssertionError("independent ordinary store was serialized")
+
+
+for lockstep in (True, False):
+    kernel_suite(
+        f"salam-kernel-volatile-order-{lockstep}",
+        "volatile_order.ll.in",
+        inputs=[6, 7, 9, 17],
+        expect={0: 3, 1: 16, 2: 17, 3: 42, 8: 99},
+        hw_config=SLOW_UDIV,
+        fs_args=[
+            "--param=system.harness_clstr.kernel.llvm_interface."
+            f"lockstep_mode={lockstep}"
+        ],
+        gem5_args=["--debug-flags=SALAMIssue"],
+        extra_tests=[("memory-order", check_volatile_order)],
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+
+def check_ordinary_raw_wait(params):
+    outdir, out = st.read_simout(params)
+    # The ordinary store and load have constant, equal addresses and no
+    # SSA dependency. Exactly one ready-load observation creates a
+    # runtime dependency; it is not a count of elapsed wait cycles.
+    waits = re.findall(r"wait: older memory access", out)
+    stats = st.read_stats(outdir)[-1]
+    if len(waits) != 1 or stats[LLVM_STATS + "memoryOrderWaits"] != 1:
+        raise AssertionError("expected one in-flight RAW wait observation")
+    events = re.findall(
+        r"^(\d+): .*memory issue (load|store) uid (\d+) address "
+        r"(0x[0-9a-f]+) volatile 0",
+        out,
+        re.M,
+    )
+    writes = [event for event in events if event[1] == "store"]
+    reads = [event for event in events if event[1] == "load"]
+    if len(writes) != 2 or len(reads) != 1 or writes[0][3] != reads[0][3]:
+        raise AssertionError(f"unexpected RAW access sequence: {events}")
+    completed = re.search(
+        rf"^(\d+): .*memory complete uid {writes[0][2]}$", out, re.M
+    )
+    if completed is None or int(reads[0][0]) < int(completed[1]):
+        raise AssertionError("dependent load issued before store completion")
+
+
+kernel_suite(
+    "salam-kernel-ordinary-raw-wait",
+    "volatile_order.ll.in",
+    inputs=[0],
+    expect={0: 99, 1: 99},
+    fs_args=NO_LOCKSTEP
+    + [
+        "--param=system.harness_clstr.kernel.llvm_interface."
+        'top_name="ordinary_raw"',
+    ],
+    gem5_args=["--debug-flags=SALAMIssue"],
+    extra_tests=[("wait-observation", check_ordinary_raw_wait)],
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
+
+
+for operation in ("load", "store", "fence", "rmw", "cmpxchg"):
+    rejected_suite(
+        f"salam-kernel-atomic-{operation}-rejected",
+        f"atomic_{operation}.ll.in",
+        inputs=[1],
+        regex=r"SALAM does not support LLVM atomic instructions:",
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+
+for width, index in ((32, 32), (64, 64)):
+    kernel_suite(
+        f"salam-kernel-pointer-width-{width}-{index}",
+        f"pointer_{width}_{index}.ll.in",
+        inputs=[],
+        expect={0: 1},
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+# Constant address arithmetic creates no extra dynamic GEP operation.
+# One runtime GEP indexes IN[1 + IN[0]]; numeric addresses only test folding.
+for width in (32, 64):
+    kernel_suite(
+        f"salam-kernel-constant-gep-{width}",
+        f"constant_gep_{width}.ll.in",
+        inputs=[1, 23, 37],
+        expect={0: 37, 1: 1},
+        ir_patterns=[r"getelementptr \(\s*i32"],
+        gem5_args=["--debug-flags=SALAMIssue"],
+        simout_counts=[
+            ("runtime-gep", r"llvm_interface: issue compute getelementptr$", 1)
+        ],
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+rejected_suite(
+    "salam-kernel-constant-gep-symbolic-global",
+    "constant_gep_global.ll.in",
+    inputs=[],
+    regex=r"symbolic global base '@base' in constant GEP:",
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
+
+
+kernel_suite(
+    "salam-kernel-pointer-unused-address-space",
+    "pointer_unused_space.ll.in",
+    inputs=[],
+    expect={0: 1},
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
+
+# Unequal pointer and index widths are unsupported. These fixtures cover
+# rejection in instructions, constant expressions, globals and callees.
+for case, index, context in (
+    ("64_32", 32, "top"),
+    ("64_16", 16, "top"),
+    ("unequal_instruction", 32, "top"),
+    ("unequal_constexpr", 32, "<global>"),
+    ("unequal_runtime", 32, "top"),
+    ("unequal_callee", 32, "adjust"),
+):
+    rejected_suite(
+        f"salam-kernel-pointer-{case}-rejected",
+        f"pointer_{case}.ll.in",
+        inputs=[],
+        regex=(
+            r"SALAM does not support unequal pointer and GEP index widths: "
+            rf"address space 0 has a 64-bit pointer and a {index}-bit index"
+            rf"\nIR file: .*kernel\.ll; function: {context}; context: "
+        ),
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+for case, diagnostic in (
+    ("address_space", r"pointer address space 1"),
+    ("non_integral", r"non-integral LLVM pointers"),
+    ("wide", r"pointer/index widths 128/128"),
+):
+    rejected_suite(
+        f"salam-kernel-pointer-{case}-rejected",
+        f"pointer_{case}.ll.in",
+        inputs=[],
+        regex=diagnostic,
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+
+for width in (32, 64):
+    kernel_suite(
+        f"salam-kernel-pointer-comparisons-{width}",
+        f"pointer_cmp_{width}.ll.in",
+        inputs=[],
+        expect={0: 1},
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+
+for kind in ("direct", "mutual"):
+    rejected_suite(
+        f"salam-kernel-recursion-{kind}-rejected",
+        f"recursion_{kind}.ll.in",
+        inputs=[],
+        regex=r"SALAM does not support recursive LLVM calls:",
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
+kernel_suite(
+    "salam-kernel-recursion-unreachable",
+    "recursion_unreachable.ll.in",
+    inputs=[],
+    expect={0: 7},
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
+
+
+kernel_suite(
+    "salam-kernel-scalar-matrix-120",
+    "scalar_matrix.ll.in",
+    inputs=[],
+    expect={0: 1},
+    tags=(st.SALAM_TAG, "salam-correctness"),
 )

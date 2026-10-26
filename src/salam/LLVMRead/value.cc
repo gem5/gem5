@@ -41,6 +41,7 @@
 
 #include "value.hh"
 #include "llvm/IR/Instruction.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/raw_ostream.h"
 #include "sim/sim_object.hh"
 
@@ -62,6 +63,7 @@ SALAM::Value::Value(const Value &copy_val)
     returnReg = copy_val.returnReg;
     valueTy = copy_val.valueTy;
     size = copy_val.size;
+    pointerBits = copy_val.pointerBits;
     ir_string = copy_val.ir_string;
     ir_stub = copy_val.ir_stub;
     owner = copy_val.owner;
@@ -74,6 +76,7 @@ SALAM::Value::Value(std::shared_ptr<SALAM::Value> copy_val)
     returnReg = copy_val->getReg();
     valueTy = copy_val->getType();
     size = copy_val->getSize();
+    pointerBits = copy_val->getPointerBits();
     ir_string = copy_val->getIRString();
     ir_stub = copy_val->getIRStub();
     owner = copy_val->getOwner();
@@ -88,6 +91,7 @@ SALAM::Value::operator=(Value &copy_val)
     returnReg = copy_val.returnReg;
     valueTy = copy_val.valueTy;
     size = copy_val.size;
+    pointerBits = copy_val.pointerBits;
     ir_string = copy_val.ir_string;
     ir_stub = copy_val.ir_stub;
     return *this;
@@ -105,7 +109,7 @@ SALAM::Value::initialize(llvm::Value *irval, SALAM::irvmap *irmap)
 {
     llvm::Type *irtype = irval->getType();
     if (irtype->getTypeID() == llvm::Type::PointerTyID) {
-        size = 64; // We assume a 64-bit memory address space
+        size = 64; // Register storage and top-level argument slot size.
     } else {
         size = irtype->getScalarSizeInBits();
     }
@@ -121,12 +125,84 @@ SALAM::Value::initialize(llvm::Value *irval, SALAM::irvmap *irmap)
     irval->printAsOperand(ss2);
     ir_stub = ss2.str();
 
+    if (irtype->isPointerTy()) {
+        const llvm::Module *module = nullptr;
+        if (auto *instruction = llvm::dyn_cast<llvm::Instruction>(irval)) {
+            module = instruction->getModule();
+        } else if (auto *argument = llvm::dyn_cast<llvm::Argument>(irval)) {
+            module = argument->getParent()->getParent();
+        } else if (auto *global = llvm::dyn_cast<llvm::GlobalValue>(irval)) {
+            module = global->getParent();
+        }
+        // Constants receive their containing module's layout explicitly
+        // in Constant::initialize; LLVM constants do not have a parent.
+        if (module) {
+            setPointerLayout(irtype, module->getDataLayout(), irval);
+        }
+    }
+
     // Intentional no-register values: void results and basic-block labels.
     // Do not use size==0 here; aggregates also report zero scalar size.
     if (irtype->isVoidTy() || irtype->isLabelTy()) {
         return;
     }
     addRegister(irtype, true);
+}
+
+void
+SALAM::Value::setPointerLayout(llvm::Type *type,
+                               const llvm::DataLayout &layout,
+                               const llvm::Value *context)
+{
+    auto *pointer = llvm::cast<llvm::PointerType>(type);
+    const unsigned address_space = pointer->getAddressSpace();
+    fatal_if(layout.isNonIntegralPointerType(pointer),
+             "SALAM does not support non-integral LLVM pointers: %s",
+             ir_string);
+    fatal_if(address_space != 0,
+             "SALAM does not support LLVM pointer address space %u: %s",
+             address_space, ir_string);
+    pointerBits = layout.getPointerSizeInBits(address_space);
+    const unsigned index_bits = layout.getIndexSizeInBits(address_space);
+    fatal_if(pointerBits == 0 || pointerBits > 64 || index_bits == 0 ||
+                 index_bits > pointerBits,
+             "SALAM does not support LLVM pointer/index widths %u/%u: %s",
+             pointerBits, index_bits, ir_string);
+    if (pointerBits != index_bits) {
+        const llvm::Module *module = nullptr;
+        const llvm::Function *function = nullptr;
+        if (auto *instruction =
+                llvm::dyn_cast_or_null<llvm::Instruction>(context)) {
+            module = instruction->getModule();
+            function = instruction->getFunction();
+        } else if (auto *argument =
+                       llvm::dyn_cast_or_null<llvm::Argument>(context)) {
+            function = argument->getParent();
+            module = function->getParent();
+        } else if (auto *global =
+                       llvm::dyn_cast_or_null<llvm::GlobalValue>(context)) {
+            module = global->getParent();
+            function = llvm::dyn_cast<llvm::Function>(global);
+        }
+        std::string location;
+        llvm::raw_string_ostream stream(location);
+        if (context) {
+            context->printAsOperand(stream, false);
+        }
+        fatal("SALAM does not support unequal pointer and GEP index widths: "
+              "address space %u has a %u-bit pointer and a %u-bit index\n"
+              "IR file: %s; function: %s; context: %s\nValue: %s",
+              address_space, pointerBits, index_bits,
+              module ? module->getModuleIdentifier() : "<unknown>",
+              function ? function->getName().str() : "<global>", stream.str(),
+              ir_string);
+    }
+}
+
+uint64_t
+SALAM::Value::normalizePointer(uint64_t value) const
+{
+    return llvm::APInt(pointerBits, value).getZExtValue();
 }
 
 void
@@ -202,7 +278,8 @@ void
 SALAM::Value::addPointerRegister(uint64_t val, bool istracked, bool isnull)
 {
     assert(valueTy == llvm::Type::PointerTyID);
-    returnReg = std::make_shared<PointerRegister>(val, istracked, isnull);
+    returnReg = std::make_shared<PointerRegister>(normalizePointer(val),
+                                                  istracked, isnull);
 }
 
 void
@@ -212,7 +289,7 @@ SALAM::Value::setRegisterValue(const uint64_t data)
         if (dbg) {
             DPRINTFS(Runtime, owner, "| Ptr Register\n");
         }
-        returnReg->writePtrData(data);
+        returnReg->writePtrData(normalizePointer(data));
     } else {
         if (returnReg->isInt()) {
             if (dbg) {
@@ -277,7 +354,7 @@ SALAM::Value::setRegisterValue(uint8_t *data)
             if (dbg) {
                 DPRINTFS(Runtime, owner, "Pointer\n");
             }
-            returnReg->writePtrData(readTargetBytes(data, getSizeInBytes()));
+            setRegisterValue(readTargetBytes(data, getSizeInBytes()));
             break;
         }
         default: {

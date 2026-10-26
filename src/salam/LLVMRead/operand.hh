@@ -164,7 +164,9 @@ class Constant : public Value
     }
     using SALAM::Value::initialize;
     virtual void initialize(llvm::Value *irval, irvmap *irmap,
-                            SALAM::valueListTy *values);
+                            SALAM::valueListTy *values,
+                            const llvm::DataLayout *layout = nullptr,
+                            const llvm::Value *context = nullptr);
 };
 
 class GlobalConstant : public Constant
@@ -180,7 +182,9 @@ class GlobalConstant : public Constant
         return true;
     }
     virtual void initialize(llvm::Value *irval, irvmap *irmap,
-                            SALAM::valueListTy *values) override;
+                            SALAM::valueListTy *values,
+                            const llvm::DataLayout *layout = nullptr,
+                            const llvm::Value *context = nullptr) override;
 };
 
 class Argument : public Value

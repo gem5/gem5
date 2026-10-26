@@ -257,8 +257,8 @@ class LLVMInterface : public AccComputeUnit
 
   public:
     // Operation classes counted when issued and completed. Control is
-    // branches and returns. Phis are evaluated on block entry and not
-    // counted.
+    // branches and returns. PHIs select their incoming value on block
+    // entry and count as compute operations when issued and completed.
     enum OpClass
     {
         ComputeOp,

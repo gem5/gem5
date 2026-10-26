@@ -130,7 +130,8 @@ SALAM::Instruction::initialize(llvm::Value *irval, irvmap *irmap,
                 std::make_shared<SALAM::Constant>(id, owner, dbg);
             valueList->push_back(con);
             irmap->insert(SALAM::irvmaptype(op, con));
-            con->initialize(op, irmap, valueList);
+            con->initialize(op, irmap, valueList,
+                            &inst->getModule()->getDataLayout(), inst);
             opval = con;
         } else {
             if (dbg) {
@@ -601,7 +602,8 @@ Switch::initialize(llvm::Value *irval, irvmap *irmap,
                 std::make_shared<SALAM::Constant>(id, owner, dbg);
             valueList->push_back(con);
             irmap->insert(SALAM::irvmaptype(op, con));
-            con->initialize(op, irmap, valueList);
+            con->initialize(op, irmap, valueList,
+                            &inst->getModule()->getDataLayout(), inst);
             opval = con;
         } else {
             if (dbg) {
@@ -1764,6 +1766,7 @@ Load::initialize(llvm::Value *irval, irvmap *irmap,
     // ****** //
     llvm::LoadInst *inst = llvm::dyn_cast<llvm::LoadInst>(irval);
     this->align = inst->getAlign().value();
+    volatileAccess = inst->isVolatile();
     // A pointer in memory has the target's width, not the 64 bits of
     // a pointer register.
     if (inst->getType()->isPointerTy()) {
@@ -1850,6 +1853,7 @@ Store::initialize(llvm::Value *irval, irvmap *irmap,
     // ****** //
     llvm::StoreInst *inst = llvm::dyn_cast<llvm::StoreInst>(irval);
     this->align = inst->getAlign().value();
+    volatileAccess = inst->isVolatile();
     const llvm::DataLayout &layout = inst->getModule()->getDataLayout();
     storeBytes = layout.getTypeStoreSize(inst->getValueOperand()->getType())
                      .getFixedValue();
@@ -1930,10 +1934,11 @@ GetElementPtr::initialize(llvm::Value *irval, irvmap *irmap,
         llvm::dyn_cast<llvm::GetElementPtrInst>(irval);
     assert(GEP);
     resultElementType = GEP->getResultElementType();
-    llvm::DataLayout layout(GEP->getModule());
+    const llvm::DataLayout &layout = GEP->getModule()->getDataLayout();
+    indexBits = layout.getIndexSizeInBits(GEP->getPointerAddressSpace());
 
     if (resultElementType->getTypeID() == llvm::Type::PointerTyID) {
-        resultElementSize = 64; // We assume a 64-bit memory address space
+        resultElementSize = layout.getPointerTypeSizeInBits(resultElementType);
     } else {
         resultElementSize = resultElementType->getScalarSizeInBits();
     }
@@ -1979,35 +1984,25 @@ GetElementPtr::compute()
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
     uint64_t ptr = (operands.front().getPtrRegValue());
-    int64_t offset = 0;
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| Index Values\n");
-    }
-    for (int i = 1; i < operands.size(); i++) {
-        auto idx = operands.at(i);
+    llvm::APInt offset(indexBits, 0);
+    for (size_t i = 1; i < operands.size(); i++) {
+        const llvm::APInt stride(indexBits, offsets.at(i - 1));
         if (offsetOfStruct.at(i - 1)) {
-            offset += offsets.at(i - 1);
-            if (dbg) {
-                DPRINTFS(RuntimeCompute, owner, "|| %s, struct offset = %d\n",
-                         idx.getIRStub(), offsets.at(i - 1));
-            }
+            offset += stride;
         } else {
-            int64_t arrayIdx = idx.getSIntRegValue();
-            if (dbg) {
-                DPRINTFS(RuntimeCompute, owner,
-                         "|| %s = %d, dimension offset = %d\n",
-                         idx.getIRStub(), arrayIdx, offsets.at(i - 1));
-            }
-            offset += arrayIdx * offsets.at(i - 1);
+            auto &idx = operands.at(i);
+            llvm::APInt index(idx.getSize(), idx.getUIntRegValue());
+            offset += index.sextOrTrunc(indexBits) * stride;
         }
     }
 
-    uint64_t result = ptr + offset;
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner,
-                 "|| Ptr[%x]  Offset[%x] (Flat Idx[%d])\n", ptr, offset,
-                 offset / resultElementSizeInBytes);
-    }
+    // GEP wraps in the index width, preserving any pointer bits above it.
+    // APInt avoids host signed-overflow UB for negative/large indices.
+    const llvm::APInt base(pointerBits, ptr);
+    const llvm::APInt low = base.trunc(indexBits) + offset;
+    const llvm::APInt high =
+        base & ~llvm::APInt::getLowBitsSet(pointerBits, indexBits);
+    uint64_t result = (high | low.zextOrTrunc(pointerBits)).getZExtValue();
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Result: Addr[%x]\n", result);
     }
@@ -2716,35 +2711,44 @@ ICmp::compute()
                 break;
         }
     } else if (operands.at(0).hasPtrVal() && operands.at(1).hasPtrVal()) {
-        uint64_t uOp1 = operands.at(0).getPtrRegValue();
-        uint64_t uOp2 = operands.at(1).getPtrRegValue();
+        const llvm::APInt op1(operands.at(0).getPointerBits(),
+                              operands.at(0).getPtrRegValue());
+        const llvm::APInt op2(operands.at(1).getPointerBits(),
+                              operands.at(1).getPtrRegValue());
         switch (predicate) {
-            case SALAM::Predicate::ICMP_EQ: {
-                result = (uOp1 == uOp2);
+            case SALAM::Predicate::ICMP_EQ:
+                result = op1 == op2;
                 break;
-            }
-            case SALAM::Predicate::ICMP_NE: {
-                result = (uOp1 != uOp2);
+            case SALAM::Predicate::ICMP_NE:
+                result = op1 != op2;
                 break;
-            }
-            case SALAM::Predicate::ICMP_UGT: {
-                result = (uOp1 > uOp2);
+            case SALAM::Predicate::ICMP_UGT:
+                result = op1.ugt(op2);
                 break;
-            }
-            case SALAM::Predicate::ICMP_UGE: {
-                result = (uOp1 >= uOp2);
+            case SALAM::Predicate::ICMP_UGE:
+                result = op1.uge(op2);
                 break;
-            }
-            case SALAM::Predicate::ICMP_ULT: {
-                result = (uOp1 < uOp2);
+            case SALAM::Predicate::ICMP_ULT:
+                result = op1.ult(op2);
                 break;
-            }
-            case SALAM::Predicate::ICMP_ULE: {
-                result = (uOp1 <= uOp2);
+            case SALAM::Predicate::ICMP_ULE:
+                result = op1.ule(op2);
                 break;
-            }
+            case SALAM::Predicate::ICMP_SGT:
+                result = op1.sgt(op2);
+                break;
+            case SALAM::Predicate::ICMP_SGE:
+                result = op1.sge(op2);
+                break;
+            case SALAM::Predicate::ICMP_SLT:
+                result = op1.slt(op2);
+                break;
+            case SALAM::Predicate::ICMP_SLE:
+                result = op1.sle(op2);
+                break;
             default:
-                break;
+                panic("Invalid LLVM pointer comparison predicate %d",
+                      predicate);
         }
     } else {
         panic("Got either wrong or differing datatypes for ICMP");

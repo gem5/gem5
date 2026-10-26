@@ -39,7 +39,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "operand.hh"
+#include "salam/LLVMRead/operand.hh"
+
+#include <cstring>
+
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Operator.h"
 #include "sim/sim_object.hh"
 
 SALAM::Constant::Constant(uint64_t id, gem5::SimObject *owner, bool dbg)
@@ -48,10 +53,17 @@ SALAM::Constant::Constant(uint64_t id, gem5::SimObject *owner, bool dbg)
 
 void
 SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
-                            SALAM::valueListTy *values)
+                            SALAM::valueListTy *values,
+                            const llvm::DataLayout *layout,
+                            const llvm::Value *context)
 {
     // Initialize SALAM::Value
     SALAM::Value::initialize(irval, irmap);
+    if (irval->getType()->isPointerTy()) {
+        fatal_if(!layout, "SALAM pointer constant has no data layout: %s",
+                 ir_string);
+        setPointerLayout(irval->getType(), *layout, context);
+    }
     // Parse the constant value
     llvm::ConstantData *cd = llvm::dyn_cast<llvm::ConstantData>(irval);
     llvm::ConstantExpr *ce = llvm::dyn_cast<llvm::ConstantExpr>(irval);
@@ -73,6 +85,26 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
             addPointerRegister(false, true);
         }
     } else if (ce) {
+        if (ce->getOpcode() == llvm::Instruction::GetElementPtr) {
+            // GlobalConstant stores an initializer, not an allocated address.
+            // Reject symbolic roots before consulting that value in irmap.
+            std::vector<const llvm::Value *> pending{ce->getOperand(0)};
+            while (!pending.empty()) {
+                const auto *base = pending.back();
+                pending.pop_back();
+                if (auto *global = llvm::dyn_cast<llvm::GlobalValue>(base)) {
+                    fatal("SALAM does not support symbolic global base '@%s' "
+                          "in constant GEP: %s",
+                          global->getName().str(), ir_string);
+                }
+                if (auto *expression =
+                        llvm::dyn_cast<llvm::ConstantExpr>(base)) {
+                    for (const auto &operand : expression->operands()) {
+                        pending.push_back(operand.get());
+                    }
+                }
+            }
+        }
         // The constant is an expression. We need to parse the expression
         for (auto op : ce->operand_values()) {
             // Iterate over operands and add
@@ -85,7 +117,7 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                 values->push_back(con);
                 irmap->insert(SALAM::irvmaptype(op, con));
                 operands.push_back(con);
-                con->initialize(op, irmap, values);
+                con->initialize(op, irmap, values, layout, context);
             } else {
                 std::shared_ptr<SALAM::Value> opval = mapit->second;
                 operands.push_back(opval);
@@ -133,7 +165,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                 switch (size) {
                     case 32: {
                         float tmp = (float)opdata;
-                        addAPFloatRegister(*(uint64_t *)&tmp);
+                        uint32_t bits;
+                        std::memcpy(&bits, &tmp, sizeof(bits));
+                        addAPFloatRegister(bits);
                         break;
                     }
                     case 64: {
@@ -154,7 +188,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                 switch (size) {
                     case 32: {
                         float tmp = (float)opdata;
-                        addAPFloatRegister(*(uint64_t *)&tmp);
+                        uint32_t bits;
+                        std::memcpy(&bits, &tmp, sizeof(bits));
+                        addAPFloatRegister(bits);
                         break;
                     }
                     case 64: {
@@ -175,7 +211,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                     case 64: {
                         double opdata = operands.front()->getDoubleFromReg();
                         float tmp = (float)opdata;
-                        addAPFloatRegister(*(uint64_t *)&tmp);
+                        uint32_t bits;
+                        std::memcpy(&bits, &tmp, sizeof(bits));
+                        addAPFloatRegister(bits);
                         break;
                     }
                     default: {
@@ -198,6 +236,20 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                                "Must use AP values for nonstandard FP sizes.");
                     }
                 }
+                break;
+            }
+            case llvm::Instruction::GetElementPtr: {
+                const auto *gep = llvm::cast<llvm::GEPOperator>(ce);
+                llvm::APInt offset(getPointerBits(), 0);
+                fatal_if(!gep->accumulateConstantOffset(*layout, offset),
+                         "SALAM cannot resolve constant GEP offset: %s",
+                         ir_string);
+                // setPointerLayout already validated equal pointer/index
+                // widths. Fold without creating a dynamic operation or event.
+                const llvm::APInt base(getPointerBits(),
+                                       operands.front()->getPtrRegValue());
+                addPointerRegister((base + offset).getZExtValue(), false,
+                                   false);
                 break;
             }
             case llvm::Instruction::PtrToInt: {
@@ -225,7 +277,9 @@ SALAM::GlobalConstant::GlobalConstant(uint64_t id, gem5::SimObject *owner,
 
 void
 SALAM::GlobalConstant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
-                                  SALAM::valueListTy *values)
+                                  SALAM::valueListTy *values,
+                                  const llvm::DataLayout *layout,
+                                  const llvm::Value *context)
 {
     // Parse the initializer of the value
     auto glb = llvm::dyn_cast<llvm::GlobalVariable>(irval);
@@ -233,7 +287,8 @@ SALAM::GlobalConstant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
     assert(glb->hasInitializer());
 
     // Initialize SALAM::ConstantData
-    SALAM::Constant::initialize(glb->getInitializer(), irmap, values);
+    SALAM::Constant::initialize(glb->getInitializer(), irmap, values,
+                                &glb->getParent()->getDataLayout(), glb);
 }
 
 SALAM::Argument::Argument(uint64_t id, gem5::SimObject *owner, bool dbg)
@@ -283,6 +338,7 @@ SALAM::Operand::operator=(SALAM::Operand &copy_val)
     returnReg = copy_val.returnReg;
     valueTy = copy_val.valueTy;
     size = copy_val.size;
+    pointerBits = copy_val.getPointerBits();
     lockedValue = copy_val.lockedValue;
     set = copy_val.set;
     return *this;

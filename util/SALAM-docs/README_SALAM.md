@@ -69,6 +69,10 @@ For more information regarding the binary types, and other build information ref
 
 To use gem5-SALAM you need to define the computation model of your accelerator in C/C++ (or another language that can produce compatible LLVM IR), and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
 
+SALAM requires equal pointer and GEP index widths in each supported address
+space used by the accelerator graph. Unequal widths are rejected before
+execution.
+
 Below are some resources in the gem5-SALAM directory that can be used when getting started:
 
 - **configs/SALAM/HWAcc.py** constructs accelerator SimObjects from the workload YAML at gem5 configuration time.
@@ -193,6 +197,11 @@ Names below are relative to each object's path in `config.ini`:
   count accepted data movement but are not stream-port attempts.
 - `StreamBuffer`: `bufferOccupancy` is time-weighted buffered bytes; it retains
   the actual occupancy across a statistics reset.
+
+`memoryOrderWaits` counts scheduling observations of ready loads or stores
+blocked by older memory accesses. It includes the observation that creates
+an in-flight RAW dependency; it does not measure elapsed wait cycles or
+count each dependency repeatedly while that instruction is unready.
 
 The average statistics retain current state at a reset while beginning a
 new integration interval. Multiplying an active fraction by its statistics
@@ -327,6 +336,18 @@ overrides. `cycles` and `stages` describe the unit, and the
 instruction entry's `runtime_cycles` and `functional_unit_limit` are
 copied into the generated classes; none of them changes when an
 operation completes or how many issue.
+
+The supported terminators `br`, `ret` and `switch_inst` transfer control
+without a separate modeled latency. Their `CycleCounts` values and workload
+`runtime_cycles` overrides must be zero; nonzero settings are rejected.
+Other LLVM terminators, including `indirectbr`, `invoke`, `resume` and
+`unreachable`, remain unsupported and are rejected when the IR is read.
+A call completes on the caller's compute pass after the callee returns,
+plus its configured call latency in further passes. Thus a call latency of
+N completes N+1 compute edges after the callee return, including one edge
+for N=0. Completion, dependency notification and call accounting occur once
+through the caller's compute queue.
+This model does not simulate a branch predictor or a control-flow pipeline.
 
 With `lockstep_mode` (the default) the accelerator issues nothing new
 until its compute and memory queues are empty, so an

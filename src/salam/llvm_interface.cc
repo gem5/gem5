@@ -42,6 +42,7 @@
 // LLVMInterface Includes
 #include "salam/llvm_interface.hh"
 
+#include <functional>
 #include <set>
 
 #include "debug/SALAMFUInventory.hh"
@@ -78,8 +79,9 @@ LLVMInterface::ExecStats::ExecStats(LLVMInterface *owner)
                "Operations issued, by LLVM opcode"),
       ADD_STAT(fuDenials, statistics::units::Count::get(),
                "Times a ready operation waited for a functional unit"),
-      ADD_STAT(memoryOrderWaits, statistics::units::Count::get(),
-               "Times a ready load or store waited for an older access"),
+      ADD_STAT(
+          memoryOrderWaits, statistics::units::Count::get(),
+          "Ready load/store scheduling observations blocked by older access"),
       ADD_STAT(reservedOps, statistics::units::Count::get(),
                "Time-weighted average of operations waiting to issue"),
       ADD_STAT(computeOps, statistics::units::Count::get(),
@@ -381,21 +383,11 @@ LLVMInterface::ActiveFunction::processQueues()
                     if ((inst)->isLoad()) {
                         // RAW protection to ensure a writeback finishes
                         // before reading that location
-                        if (inst->isLoadingInternal()) {
-                            launchRead(inst);
-                            if (dbg) {
-                                DPRINTFS(
-                                    Runtime, owner,
-                                    "\t\t  |-Erase From Queue: %s - UID[%i]\n",
-                                    llvm::Instruction::getOpcodeName(
-                                        (*queue_iter)->getOpode()),
-                                    (*queue_iter)->getUID());
-                            }
-                            queue_iter = reservation.erase(queue_iter);
-                        } else if (mustWaitForOlder(queue_iter)) {
+                        if (mustWaitForOlder(queue_iter)) {
                             ++queue_iter;
                             owner->countMemoryOrderWait();
-                        } else if (!writeActive(inst->getPtrOperandValue(0),
+                        } else if (inst->isLoadingInternal() ||
+                                   !writeActive(inst->getPtrOperandValue(0),
                                                 inst->getSizeInBytes())) {
                             launchRead(inst);
                             if (dbg) {
@@ -413,6 +405,7 @@ LLVMInterface::ActiveFunction::processQueues()
                                                inst->getSizeInBytes());
                             inst->addRuntimeDependency(activeWrite);
                             activeWrite->addRuntimeUser(inst);
+                            owner->countMemoryOrderWait();
                             ++queue_iter;
                         }
                     } else if ((inst)->isStore() &&
@@ -710,6 +703,42 @@ LLVMInterface::dumpModule(llvm::Module *M)
     }
 }
 
+namespace
+{
+
+// Functions have one register frame and one active instance. A cycle in
+// the reachable direct-call graph cannot execute with that model.
+void
+rejectRecursiveCalls(llvm::Function &entry)
+{
+    std::set<const llvm::Function *> active;
+    std::set<const llvm::Function *> complete;
+    std::function<void(llvm::Function &)> visit = [&](llvm::Function &func) {
+        active.insert(&func);
+        for (auto &bb : func) {
+            for (auto &inst : bb) {
+                auto *call = llvm::dyn_cast<llvm::CallInst>(&inst);
+                auto *callee = call ? call->getCalledFunction() : nullptr;
+                if (!callee || callee->isDeclaration()) {
+                    continue;
+                }
+                fatal_if(active.count(callee),
+                         "SALAM does not support recursive LLVM calls: "
+                         "%s calls %s",
+                         func.getName().str(), callee->getName().str());
+                if (!complete.count(callee)) {
+                    visit(*callee);
+                }
+            }
+        }
+        active.erase(&func);
+        complete.insert(&func);
+    };
+    visit(entry);
+}
+
+} // anonymous namespace
+
 void
 LLVMInterface::constructStaticGraph()
 {
@@ -736,7 +765,16 @@ LLVMInterface::constructStaticGraph()
 
     m = llvm::parseIRFile(file, *error, *context);
     if (!m) {
-        panic("Error reading Module");
+        panic("Error reading LLVM module '%s': %s", filename,
+              error->getMessage().str());
+    }
+
+    auto *entry = m->getFunction(topName);
+    if (m->size() == 1) {
+        entry = &*m->begin();
+    }
+    if (entry) {
+        rejectRecursiveCalls(*entry);
     }
 
     // Construct the LLVM::Value to SALAM::Value map
@@ -876,6 +914,9 @@ LLVMInterface::ActiveFunction::launchRead(
         auto rd_uid = readInst->getUID();
         readQueue.insert({rd_uid, (readInst)});
         readQueueMap.insert({memReq, rd_uid});
+        DPRINTFS(SALAMIssue, owner,
+                 "memory issue load uid %d address %#x volatile %d\n", rd_uid,
+                 memReq->getAddress(), readInst->isVolatileAccess());
         owner->launchRead(memReq, this);
     }
 }
@@ -907,15 +948,25 @@ LLVMInterface::ActiveFunction::mustWaitForOlder(
     auto inst = *pos;
     bool isCall = inst->isCall();
     bool isStore = inst->isStore();
+    bool internalLoad = inst->isLoad() && inst->isLoadingInternal();
     Addr start = 0;
     Addr end = 0;
-    if (!isCall && !inst->accessRange(start, end)) {
+    if (!isCall && !internalLoad && !inst->accessRange(start, end)) {
         panic("%s is ready without an address", inst->getIRString());
     }
     for (auto it = reservation.begin(); it != pos; ++it) {
         auto older = *it;
         if (older->isCall()) {
             return true;
+        }
+        // Volatile operations can access distinct MMIO registers with
+        // related side effects. Preserve their execution order regardless
+        // of address overlap; ordinary accesses retain the alias rules.
+        if (inst->isVolatileAccess() && older->isVolatileAccess()) {
+            return true;
+        }
+        if (internalLoad) {
+            continue;
         }
         bool olderLoad = older->isLoad() && !older->isLoadingInternal();
         if (!older->isStore() && !(olderLoad && (isStore || isCall))) {
@@ -933,6 +984,18 @@ LLVMInterface::ActiveFunction::mustWaitForOlder(
     }
     if (isCall) {
         return !readQueue.empty() || !writeQueue.empty();
+    }
+    if (inst->isVolatileAccess()) {
+        for (const auto &entry : readQueue) {
+            if (entry.second->isVolatileAccess()) {
+                return true;
+            }
+        }
+        for (const auto &entry : writeQueue) {
+            if (entry.second->isVolatileAccess()) {
+                return true;
+            }
+        }
     }
     if (isStore) {
         if (writeActive(start, end - start)) {
@@ -985,6 +1048,9 @@ LLVMInterface::ActiveFunction::launchWrite(
     auto wr_uid = writeInst->getUID();
     writeQueue.insert({wr_uid, (writeInst)});
     writeQueueMap.insert({memReq, wr_uid});
+    DPRINTFS(SALAMIssue, owner,
+             "memory issue store uid %d address %#x volatile %d\n", wr_uid,
+             memReq->getAddress(), writeInst->isVolatileAccess());
     owner->launchWrite(memReq, this);
 }
 
@@ -1015,6 +1081,8 @@ LLVMInterface::ActiveFunction::readCommit(MemoryRequest *req)
     if (map_iter != readQueueMap.end()) {
         auto queue_iter = readQueue.find(map_iter->second);
         if (queue_iter != readQueue.end()) {
+            DPRINTFS(SALAMIssue, owner, "memory complete uid %d\n",
+                     map_iter->second);
             auto load_inst = queue_iter->second;
             uint8_t *readBuff = req->getBuffer();
             load_inst->setRegisterValue(readBuff);
@@ -1062,6 +1130,8 @@ LLVMInterface::ActiveFunction::writeCommit(MemoryRequest *req)
     if (map_iter != writeQueueMap.end()) {
         auto queue_iter = writeQueue.find(map_iter->second);
         if (queue_iter != writeQueue.end()) {
+            DPRINTFS(SALAMIssue, owner, "memory complete uid %d\n",
+                     map_iter->second);
             queue_iter->second->commit();
             owner->countCompletion(StoreOp);
             untrackWrite(map_iter->second);
@@ -1538,6 +1608,16 @@ LLVMInterface::resolveFunctionalUnits()
 std::shared_ptr<SALAM::Instruction>
 LLVMInterface::createInstruction(llvm::Instruction *inst, uint64_t id)
 {
+    // LLVM synchronization semantics are not modeled by the ordinary
+    // accelerator memory requests. This does not restrict gem5's atomic
+    // memory-system simulation mode.
+    if (inst->isAtomic() || llvm::isa<llvm::FenceInst>(inst)) {
+        std::string ir_text;
+        llvm::raw_string_ostream ss(ir_text);
+        ss << *inst;
+        fatal("SALAM does not support LLVM atomic instructions: %s",
+              ss.str().c_str());
+    }
     uint64_t OpCode = inst->Instruction::getOpcode();
     hw->opcodes->update_usage(OpCode);
 

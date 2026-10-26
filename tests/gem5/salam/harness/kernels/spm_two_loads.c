@@ -26,9 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Two independent scratchpad loads issued together: one service pass
-// sends both, and the scratchpad port, busy with the first, rejects
-// the second until it is free.
+// Two ordinary scratchpad loads can be in flight together. The
+// scratchpad port, busy with the first, rejects the second until it is
+// free. Volatile loads would wait for the preceding load to complete.
 
 #include <stdint.h>
 
@@ -38,6 +38,6 @@ void
 top(void)
 {
     volatile uint32_t *out = (volatile uint32_t *)OUT;
-    volatile uint32_t *mem = (volatile uint32_t *)MEM;
+    uint32_t *mem = (uint32_t *)MEM;
     out[0] = mem[0] + mem[1];
 }

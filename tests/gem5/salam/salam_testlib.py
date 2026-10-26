@@ -1024,6 +1024,17 @@ class SalamHarnessFixture(Fixture):
         with open(source) as f:
             text = f.read()
         text = text.replace("{PTR_I32}", ptr)
+        text = text.replace(
+            "{PTR_I8}", "i8*" if tools.llvm_major < 15 else "ptr"
+        )
+        text = text.replace(
+            "{PTR_AS1}",
+            (
+                "i8 addrspace(1)*"
+                if tools.llvm_major < 15
+                else "ptr addrspace(1)"
+            ),
+        )
         # {IN}, {OUT}: base addresses; {IN2}, {OUT1}: word offsets.
         text = re.sub(
             r"\{(IN|OUT)(\d*)\}",

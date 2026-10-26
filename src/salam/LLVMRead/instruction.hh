@@ -87,6 +87,7 @@ class Instruction : public Value
     // Operands
     std::vector<SALAM::Operand> operands;
 
+    bool volatileAccess = false;
     bool running = false;
     class Instruction_Debugger : public Debugger
     {
@@ -295,6 +296,12 @@ class Instruction : public Value
     accessRange(Addr &start, Addr &end)
     {
         return false;
+    }
+
+    bool
+    isVolatileAccess() const
+    {
+        return volatileAccess;
     }
 
     // Whether operand op_num has its value: any producer has completed.
@@ -1546,7 +1553,8 @@ class GetElementPtr : public Instruction
 {
   private:
     std::vector<std::vector<uint64_t>> conditions;
-    std::vector<int64_t> offsets;
+    std::vector<uint64_t> offsets;
+    unsigned indexBits = 64;
     std::vector<bool> offsetOfStruct;
     SALAM::Debugger *dbgr;
     llvm::Type *resultElementType;

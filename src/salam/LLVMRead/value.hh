@@ -52,6 +52,7 @@
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Value.h"
 #include "registers.hh"
@@ -74,6 +75,12 @@ class Value
   protected:
     uint64_t uid = 0;
     uint64_t size = 0;
+    // Storage/argument slots remain 64 bits; LLVM pointer values obey the
+    // module's representation width independently of those slots.
+    unsigned pointerBits = 64;
+    void setPointerLayout(llvm::Type *type, const llvm::DataLayout &layout,
+                          const llvm::Value *context);
+    uint64_t normalizePointer(uint64_t value) const;
     gem5::SimObject *owner;
     std::string ir_string;
     std::string ir_stub;
@@ -133,6 +140,11 @@ class Value
         } else {
             return ((size - 1) >> 3) + 1;
         }
+    }
+    unsigned
+    getPointerBits() const
+    {
+        return pointerBits;
     }
     uint64_t
     getUID() const
