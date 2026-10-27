@@ -32,6 +32,7 @@
 #ifndef __ARCH_AMDGPU_COMMON_DTYPE_MXFP_CONVERT_HH__
 #define __ARCH_AMDGPU_COMMON_DTYPE_MXFP_CONVERT_HH__
 
+#include <algorithm>
 #include <cassert>
 
 #include "arch/amdgpu/common/dtype/mxfp_type_info.hh"
@@ -130,92 +131,36 @@ convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             int32_t exp = in.exp - sFMT::bias + dFMT::bias;
             out.sign = in.sign;
 
-            // Input is not subnormal, add the implicit 1 bit.
+            // Input is not subnormal, add the implicit 1 bit. A subnormal
+            // input has the exponent of the smallest normal value.
             if (in.exp) {
                 mant |= (1 << sFMT::mbits);
-            }
-
-            // Save the value for rounding so we don't need to recompute it.
-            uint32_t saved_mant = mant;
-
-            mant >>= (sFMT::mbits - dFMT::mbits);
-
-            // Output became subnormal
-            if (exp < 1 && in.exp) {
-                int shift = 1 - exp;
-                mant >>= shift;
-                out.exp = 0;
             } else {
-                out.exp = exp;
+                exp++;
             }
 
-            mant &= mask(dFMT::mbits);
-            out.mant = mant;
+            // Shift out the extra mantissa bits. If the output becomes
+            // subnormal, shift out 1 - exp more bits and keep the smallest
+            // normal exponent. Shifting out more than mbits + 2 bits leaves
+            // zero and less than half either way, so limit the shift there.
+            int shift = sFMT::mbits - dFMT::mbits;
+            if (exp < 1) {
+                shift = std::min(shift + 1 - exp, int(sFMT::mbits) + 2);
+                exp = 1;
+            }
+            uint32_t shifted_out = mant & mask(shift);
+            mant >>= shift;
 
-            // roundTiesToEven is the only required rounding mode for MXFP
-            // types. Here we take the input mantissa and check the first
-            // three bits that were shifted out. These are called guard,
-            // round, and sticky bits. The value of these three bits combined
-            // are used to determine if we should round up or down. If the
-            // value is directly in between, we look at the final bit of the
-            // output mantissa with guard, round, sticky shifted out. If the
-            // value is one, round to nearest even by rounding down (set it to
-            // zero).
-            //
-            // For denormals, the process is similar, but we shift the input
-            // mantissa by 1 - exp more bits before setting the value of guard,
-            // round, sticky. Note that for denormals exp < 1 (i.e., shift
-            // value is always positive).
-            //
-            // If the number of destination and source format mantissa bits are
-            // the same, the mantissa is unchanged.
             if (int(sFMT::mbits) > int(dFMT::mbits) &&
                 mode == roundTiesToEven) {
-                bool round_up = false;
-
-                // Round using guard, round, sticky bits. We want to make sure
-                // there are three bits remaining. This is currently true for
-                // all conversion instructions. This would need to be revisited
-                // if there are f4 <-> f6 or f6 <-> f8 conversions.
-                assert((sFMT::mbits - dFMT::mbits) > 2);
-
-                int check_shift = sFMT::mbits - dFMT::mbits - 3;
-                uint32_t check_mant = saved_mant;
-
-                // Sticky bit is 1 if *any* of the N-2 bits that get shifted
-                // off are one. Being zero implies we are directly between two
-                // floating point values.
-                int sticky = (check_mant & mask(check_shift + 1)) != 0;
-
-                check_mant >>= check_shift;
-                if (exp < 1) {
-                    int shift = 1 - exp;
-                    check_mant >>= shift;
-                }
-
-                // Combine guard, round, sticky into one 3-bit value. If that
-                // value is < 0b100 we round down (truncate -- nothing to do),
-                // if it is > 0b100 we round up. If it is == 0b100, round to
-                // nearest even.
-                uint32_t check_test = check_mant & 0x7;
-
-                // Add sticky to the 3-bit check value.
-                check_test += sticky;
-
-                if (check_test > 0x4) {
-                    round_up = true;
-                }
-
-                if (round_up) {
-                    if (out.mant == mask(dFMT::mbits)) {
-                        // Mantissa at max value, increment exponent if not inf
-                        if (out.exp != mask(dFMT::ebits)) {
-                            out.exp++;
-                        }
-                        out.mant = 0;
-                    } else {
-                        out.mant++;
-                    }
+                // roundTiesToEven is the only required rounding mode for MXFP
+                // types. Round up if the bits shifted out are more than half
+                // of the last kept bit, or exactly half and the kept mantissa
+                // is odd.
+                uint32_t half = 1 << (shift - 1);
+                if (shifted_out > half ||
+                    (shifted_out == half && (mant & 1))) {
+                    mant++;
                 }
             } else if (int(sFMT::mbits) > int(dFMT::mbits) &&
                        mode == roundStochastic) {
@@ -246,16 +191,36 @@ convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                 // probability. E.g., if round_prob is 90% (0.9) we choose
                 // values 0.0f - 0.90f to round up.
                 if (round_prob <= draw_prob) {
-                    if (out.mant == mask(dFMT::mbits)) {
-                        // mantissa at max value, increment exponent if not inf
-                        if (out.exp != mask(dFMT::ebits)) {
-                            out.exp++;
-                        }
-                        out.mant = 0;
-                    } else {
-                        out.mant++;
-                    }
+                    mant++;
                 }
+            }
+
+            // The exponent field sits right above the mantissa, so adding the
+            // mantissa with its implicit bit to (exp - 1) << mbits gives the
+            // encoding. A carry from rounding moves to the next exponent and
+            // a subnormal result, which has no implicit bit, gets exponent 0.
+            uint32_t bits = ((exp - 1) << dFMT::mbits) + mant;
+
+            // Largest finite encoding. Formats with infinity reserve the top
+            // exponent and E4M3 reserves only its NaN encoding.
+            uint32_t max_bits = mask(dFMT::ebits + dFMT::mbits);
+            if (std::numeric_limits<dFMT>::has_infinity) {
+                max_bits -= 1 << dFMT::mbits;
+            } else if (std::numeric_limits<dFMT>::has_quiet_NaN) {
+                max_bits -= 1;
+            }
+
+            // Values too large for the format convert like an infinity.
+            if (bits > max_bits) {
+                if (std::numeric_limits<dFMT>::has_infinity) {
+                    out = std::numeric_limits<dFMT>::infinity();
+                } else {
+                    out = std::numeric_limits<dFMT>::max();
+                }
+                out.sign = in.sign;
+            } else {
+                out.exp = bits >> dFMT::mbits;
+                out.mant = bits & mask(dFMT::mbits);
             }
         }
     } else if constexpr (int(sFMT::mbits) <= int(dFMT::mbits) &&
