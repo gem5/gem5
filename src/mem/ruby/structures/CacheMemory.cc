@@ -67,22 +67,43 @@ operator<<(std::ostream& out, const CacheMemory& obj)
     return out;
 }
 
+CacheMemory::RubyCacheSlot *
+CacheMemory::RubyCache::selectVictim(
+    const std::vector<RubyCacheSlot *> &candidates) const
+{
+    ReplacementCandidates replacement_candidates(candidates.begin(),
+                                                 candidates.end());
+    return static_cast<RubyCacheSlot *>(
+        replPolicy->getVictim(replacement_candidates));
+}
+
+void
+CacheMemory::RubyCache::weightedTouch(RubyCacheSlot *entry,
+                                      const int occupancy) const
+{
+    static_cast<replacement_policy::WeightedLRU *>(replPolicy)
+        ->touch(entry->replacementData, occupancy);
+}
+
 CacheMemory::CacheMemory(const Params &p)
     : SimObject(p),
-    dataArray(p.dataArrayBanks, p.dataAccessLatency, p.start_index_bit),
-    tagArray(p.tagArrayBanks, p.tagAccessLatency, p.start_index_bit),
-    atomicALUArray(p.atomicALUs, p.atomicLatency),
-    cacheMemoryStats(this)
+      dataArray(p.dataArrayBanks, p.dataAccessLatency, p.start_index_bit),
+      tagArray(p.tagArrayBanks, p.tagAccessLatency, p.start_index_bit),
+      rubyCache(name() + ".cache"),
+      atomicALUArray(p.atomicALUs, p.atomicLatency),
+      cacheMemoryStats(this)
 {
     m_cache_size = p.size;
     m_cache_assoc = p.assoc;
-    m_replacementPolicy_ptr = p.replacement_policy;
     m_start_index_bit = p.start_index_bit;
     m_is_instruction_only_cache = p.is_icache;
     m_resource_stalls = p.resourceStalls;
     m_block_size = p.block_size;  // may be 0 at this point. Updated in init()
-    m_use_occupancy = dynamic_cast<replacement_policy::WeightedLRU*>(
-                                    m_replacementPolicy_ptr) ? true : false;
+    fatal_if(!p.indexing_policy, "%s requires an indexing policy", name());
+    m_use_occupancy =
+        dynamic_cast<replacement_policy::WeightedLRU *>(p.replacement_policy)
+            ? true
+            : false;
 }
 
 void
@@ -121,34 +142,25 @@ CacheMemory::init()
         m_is_power_of_2_sets = false;
     }
 
-    m_cache.resize(m_cache_num_sets,
-                    std::vector<AbstractCacheEntry*>(m_cache_assoc, nullptr));
-    replacement_data.resize(m_cache_num_sets,
-                               std::vector<ReplData>(m_cache_assoc, nullptr));
-    // instantiate all the replacement_data here
-    for (int i = 0; i < m_cache_num_sets; i++) {
-        for ( int j = 0; j < m_cache_assoc; j++) {
-            replacement_data[i][j] =
-                                m_replacementPolicy_ptr->instantiateEntry();
-        }
-    }
+    const size_t num_entries = m_cache_size / m_block_size;
+    const auto &p = params();
+    rubyCache.init(num_entries, m_cache_assoc, p.replacement_policy,
+                   p.indexing_policy,
+                   RubyCacheSlot(genTagExtractor(p.indexing_policy)));
 }
 
 CacheMemory::~CacheMemory()
 {
-    if (m_replacementPolicy_ptr)
-        delete m_replacementPolicy_ptr;
-    for (int i = 0; i < m_cache_num_sets; i++) {
-        for (int j = 0; j < m_cache_assoc; j++) {
-            delete m_cache[i][j];
-        }
-    }
+    flushEntries();
 }
 
-// convert a Address to its location in the cache
+// convert an Address to its location in the cache
 int64_t
 CacheMemory::addressToCacheSet(Addr address) const
 {
+    // TODO: this is exclusively used for contention modelling now,
+    //  this methodology doesnt hold for differing indexing policies
+    //  e.g. skewed associative caches.
     assert(address == makeLineAddress(address));
     if (m_is_power_of_2_sets) {
         return bitSelect(address, m_start_index_bit,
@@ -158,56 +170,23 @@ CacheMemory::addressToCacheSet(Addr address) const
     }
 }
 
-// Given a cache index: returns the index of the tag in a set.
-// returns -1 if the tag is not found.
-int
-CacheMemory::findTagInSet(int64_t cacheSet, Addr tag) const
-{
-    assert(tag == makeLineAddress(tag));
-    // search the set for the tags
-    auto it = m_tag_index.find(tag);
-    if (it != m_tag_index.end())
-        if (m_cache[cacheSet][it->second]->m_Permission !=
-            AccessPermission_NotPresent)
-            return it->second;
-    return -1; // Not found
-}
-
-// Given a cache index: returns the index of the tag in a set.
-// returns -1 if the tag is not found.
-int
-CacheMemory::findTagInSetIgnorePermissions(int64_t cacheSet,
-                                           Addr tag) const
-{
-    assert(tag == makeLineAddress(tag));
-    // search the set for the tags
-    auto it = m_tag_index.find(tag);
-    if (it != m_tag_index.end())
-        return it->second;
-    return -1; // Not found
-}
-
 // Given an unique cache block identifier (idx): return the valid address
 // stored by the cache block.  If the block is invalid/notpresent, the
 // function returns the 0 address
 Addr
 CacheMemory::getAddressAtIdx(int idx) const
 {
-    Addr tmp(0);
+    assert(idx >= 0);
+    assert(idx < getNumBlocks());
 
-    int set = idx / m_cache_assoc;
-    assert(set < m_cache_num_sets);
+    const auto &slot = *std::next(rubyCache.begin(), idx);
 
-    int way = idx - set * m_cache_assoc;
-    assert (way < m_cache_assoc);
-
-    AbstractCacheEntry* entry = m_cache[set][way];
-    if (entry == NULL ||
-        entry->m_Permission == AccessPermission_Invalid ||
-        entry->m_Permission == AccessPermission_NotPresent) {
-        return tmp;
+    if (!slot.isValid() ||
+        slot.entry->m_Permission == AccessPermission_Invalid) {
+        return 0;
     }
-    return entry->m_Address;
+
+    return slot.entry->m_Address;
 }
 
 bool
@@ -215,29 +194,29 @@ CacheMemory::tryCacheAccess(Addr address, RubyRequestType type,
                             DataBlock*& data_ptr)
 {
     DPRINTF(RubyCache, "trying to access address: %#x\n", address);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
+
     if (entry != nullptr) {
-        // Do we even have a tag match?
-        m_replacementPolicy_ptr->touch(entry->replacementData);
+        rubyCache.accessEntry(address);
         entry->setLastAccess(curTick());
         data_ptr = &(entry->getDataBlk());
 
         if (entry->m_Permission == AccessPermission_Read_Write) {
             DPRINTF(RubyCache, "Have permission to access address: %#x\n",
-                        address);
+                    address);
             return true;
         }
         if ((entry->m_Permission == AccessPermission_Read_Only) &&
             (type == RubyRequestType_LD || type == RubyRequestType_IFETCH)) {
             DPRINTF(RubyCache, "Have permission to access address: %#x\n",
-                        address);
+                    address);
             return true;
         }
         // The line must not be accessible
     }
     DPRINTF(RubyCache, "Do not have permission to access address: %#x\n",
                 address);
-    data_ptr = NULL;
+    data_ptr = nullptr;
     return false;
 }
 
@@ -246,22 +225,20 @@ CacheMemory::testCacheAccess(Addr address, RubyRequestType type,
                              DataBlock*& data_ptr)
 {
     DPRINTF(RubyCache, "testing address: %#x\n", address);
-    AbstractCacheEntry* entry = lookup(address);
+    AbstractCacheEntry *entry = lookup(address);
+
     if (entry != nullptr) {
-        // Do we even have a tag match?
-        m_replacementPolicy_ptr->touch(entry->replacementData);
+        rubyCache.accessEntry(address);
         entry->setLastAccess(curTick());
         data_ptr = &(entry->getDataBlk());
 
-        DPRINTF(RubyCache, "have permission for address %#x?: %d\n",
-                    address,
-                    entry->m_Permission != AccessPermission_NotPresent);
-        return entry->m_Permission != AccessPermission_NotPresent;
+        DPRINTF(RubyCache, "have permission for address %#x\n", address);
+        return true;
     }
 
     DPRINTF(RubyCache, "do not have permission for address %#x\n",
                 address);
-    data_ptr = NULL;
+    data_ptr = nullptr;
     return false;
 }
 
@@ -287,17 +264,11 @@ CacheMemory::cacheAvail(Addr address) const
 {
     assert(address == makeLineAddress(address));
 
-    int64_t cacheSet = addressToCacheSet(address);
+    auto entries = rubyCache.getPossibleEntries(address);
 
-    for (int i = 0; i < m_cache_assoc; i++) {
-        AbstractCacheEntry* entry = m_cache[cacheSet][i];
-        if (entry != NULL) {
-            if (entry->m_Address == address ||
-                entry->m_Permission == AccessPermission_NotPresent) {
-                // Already in the cache or we found an empty entry
-                return true;
-            }
-        } else {
+    for (auto *ruby_entry : entries) {
+        if (!ruby_entry->isValid() || ruby_entry->match(address)) {
+            // We found an empty entry
             return true;
         }
     }
@@ -316,34 +287,26 @@ CacheMemory::allocate(Addr address, AbstractCacheEntry *entry)
     entry->setRubySystem(m_ruby_system);
 
     // Find the first open slot
-    int64_t cacheSet = addressToCacheSet(address);
-    std::vector<AbstractCacheEntry*> &set = m_cache[cacheSet];
-    for (int i = 0; i < m_cache_assoc; i++) {
-        if (!set[i] || set[i]->m_Permission == AccessPermission_NotPresent) {
-            if (set[i] && (set[i] != entry)) {
-                warn_once("This protocol contains a cache entry handling bug: "
-                    "Entries in the cache should never be NotPresent! If\n"
-                    "this entry (%#x) is not tracked elsewhere, it will memory "
-                    "leak here. Fix your protocol to eliminate these!",
-                    address);
-            }
-            set[i] = entry;  // Init entry
-            set[i]->m_Address = address;
-            set[i]->m_Permission = AccessPermission_Invalid;
-            DPRINTF(RubyCache, "Allocate clearing lock for addr: 0x%x\n",
-                    address);
-            set[i]->m_locked = -1;
-            m_tag_index[address] = i;
-            set[i]->setPosition(cacheSet, i);
-            set[i]->replacementData = replacement_data[cacheSet][i];
-            set[i]->setLastAccess(curTick());
+    auto entries = rubyCache.getPossibleEntries(address);
 
-            // Call reset function here to set initial value for different
-            // replacement policies.
-            m_replacementPolicy_ptr->reset(entry->replacementData);
-
-            return entry;
+    for (auto *ruby_entry : entries) {
+        if (ruby_entry->isValid()) {
+            continue;
         }
+
+        assert(ruby_entry->entry == nullptr);
+
+        ruby_entry->entry = entry; // Init entry
+        entry->m_Address = address;
+        entry->m_Permission = AccessPermission_Invalid;
+        DPRINTF(RubyCache, "Allocate clearing lock for addr: 0x%x\n", address);
+        entry->m_locked = -1;
+
+        entry->setLastAccess(curTick());
+        entry->setPosition(ruby_entry->getSet(), ruby_entry->getWay());
+
+        rubyCache.insertEntry(address, ruby_entry);
+        return entry;
     }
     panic("Allocate didn't find an available entry");
 }
@@ -360,22 +323,29 @@ void
 CacheMemory::deallocate(AbstractCacheEntry *entry)
 {
     assert(entry != nullptr);
-    m_replacementPolicy_ptr->invalidate(entry->replacementData);
-    uint32_t cache_set = entry->getSet();
-    uint32_t way = entry->getWay();
-    m_tag_index.erase(entry->m_Address);
+
+    RubyCacheSlot *slot = lookupSlot(entry->m_Address);
+
+    assert(slot != nullptr);
+    assert(slot->entry == entry);
+
+    /*
+     * Clears the slot’s tag and entry pointer and invalidates its
+     * replacement-policy metadata.
+     */
+    rubyCache.invalidate(slot);
+
     delete entry;
-    m_cache[cache_set][way] = NULL;
 }
 
 void
 CacheMemory::flushEntries()
 {
-    for (auto &sets : m_cache) {
-        for (auto &entry : sets) {
-            if (entry) {
-                deallocate(entry);
-            }
+    for (auto &slot : rubyCache) {
+        if (slot.entry != nullptr) {
+            AbstractCacheEntry *entry = slot.entry;
+            rubyCache.invalidate(&slot);
+            delete entry;
         }
     }
 }
@@ -387,46 +357,65 @@ CacheMemory::cacheProbe(Addr address) const
     assert(address == makeLineAddress(address));
     assert(!cacheAvail(address));
 
-    int64_t cacheSet = addressToCacheSet(address);
-    std::vector<ReplaceableEntry*> candidates;
-    for (int i = 0; i < m_cache_assoc; i++) {
-        candidates.push_back(static_cast<ReplaceableEntry*>(
-                                                       m_cache[cacheSet][i]));
-    }
-    return m_cache[cacheSet][m_replacementPolicy_ptr->
-                        getVictim(candidates)->getWay()]->m_Address;
+    const auto candidates = rubyCache.getPossibleEntries(address);
+
+    const auto *victim = rubyCache.selectVictim(candidates);
+
+    assert(victim != nullptr);
+    assert(victim->entry != nullptr);
+
+    return victim->entry->m_Address;
+}
+
+CacheMemory::RubyCacheSlot *
+CacheMemory::lookupSlot(Addr address)
+{
+    assert(address == makeLineAddress(address));
+    return rubyCache.findEntry(address);
+}
+
+const CacheMemory::RubyCacheSlot *
+CacheMemory::lookupSlot(Addr address) const
+{
+    assert(address == makeLineAddress(address));
+    return rubyCache.findEntry(address);
 }
 
 // looks an address up in the cache
 AbstractCacheEntry*
 CacheMemory::lookup(Addr address)
 {
-    assert(address == makeLineAddress(address));
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-    if (loc == -1) return NULL;
-    return m_cache[cacheSet][loc];
+    RubyCacheSlot *slot = lookupSlot(address);
+
+    if (slot == nullptr) {
+        return nullptr;
+    }
+
+    return slot->entry;
 }
 
 // looks an address up in the cache
 const AbstractCacheEntry*
 CacheMemory::lookup(Addr address) const
 {
-    assert(address == makeLineAddress(address));
-    int64_t cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-    if (loc == -1) return NULL;
-    return m_cache[cacheSet][loc];
+    const RubyCacheSlot *slot = lookupSlot(address);
+
+    if (slot == nullptr) {
+        return nullptr;
+    }
+
+    return slot->entry;
 }
 
 // Sets the most recently used bit for a cache block
 void
 CacheMemory::setMRU(Addr address)
 {
-    AbstractCacheEntry* entry = lookup(makeLineAddress(address));
-    if (entry != nullptr) {
-        m_replacementPolicy_ptr->touch(entry->replacementData);
-        entry->setLastAccess(curTick());
+    RubyCacheSlot *ruby_entry = lookupSlot(makeLineAddress(address));
+    if (ruby_entry != nullptr) {
+        assert(ruby_entry->isValid());
+        rubyCache.accessEntry(ruby_entry);
+        ruby_entry->entry->setLastAccess(curTick());
     }
 }
 
@@ -434,41 +423,29 @@ void
 CacheMemory::setMRU(AbstractCacheEntry *entry)
 {
     assert(entry != nullptr);
-    m_replacementPolicy_ptr->touch(entry->replacementData);
+
+    RubyCacheSlot *ruby_entry = lookupSlot(entry->m_Address);
+
+    rubyCache.accessEntry(ruby_entry);
     entry->setLastAccess(curTick());
 }
 
 void
 CacheMemory::setMRU(Addr address, int occupancy)
 {
-    AbstractCacheEntry* entry = lookup(makeLineAddress(address));
-    if (entry != nullptr) {
-        // m_use_occupancy can decide whether we are using WeightedLRU
-        // replacement policy. Depending on different replacement policies,
-        // use different touch() function.
-        if (m_use_occupancy) {
-            static_cast<replacement_policy::WeightedLRU*>(
-                m_replacementPolicy_ptr)->touch(
-                entry->replacementData, occupancy);
-        } else {
-            m_replacementPolicy_ptr->touch(entry->replacementData);
-        }
-        entry->setLastAccess(curTick());
-    }
-}
-
-int
-CacheMemory::getReplacementWeight(int64_t set, int64_t loc)
-{
-    assert(set < m_cache_num_sets);
-    assert(loc < m_cache_assoc);
-    int ret = 0;
-    if (m_cache[set][loc] != NULL) {
-        ret = m_cache[set][loc]->getNumValidBlocks();
-        assert(ret >= 0);
+    RubyCacheSlot *ruby_entry = lookupSlot(makeLineAddress(address));
+    if (ruby_entry == nullptr) {
+        return;
     }
 
-    return ret;
+    if (m_use_occupancy) {
+        // If we need to support weights
+        rubyCache.weightedTouch(ruby_entry, occupancy);
+    } else {
+        rubyCache.accessEntry(ruby_entry);
+    }
+
+    ruby_entry->entry->setLastAccess(curTick());
 }
 
 void
@@ -478,30 +455,32 @@ CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
     [[maybe_unused]] uint64_t totalBlocks = (uint64_t)m_cache_num_sets *
                                          (uint64_t)m_cache_assoc;
 
-    for (int i = 0; i < m_cache_num_sets; i++) {
-        for (int j = 0; j < m_cache_assoc; j++) {
-            if (m_cache[i][j] != NULL) {
-                AccessPermission perm = m_cache[i][j]->m_Permission;
-                RubyRequestType request_type = RubyRequestType_NULL;
-                if (perm == AccessPermission_Read_Only) {
-                    if (m_is_instruction_only_cache) {
-                        request_type = RubyRequestType_IFETCH;
-                    } else {
-                        request_type = RubyRequestType_LD;
-                    }
-                } else if (perm == AccessPermission_Read_Write) {
-                    request_type = RubyRequestType_ST;
-                }
+    for (const auto &slot : rubyCache) {
+        if (!slot.isValid()) {
+            continue;
+        }
 
-                if (request_type != RubyRequestType_NULL) {
-                    Tick lastAccessTick;
-                    lastAccessTick = m_cache[i][j]->getLastAccess();
-                    tr->addRecord(cntrl, m_cache[i][j]->m_Address,
-                                  0, request_type, lastAccessTick,
-                                  m_cache[i][j]->getDataBlk());
-                    warmedUpBlocks++;
-                }
+        AbstractCacheEntry *entry = slot.entry;
+
+        RubyRequestType request_type = RubyRequestType_NULL;
+        if (entry->m_Permission == AccessPermission_Read_Only) {
+            if (m_is_instruction_only_cache) {
+                request_type = RubyRequestType_IFETCH;
+            } else {
+                request_type = RubyRequestType_LD;
             }
+        } else if (entry->m_Permission == AccessPermission_Read_Write) {
+            request_type = RubyRequestType_ST;
+        }
+
+        if (request_type != RubyRequestType_NULL) {
+            Tick lastAccessTick;
+            lastAccessTick = entry->getLastAccess();
+            Addr address = entry->m_Address;
+
+            tr->addRecord(cntrl, address, 0, request_type, lastAccessTick,
+                          entry->getDataBlk());
+            warmedUpBlocks++;
         }
     }
 
@@ -514,17 +493,14 @@ void
 CacheMemory::print(std::ostream& out) const
 {
     out << "Cache dump: " << name() << std::endl;
-    for (int i = 0; i < m_cache_num_sets; i++) {
-        for (int j = 0; j < m_cache_assoc; j++) {
-            if (m_cache[i][j] != NULL) {
-                out << "  Index: " << i
-                    << " way: " << j
-                    << " entry: " << *m_cache[i][j] << std::endl;
-            } else {
-                out << "  Index: " << i
-                    << " way: " << j
-                    << " entry: NULL" << std::endl;
-            }
+
+    for (const auto &slot : rubyCache) {
+        if (slot.isValid()) {
+            out << "  Index: " << slot.getSet() << " way: " << slot.getWay()
+                << " entry: " << *slot.entry << std::endl;
+        } else {
+            out << "  Index: " << slot.getSet() << " way: " << slot.getWay()
+                << " entry: NULL" << std::endl;
         }
     }
 }
@@ -556,15 +532,12 @@ CacheMemory::clearLocked(Addr address)
 void
 CacheMemory::clearLockedAll(int context)
 {
-    // iterate through every set and way to get a cache line
-    for (auto i = m_cache.begin(); i != m_cache.end(); ++i) {
-        std::vector<AbstractCacheEntry*> set = *i;
-        for (auto j = set.begin(); j != set.end(); ++j) {
-            AbstractCacheEntry *line = *j;
-            if (line && line->isLocked(context)) {
+    for (const auto &slot : rubyCache) {
+        if (slot.isValid()) {
+            if (slot.entry->isLocked(context)) {
                 DPRINTF(RubyCache, "Clear Lock for addr: %#x\n",
-                    line->m_Address);
-                line->clearLocked();
+                        slot.entry->m_Address);
+                slot.entry->clearLocked();
             }
         }
     }
@@ -751,18 +724,6 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
     }
 }
 
-bool
-CacheMemory::isBlockInvalid(int64_t cache_set, int64_t loc)
-{
-  return (m_cache[cache_set][loc]->m_Permission == AccessPermission_Invalid);
-}
-
-bool
-CacheMemory::isBlockNotBusy(int64_t cache_set, int64_t loc)
-{
-  return (m_cache[cache_set][loc]->m_Permission != AccessPermission_Busy);
-}
-
 /* hardware transactional memory */
 
 void
@@ -771,25 +732,16 @@ CacheMemory::htmAbortTransaction()
     uint64_t htmReadSetSize = 0;
     uint64_t htmWriteSetSize = 0;
 
-    // iterate through every set and way to get a cache line
-    for (auto i = m_cache.begin(); i != m_cache.end(); ++i)
-    {
-        std::vector<AbstractCacheEntry*> set = *i;
-
-        for (auto j = set.begin(); j != set.end(); ++j)
-        {
-            AbstractCacheEntry *line = *j;
-
-            if (line != nullptr) {
-                htmReadSetSize += (line->getInHtmReadSet() ? 1 : 0);
-                htmWriteSetSize += (line->getInHtmWriteSet() ? 1 : 0);
-                if (line->getInHtmWriteSet()) {
-                    line->invalidateEntry();
-                }
-                line->setInHtmWriteSet(false);
-                line->setInHtmReadSet(false);
-                line->clearLocked();
+    for (const auto &slot : rubyCache) {
+        if (slot.isValid()) {
+            htmReadSetSize += (slot.entry->getInHtmReadSet() ? 1 : 0);
+            htmWriteSetSize += (slot.entry->getInHtmWriteSet() ? 1 : 0);
+            if (slot.entry->getInHtmWriteSet()) {
+                slot.entry->invalidateEntry();
             }
+            slot.entry->setInHtmWriteSet(false);
+            slot.entry->setInHtmReadSet(false);
+            slot.entry->clearLocked();
         }
     }
 
@@ -805,21 +757,13 @@ CacheMemory::htmCommitTransaction()
     uint64_t htmReadSetSize = 0;
     uint64_t htmWriteSetSize = 0;
 
-    // iterate through every set and way to get a cache line
-    for (auto i = m_cache.begin(); i != m_cache.end(); ++i)
-    {
-        std::vector<AbstractCacheEntry*> set = *i;
-
-        for (auto j = set.begin(); j != set.end(); ++j)
-        {
-            AbstractCacheEntry *line = *j;
-            if (line != nullptr) {
-                htmReadSetSize += (line->getInHtmReadSet() ? 1 : 0);
-                htmWriteSetSize += (line->getInHtmWriteSet() ? 1 : 0);
-                line->setInHtmWriteSet(false);
-                line->setInHtmReadSet(false);
-                line->clearLocked();
-             }
+    for (const auto &slot : rubyCache) {
+        if (slot.isValid()) {
+            htmReadSetSize += (slot.entry->getInHtmReadSet() ? 1 : 0);
+            htmWriteSetSize += (slot.entry->getInHtmWriteSet() ? 1 : 0);
+            slot.entry->setInHtmWriteSet(false);
+            slot.entry->setInHtmReadSet(false);
+            slot.entry->clearLocked();
         }
     }
 
