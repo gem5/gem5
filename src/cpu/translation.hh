@@ -154,6 +154,21 @@ class WholeTranslationState
     }
 
     /**
+     * Determine whether this is a split translation in which only the high
+     * fragment faulted while the low fragment translated cleanly.  In that
+     * case the low fragment still refers to valid memory and its data can be
+     * delivered even though the access as a whole faulted.  This is used by
+     * RISC-V fault-only-first loads, whose elements before the faulting one
+     * must still be loaded (the atomic CPU gets this for free because it
+     * reads and faults one fragment at a time).
+     */
+    bool
+    isPartialFault() const
+    {
+        return isSplit && faults[0] == NoFault && faults[1] != NoFault;
+    }
+
+    /**
      * Check if this request is strictly ordered device access.  We
      * only need to check the main request because the flags will have
      * been copied here on a split translation.
