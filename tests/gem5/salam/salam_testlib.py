@@ -653,7 +653,13 @@ NO_SOURCE_TREE = os.path.join(os.path.dirname(__file__), "no_source_tree.py")
 
 
 def run_stdlib(
-    workload, wall, ticks, gem5_args=(), subdir=None, config_args=()
+    workload,
+    wall,
+    ticks,
+    gem5_args=(),
+    subdir=None,
+    config_args=(),
+    config_script=STDLIB_EXAMPLE,
 ):
     # Runs the standard library SALAM example on a built workload, with
     # the source tree's configs/ and util/ off the module path.
@@ -672,7 +678,7 @@ def run_stdlib(
             "--silent-redirect",
             *gem5_args,
             NO_SOURCE_TREE,
-            os.path.join(config.base_dir, STDLIB_EXAMPLE),
+            os.path.join(config.base_dir, config_script),
             "--binary",
             wl.elf,
             "--accpath",

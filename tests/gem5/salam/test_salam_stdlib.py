@@ -37,6 +37,7 @@ import salam_testlib as st
 from testlib import *
 
 BOARD_CHECK = os.path.join(os.path.dirname(__file__), "board_check.py")
+PARITY_STDLIB = "tests/gem5/salam/legacy_parity.py"
 
 
 def _board_check(params, *options):
@@ -321,6 +322,62 @@ BFS_WALL = 300
 BFS_TICKS = 4000000000
 
 
+def public_example_configuration(params):
+    outdir = params.fixtures[constants.tempdir_fixture_name].path
+    ini = configparser.ConfigParser(interpolation=None, strict=False)
+    ini.read(os.path.join(outdir, "config.ini"))
+
+    def expect(section, field, expected):
+        actual = ini.get(section, field, fallback=None)
+        if actual != str(expected):
+            raise AssertionError(
+                f"[{section}] {field}={actual!r}, expected {expected!r}"
+            )
+
+    expect("board", "multi_proc", "false")
+    expect("board.clk_domain", "clock", 1000)
+    expect("board.processor.clk_domain", "clock", 500)
+    expect("board.processor.cores.core", "type", "BaseO3CPU")
+    expect(
+        "board.processor.cores.core",
+        "clk_domain",
+        "board.processor.clk_domain",
+    )
+    cpus = [s for s in ini if ini.get(s, "type", fallback="") == "BaseO3CPU"]
+    if cpus != ["board.processor.cores.core"]:
+        raise AssertionError(f"unexpected processor inventory: {cpus}")
+    ranges = ini.get("board", "mem_ranges").split()
+    capacity = sum(
+        int(end) - int(start)
+        for start, end in (value.split(":") for value in ranges)
+    )
+    if capacity != 16 * 1024**3:
+        raise AssertionError(f"unexpected memory capacity: {capacity}")
+
+    for name, size, assoc, latency, mshrs in (
+        ("l1icaches", 32 * 1024, 8, 1, 16),
+        ("l1dcaches", 64 * 1024, 8, 1, 16),
+        ("l2cache", 2 * 1024**2, 16, 10, 20),
+    ):
+        cache = "board.cache_hierarchy." + name
+        expect(cache, "size", size)
+        expect(cache, "assoc", assoc)
+        expect(cache, "tag_latency", latency)
+        expect(cache, "data_latency", latency)
+        expect(cache, "response_latency", 1)
+        expect(cache, "mshrs", mshrs)
+        expect(cache, "writeback_clean", "false")
+        expect(cache, "clk_domain", "board.clk_domain")
+        expect(cache + ".prefetcher", "type", "StridePrefetcher")
+    expect("board.cache_hierarchy.membus", "width", 64)
+    expect("board.cache_hierarchy.l2bus", "width", 32)
+    expect("board.cache_hierarchy.l2bus", "clk_domain", "board.clk_domain")
+    expect("board.iobus", "default", "board.iobus.badaddr_responder.pio")
+    expect("board", "gic_cpu_addr", ini.get("board.realview.gic", "cpu_addr"))
+    if any(ini.get(s, "type", fallback="") == "IdeController" for s in ini):
+        raise AssertionError("public example has an unexpected IDE device")
+
+
 def stdlib_bfs_suite(name, edits, verifiers):
     # BFS through configs/example/gem5_library/salam, from a copy built
     # in the test.
@@ -340,7 +397,10 @@ def stdlib_bfs_suite(name, edits, verifiers):
     tests = [
         TestFunction(
             st.run_stdlib("salam-workload", BFS_WALL, BFS_TICKS), name=name
-        )
+        ),
+        TestFunction(
+            public_example_configuration, name=name + "-configuration"
+        ),
     ]
     tests += [
         v.instantiate_test(f"{name}-{label}") for label, v in verifiers.items()
@@ -563,6 +623,7 @@ def legacy_stdlib_parity(
         BFS_TICKS,
         subdir="stdlib",
         config_args=["--param=" + item for item in assignments],
+        config_script=PARITY_STDLIB,
     )(params)
     after = {p: st.sha256_file(p) for p in artifacts}
     if before != after:

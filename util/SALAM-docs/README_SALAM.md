@@ -134,13 +134,14 @@ Ruby hierarchies are rejected. The board enters the ARM ELF directly,
 without a Linux kernel, bootloader, or device tree. UART 0 terminates on
 end-of-transmission; the supplied workloads also use `m5_exit`.
 
-The example explicitly matches the legacy BFS launcher's CPU, caches,
-clocks, memory, platform, and bus connections. Board defaults alone do not
-imply timing parity. The parity suites use the same binary and workload
-artifacts, compare effective configurations first, and require exact
-architectural statistics, UART output, invocation cycles, and exit ticks.
-Only hierarchy labels, output paths, and host-performance measurements
-are excluded from that comparison.
+The example uses ordinary board and cache-hierarchy defaults with a 2 GHz
+CPU, a 1 GHz board, and 16 GiB of DDR4 memory. The dedicated
+`tests/gem5/salam/legacy_parity.py` configuration selects the legacy
+launcher's cache, clock, platform, and bus settings. Parity suites use the
+same binary and workload artifacts, compare effective configurations first,
+and require exact architectural statistics, UART output, invocation cycles,
+and exit ticks. Only hierarchy labels, output paths, and host-performance
+measurements are excluded from that comparison.
 
 ## Statistics and reset windows
 

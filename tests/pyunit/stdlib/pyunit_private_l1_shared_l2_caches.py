@@ -77,37 +77,3 @@ class TestPrivateL1SharedL2Caches(unittest.TestCase):
         self.assertEqual(int(hierarchy.l2cache.size), 256 * 1024)
         self.assertEqual(int(hierarchy.l2cache.assoc), 16)
         self.assertIsInstance(hierarchy.l2bus, L2XBar)
-
-    def test_given_caches_and_bus(self):
-        made = {"l1i": [], "l1d": [], "l2": []}
-
-        def factory(kind, cls, size):
-            def make():
-                made[kind].append(cls(size=size, assoc=2))
-                return made[kind][-1]
-
-            return make
-
-        l2bus = L2XBar(width=16)
-        hierarchy = PrivateL1SharedL2CacheHierarchy(
-            l1d_size="16KiB",
-            l1i_size="8KiB",
-            l2_size="256KiB",
-            l1i_cache=factory("l1i", L1ICache, "4KiB"),
-            l1d_cache=factory("l1d", L1DCache, "4KiB"),
-            l2_cache=factory("l2", L2Cache, "64KiB"),
-            l2bus=l2bus,
-        )
-        _connect(hierarchy, 2)
-        # One cache per core, each a new one, and a single L2.
-        self.assertEqual(len(made["l1i"]), 2)
-        self.assertEqual(len(made["l1d"]), 2)
-        self.assertEqual(len(made["l2"]), 1)
-        self.assertIsNot(made["l1i"][0], made["l1i"][1])
-        for given, used in zip(made["l1i"], hierarchy.l1icaches):
-            self.assertIs(given, used)
-        for given, used in zip(made["l1d"], hierarchy.l1dcaches):
-            self.assertIs(given, used)
-        self.assertIs(hierarchy.l2cache, made["l2"][0])
-        self.assertIs(hierarchy.l2bus, l2bus)
-        self.assertEqual(int(hierarchy.l2bus.width), 16)

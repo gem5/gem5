@@ -25,7 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from collections.abc import Callable
 from typing import Optional
 
 from m5.objects import (
@@ -83,10 +82,6 @@ class PrivateL1SharedL2CacheHierarchy(
         l1i_assoc: int = 8,
         l2_assoc: int = 16,
         membus: BaseXBar | None = None,
-        l1i_cache: Callable[[], Cache] | None = None,
-        l1d_cache: Callable[[], Cache] | None = None,
-        l2_cache: Callable[[], Cache] | None = None,
-        l2bus: BaseXBar | None = None,
     ) -> None:
         """
         :param l1d_size: The size of the L1 Data Cache (e.g., "32KiB").
@@ -98,13 +93,6 @@ class PrivateL1SharedL2CacheHierarchy(
         :param membus: The memory bus. This parameter is optional parameter and
                        will default to a 64 bit width SystemXBar is not
                        specified.
-        :param l1i_cache: Optional. Called once per core to make its L1
-                          instruction cache, instead of an ``L1ICache`` of
-                          ``l1i_size`` and ``l1i_assoc``.
-        :param l1d_cache: Optional. Likewise for the L1 data caches.
-        :param l2_cache: Optional. Called once to make the L2 cache.
-        :param l2bus: Optional. The bus between the L1 caches and the L2
-                      cache; an ``L2XBar`` if not specified.
         """
 
         AbstractClassicCacheHierarchy.__init__(self=self)
@@ -119,10 +107,6 @@ class PrivateL1SharedL2CacheHierarchy(
         )
 
         self.membus = membus if membus else self._get_default_membus()
-        self._l1i_cache = l1i_cache
-        self._l1d_cache = l1d_cache
-        self._l2_cache = l2_cache
-        self._l2bus = l2bus
 
     @overrides(AbstractClassicCacheHierarchy)
     def get_mem_side_port(self) -> Port:
@@ -140,33 +124,20 @@ class PrivateL1SharedL2CacheHierarchy(
         for _, port in board.get_mem_ports():
             self.membus.mem_side_ports = port
 
-        cores = board.get_processor().get_num_cores()
         self.l1icaches = [
-            (
-                self._l1i_cache()
-                if self._l1i_cache
-                else L1ICache(
-                    size=self._l1i_size,
-                    assoc=self._l1i_assoc,
-                    writeback_clean=False,
-                )
+            L1ICache(
+                size=self._l1i_size,
+                assoc=self._l1i_assoc,
+                writeback_clean=False,
             )
-            for i in range(cores)
+            for i in range(board.get_processor().get_num_cores())
         ]
         self.l1dcaches = [
-            (
-                self._l1d_cache()
-                if self._l1d_cache
-                else L1DCache(size=self._l1d_size, assoc=self._l1d_assoc)
-            )
-            for i in range(cores)
+            L1DCache(size=self._l1d_size, assoc=self._l1d_assoc)
+            for i in range(board.get_processor().get_num_cores())
         ]
-        self.l2bus = self._l2bus if self._l2bus else L2XBar()
-        self.l2cache = (
-            self._l2_cache()
-            if self._l2_cache
-            else L2Cache(size=self._l2_size, assoc=self._l2_assoc)
-        )
+        self.l2bus = L2XBar()
+        self.l2cache = L2Cache(size=self._l2_size, assoc=self._l2_assoc)
 
         if board.has_coherent_io():
             self._setup_io_cache(board)

@@ -31,7 +31,6 @@ from m5.objects import (
     ArmDefaultRelease,
     ArmFsWorkload,
     ArmRelease,
-    IOXBar,
     VExpress_GEM5_Base,
     VExpress_GEM5_V1,
 )
@@ -51,17 +50,7 @@ from .cluster import build_clusters
 
 
 class SALAMArmBoard(ArmBoard):
-    # An ``ArmBoard`` that runs a bare-metal program and hosts SALAM
-    # accelerator clusters.
-    #
-    # The program is loaded as an ELF and entered directly: there is no
-    # bootloader or device tree, and the simulation ends when UART 0 sees
-    # an end-of-transmission character. Clusters come from a SALAM workload
-    # configuration (``config.yml``) through ``gem5.salam.cluster``. The
-    # cache hierarchy must be a classic one with a ``membus``, to which the
-    # clusters' coherency buses connect. An optional ``iobus`` selects the
-    # I/O bus before platform devices are connected; otherwise ArmBoard
-    # supplies its usual bus and bad-address responder.
+    """Bare-metal ARM board using a classic cache hierarchy with a membus."""
 
     def __init__(
         self,
@@ -71,7 +60,6 @@ class SALAMArmBoard(ArmBoard):
         cache_hierarchy: AbstractCacheHierarchy,
         platform: VExpress_GEM5_Base = VExpress_GEM5_V1(),
         release: ArmRelease = ArmDefaultRelease(),
-        iobus: IOXBar | None = None,
     ) -> None:
         if not isinstance(
             cache_hierarchy, AbstractClassicCacheHierarchy
@@ -88,24 +76,19 @@ class SALAMArmBoard(ArmBoard):
             platform=platform,
             release=release,
         )
-        self._salam_iobus = iobus
 
     @overrides(ArmBoard)
     def _setup_board(self) -> None:
         super()._setup_board()
-        # A bare-metal program, entered at its ELF entry point.
         self.workload = ArmFsWorkload(dtb_addr=0)
 
     @overrides(ArmBoard)
     def _setup_io_devices(self) -> None:
-        if self._salam_iobus is not None:
-            self.iobus = self._salam_iobus
         super()._setup_io_devices()
         self.realview.uart[0].end_on_eot = True
 
     def set_bare_metal_binary(self, path: str) -> None:
-        # Run the ARM ELF at ``path``. This sets up the board's platform,
-        # so call it before ``attach_accelerators``.
+        """Set the ARM ELF before attaching accelerators."""
         self._set_fullsystem(True)
         self.workload.object_file = path
         self.set_is_workload_set(True)
@@ -113,8 +96,6 @@ class SALAMArmBoard(ArmBoard):
     def attach_accelerators(
         self, working_dir: str, config_name: str = "config.yml"
     ):
-        # Add the clusters that ``working_dir/config_name`` describes,
-        # and return their descriptions.
         if not self.is_workload_set():
             raise RuntimeError(
                 "set_bare_metal_binary must be called before "
@@ -127,15 +108,7 @@ class SALAMArmBoard(ArmBoard):
             membus=self.get_cache_hierarchy().membus,
         )
 
-    def add_pci_device(self, device) -> None:
-        # Attach a PCI device to the platform.
-        self._add_pci_device(device)
-
     @overrides(ArmBoard)
     def _pre_instantiate(self, full_system=None):
-        # ArmBoard's version adds a device tree and a bootloader for
-        # Linux; a bare-metal program needs neither.
-        root = AbstractBoard._pre_instantiate(self, full_system=full_system)
-        if self._pci_devices:
-            self.pci_devices = self._pci_devices
-        return root
+        # Bare-metal execution does not need ArmBoard's Linux boot setup.
+        return AbstractBoard._pre_instantiate(self, full_system=full_system)

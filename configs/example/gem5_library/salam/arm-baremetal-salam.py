@@ -28,10 +28,9 @@
 # Run a bare-metal ARM program that uses gem5-SALAM accelerators, built from
 # gem5 standard library components.
 #
-# The machine matches the one ``configs/SALAM/fs.py`` builds with the options
-# ``util/SALAM-tools/run_system.sh`` passes: one O3 core at 2 GHz on a 1 GHz
-# system, private L1 caches and a shared L2 with the legacy cache parameters,
-# 16 GiB of single-channel DDR4-2400 and the VExpress_GEM5_V1 platform.
+# One O3 core runs at 2 GHz on a 1 GHz board with private L1 caches, a
+# shared L2, 16 GiB of single-channel DDR4-2400, and VExpress_GEM5_V1.
+# The cache hierarchy and board use their ordinary component defaults.
 #
 # Usage
 # -----
@@ -48,18 +47,6 @@
 
 import argparse
 
-from m5.objects import (
-    NULL,
-    BadAddr,
-    IdeController,
-    IOXBar,
-    L2XBar,
-    SystemXBar,
-)
-
-from gem5.components.cachehierarchies.classic.caches.l1dcache import L1DCache
-from gem5.components.cachehierarchies.classic.caches.l1icache import L1ICache
-from gem5.components.cachehierarchies.classic.caches.l2cache import L2Cache
 from gem5.components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
     PrivateL1SharedL2CacheHierarchy,
 )
@@ -100,74 +87,11 @@ args = parser.parse_args()
 processor = SimpleProcessor(
     cpu_type=CPUTypes.O3, isa=ISA.ARM, num_cores=1, clk_freq="2GHz"
 )
-cpu_clock = processor.get_clock_domain()
-
-
-def no_prefetcher():
-    return NULL
-
-
-# The caches run on the core clock, as the legacy configuration's do.
-def l1i():
-    cache = L1ICache(
-        size="32KiB",
-        assoc=2,
-        tag_latency=2,
-        data_latency=2,
-        response_latency=2,
-        mshrs=4,
-        tgts_per_mshr=20,
-        writeback_clean=True,
-        PrefetcherCls=no_prefetcher,
-    )
-    cache.is_read_only = True
-    cache.clk_domain = cpu_clock
-    return cache
-
-
-def l1d():
-    cache = L1DCache(
-        size="64KiB",
-        assoc=2,
-        tag_latency=2,
-        data_latency=2,
-        response_latency=2,
-        mshrs=4,
-        tgts_per_mshr=20,
-        PrefetcherCls=no_prefetcher,
-    )
-    cache.clk_domain = cpu_clock
-    return cache
-
-
-def l2():
-    cache = L2Cache(
-        size="2MiB",
-        assoc=8,
-        tag_latency=20,
-        data_latency=20,
-        response_latency=20,
-        mshrs=20,
-        tgts_per_mshr=12,
-        PrefetcherCls=no_prefetcher,
-    )
-    cache.clk_domain = cpu_clock
-    return cache
-
-
-membus = SystemXBar(width=16)
-membus.badaddr_responder = BadAddr(warn_access="warn")
-membus.default = membus.badaddr_responder.pio
 
 cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
     l1d_size="64KiB",
     l1i_size="32KiB",
     l2_size="2MiB",
-    membus=membus,
-    l1i_cache=l1i,
-    l1d_cache=l1d,
-    l2_cache=l2,
-    l2bus=L2XBar(clk_domain=cpu_clock),
 )
 
 board = SALAMArmBoard(
@@ -175,18 +99,9 @@ board = SALAMArmBoard(
     processor=processor,
     memory=SingleChannelDDR4_2400(size="16GiB"),
     cache_hierarchy=cache_hierarchy,
-    iobus=IOXBar(),
 )
-# ArmBoard marks single-core systems as uniprocessors in MPIDR; the
-# legacy configuration keeps ArmSystem's multiprocessor default.
-board.multi_proc = True
 board.set_bare_metal_binary(args.binary)
-# This field supplies the bootloader, which this bare-metal run does not use.
-board.gic_cpu_addr = 0
 board.attach_accelerators(args.accpath, args.acccfg)
-# The platform has no built-in storage controller; the legacy
-# configuration adds an IDE controller without disks.
-board.add_pci_device(IdeController(disks=[]))
 
 # Use gem5's existing command-line parameter mechanism after the accelerator
 # children exist and before the simulator instantiates their C++ objects.
