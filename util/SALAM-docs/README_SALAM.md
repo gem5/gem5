@@ -357,9 +357,12 @@ These unit parameters schedule it:
 - `initiation_interval`, if given, makes the unit pipelined: an
   instance admits an operation once that many cycles have passed
   since its previous admission, however many operations it has in
-  flight. Without it an instance admits one operation at a time, the
-  next once the previous completes. A zero-cycle operation is admitted
-  and released in the same cycle.
+  flight. Without it an instance admits one operation at a time, after
+  the previous operation completes. Each physical instance admits at
+  most once per compute edge. A zero-cycle operation completes and
+  releases its token immediately; its instance can next admit on the
+  following compute edge. Operations with unit identifier 0 have no
+  physical admission restriction.
 
 Latency comes only from `CycleCounts` and the workload `hw_config`
 overrides. `cycles` and `stages` describe the unit, and the

@@ -1602,7 +1602,7 @@ LLVMInterface::resolveFunctionalUnits()
         pool[id] = {inventory.instances.at(id),
                     cyclesToTicks(Cycles(unit->get_initiation_interval()))};
     }
-    hw->fuPool.configure(pool);
+    hw->fuPool.configure(pool, clockPeriod());
 }
 
 std::shared_ptr<SALAM::Instruction>

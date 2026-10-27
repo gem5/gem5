@@ -672,120 +672,155 @@ kernel_suite(
 )
 
 
-def parallel_multiply_tail(latency):
+def multiply_schedule(latency, issue_cycles, runs):
     def check(params):
         outdir, out = st.read_simout(params)
-        starts = re.findall(
-            r"launch accepted at (\d+); first compute pass at (\d+) "
-            r"\(period (\d+)\)",
-            out,
-        )
-        if len(starts) != 1:
-            raise AssertionError("expected one traced invocation")
-        start, first, period = map(int, starts[0])
-        if first != start:
-            raise AssertionError("first pass differs from launch acceptance")
+        starts = [
+            tuple(map(int, values))
+            for values in re.findall(
+                r"launch accepted at (\d+); first compute pass at (\d+) "
+                r"\(period (\d+)\)",
+                out,
+            )
+        ]
+        if len(starts) != runs:
+            raise AssertionError(f"expected {runs} traced invocations")
         events = []
         for position, line in enumerate(out.splitlines()):
             match = re.match(r"^\s*(\d+): .*\.llvm_interface: (.*)$", line)
             if match:
                 events.append((position, int(match[1]), match[2]))
-        issues = [t for _, t, text in events if text == "issue compute mul"]
-        completes = [t for _, t, text in events if text == "complete compute"]
-        compute_end = start + latency * period
-        if issues != [start] * 3 or completes != [compute_end] * 3:
-            raise AssertionError(
-                f"parallel multiply timing: issues={issues}, "
-                f"completes={completes}, start={start}, "
-                f"latency={latency}, period={period}"
-            )
-        stores = []
-        memory_completes = {}
-        for position, tick, text in events:
-            match = re.fullmatch(
-                r"memory issue store uid (\d+) address (0x[0-9a-f]+) "
-                r"volatile (\d)",
-                text,
-            )
-            if match:
-                stores.append(
-                    (
-                        position,
-                        tick,
-                        int(match[1]),
-                        int(match[2], 16),
-                        int(match[3]),
-                    )
-                )
-            match = re.fullmatch(r"memory complete uid (\d+)", text)
-            if match:
-                memory_completes[int(match[1])] = (position, tick)
-        if len(stores) != 3:
-            raise AssertionError(f"expected three output stores: {stores}")
-        previous_completion = -1
-        observed = []
-        for index, store in enumerate(stores):
-            position, tick, uid, address, volatile = store
-            completion = memory_completes.get(uid)
-            expected_issue = compute_end + index * period
+        records = []
+        for run, (start, first, period) in enumerate(starts):
+            end = starts[run + 1][0] if run + 1 < runs else float("inf")
+            invocation = [e for e in events if start <= e[1] < end]
+            issues = [
+                t for _, t, text in invocation if text == "issue compute mul"
+            ]
+            completes = [
+                t for _, t, text in invocation if text == "complete compute"
+            ]
+            expected_issues = [
+                start + cycle * period for cycle in issue_cycles
+            ]
+            expected_completes = [
+                t + latency * period for t in expected_issues
+            ]
             if (
-                (tick, address, volatile)
-                != (expected_issue, 0x2F000100 + 4 * index, 1)
-                or completion is None
-                or completion[1] != expected_issue + period
-                or completion[0] <= position
-                or position <= previous_completion
+                first != start
+                or issues != expected_issues
+                or completes != expected_completes
             ):
                 raise AssertionError(
-                    f"volatile store {index}: issue={stores[index]}, "
-                    f"completion={completion}, expected tick={expected_issue}"
+                    f"multiply timing: issues={issues}, completes={completes}, "
+                    f"expected issues={expected_issues}, "
+                    f"expected completions={expected_completes}"
                 )
-            previous_completion = completion[0]
-            observed.append(
-                dict(
-                    uid=uid,
-                    address=address,
-                    issued=tick,
-                    completed=completion[1],
+            stores = []
+            memory_completes = {}
+            for position, tick, text in invocation:
+                match = re.fullmatch(
+                    r"memory issue store uid (\d+) address (0x[0-9a-f]+) "
+                    r"volatile (\d)",
+                    text,
                 )
-            )
-        path = os.path.join(outdir, "parallel-multiply-tail.json")
-        with open(path, "w") as f:
-            json.dump(
+                if match:
+                    stores.append(
+                        (
+                            position,
+                            tick,
+                            int(match[1]),
+                            int(match[2], 16),
+                            int(match[3]),
+                        )
+                    )
+                match = re.fullmatch(r"memory complete uid (\d+)", text)
+                if match:
+                    memory_completes[int(match[1])] = (position, tick)
+            if len(stores) != 3:
+                raise AssertionError(f"expected three output stores: {stores}")
+            previous_completion = -1
+            previous_tick = start
+            observed = []
+            for index, store in enumerate(stores):
+                position, tick, uid, address, volatile = store
+                completion = memory_completes.get(uid)
+                expected_issue = max(expected_completes[index], previous_tick)
+                if (
+                    (tick, address, volatile)
+                    != (expected_issue, 0x2F000100 + 4 * index, 1)
+                    or completion is None
+                    or completion[1] != expected_issue + period
+                    or completion[0] <= position
+                    or position <= previous_completion
+                ):
+                    raise AssertionError(
+                        f"volatile store {index}: issue={store}, "
+                        f"completion={completion}, expected tick={expected_issue}"
+                    )
+                previous_completion, previous_tick = completion
+                observed.append(
+                    dict(
+                        uid=uid,
+                        address=address,
+                        issued=tick,
+                        completed=completion[1],
+                    )
+                )
+            records.append(
                 dict(
                     latency=latency,
                     period=period,
                     issues=issues,
                     completes=completes,
                     stores=observed,
-                ),
-                f,
-                indent=2,
+                )
             )
+        with open(os.path.join(outdir, "multiply-schedule.json"), "w") as f:
+            json.dump(records, f, indent=2)
 
     return check
 
 
-# Functional-unit scheduling: three independent multiplies are ready
-# together. All three can issue in the first pass, but their volatile
-# output stores complete in order, one per later pass. With simultaneous
-# results at latency L, the last store completes at L + 3 cycles and the
-# invocation takes L + 4 inclusive passes. With one instance, results
-# spaced at least one cycle apart overlap this store tail: the last issue
-# is delayed by 2L for interval L, 2 cycles for interval 1, or 10 for 5.
-# An interval shorter than the latency only overlaps without lockstep.
+def zero_latency_accounting(instances, operations):
+    def check(params):
+        outdir, _out = st.read_simout(params)
+        stats = st.read_stats(outdir)[-1]
+        prefix = "system.harness_clstr.kernel.hw_interface.integer_multiplier."
+        expected = {
+            "instances": instances,
+            "admissions": operations,
+            "inFlight": 0,
+            "busyInstances": 0,
+            "utilization": 0,
+        }
+        found = {name: stats[prefix + name] for name in expected}
+        if found != expected:
+            raise AssertionError(f"zero-latency FU accounting {found}")
+
+    return check
+
+
+# Three independent multiplies are ready together. Each physical instance
+# admits at most once per compute edge, including zero-latency operations.
+# Volatile output stores complete in order, one per later pass. The trace
+# checks individual issues and completions because the store tail can hide
+# admission differences in the final invocation duration.
 MULTIPLIER = FU_UNITS + ".integer_multiplier"
 CYCLE_COUNTS = "system.harness_clstr.kernel.hw_interface.cycle_counts"
 LOCKSTEP = "system.harness_clstr.kernel.llvm_interface.lockstep_mode"
-for name, latency, limit, interval, lockstep, runtime, runs in (
-    ("l4-three", 4, 3, None, False, 8, 1),
-    ("l4-one", 4, 1, None, False, 6 + 8, 3),
-    ("l4-ii4", 4, 1, 4, False, 6 + 8, 1),
-    ("l4-ii1", 4, 1, 1, False, 6 + 2, 1),
-    ("l4-ii1-lockstep", 4, 1, 1, True, 6 + 8, 1),
-    ("l1-ii5", 1, 1, 5, False, 3 + 10, 1),
-    ("l0-one", 0, 1, None, False, 4, 1),
-    ("l0-ii5", 0, 1, 5, False, 2 + 10, 1),
+for name, latency, limit, interval, lockstep, runtime, runs, issues in (
+    ("l4-three", 4, 3, None, False, 8, 1, (0, 0, 0)),
+    ("l4-one", 4, 1, None, False, 14, 3, (0, 4, 8)),
+    ("l4-ii4", 4, 1, 4, False, 14, 1, (0, 4, 8)),
+    ("l4-ii1", 4, 1, 1, False, 8, 1, (0, 1, 2)),
+    ("l4-ii1-lockstep", 4, 1, 1, True, 14, 1, (0, 4, 8)),
+    ("l1-ii5", 1, 1, 5, False, 13, 1, (0, 5, 10)),
+    ("l0-one", 0, 1, None, False, 4, 3, (0, 1, 2)),
+    ("l0-one-lockstep", 0, 1, None, True, 4, 1, (0, 1, 2)),
+    ("l0-two", 0, 2, None, False, 4, 1, (0, 0, 1)),
+    ("l0-three", 0, 3, None, False, 4, 1, (0, 0, 0)),
+    ("l0-ii5", 0, 1, 5, False, 12, 1, (0, 5, 10)),
 ):
     fs_args = [
         f"--param={LOCKSTEP}={lockstep}",
@@ -794,7 +829,11 @@ for name, latency, limit, interval, lockstep, runtime, runs in (
     ]
     if interval is not None:
         fs_args.append(f"--param={MULTIPLIER}.initiation_interval={interval}")
-    trace_tail = name in ("l4-three", "l0-one")
+    checks = [("multiply-schedule", multiply_schedule(latency, issues, runs))]
+    if latency == 0:
+        checks.append(
+            ("unit-accounting", zero_latency_accounting(limit, 3 * runs))
+        )
     kernel_suite(
         f"salam-kernel-fu-sched-{name}",
         "fu_sched.c",
@@ -806,20 +845,81 @@ for name, latency, limit, interval, lockstep, runtime, runs in (
         simout_counts=[
             ("runtime", rf"^\s*Compute passes:\s+{runtime}$", runs)
         ],
-        gem5_args=(
-            ["--debug-flags=SALAMIssue,SALAMLaunch"] if trace_tail else []
-        ),
-        extra_tests=(
-            [("multiply-tail", parallel_multiply_tail(latency))]
-            if trace_tail
-            else []
-        ),
-        tags=(
-            (st.SALAM_TAG, "salam-correctness")
-            if trace_tail
-            else (st.SALAM_TAG,)
-        ),
+        gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
+        extra_tests=checks,
+        tags=(st.SALAM_TAG, "salam-correctness"),
     )
+
+# An explicitly unbound operation has no physical-instance admission limit.
+kernel_suite(
+    "salam-kernel-fu-sched-unbound",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    fs_args=[
+        f"--param={LOCKSTEP}=False",
+        f"--param={CYCLE_COUNTS}.mul=0",
+        f"--param={INST_CONFIG}.mul.functional_unit=0",
+        f"--param={MULTIPLIER}.limit=1",
+    ],
+    ir_patterns=[r"(?s)(= mul i32 .*){3}"],
+    gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
+    extra_tests=[("multiply-schedule", multiply_schedule(0, (0, 0, 0), 1))],
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
+
+
+def nested_zero_admission(params):
+    _outdir, out = st.read_simout(params)
+    period = int(
+        re.search(r"first compute pass at \d+ \(period (\d+)\)", out)[1]
+    )
+    issues = [
+        int(tick)
+        for tick in re.findall(
+            r"^\s*(\d+): .*\.llvm_interface: issue compute (?:add|mul)$",
+            out,
+            re.M,
+        )
+    ]
+    completes = [
+        int(tick)
+        for tick in re.findall(
+            r"^\s*(\d+): .*\.llvm_interface: complete compute$", out, re.M
+        )
+    ]
+    # Three calls to f issue one mul and one add each; g adds its second
+    # argument and then the two results. All eight use the same instance.
+    if (
+        len(issues) != 8
+        or completes != issues
+        or any(b - a < period for a, b in zip(issues, issues[1:]))
+    ):
+        raise AssertionError(
+            f"nested zero-latency admission {issues}, {completes}"
+        )
+    zero_latency_accounting(1, 8)(params)
+
+
+for lockstep in (False, True):
+    kernel_suite(
+        f"salam-kernel-fu-sched-nested-zero-{lockstep}",
+        "call_nested.c",
+        inputs=[5, 2],
+        expect={0: 35, 1: 7},
+        fs_args=[
+            f"--param={LOCKSTEP}={lockstep}",
+            f"--param={CYCLE_COUNTS}.mul=0",
+            f"--param={CYCLE_COUNTS}.add=0",
+            f"--param={INST_CONFIG}.add.functional_unit=2",
+            f"--param={MULTIPLIER}.limit=1",
+        ],
+        ir_patterns=[r"call i32 @g\(", r"call i32 @f\("],
+        gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
+        extra_tests=[("shared-unit", nested_zero_admission)],
+        tags=(st.SALAM_TAG, "salam-correctness"),
+    )
+
 
 # Latency comes from CycleCounts (and workload overrides) only. The
 # profile's descriptive fields do not change it: with all of them set
@@ -838,7 +938,7 @@ kernel_suite(
     ir_patterns=[r"(?s)(= mul i32 .*){3}"],
     simout_counts=[("runtime", r"^\s*Compute passes:\s+5$", 1)],
     gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
-    extra_tests=[("multiply-tail", parallel_multiply_tail(1))],
+    extra_tests=[("multiply-schedule", multiply_schedule(1, (0, 0, 0), 1))],
     tags=(st.SALAM_TAG, "salam-correctness"),
 )
 

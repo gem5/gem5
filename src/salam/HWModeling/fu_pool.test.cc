@@ -43,10 +43,10 @@ namespace
 constexpr uint32_t Unit = 1;
 
 FUPool
-makePool(uint32_t instances, Tick interval)
+makePool(uint32_t instances, Tick interval, Tick compute_period = 1)
 {
     FUPool pool;
-    pool.configure({{Unit, {instances, interval}}});
+    pool.configure({{Unit, {instances, interval}}}, compute_period);
     return pool;
 }
 
@@ -126,10 +126,10 @@ TEST(SalamFUPool, IntervalLongerThanLatencyWaitsWithNothingInFlight)
     EXPECT_EQ(schedule(fresh, 3, 1), (std::vector<Tick>{0, 5, 10}));
 }
 
-TEST(SalamFUPool, ZeroLatencyIsAdmittedAndReleasedOnce)
+TEST(SalamFUPool, ZeroLatencyAdmissionWaitsForTheNextComputeEdge)
 {
     FUPool pool = makePool(1, 0);
-    EXPECT_EQ(schedule(pool, 3, 0), (std::vector<Tick>{0, 0, 0}));
+    EXPECT_EQ(schedule(pool, 3, 0), (std::vector<Tick>{0, 1, 2}));
     EXPECT_EQ(pool.inFlight(), 0u);
 }
 
@@ -185,10 +185,58 @@ TEST(SalamFUPool, Reconfiguration)
 {
     FUPool pool = makePool(1, 5);
     FUPool::Token token = pool.acquire(Unit, 0);
-    ASSERT_ANY_THROW(pool.configure({{Unit, {2, 0}}}));
+    ASSERT_ANY_THROW(pool.configure({{Unit, {2, 0}}}, 1));
     pool.release(token);
-    pool.configure({{Unit, {2, 0}}});
+    pool.configure({{Unit, {2, 0}}}, 1);
     EXPECT_EQ(pool.instances(Unit), 2u);
     // The new configuration starts without the old interval's wait.
     EXPECT_EQ(schedule(pool, 3, 1), (std::vector<Tick>{0, 0, 1}));
+}
+
+TEST(SalamFUPool, ZeroLatencyDoesNotKeepAnOperationInFlight)
+{
+    FUPool pool = makePool(1, 0, 10);
+    auto token = pool.acquire(Unit, 20);
+    pool.release(token);
+    EXPECT_EQ(pool.inFlight(), 0u);
+    EXPECT_EQ(pool.busyInstances(Unit), 0u);
+    EXPECT_FALSE(pool.canAccept(Unit, 20));
+    EXPECT_FALSE(pool.canAccept(Unit, 29));
+    EXPECT_EQ(pool.nextAdmission(Unit, 20), 30u);
+    EXPECT_TRUE(pool.canAccept(Unit, 30));
+}
+
+TEST(SalamFUPool, EachInstanceHasItsOwnComputeEdgeRestriction)
+{
+    FUPool pool = makePool(2, 0, 10);
+    EXPECT_EQ(schedule(pool, 5, 0), (std::vector<Tick>{0, 0, 10, 10, 20}));
+    EXPECT_EQ(pool.inFlight(), 0u);
+}
+
+TEST(SalamFUPool, UnpipelinedAdmissionRequiresReleaseAndComputeEdge)
+{
+    FUPool pool = makePool(1, 0, 10);
+    auto token = pool.acquire(Unit, 0);
+    // Passing the next edge must not pipeline an unpipelined unit.
+    EXPECT_FALSE(pool.canAccept(Unit, 10));
+    EXPECT_EQ(pool.nextAdmission(Unit, 10), MaxTick);
+    pool.release(token);
+    EXPECT_TRUE(pool.canAccept(Unit, 10));
+    token = pool.acquire(Unit, 10);
+    pool.release(token);
+    EXPECT_FALSE(pool.canAccept(Unit, 10));
+    EXPECT_TRUE(pool.canAccept(Unit, 20));
+}
+
+TEST(SalamFUPool, ExplicitIntervalAndComputePeriodBothLimitAdmission)
+{
+    FUPool pool = makePool(1, 20, 10);
+    EXPECT_EQ(schedule(pool, 3, 0), (std::vector<Tick>{0, 20, 40}));
+    FUPool shorter = makePool(1, 5, 10);
+    EXPECT_EQ(schedule(shorter, 3, 0), (std::vector<Tick>{0, 10, 20}));
+}
+
+TEST(SalamFUPool, ZeroComputePeriodIsRejected)
+{
+    ASSERT_ANY_THROW(makePool(1, 0, 0));
 }

@@ -36,11 +36,14 @@ namespace SALAM
 {
 
 void
-FUPool::configure(const std::map<uint32_t, UnitConfig> &config)
+FUPool::configure(const std::map<uint32_t, UnitConfig> &config,
+                  gem5::Tick compute_period)
 {
+    panic_if(compute_period == 0, "Functional unit compute period is zero");
     panic_if(!live.empty(),
              "Reconfiguring functional units with %d operations in flight",
              live.size());
+    computePeriod = compute_period;
     units.clear();
     for (const auto &entry : config) {
         Unit unit;
@@ -74,10 +77,8 @@ bool
 FUPool::admits(const Unit &unit, const Instance &instance,
                gem5::Tick now) const
 {
-    if (unit.interval == 0) {
-        return instance.inFlight == 0;
-    }
-    return now >= instance.nextIssue;
+    return now >= instance.nextIssue &&
+           (unit.interval > 0 || instance.inFlight == 0);
 }
 
 bool
@@ -95,11 +96,7 @@ FUPool::nextAdmission(uint32_t unit, gem5::Tick now) const
     const Unit &u = unitFor(unit);
     gem5::Tick next = gem5::MaxTick;
     for (const Instance &instance : u.instances) {
-        if (u.interval == 0) {
-            if (instance.inFlight == 0) {
-                return now;
-            }
-        } else {
+        if (u.interval > 0 || instance.inFlight == 0) {
             next = std::min(next, std::max(now, instance.nextIssue));
         }
     }
@@ -116,7 +113,7 @@ FUPool::acquire(uint32_t unit, gem5::Tick now)
         Instance &instance = u.instances[i];
         if (admits(u, instance, now)) {
             instance.inFlight++;
-            instance.nextIssue = now + u.interval;
+            instance.nextIssue = now + std::max(computePeriod, u.interval);
             Token token{unit, i, ++lastId};
             live.emplace(token.id, token);
             return token;

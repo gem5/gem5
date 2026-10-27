@@ -43,7 +43,8 @@ namespace SALAM
 // pipelined unit (interval > 0) admits an operation once interval
 // ticks have passed since its last admission, however many operations
 // it has in flight. An instance of an unpipelined unit admits one
-// operation at a time.
+// operation at a time. Every instance admits at most once per compute
+// period, even when an operation completes immediately.
 class FUPool
 {
   public:
@@ -63,7 +64,8 @@ class FUPool
     };
 
     // Replace the units. No operation may be in flight.
-    void configure(const std::map<uint32_t, UnitConfig> &units);
+    void configure(const std::map<uint32_t, UnitConfig> &units,
+                   gem5::Tick compute_period);
 
     bool hasUnit(uint32_t unit) const;
     uint32_t instances(uint32_t unit) const;
@@ -107,6 +109,7 @@ class FUPool
     std::map<uint32_t, Unit> units;
     std::map<uint64_t, Token> live;
     uint64_t lastId = 0;
+    gem5::Tick computePeriod = 0;
 };
 
 } // namespace SALAM
