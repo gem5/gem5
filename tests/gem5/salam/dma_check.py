@@ -35,7 +35,9 @@ import m5
 from m5.objects import (
     AddrRange,
     ArmSystem,
+    CommInterface,
     GicV2,
+    NoncoherentDma,
     NoncoherentXBar,
     RealView,
     Root,
@@ -43,6 +45,7 @@ from m5.objects import (
     SimpleMemory,
     SrcClockDomain,
     StreamDma,
+    StubWorkload,
     System,
     VoltageDomain,
 )
@@ -120,9 +123,219 @@ def check_read_fifo(case):
     print("DEVICE CHECK PASSED", case)
 
 
+def check_registers(case):
+    # Component-only register/argument checks; checked BFS covers launches.
+    comm = case.startswith("comm-registers-")
+    noncoherent = "-nc" in case
+    register_bytes = 21 if noncoherent or comm else 32
+    pio_size = register_bytes if noncoherent or comm else 40
+    flags_size = 2 if "-config-" in case else 1
+    config_size = 3 if "-config-" in case else 0
+    byte_order = "big" if case.endswith("-big") else "little"
+    premap = case.endswith("-premap")
+    premapped = [0x8877665544332211, 0xFEDCBA9876543210]
+    invalid_layout = {
+        "comm-registers-zero-map": (0, 1, 0),
+        "comm-registers-zero-flags": (register_bytes, 0, 0),
+        "comm-registers-large-flags": (register_bytes, register_bytes + 1, 0),
+        "comm-registers-large-config": (register_bytes, 1, register_bytes),
+        "comm-registers-overflow-config": (register_bytes, 1, (1 << 64) - 1),
+    }
+    if case in invalid_layout:
+        pio_size, flags_size, config_size = invalid_layout[case]
+    elif case.endswith("small-map"):
+        pio_size = register_bytes - 1
+    elif premap:
+        # Premapped slots need no argument bytes in the register image.
+        pio_size = flags_size
+    elif case.endswith("argument-empty"):
+        config_size = pio_size - flags_size
+    argument_start = flags_size + config_size
+    argument_bytes = pio_size - argument_start
+    system = ArmSystem(highest_el_is_64=False)
+    system.workload = StubWorkload(byte_order=byte_order)
+    system.clk_domain = SrcClockDomain(
+        clock="1GHz", voltage_domain=VoltageDomain()
+    )
+    system.mem_mode = "timing"
+    system.mem_ranges = [AddrRange(0, size=4096)]
+    system.realview = RealView()
+    system.realview.gic = GicV2(dist_addr=0x10000, cpu_addr=0x20000)
+    system.bus = NoncoherentXBar(
+        width=8,
+        frontend_latency=0,
+        forward_latency=0,
+        response_latency=0,
+        header_latency=0,
+    )
+    system.realview.gic.pio = system.bus.mem_side_ports
+    system.memory = SimpleMemory(range=system.mem_ranges[0])
+    system.memory.port = system.bus.mem_side_ports
+    device_type = (
+        CommInterface if comm else NoncoherentDma if noncoherent else StreamDma
+    )
+    system.device = device_type(
+        pio_addr=0x30000,
+        pio_size=pio_size,
+        gic=system.realview.gic,
+    )
+    if comm:
+        system.device.flags_size = flags_size
+        system.device.config_size = config_size
+        system.device.premap_data = premap
+        system.device.data_bases = premapped
+        system.device.enable_debug_msgs = True
+    else:
+        system.device.dma = system.bus.cpu_side_ports
+        if noncoherent:
+            system.local_memory = SimpleMemory(
+                range=AddrRange(0x4000, size=4096)
+            )
+            system.device.cluster_dma = system.local_memory.port
+        else:
+            system.device.stream_addr = 0x40000
+            system.device.status_addr = 0x40008
+    system.system_port = system.bus.cpu_side_ports
+    system.tester = SALAMDeviceTester()
+    # Direct attachment lets boundary probes reach the device itself,
+    # independently of any interconnect range check.
+    system.tester.port = system.device.pio
+    root = Root(full_system=False, system=system)
+    m5.instantiate()
+    tester = system.tester
+    base = 0x30000
+    if case in invalid_layout or case.endswith("small-map"):
+        raise AssertionError("An invalid register layout was accepted")
+    invalid_access = {
+        "cross-read": (True, base + register_bytes - 1, 2),
+        "cross-write": (False, base + register_bytes - 1, 2),
+        "before-read": (True, base - 1, 1),
+        "before-write": (False, base - 1, 1),
+        "after-read": (True, base + register_bytes, 1),
+        "after-write": (False, base + register_bytes, 1),
+        "wide-read": (True, base + 4, 8),
+        "size-read": (True, base + 4, 3),
+    }
+    for suffix, (read, addr, size) in invalid_access.items():
+        if case.endswith(suffix):
+            if read:
+                tester.functionalRead(addr, size)
+            else:
+                tester.functionalWrite(addr, size, 0xBBAA)
+            raise AssertionError("An invalid register access was accepted")
+    invalid_argument = {
+        "argument-cross": (argument_bytes - 1, 2),
+        "argument-after": (argument_bytes, 1),
+        "argument-offset": ((1 << 32) - 1, 1),
+        "argument-empty": (0, 1),
+        "argument-zero-size": (0, 0),
+        "argument-size": (0, 3),
+    }
+    for suffix, (offset, size) in invalid_argument.items():
+        if case.endswith(suffix):
+            tester.readCommArgument(system.device.getCCObject(), offset, size)
+            raise AssertionError("An invalid argument access was accepted")
+    if premap:
+        observations = []
+        # Preserve the existing offset/8 lookup, independent of requested
+        # width and of the memory-mapped argument extent.
+        for offset in range(16):
+            for size in (0, 1, 2, 3, 4, 8, 16):
+                value = tester.readCommArgument(
+                    system.device.getCCObject(), offset, size
+                )
+                assert value == premapped[offset // 8], (offset, size, value)
+                observations.append([offset, size, value])
+        assert m5.curTick() == 0
+        result_path = os.path.join(m5.options.outdir, "device-results.json")
+        with open(result_path, "w") as f:
+            json.dump(
+                {
+                    "case": case,
+                    "scope": "component-only",
+                    "argument_reads": observations,
+                },
+                f,
+                indent=2,
+            )
+        print("DEVICE CHECK PASSED", case)
+        return
+
+    # The reference is the packed byte image, independently of the host's
+    # alignment and integer representation. Keep the run bit clear.
+    expected = bytearray([0] + list(range(0x41, 0x40 + register_bytes)))
+    offset = 0
+    while offset < register_bytes:
+        size = min(8, register_bytes - offset)
+        tester.functionalWrite(
+            base + offset,
+            size,
+            int.from_bytes(expected[offset : offset + size], "little"),
+        )
+        offset += size
+    widths = (1, 2, 4, 8) if noncoherent or comm else (1, 2, 4)
+    observations = []
+    argument_observations = []
+
+    def verify():
+        for size in widths:
+            for offset in range(register_bytes - size + 1):
+                value = tester.functionalRead(base + offset, size)
+                wanted = int.from_bytes(
+                    expected[offset : offset + size], "little"
+                )
+                assert value == wanted, (offset, size, value, wanted)
+                observations.append([offset, size, value])
+            if comm:
+                for offset in range(argument_bytes - size + 1):
+                    value = tester.readCommArgument(
+                        system.device.getCCObject(), offset, size
+                    )
+                    start = argument_start + offset
+                    wanted = int.from_bytes(
+                        expected[start : start + size], byte_order
+                    )
+                    assert value == wanted, (offset, size, value, wanted)
+                    argument_observations.append([offset, size, value])
+
+    verify()
+    tester.functionalWrite(base + 4, 2, 0xBBAA)
+    expected[4:6] = bytes([0xAA, 0xBB])
+    verify()
+    tester.functionalWrite(base + register_bytes - 1, 1, 0xC5)
+    expected[-1] = 0xC5
+    verify()
+    masked_data = bytes(range(0xE1, 0xE9))
+    byte_enable = [True, False] * 4
+    tester.functionalWriteMasked(
+        base + 2, 8, int.from_bytes(masked_data, "little"), byte_enable
+    )
+    for index, enabled in enumerate(byte_enable):
+        if enabled:
+            expected[2 + index] = masked_data[index]
+    verify()
+    assert m5.curTick() == 0
+    result_path = os.path.join(m5.options.outdir, "device-results.json")
+    with open(result_path, "w") as f:
+        json.dump(
+            {
+                "case": case,
+                "scope": "component-only",
+                "reads": observations,
+                "argument_reads": argument_observations,
+            },
+            f,
+            indent=2,
+        )
+    print("DEVICE CHECK PASSED", case)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("case")
 args = parser.parse_args()
+if args.case.startswith(("dma-registers-", "comm-registers-")):
+    check_registers(args.case)
+    raise SystemExit(0)
 if args.case.startswith("dma-fifo-"):
     check_read_fifo(args.case)
     raise SystemExit(0)

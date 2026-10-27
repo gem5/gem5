@@ -42,6 +42,8 @@
 #ifndef __SALAM_NONCOHERENT_DMA_HH__
 #define __SALAM_NONCOHERENT_DMA_HH__
 
+#include <cstring>
+
 #include "base/statistics.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/dma_device.hh"
@@ -50,9 +52,10 @@
 #include "params/NoncoherentDma.hh"
 #include "salam/LLVMRead/debug_flags.hh"
 #include "salam/dma_write_fifo.hh"
+#include "sim/byteswap.hh"
 
 //------------------------------------------
-//    Memory Map
+//    Little-endian packed register map
 //    |  Length  | Dst Addr | Src Addr | Flags  |
 //    |----------|----------|----------|--------|
 //    |  4 Bytes | 8 Bytes  | 8 Bytes  | 1 Byte |
@@ -92,9 +95,17 @@ class NoncoherentDma : public DmaDevice
 
     uint8_t *mmreg;
     uint8_t *FLAGS;
-    uint64_t *SRC;
-    uint64_t *DST;
-    int *LEN;
+
+    Addr pioOffset(PacketPtr pkt) const;
+
+    template <typename T>
+    T
+    readRegister(Addr offset) const
+    {
+        T value;
+        std::memcpy(&value, mmreg + offset, sizeof(value));
+        return letoh(value);
+    }
 
     uint8_t last_flag;
 

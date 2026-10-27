@@ -143,6 +143,14 @@ SALAMDeviceTester::readOnNextWriteResponse(SALAMDeviceTester *reader,
 }
 
 uint64_t
+SALAMDeviceTester::readCommArgument(CommInterface *comm, unsigned offset,
+                                    unsigned size)
+{
+    panic_if(!comm, "No CommInterface supplied for argument read");
+    return comm->getGlobalVar(offset, size);
+}
+
+uint64_t
 SALAMDeviceTester::functionalRead(Addr addr, unsigned size)
 {
     auto pkt = packet(true, addr, size, 0);
@@ -159,6 +167,18 @@ void
 SALAMDeviceTester::functionalWrite(Addr addr, unsigned size, uint64_t data)
 {
     auto pkt = packet(false, addr, size, data);
+    port.sendFunctional(pkt);
+    delete pkt;
+}
+
+void
+SALAMDeviceTester::functionalWriteMasked(Addr addr, unsigned size,
+                                         uint64_t data,
+                                         const std::vector<bool> &byte_enable)
+{
+    panic_if(byte_enable.size() != size, "Invalid test byte-enable size");
+    auto pkt = packet(false, addr, size, data);
+    pkt->req->setByteEnable(byte_enable);
     port.sendFunctional(pkt);
     delete pkt;
 }

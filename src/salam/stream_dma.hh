@@ -42,6 +42,8 @@
 #ifndef __SALAM_STREAM_DMA_HH__
 #define __SALAM_STREAM_DMA_HH__
 
+#include <cstring>
+
 #include "dev/arm/base_gic.hh"
 #include "dev/dma_device.hh"
 #include "mem/packet.hh"
@@ -50,6 +52,7 @@
 #include "salam/LLVMRead/debug_flags.hh"
 #include "salam/dma_write_fifo.hh"
 #include "salam/stream_port.hh"
+#include "sim/byteswap.hh"
 
 /*
     Steaming DMA device with 2 modes.
@@ -61,6 +64,9 @@
     Access Range will store into the write FIFO to be writen back to memory
     later. Supports interrupts based on the number of Frames transmitted.
 
+
+    Packed registers use little-endian byte order.
+    Status-port values use the system byte order.
 
     Memory Mapped Register 32+N Bytes
 
@@ -248,15 +254,22 @@ class StreamDma : public DmaDevice
 
     uint8_t *mmreg;
     uint8_t *FLAGS;
-    uint16_t *CONFIG;
-    uint64_t *RD_ADDR;
-    uint64_t *WR_ADDR;
-    uint32_t *RD_FRAME_SIZE;
+
     uint8_t *NUM_RD_FRAMES;
     uint8_t *RD_FRAME_BUFF_SIZE;
-    uint32_t *WR_FRAME_SIZE;
     uint8_t *NUM_WR_FRAMES;
     uint8_t *WR_FRAME_BUFF_SIZE;
+
+    Addr pioOffset(PacketPtr pkt) const;
+
+    template <typename T>
+    T
+    readRegister(Addr offset) const
+    {
+        T value;
+        std::memcpy(&value, mmreg + offset, sizeof(value));
+        return letoh(value);
+    }
 
     uint64_t readAddr;
     uint32_t readFrameSize;

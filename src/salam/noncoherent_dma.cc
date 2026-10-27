@@ -49,6 +49,10 @@ namespace
 constexpr uint8_t DmaStart = 0x01;
 constexpr uint8_t DmaBusy = 0x02;
 constexpr uint8_t DmaDone = 0x04;
+constexpr Addr SourceOffset = 1;
+constexpr Addr DestinationOffset = 9;
+constexpr Addr LengthOffset = 17;
+constexpr Addr RegisterBytes = 21;
 
 } // anonymous namespace
 
@@ -83,6 +87,9 @@ NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
       tickEvent([this] { tick(); }, name()),
       accPort(this, sys, p.sid, p.ssid)
 {
+    fatal_if(pioSize < RegisterBytes,
+             "%s: DMA PIO size must cover %u register bytes", name(),
+             RegisterBytes);
     memSideReadFifo = new DmaReadFifo(dmaPort, size_t(bufferSize / 2),
                                       maxReqSize, maxPending);
     memSideWriteFifo = new DmaWriteFifo(dmaPort, size_t(bufferSize / 2),
@@ -103,9 +110,6 @@ NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
     }
     FLAGS = mmreg;
     last_flag = 0;
-    SRC = (uint64_t *)(mmreg + 1);
-    DST = (uint64_t *)(mmreg + 9);
-    LEN = (int *)(mmreg + 17);
     running = false;
 }
 
@@ -151,9 +155,9 @@ void
 NoncoherentDma::tick()
 {
     if (!running && (*FLAGS & DmaStart)) {
-        activeSrc = *SRC;
-        activeDst = *DST;
-        writesLeft = *LEN;
+        activeSrc = readRegister<uint64_t>(SourceOffset);
+        activeDst = readRegister<uint64_t>(DestinationOffset);
+        writesLeft = readRegister<int32_t>(LengthOffset);
         readFifo = getActiveReadFifo();
         writeFifo = getActiveWriteFifo();
         // The controller moves a whole chunk between FIFOs in every
@@ -216,35 +220,29 @@ NoncoherentDma::tick()
     }
 }
 
+Addr
+NoncoherentDma::pioOffset(PacketPtr pkt) const
+{
+    const Addr addr = pkt->req->getPaddr();
+    panic_if(addr < pioAddr, "DMA PIO access precedes register range");
+    const Addr offset = addr - pioAddr;
+    panic_if(offset >= pioSize || pkt->getSize() == 0 ||
+                 pkt->getSize() > pioSize - offset,
+             "DMA PIO access exceeds register range");
+    return offset;
+}
+
 Tick
 NoncoherentDma::read(PacketPtr pkt)
 {
     DPRINTF(DeviceMMR,
             "The address range associated with this DMA was read!\n");
 
-    Addr offset = pkt->req->getPaddr() - pioAddr;
-
-    uint64_t data;
-
-    data = *(uint64_t *)(mmreg + offset);
-
-    switch (pkt->getSize()) {
-        case 1:
-            pkt->setLE<uint8_t>(data);
-            break;
-        case 2:
-            pkt->setLE<uint16_t>(data);
-            break;
-        case 4:
-            pkt->setLE<uint32_t>(data);
-            break;
-        case 8:
-            pkt->setLE<uint64_t>(data);
-            break;
-        default:
-            panic("Read size too big?\n");
-            break;
-    }
+    const Addr offset = pioOffset(pkt);
+    const auto size = pkt->getSize();
+    panic_if(size != 1 && size != 2 && size != 4 && size != 8,
+             "Unsupported DMA register read size %u", size);
+    pkt->setData(mmreg + offset);
 
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -255,12 +253,16 @@ NoncoherentDma::write(PacketPtr pkt)
 {
     DPRINTF(DeviceMMR,
             "The address range associated with this DMA was written to!\n");
-    DPRINTF(DeviceMMR, "LEN Reg:0x%08x\n", *LEN);
-    DPRINTF(DeviceMMR, "SRC Reg:0x%016x\n", *SRC);
-    DPRINTF(DeviceMMR, "DST Reg:0x%016x\n", *DST);
+    const Addr offset = pioOffset(pkt);
+    DPRINTF(DeviceMMR, "LEN Reg:0x%08x\n",
+            readRegister<int32_t>(LengthOffset));
+    DPRINTF(DeviceMMR, "SRC Reg:0x%016x\n",
+            readRegister<uint64_t>(SourceOffset));
+    DPRINTF(DeviceMMR, "DST Reg:0x%016x\n",
+            readRegister<uint64_t>(DestinationOffset));
     DPRINTF(DeviceMMR, "FLAGS Reg:0x%02x\n", *FLAGS);
 
-    pkt->writeData(mmreg + (pkt->req->getPaddr() - pioAddr));
+    pkt->writeData(mmreg + offset);
 
     if (!tickEvent.scheduled()) {
         schedule(tickEvent, clockEdge(processCycles));

@@ -35,7 +35,7 @@ import salam_testlib as st
 from testlib import *
 
 
-def device_case(case):
+def device_case(case, diagnostic=None):
     def run(params):
         gem5 = params.fixtures["salam-gem5"]
         outdir = params.fixtures[constants.tempdir_fixture_name].path
@@ -45,12 +45,17 @@ def device_case(case):
                 "-d",
                 outdir,
                 "-re",
-                "--debug-flags=SALAMScratchpad,DMA",
+                "--debug-flags=SALAMScratchpad,DMA"
+                + (
+                    ",DeviceMMR"
+                    if case.startswith(("dma-registers-", "comm-registers-"))
+                    else ""
+                ),
                 os.path.join(
                     os.path.dirname(__file__),
                     (
                         "dma_check.py"
-                        if case.startswith("dma-")
+                        if case.startswith(("dma-", "comm-registers-"))
                         else "device_check.py"
                     ),
                 ),
@@ -59,6 +64,11 @@ def device_case(case):
             env=gem5.tools.env(),
             timeout=60,
         )
+        if diagnostic is not None:
+            assert result.returncode != 0, f"{case} succeeded: {outdir}"
+            with open(os.path.join(outdir, "simerr.txt")) as stream:
+                assert diagnostic in stream.read()
+            return
         assert result.returncode == 0, f"{case} failed: {outdir}"
         with open(os.path.join(outdir, "simout.txt")) as stream:
             output = stream.read()
@@ -101,6 +111,13 @@ for case in (
     "spm-blocked",
     "stream-empty",
     "stream-full",
+    "dma-registers-nc",
+    "dma-registers-stream",
+    "comm-registers-little",
+    "comm-registers-big",
+    "comm-registers-config-little",
+    "comm-registers-config-big",
+    "comm-registers-premap",
     "dma-fifo-bypass",
     "dma-fifo-bypass-backdoor",
     "dma-fifo-bypass-small",
@@ -119,4 +136,75 @@ for case in (
         fixtures=[st.SalamGem5Fixture(), TempdirFixture()],
         tags=[st.SALAM_TAG, "salam-correctness", "salam-device-correctness"],
         tests=[TestFunction(device_case(case), name=name)],
+    )
+
+
+for case, diagnostic in (
+    *(
+        (f"comm-registers-{suffix}", diagnostic)
+        for suffix, diagnostic in (
+            ("zero-flags", "CommInterface flags size must be nonzero"),
+            ("zero-map", "CommInterface flags and config exceed PIO size"),
+            ("large-flags", "CommInterface flags and config exceed PIO size"),
+            ("large-config", "CommInterface flags and config exceed PIO size"),
+            (
+                "overflow-config",
+                "CommInterface flags and config exceed PIO size",
+            ),
+            ("size-read", "Unsupported CommInterface register read size 3"),
+            (
+                "argument-zero-size",
+                "Unsupported CommInterface argument size 0",
+            ),
+            ("argument-size", "Unsupported CommInterface argument size 3"),
+        )
+    ),
+    *(
+        (
+            f"comm-registers-{extent}-{operation}",
+            f"CommInterface PIO access {diagnostic} register range",
+        )
+        for extent, diagnostic in (
+            ("before", "precedes"),
+            ("after", "exceeds"),
+            ("cross", "exceeds"),
+        )
+        for operation in ("read", "write")
+    ),
+    *(
+        (
+            f"comm-registers-argument-{extent}",
+            "CommInterface argument access exceeds register range",
+        )
+        for extent in ("cross", "after", "offset", "empty")
+    ),
+    ("dma-registers-nc-cross-read", "DMA PIO access exceeds register range"),
+    ("dma-registers-nc-cross-write", "DMA PIO access exceeds register range"),
+    (
+        "dma-registers-nc-small-map",
+        "DMA PIO size must cover 21 register bytes",
+    ),
+    (
+        "dma-registers-stream-cross-read",
+        "Stream DMA PIO access crosses register boundary",
+    ),
+    (
+        "dma-registers-stream-cross-write",
+        "Stream DMA PIO access crosses register boundary",
+    ),
+    (
+        "dma-registers-stream-small-map",
+        "stream DMA PIO size must cover 32 register bytes",
+    ),
+    (
+        "dma-registers-stream-wide-read",
+        "Unsupported stream DMA register read size 8",
+    ),
+):
+    name = "salam-device-" + case
+    TestSuite(
+        name=name,
+        fixtures=[st.SalamGem5Fixture(), TempdirFixture()],
+        tags=[st.SALAM_TAG, "salam-correctness", "salam-device-correctness"],
+        tests=[TestFunction(device_case(case, diagnostic), name=name)],
     )

@@ -96,15 +96,13 @@ StreamDma::StreamDma(const StreamDmaParams &p)
     writeFifo =
         new WriteFifo(*this, dmaPort, wrBufferSize, maxReqSize, maxPending);
     // The FIFO data aperture extends PIO space, not the register array.
+    fatal_if(pioSize < BUFFER_ACCESS_OFF,
+             "%s: stream DMA PIO size must cover %u register bytes", name(),
+             BUFFER_ACCESS_OFF);
     mmreg = new uint8_t[BUFFER_ACCESS_OFF]{};
     FLAGS = mmreg;
-    CONFIG = (uint16_t *)(mmreg + CONFIG_OFF);
-    RD_ADDR = (uint64_t *)(mmreg + RD_ADDR_OFF);
-    WR_ADDR = (uint64_t *)(mmreg + WR_ADDR_OFF);
-    RD_FRAME_SIZE = (uint32_t *)(mmreg + RD_FRAME_SIZE_OFF);
     NUM_RD_FRAMES = (uint8_t *)(mmreg + NUM_RD_FRAMES_OFF);
     RD_FRAME_BUFF_SIZE = (uint8_t *)(mmreg + RD_FRAME_BUFF_SIZE_OFF);
-    WR_FRAME_SIZE = (uint32_t *)(mmreg + WR_FRAME_SIZE_OFF);
     NUM_WR_FRAMES = (uint8_t *)(mmreg + NUM_WR_FRAMES_OFF);
     WR_FRAME_BUFF_SIZE = (uint8_t *)(mmreg + WR_FRAME_BUFF_SIZE_OFF);
 
@@ -177,22 +175,22 @@ StreamDma::tick()
     // Check both requested directions before either FIFO can issue traffic.
     if (!sys->bypassCaches()) {
         if (start_read) {
+            const auto frame_size = readRegister<uint32_t>(RD_FRAME_SIZE_OFF);
             const size_t request_size =
-                std::min<size_t>(maxReqSize, *RD_FRAME_SIZE);
+                std::min<size_t>(maxReqSize, frame_size);
             fatal_if(request_size > readFifo->capacity(),
                      "%s: DMA transfer length %u requires a %u-byte chunk "
                      "exceeding the read FIFO capacity of %u bytes",
-                     name(), *RD_FRAME_SIZE, request_size,
-                     readFifo->capacity());
+                     name(), frame_size, request_size, readFifo->capacity());
         }
         if (start_write) {
+            const auto frame_size = readRegister<uint32_t>(WR_FRAME_SIZE_OFF);
             const size_t request_size =
-                std::min<size_t>(maxReqSize, *WR_FRAME_SIZE);
+                std::min<size_t>(maxReqSize, frame_size);
             fatal_if(request_size > writeFifo->capacity(),
                      "%s: DMA transfer length %u requires a %u-byte chunk "
                      "exceeding the write FIFO capacity of %u bytes",
-                     name(), *WR_FRAME_SIZE, request_size,
-                     writeFifo->capacity());
+                     name(), frame_size, request_size, writeFifo->capacity());
         }
     }
 
@@ -202,13 +200,13 @@ StreamDma::tick()
         transferStats.readActive = 1;
         *FLAGS &= ~RD_START_MASK;
         *FLAGS |= RD_RUNNING_MASK;
-        readAddr = *RD_ADDR;
+        readAddr = readRegister<uint64_t>(RD_ADDR_OFF);
         readPtr = readAddr;
-        readFrameSize = *RD_FRAME_SIZE;
+        readFrameSize = readRegister<uint32_t>(RD_FRAME_SIZE_OFF);
         framesToRead = *NUM_RD_FRAMES;
         readFrameBuffSize = *RD_FRAME_BUFF_SIZE;
         framesRead = 0;
-        readIntFrames = *(uint8_t *)CONFIG;
+        readIntFrames = mmreg[CONFIG_OFF];
         DPRINTF(StreamDma,
                 "Init frame read from 0x%016x with frame size of %d Bytes\n",
                 readPtr, readFrameSize);
@@ -222,13 +220,13 @@ StreamDma::tick()
         transferStats.writeActive = 1;
         *FLAGS &= ~WR_START_MASK;
         *FLAGS |= WR_RUNNING_MASK;
-        writeAddr = *WR_ADDR;
+        writeAddr = readRegister<uint64_t>(WR_ADDR_OFF);
         writePtr = writeAddr;
-        writeFrameSize = *WR_FRAME_SIZE;
+        writeFrameSize = readRegister<uint32_t>(WR_FRAME_SIZE_OFF);
         framesToWrite = *NUM_WR_FRAMES;
         writeFrameBuffSize = *WR_FRAME_BUFF_SIZE;
         framesWritten = 0;
-        writeIntFrames = *CONFIG >> 8;
+        writeIntFrames = mmreg[CONFIG_OFF + 1];
         DPRINTF(StreamDma, "MMR After Write: %08x\n", *FLAGS);
         DPRINTF(StreamDma,
                 "Init frame write to 0x%016x with frame size of %d Bytes\n",
@@ -306,33 +304,35 @@ StreamDma::tick()
     }
 }
 
+Addr
+StreamDma::pioOffset(PacketPtr pkt) const
+{
+    const Addr addr = pkt->req->getPaddr();
+    panic_if(addr < pioAddr, "Stream DMA access precedes PIO range");
+    const Addr offset = addr - pioAddr;
+    panic_if(offset >= pioSize || pkt->getSize() == 0 ||
+                 pkt->getSize() > pioSize - offset,
+             "Stream DMA access exceeds PIO range");
+    panic_if(offset < BUFFER_ACCESS_OFF &&
+                 pkt->getSize() > BUFFER_ACCESS_OFF - offset,
+             "Stream DMA PIO access crosses register boundary");
+    return offset;
+}
+
 Tick
 StreamDma::read(PacketPtr pkt)
 {
 
-    Addr offset = pkt->req->getPaddr() - pioAddr;
+    const Addr offset = pioOffset(pkt);
 
     if (offset < BUFFER_ACCESS_OFF) {
         DPRINTF(DeviceMMR,
                 "The MMR associated with this DMA was read from!\n");
 
-        uint32_t data;
-        data = *(uint32_t *)(mmreg + offset);
-
-        switch (pkt->getSize()) {
-            case 1:
-                pkt->set<uint8_t>(data, endian);
-                break;
-            case 2:
-                pkt->set<uint16_t>(data, endian);
-                break;
-            case 4:
-                pkt->set<uint32_t>(data, endian);
-                break;
-            default:
-                panic("Read size too big?\n");
-                break;
-        }
+        const auto size = pkt->getSize();
+        panic_if(size != 1 && size != 2 && size != 4,
+                 "Unsupported stream DMA register read size %u", size);
+        pkt->setData(mmreg + offset);
     } else {
         DPRINTF(DeviceMMR,
                 "The data buffer associated with this DMA was read from!\n");
@@ -356,7 +356,7 @@ Tick
 StreamDma::write(PacketPtr pkt)
 {
 
-    Addr offset = pkt->req->getPaddr() - pioAddr;
+    const Addr offset = pioOffset(pkt);
 
     if (offset < BUFFER_ACCESS_OFF) {
         DPRINTF(DeviceMMR,

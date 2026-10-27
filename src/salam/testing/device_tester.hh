@@ -49,6 +49,7 @@
 #include "dev/dma_device.hh"
 #include "mem/port.hh"
 #include "params/SALAMDeviceTester.hh"
+#include "salam/comm_interface.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
@@ -127,8 +128,12 @@ class SALAMDeviceTester : public ClockedObject
     std::vector<uint64_t> readFifoState() const;
     void readOnNextWriteResponse(SALAMDeviceTester *reader, Addr addr,
                                  unsigned size);
+    uint64_t readCommArgument(CommInterface *comm, unsigned offset,
+                              unsigned size);
     uint64_t functionalRead(Addr addr, unsigned size);
     void functionalWrite(Addr addr, unsigned size, uint64_t data);
+    void functionalWriteMasked(Addr addr, unsigned size, uint64_t data,
+                               const std::vector<bool> &byte_enable);
     void
     blockResponsesUntil(Tick tick)
     {

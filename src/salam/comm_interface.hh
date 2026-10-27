@@ -433,6 +433,8 @@ class CommInterface : public BasicPioDevice
 
     uint8_t *mmreg;
 
+    Addr pioOffset(PacketPtr pkt) const;
+
     bool processingDone;
     // Compute cycles from a request, response or retry to the next
     // service pass. While requests are outstanding the passes repeat

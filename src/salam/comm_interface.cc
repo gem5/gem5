@@ -43,12 +43,14 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 
 #include "base/trace.hh"
 #include "debug/SALAMLaunch.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/byteswap.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -62,6 +64,15 @@ constexpr uint8_t MmrDone = 0x04;
 
 constexpr uint8_t MmrClearRunMask = 0xfe;
 constexpr uint8_t MmrClearRunBusyMask = 0xfc;
+
+template <typename T>
+T
+readArgument(const uint8_t *data, ByteOrder endian)
+{
+    T value;
+    std::memcpy(&value, data, sizeof(value));
+    return gtoh(value, endian);
+}
 
 } // anonymous namespace
 
@@ -133,6 +144,10 @@ CommInterface::CommInterface(const CommInterfaceParams &p)
       reset_spm(p.reset_spm),
       stats(this)
 {
+    fatal_if(flag_size == 0, "%s: CommInterface flags size must be nonzero",
+             name());
+    fatal_if(flag_size > io_size || config_size > io_size - flag_size,
+             "%s: CommInterface flags and config exceed PIO size", name());
     FLAG_OFFSET = 0;
     CONFIG_OFFSET = flag_size;
     VAR_OFFSET = CONFIG_OFFSET + config_size;
@@ -789,12 +804,10 @@ CommInterface::tryWrite(MemSidePort *port)
     }
     if (debug()) {
         DPRINTF(CommInterface,
-                "Trying to write to addr: 0x%016x, %d bytes, data 0x%08x"
+                "Trying to write to addr: 0x%016x, %d bytes "
                 "through port: %s\n",
-                writeReq->currentWriteAddr, size,
-                *((uint64_t *)(&(writeReq->buffer[writeReq->totalLength -
-                                                  writeReq->writeLeft]))),
-                port->name());
+                writeReq->currentWriteAddr, size, port->name());
+        DDUMP(CommInterface, data, size);
     }
 
     PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
@@ -909,12 +922,10 @@ CommInterface::tryWrite(SPMPort *port)
     }
     if (debug()) {
         DPRINTF(CommInterface,
-                "Trying to write to addr: 0x%016x, %d bytes,"
-                " data 0x%08x through port: %s\n",
-                writeReq->currentWriteAddr, size,
-                *((uint64_t *)(&(writeReq->buffer[writeReq->totalLength -
-                                                  writeReq->writeLeft]))),
-                port->name());
+                "Trying to write to addr: 0x%016x, %d bytes "
+                "through port: %s\n",
+                writeReq->currentWriteAddr, size, port->name());
+        DDUMP(CommInterface, data, size);
     }
 
     PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
@@ -1007,12 +1018,10 @@ CommInterface::tryWrite(RegPort *port)
     }
     if (debug()) {
         DPRINTF(CommInterface,
-                "Trying to write to addr: 0x%016x, %d bytes, "
-                "data 0x%08x through port: %s\n",
-                writeReq->currentWriteAddr, size,
-                *((uint64_t *)(&(writeReq->buffer[writeReq->totalLength -
-                                                  writeReq->writeLeft]))),
-                port->name());
+                "Trying to write to addr: 0x%016x, %d bytes "
+                "through port: %s\n",
+                writeReq->currentWriteAddr, size, port->name());
+        DDUMP(CommInterface, data, size);
     }
 
     PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
@@ -1119,6 +1128,19 @@ CommInterface::finish()
     }
 }
 
+Addr
+CommInterface::pioOffset(PacketPtr pkt) const
+{
+    const Addr addr = pkt->req->getPaddr();
+    panic_if(addr < io_addr,
+             "CommInterface PIO access precedes register range");
+    const Addr offset = addr - io_addr;
+    panic_if(offset >= io_size || pkt->getSize() == 0 ||
+                 pkt->getSize() > io_size - offset,
+             "CommInterface PIO access exceeds register range");
+    return offset;
+}
+
 Tick
 CommInterface::read(PacketPtr pkt)
 {
@@ -1127,29 +1149,11 @@ CommInterface::read(PacketPtr pkt)
                 "The address range associated with this ACC was read!\n");
     }
 
-    Addr offset = pkt->req->getPaddr() - io_addr;
-
-    uint64_t data;
-
-    data = *(uint64_t *)(mmreg + offset);
-
-    switch (pkt->getSize()) {
-        case 1:
-            pkt->set<uint8_t>(data, endian);
-            break;
-        case 2:
-            pkt->set<uint16_t>(data, endian);
-            break;
-        case 4:
-            pkt->set<uint32_t>(data, endian);
-            break;
-        case 8:
-            pkt->set<uint64_t>(data, endian);
-            break;
-        default:
-            panic("Read size too big?\n");
-            break;
-    }
+    const Addr offset = pioOffset(pkt);
+    const auto size = pkt->getSize();
+    panic_if(size != 1 && size != 2 && size != 4 && size != 8,
+             "Unsupported CommInterface register read size %u", size);
+    pkt->setData(mmreg + offset);
 
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -1158,6 +1162,7 @@ CommInterface::read(PacketPtr pkt)
 Tick
 CommInterface::write(PacketPtr pkt)
 {
+    const Addr offset = pioOffset(pkt);
     if (debug()) {
         DPRINTF(
             DeviceMMR,
@@ -1183,7 +1188,7 @@ CommInterface::write(PacketPtr pkt)
     if (debug()) {
         DPRINTF(DeviceMMR, "Packet val %d\n", pkt->get<uint8_t>(endian));
     }
-    pkt->writeData(mmreg + (pkt->req->getPaddr() - io_addr));
+    pkt->writeData(mmreg + offset);
 
     std::stringstream mm;
     for (int i = io_size - 1; i >= 0; i--) {
@@ -1231,25 +1236,24 @@ CommInterface::getGlobalVar(unsigned offset, unsigned size)
 {
     if (use_premap_data) {
         return data_base_ptrs.at(offset / 8);
-    } else {
-        uint64_t value;
-        switch (size) {
-            case 1:
-                value = *(uint64_t *)(uint8_t *)(mmreg + VAR_OFFSET + offset);
-                break;
-            case 2:
-                value = *(uint64_t *)(uint16_t *)(mmreg + VAR_OFFSET + offset);
-                break;
-            case 4:
-                value = *(uint64_t *)(uint32_t *)(mmreg + VAR_OFFSET + offset);
-                break;
-            case 8:
-                value = *(uint64_t *)(mmreg + VAR_OFFSET + offset);
-                break;
-            default:
-                panic("Data size: %d is not supported as a global variable!");
-        }
-        return value;
+    }
+    panic_if(size != 1 && size != 2 && size != 4 && size != 8,
+             "Unsupported CommInterface argument size %u", size);
+    const Addr argument_bytes = io_size - VAR_OFFSET;
+    panic_if(offset >= argument_bytes || size > argument_bytes - offset,
+             "CommInterface argument access exceeds register range");
+    const uint8_t *data = mmreg + VAR_OFFSET + offset;
+    switch (size) {
+        case 1:
+            return readArgument<uint8_t>(data, endian);
+        case 2:
+            return readArgument<uint16_t>(data, endian);
+        case 4:
+            return readArgument<uint32_t>(data, endian);
+        case 8:
+            return readArgument<uint64_t>(data, endian);
+        default:
+            panic("Unsupported CommInterface argument size %u", size);
     }
 }
 
