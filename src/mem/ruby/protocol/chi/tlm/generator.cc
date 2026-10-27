@@ -42,6 +42,7 @@
 #include "debug/TLM.hh"
 #include "mem/ruby/protocol/chi/tlm/controller.hh"
 #include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
+#include "mem/ruby/protocol/chi/tlm/source.hh"
 #include "sim/sim_exit.hh"
 
 namespace gem5 {
@@ -195,6 +196,7 @@ TlmGenerator::TlmGenerator(const Params &p)
       suiteFailure(false),
       cbusyTracker(p.cbusy_tracker),
       snpHandler(p.snp_handler),
+      source(p.chi_source),
       stats(this)
 {
     inPort.onChange([this](const TlmData &data) {
@@ -206,6 +208,8 @@ TlmGenerator::TlmGenerator(const Params &p)
     if (snpHandler) {
         snpHandler->setGenerator(this);
     }
+    assert(source);
+    source->setGenerator(this);
 
     registerExitCallback([this](){ passFailCheck(); });
 }
