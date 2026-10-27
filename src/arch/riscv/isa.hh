@@ -191,6 +191,9 @@ class ISA : public BaseISA
     }
 
     // Zawrs support
+    static constexpr uint64_t WRS_NTO_CYCLES = 1000;
+    static constexpr uint64_t WRS_STO_CYCLES = 100;
+
     bool
     hasLoadReservation(ContextID cid)
     {

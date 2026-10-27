@@ -5854,7 +5854,8 @@ decode QUADRANT default Unknown::unknown() {
                                 }
                                 isa->setWrsWaiting(true);
                                 tc->quiesceTick(curTick() +
-                                    cpu->cyclesToTicks(Cycles(1000)));
+                                    cpu->cyclesToTicks(Cycles(
+                                        RiscvISA::ISA::WRS_NTO_CYCLES)));
                             }
                         }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
                             IsSquashAfter, No_OpClass);
@@ -5883,7 +5884,8 @@ decode QUADRANT default Unknown::unknown() {
                                 !pending) {
                                 isa->setWrsWaiting(true);
                                 tc->quiesceTick(curTick() +
-                                    cpu->cyclesToTicks(Cycles(100)));
+                                    cpu->cyclesToTicks(Cycles(
+                                        RiscvISA::ISA::WRS_STO_CYCLES)));
                             }
                         }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
                             IsSquashAfter, No_OpClass);
