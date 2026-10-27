@@ -51,6 +51,17 @@ test_raw_mxfp(T raw_mxfp, int bits)
 }
 
 template <typename T>
+bool
+test_scale_unchanged(uint32_t raw)
+{
+    T down(raw), up(raw);
+    down.scaleDiv(64.0f);
+    up.scaleMul(1.0f / 1024);
+
+    return down.data == T(raw).data && up.data == T(raw).data;
+}
+
+template <typename T>
 int
 test_type(int bits)
 {
@@ -130,4 +141,33 @@ TEST(MxfpTest, MxFp4Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+}
+
+TEST(MxfpTest, ScaleInfNanTest)
+{
+    using namespace gem5::AMDGPU;
+
+    // Scaling keeps infinity and NaN in every format that has them.
+    EXPECT_TRUE(test_scale_unchanged<mxfloat32>(0x7f800000));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat32>(0xff800000));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat32>(0x7fc00000));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat16>(0x7c00));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat16>(0x7e00));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat16>(0xff80));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat16>(0x7fc0));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat8>(0x7c));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat8>(0xfe));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat8>(0x7f));
+
+    // Finite values, including E4M3 values with an all ones exponent, are
+    // still scaled.
+    mxfloat32 down(1.5f), up(1.5f);
+    down.scaleDiv(64.0f);
+    up.scaleMul(1.0f / 1024);
+    EXPECT_EQ(float(down), 1.5f / 64);
+    EXPECT_EQ(float(up), 1.5f / 1024);
+
+    mxfloat8 e4m3_max(uint32_t(0x7e));
+    e4m3_max.scaleDiv(2.0f);
+    EXPECT_EQ(float(e4m3_max), 224.0f);
 }
