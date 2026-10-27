@@ -104,8 +104,7 @@ repos:
             name: gem5 clang-format
             entry: python util/run-git-clang-format.py
             args: [--pre-commit]
-            always_run: true
-            exclude: .*
+            require_serial: true
             language: python
             additional_dependencies: [clang-format==18.1.8]
             description: Run git-clang-format on the commit.
