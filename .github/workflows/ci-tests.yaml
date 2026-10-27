@@ -295,8 +295,6 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit]
         timeout-minutes: 90
-        # The SALAM test fixture builds with absolute compiler paths. Use
-        # the same ones for every build here, or SCons rebuilds it all.
         env:
             CC: /usr/bin/gcc
             CXX: /usr/bin/g++
@@ -309,77 +307,71 @@ jobs:
                       python3-yaml clang-18 gcc-arm-none-eabi \
                       libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
                   llvm-config --version
-            - name: Build gem5 with SALAM
+            - name: Build gem5 and SALAM unit tests
               run: |
-                  scons build/ARM/gem5.opt --with-salam -j $(nproc)
-        # Run the SALAM suites on the default-profile build, before the
-        # Custom-profile build below replaces it. The check fails if any
-        # listed suite did not run or any test did not pass.
+                  scons build/ARM/gem5.opt \
+                      build/ARM/salam/LLVMRead/value.test.opt \
+                      build/ARM/salam/latency_sample.test.opt \
+                      build/ARM/salam/HWModeling/fu_pool.test.opt \
+                      build/ARM/salam/HWModeling/salam_power_model.test.opt \
+                      build/ARM/salam/storage_access.test.opt \
+                      --with-salam -j $(nproc)
+            - name: Run SALAM unit tests
+              run: |
+                  mkdir -p tests/testing-results/unittests
+                  for test in \
+                      build/ARM/salam/LLVMRead/value.test.opt \
+                      build/ARM/salam/latency_sample.test.opt \
+                      build/ARM/salam/HWModeling/fu_pool.test.opt \
+                      build/ARM/salam/HWModeling/salam_power_model.test.opt \
+                      build/ARM/salam/storage_access.test.opt; do
+                      "$test" --gtest_output="xml:tests/testing-results/unittests/$(basename "$test").xml"
+                  done
             - name: Run the SALAM test suites
               id: run-salam-tests
               working-directory: ${{ github.workspace }}/tests
               run: |
+                  mkdir -p "${RUNNER_TEMP}/salam-results"
                   ./main.py list -q --suites gem5/salam --include-tags salam \
-                      > "${RUNNER_TEMP}/salam-suites.txt"
+                      > "${RUNNER_TEMP}/salam-results/default-suites.txt"
                   status=0
                   ./main.py run gem5/salam --include-tags salam -j $(nproc) \
                       || status=$?
                   python3 gem5/salam/check_salam_results.py \
-                      "${RUNNER_TEMP}/salam-suites.txt" \
-                      testing-results/results.xml gem5/salam || status=1
+                      "${RUNNER_TEMP}/salam-results/default-suites.txt" \
+                      testing-results/results.xml gem5/salam \
+                      || status=1
+                  if [ -d testing-results ]; then
+                      mv testing-results "${RUNNER_TEMP}/salam-results/default"
+                  fi
+                  exit ${status}
+            - name: Run custom hardware profiles
+              working-directory: ${{ github.workspace }}/tests
+              run: |
+                  status=0
+                  for group in fu-remap profile-singleton profile-reordered; do
+                      ./main.py list -q --suites gem5/salam \
+                          --include-tags "$group" \
+                          > "${RUNNER_TEMP}/salam-results/${group}-suites.txt"
+                      ./main.py run gem5/salam --include-tags "$group" \
+                          -j $(nproc) || status=$?
+                      python3 gem5/salam/check_salam_results.py \
+                          "${RUNNER_TEMP}/salam-results/${group}-suites.txt" \
+                          testing-results/results.xml || status=1
+                      if [ -d testing-results ]; then
+                          mv testing-results "${RUNNER_TEMP}/salam-results/${group}"
+                      fi
+                  done
                   exit ${status}
             - name: Upload SALAM test results
               if: success() || failure()
               uses: actions/upload-artifact@v7
               with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ steps.run-salam-tests.outcome }}-output
-                  path: tests/testing-results
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ job.status }}-output
+                  path: |
+                      tests/testing-results
+                      ${{ runner.temp }}/salam-results
                   retention-days: 30
-            - name: Build a profile with an extra functional unit
-              run: |
-                  dest="${RUNNER_TEMP}/salam-extra-unit"
-                  rm -rf "${dest}"
-                  cp -a src/salam/hw_profiles/default "${dest}"
-                  python3 - "${dest}" << 'PY'
-                  import sys
-                  from pathlib import Path
-                  import yaml
-                  dest = Path(sys.argv[1])
-                  unit = dest / "functional_units" / "extra_unit"
-                  unit.mkdir()
-                  reg = dest / "functional_units" / "bit_register"
-                  doc = yaml.safe_load((reg / "bit_register.yml").read_text())
-                  params = doc["functional_unit"]["parameters"]
-                  params["alias"] = "extra_unit"
-                  params["enum_value"] = 99
-                  params["instructions"] = ["none"]
-                  (unit / "extra_unit.yml").write_text(
-                      yaml.safe_dump(doc, sort_keys=False)
-                  )
-                  config_path = dest / "salam-hw-config.yml"
-                  config = yaml.safe_load(config_path.read_text())
-                  config["functional_unit_order"].append("extra_unit")
-                  config_path.write_text(yaml.safe_dump(config, sort_keys=False))
-                  PY
-                  scons build/ARM/gem5.opt --with-salam \
-                      --salam-hw-config="${dest}/salam-hw-config.yml" \
-                      -j $(nproc)
-                  cat > "${RUNNER_TEMP}/check_extra_unit.py" << 'PY'
-                  import m5
-                  from m5.objects import FunctionalUnit, FunctionalUnits, Root
-
-                  root = Root(full_system=False)
-                  root.units = FunctionalUnits.from_profile()
-                  extra = root.units.extra_unit
-                  assert type(extra) is FunctionalUnit
-                  assert str(extra.alias) == "extra_unit"
-                  assert int(extra.enum_value) == 99
-                  assert extra.path() == "units.extra_unit"
-                  m5.instantiate()
-                  entries = root.units.getCCParams().functional_unit_list
-                  assert entries[-1] is extra.getCCObject()
-                  PY
-                  ./build/ARM/gem5.opt "${RUNNER_TEMP}/check_extra_unit.py"
 
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be

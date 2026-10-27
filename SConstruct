@@ -1169,7 +1169,7 @@ for variant_path in variant_paths:
     if env['CONF']['WITH_SALAM']:
         if not hw_config:
             hw_config = File(
-                '#src/salam/hw_profiles/default/salam-hw-config.yml'
+                '#configs/SALAM/hw_profiles/default/salam-hw-config.yml'
             ).abspath
         else:
             hw_config = os.path.abspath(hw_config)

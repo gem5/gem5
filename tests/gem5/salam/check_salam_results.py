@@ -25,14 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-# Checks a SALAM TestLib run for CI: every listed suite ran, every test
-# passed, and each test file contributed suites. A skipped or missing
-# suite fails the check, unlike TestLib's exit status.
-#
-#   check_salam_results.py <listing> <results.xml> <suite directory>
-#
-# <listing> is the output of
-#   ./main.py list -q --suites gem5/salam --include-tags salam
+"""Require every selected SALAM suite and test to pass."""
 
 import glob
 import os
@@ -40,7 +33,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-def main(listing_path, results_path, suite_dir):
+def main(listing_path, results_path, suite_dir=None):
     errors = []
     listed = {}
     with open(listing_path) as f:
@@ -48,15 +41,23 @@ def main(listing_path, results_path, suite_dir):
             line = line.strip()
             if not line:
                 continue
-            kind, path, name = line.split(":", 2)
-            if kind != "SuiteUID":
+            fields = line.split(":", 2)
+            if len(fields) != 3 or fields[0] != "SuiteUID":
                 errors.append(f"unexpected listing line: {line}")
                 continue
+            _kind, path, name = fields
+            if name in listed:
+                errors.append(f"duplicate suite name: {name}")
             listed[name] = path
-    for test_file in sorted(glob.glob(os.path.join(suite_dir, "test_*.py"))):
-        base = os.path.basename(test_file)
-        if not any(os.path.basename(p) == base for p in listed.values()):
-            errors.append(f"{base} contributed no suites")
+    if not listed:
+        errors.append("no suites selected")
+    if suite_dir is not None:
+        for test_file in sorted(
+            glob.glob(os.path.join(suite_dir, "test_*.py"))
+        ):
+            base = os.path.basename(test_file)
+            if not any(os.path.basename(p) == base for p in listed.values()):
+                errors.append(f"{base} contributed no suites")
 
     if not os.path.isfile(results_path):
         # TestLib fails to save results after a fixture setup error.
@@ -86,6 +87,6 @@ def main(listing_path, results_path, suite_dir):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        sys.exit(__doc__ or "usage: check_salam_results.py LISTING XML DIR")
+    if len(sys.argv) not in (3, 4):
+        sys.exit("usage: check_salam_results.py LISTING XML [SUITE_DIR]")
     sys.exit(main(*sys.argv[1:]))

@@ -1297,7 +1297,8 @@ def remap_fsub(profile):
     sine = os.path.join(units, "float_trig_sine")
     shutil.copytree(
         os.path.join(
-            config.base_dir, "src/salam/hw_profiles/examples/float_trig_sine"
+            config.base_dir,
+            "configs/SALAM/hw_profiles/examples/float_trig_sine",
         ),
         sine,
     )

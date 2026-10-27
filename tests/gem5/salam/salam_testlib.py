@@ -53,7 +53,7 @@ from gem5.verifier import MatchFileRegex
 
 SALAM_TAG = "salam"
 BENCH_DIR = "configs/example/gem5_library/salam-benchmarks/src"
-DEFAULT_PROFILE = "src/salam/hw_profiles/default/salam-hw-config.yml"
+DEFAULT_PROFILE = "configs/SALAM/hw_profiles/default/salam-hw-config.yml"
 PROVENANCE_NAME = "salam-test-provenance.json"
 
 # Options used by util/SALAM-tools/run_system.sh.

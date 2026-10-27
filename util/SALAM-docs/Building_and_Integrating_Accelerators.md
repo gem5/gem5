@@ -252,7 +252,7 @@ Each domain runs at a fixed frequency; there is no DVFS. The unsupported acceler
 The timing rules on these clocks are:
 
 - The host's run bit is seen at the compute edge after the one on or following its write, and the first compute pass runs on that edge. Each pass schedules the next compute edge.
-- An instruction issued on compute edge k with latency L completes on edge k + L.
+- A compute operation with a fixed latency L completes on compute edge k + L when issued on edge k. Loads and stores complete from memory responses, as described below. Calls complete after the callee returns under the [call timing rules](README_SALAM.md#functional-unit-scheduling); supported terminators have no separate modeled latency.
 - A `CommInterface` services memory requests every `process_cycles` compute cycles while any are outstanding; a request issued while it is idle waits exactly `process_cycles`. Its service pass runs before the compute pass on the same edge. Responses complete when they arrive, and the next compute pass sees them.
 - A scratchpad response is ready `access_cycles` fabric cycles after the first fabric edge at or after the request arrives, plus a uniformly drawn extra of up to `access_cycles_var` cycles. Each scratchpad keeps one random generator, seeded by gem5's seed, and draws once per serviced access. Identically seeded scratchpads with equal bounds can draw identical sequences; separate generator state does not imply independent seeds. A shared response queue preserves a blocked head across ports, so downstream backpressure can delay a ready response on another port.
 - A register bank batches writes until `write_cycles` fabric cycles after the first write's edge. A write response waits for both `access_cycles` after its own edge and publication of its batch; publication precedes responses on the same edge. A read issued after the write response sees the stored value. Reads sample visible storage when accepted: private-port reads complete at once, while load-port reads respond after `access_cycles`. Reads issued before a pending write completes may still sample the old value.
@@ -461,7 +461,7 @@ The simulated terminal output can also be used to confirm that the host generate
 ## Optional: Customize the Hardware Profile
 
 Plain `--with-salam` uses the default hardware profile
-`src/salam/hw_profiles/default/salam-hw-config.yml`. It generates
+`configs/SALAM/hw_profiles/default/salam-hw-config.yml`. It generates
 embedded parameter data under the variant build directory.
 `--salam-hw-config=CONFIG` selects a complete replacement profile.
 Paths in `CONFIG` are relative

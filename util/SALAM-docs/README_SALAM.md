@@ -291,7 +291,7 @@ process, then rebuild the default profile before ordinary SALAM suites.
 ## Hardware Profiles
 
 `--with-salam` uses the default hardware profile
-`src/salam/hw_profiles/default/salam-hw-config.yml`. It embeds ordered
+`configs/SALAM/hw_profiles/default/salam-hw-config.yml`. It embeds ordered
 functional-unit and instruction parameter records as `m5._salam_profile`,
 generated under the variant build directory. Paths in the profile are
 relative to that file. The build does not modify the profile YAML, and the
@@ -299,7 +299,7 @@ simulator does not read that YAML at runtime.
 
 `--salam-hw-config=CONFIG` selects a complete replacement profile.
 It does not merge with the default hardware profile, scan
-`src/salam/hw_profiles/examples/`, or infer a technology node or
+`configs/SALAM/hw_profiles/examples/`, or infer a technology node or
 cycle time. Paths in `CONFIG` are relative to that file. The build
 does not modify the profile YAML. The selected file must name
 `functional_units`, `functional_unit_order`, and `instructions`.
@@ -356,7 +356,7 @@ that names any other value.
 Copy a complete profile, add the unit directory and its YAML, append
 the alias to `functional_unit_order`, and edit instruction ownership so
 each instruction has one owner. Then build with `--salam-hw-config`
-pointing at that copy. `src/salam/hw_profiles/examples/float_trig_sine/`
+pointing at that copy. `configs/SALAM/hw_profiles/examples/float_trig_sine/`
 is an example unit. It is not part of the default hardware profile
 and is not scanned.
 
@@ -365,9 +365,9 @@ YAML instruction name does not add `compute()` support. Instruction
 execution stays in handwritten `src/salam/LLVMRead/instruction.cc`.
 
 For example, to run `fsub` on the example unit, copy
-`src/salam/hw_profiles/default/` and, in the copy:
+`configs/SALAM/hw_profiles/default/` and, in the copy:
 
-1. copy `src/salam/hw_profiles/examples/float_trig_sine/` into
+1. copy `configs/SALAM/hw_profiles/examples/float_trig_sine/` into
    `functional_units/`;
 2. remove `fsub` from the `instructions` list in
    `functional_units/double_adder/double_adder.yml`;

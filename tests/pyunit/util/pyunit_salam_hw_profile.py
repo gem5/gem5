@@ -44,7 +44,7 @@ sys.path.insert(0, os.path.join(_ROOT, "util", "SALAM-tools", "hw_generator"))
 
 import SALAMGeneratedSources as g
 
-_DEFAULT = os.path.join(_ROOT, "src", "salam", "hw_profiles", "default")
+_DEFAULT = os.path.join(_ROOT, "configs", "SALAM", "hw_profiles", "default")
 
 
 class FunctionalUnitFieldTest(unittest.TestCase):
