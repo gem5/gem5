@@ -313,7 +313,7 @@ jobs:
               run: |
                   scons build/ARM/gem5.opt --with-salam -j $(nproc)
         # Run the SALAM suites on the default-profile build, before the
-        # ExtraUnit build below replaces it. The check fails if any
+        # Custom-profile build below replaces it. The check fails if any
         # listed suite did not run or any test did not pass.
             - name: Run the SALAM test suites
               id: run-salam-tests
@@ -335,7 +335,7 @@ jobs:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ steps.run-salam-tests.outcome }}-output
                   path: tests/testing-results
                   retention-days: 30
-            - name: Build a complete ExtraUnit hardware profile
+            - name: Build a profile with an extra functional unit
               run: |
                   dest="${RUNNER_TEMP}/salam-extra-unit"
                   rm -rf "${dest}"
@@ -365,10 +365,19 @@ jobs:
                       --salam-hw-config="${dest}/salam-hw-config.yml" \
                       -j $(nproc)
                   cat > "${RUNNER_TEMP}/check_extra_unit.py" << 'PY'
-                  import m5.objects
+                  import m5
+                  from m5.objects import FunctionalUnit, FunctionalUnits, Root
 
-                  if not hasattr(m5.objects, "ExtraUnit"):
-                      raise SystemExit("ExtraUnit is not in m5.objects")
+                  root = Root(full_system=False)
+                  root.units = FunctionalUnits.from_profile()
+                  extra = root.units.extra_unit
+                  assert type(extra) is FunctionalUnit
+                  assert str(extra.alias) == "extra_unit"
+                  assert int(extra.enum_value) == 99
+                  assert extra.path() == "units.extra_unit"
+                  m5.instantiate()
+                  entries = root.units.getCCParams().functional_unit_list
+                  assert entries[-1] is extra.getCCObject()
                   PY
                   ./build/ARM/gem5.opt "${RUNNER_TEMP}/check_extra_unit.py"
 

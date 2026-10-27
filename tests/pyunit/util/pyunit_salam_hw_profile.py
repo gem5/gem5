@@ -28,6 +28,7 @@
 # Functional-unit fields in SALAM hardware profiles.
 
 import ast
+import dataclasses
 import os
 import shutil
 import sys
@@ -151,24 +152,10 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         model = self.load()
         self.assertIn(record, model.fu_input_paths)
         expected = g.power_model.load(record)
-        text = g.generate_sources(model)["FunctionalUnits.py"]
         shutil.rmtree(self.profile)
-        tree = ast.parse(text)
-        cls = next(
-            node
-            for node in tree.body
-            if isinstance(node, ast.ClassDef)
-            and node.name == "FunctionalUnits"
+        self.assertEqual(
+            self.generated_data(model)["CHARACTERIZATION"], expected
         )
-        method = next(
-            node
-            for node in cls.body
-            if isinstance(node, ast.FunctionDef)
-            and node.name == "characterization"
-        )
-        # The generated model contains data, not an input-file lookup.
-        self.assertEqual(len(method.body), 1)
-        self.assertEqual(ast.literal_eval(method.body[0].value), expected)
 
     def operation_characterization(
         self, alias, operation, signature, physical_signature=None
@@ -248,25 +235,9 @@ class FunctionalUnitFieldTest(unittest.TestCase):
                 self.assertIn(
                     f"op:{alias}:{operation}:{signature}", expected["keys"]
                 )
-                text = g.generate_sources(model)["FunctionalUnits.py"]
                 shutil.rmtree(self.profile)
-                tree = ast.parse(text)
-                cls = next(
-                    node
-                    for node in tree.body
-                    if isinstance(node, ast.ClassDef)
-                    and node.name == "FunctionalUnits"
-                )
-                method = next(
-                    node
-                    for node in cls.body
-                    if isinstance(node, ast.FunctionDef)
-                    and node.name == "characterization"
-                )
-                # The generated model contains data, not an input lookup.
-                self.assertEqual(len(method.body), 1)
                 self.assertEqual(
-                    ast.literal_eval(method.body[0].value), expected
+                    self.generated_data(model)["CHARACTERIZATION"], expected
                 )
 
     def test_characterization_binding_rejects_a_different_unit(self):
@@ -384,10 +355,8 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         self.assertEqual(
             self.unit(model, "integer_adder").initiation_interval, 3
         )
-        text = g.generate_sources(model)["FunctionalUnits.py"]
-        adder = text[text.index("class IntegerAdder(") :]
-        adder = adder[: adder.index("\nclass ")]
-        self.assertIn("initiation_interval = Param.UInt32(3,", adder)
+        units = dict(self.generated_data(model)["FUNCTIONAL_UNITS"])
+        self.assertEqual(units["integer_adder"]["initiation_interval"], 3)
 
     def test_initiation_interval_must_be_positive(self):
         for value in (0, -1, 2**32, "2", True, 1.5):
@@ -439,6 +408,13 @@ class FunctionalUnitFieldTest(unittest.TestCase):
                 with open(path, "w") as f:
                     f.write(sentinels[rel])
 
+        for name in ("FunctionalUnits.py", "InstConfig.py"):
+            sentinels[name] = (
+                "raise RuntimeError('inactive generated module')\n"
+            )
+            with open(os.path.join(root, name), "w") as stream:
+                stream.write(sentinels[name])
+
         def generate():
             outputs = g.generate_sources(self.load())
             targets = [os.path.join(root, name) for name in outputs]
@@ -483,15 +459,165 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         with open(config, "w") as f:
             yaml.safe_dump(document, f, sort_keys=False)
         custom = generate()
-        inactive = {
-            name: text for name, text in custom.items() if name not in default
-        }
-        self.assertTrue(inactive)
+        self.assertEqual(set(custom), set(default))
+        self.assertNotEqual(custom, default)
+        model = self.load()
+        data = self.generated_data(model)
+        self.assert_profile_records(model, data)
+        self.assertEqual(data["FUNCTIONAL_UNITS"][-1][0], "extra_unit")
         self.reset()
         self.assertEqual(generate(), default)
-        for rel, expected in inactive.items():
-            with open(os.path.join(root, rel)) as f:
-                self.assertEqual(f.read(), expected, rel)
+
+    def generated_data(self, model):
+        outputs = g.generate_sources(model)
+        self.assertEqual(set(outputs), {"_salam_profile.py"})
+        tree = ast.parse(outputs["_salam_profile.py"])
+        values = {}
+        for node in tree.body:
+            self.assertIsInstance(node, ast.Assign)
+            self.assertEqual(len(node.targets), 1)
+            self.assertIsInstance(node.targets[0], ast.Name)
+            name = node.targets[0].id
+            self.assertNotIn(name, values)
+            values[name] = ast.literal_eval(node.value)
+        self.assertEqual(
+            set(values),
+            {
+                "PROFILE_PATH",
+                "FUNCTIONAL_UNITS",
+                "INSTRUCTIONS",
+                "CHARACTERIZATION",
+            },
+        )
+        return values
+
+    def assert_profile_records(self, model, data):
+        metadata = {
+            "path",
+            "instruction_names",
+            "characterization",
+            "characterization_path",
+        }
+        units = tuple(
+            (
+                unit.alias,
+                {
+                    name: value
+                    for name, value in dataclasses.asdict(unit).items()
+                    if name not in metadata
+                },
+            )
+            for unit in model.functional_units
+        )
+        instructions = tuple(
+            (
+                inst.name,
+                {
+                    name: value
+                    for name, value in dataclasses.asdict(inst).items()
+                    if name != "name"
+                },
+            )
+            for inst in model.instructions
+        )
+        self.assertEqual(data["PROFILE_PATH"], model.spec.config_path)
+        self.assertEqual(data["FUNCTIONAL_UNITS"], units)
+        self.assertEqual(data["INSTRUCTIONS"], instructions)
+        self.assertEqual(
+            data["CHARACTERIZATION"],
+            g.power_model.merge(
+                unit.characterization for unit in model.functional_units
+            ),
+        )
+
+    def test_default_profile_is_literal_data(self):
+        model = self.load()
+        self.assert_profile_records(model, self.generated_data(model))
+
+    def test_singleton_profile_records(self):
+        config_path = os.path.join(self.profile, "salam-hw-config.yml")
+        with open(config_path) as stream:
+            selected = yaml.safe_load(stream)
+        units = os.path.join(self.profile, selected["functional_units"])
+        for alias in selected["functional_unit_order"]:
+            if alias != "integer_adder":
+                shutil.rmtree(os.path.join(units, alias))
+        selected["functional_unit_order"] = ["integer_adder"]
+        with open(config_path, "w") as stream:
+            yaml.safe_dump(selected, stream, sort_keys=False)
+        self.edit("integer_adder", instructions=["add"])
+        instruction_path = os.path.join(self.profile, selected["instructions"])
+        with open(instruction_path) as stream:
+            document = yaml.safe_load(stream)
+        document["instructions"] = {"add": document["instructions"]["add"]}
+        with open(instruction_path, "w") as stream:
+            yaml.safe_dump(document, stream, sort_keys=False)
+        model = self.load()
+        data = self.generated_data(model)
+        self.assert_profile_records(model, data)
+        self.assertEqual(
+            [row[0] for row in data["FUNCTIONAL_UNITS"]], ["integer_adder"]
+        )
+        self.assertEqual([row[0] for row in data["INSTRUCTIONS"]], ["add"])
+
+    def test_reordered_profile_records(self):
+        original = self.load()
+        config_path = os.path.join(self.profile, "salam-hw-config.yml")
+        with open(config_path) as stream:
+            selected = yaml.safe_load(stream)
+        selected["functional_unit_order"].reverse()
+        with open(config_path, "w") as stream:
+            yaml.safe_dump(selected, stream, sort_keys=False)
+        instruction_path = os.path.join(self.profile, selected["instructions"])
+        with open(instruction_path) as stream:
+            document = yaml.safe_load(stream)
+        document["instructions"] = dict(
+            reversed(list(document["instructions"].items()))
+        )
+        with open(instruction_path, "w") as stream:
+            yaml.safe_dump(document, stream, sort_keys=False)
+        model = self.load()
+        data = self.generated_data(model)
+        self.assert_profile_records(model, data)
+        self.assertEqual(
+            [row[0] for row in data["FUNCTIONAL_UNITS"]],
+            list(reversed(original.fu_aliases)),
+        )
+        self.assertEqual(
+            [row[0] for row in data["INSTRUCTIONS"]],
+            list(reversed(original.instruction_names)),
+        )
+
+    def test_invalid_profile_names_are_rejected(self):
+        for category in ("unit", "instruction"):
+            for alias in ("class", "_private", "bad-name", "trailing\n"):
+                with self.subTest(category=category, alias=alias):
+                    self.reset()
+                    config_path = os.path.join(
+                        self.profile, "salam-hw-config.yml"
+                    )
+                    with open(config_path) as stream:
+                        selected = yaml.safe_load(stream)
+                    if category == "unit":
+                        selected["functional_unit_order"][0] = alias
+                        with open(config_path, "w") as stream:
+                            yaml.safe_dump(selected, stream, sort_keys=False)
+                    else:
+                        path = os.path.join(
+                            self.profile, selected["instructions"]
+                        )
+                        with open(path) as stream:
+                            document = yaml.safe_load(stream)
+                        document["instructions"][alias] = dict(
+                            document["instructions"]["add"]
+                        )
+                        with open(path, "w") as stream:
+                            yaml.safe_dump(document, stream, sort_keys=False)
+                    with self.assertRaisesRegex(
+                        g.SourceConfigError, "invalid name"
+                    ) as caught:
+                        self.load()
+                    self.assertIn(alias, str(caught.exception))
 
 
 if __name__ == "__main__":

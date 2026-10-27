@@ -40,29 +40,13 @@
 
 import copy
 import importlib.util
+import keyword
 import os
 import re
 from dataclasses import dataclass
+from pprint import pformat
 
 import yaml
-from SALAMClassGenerator import (
-    generate_fu_base_header,
-    generate_fu_header,
-    generate_fu_list_header,
-    generate_fu_list_source,
-    generate_fu_source,
-    generate_functional_unit_declaration,
-    generate_functional_units_declaration,
-    generate_instconfig_declaration,
-    generate_instruction_base_header,
-    generate_instruction_config_header,
-    generate_instruction_config_preamble,
-    generate_instruction_config_source,
-    generate_instruction_declaration,
-    generate_instruction_unit_header,
-    generate_instruction_unit_source,
-    simobject_classname,
-)
 
 _power_path = os.path.join(
     os.path.dirname(__file__), "..", "SALAM-Configurator", "power_model.py"
@@ -132,10 +116,6 @@ class FunctionalUnit:
     characterization: dict
     characterization_path: str | None
 
-    @property
-    def class_name(self):
-        return simobject_classname(self.alias)
-
 
 @dataclass(frozen=True)
 class Instruction:
@@ -145,10 +125,6 @@ class Instruction:
     functional_unit_limit: object
     opcode_num: object
     runtime_cycles: object
-
-    @property
-    def class_name(self):
-        return simobject_classname(self.name)
 
 
 @dataclass(frozen=True)
@@ -174,9 +150,7 @@ class GeneratedSources:
 
     @property
     def fu_class_names(self):
-        return ("FunctionalUnits",) + tuple(
-            unit.class_name for unit in self.functional_units
-        )
+        return ("FunctionalUnit", "FunctionalUnits")
 
     @property
     def instruction_names(self):
@@ -184,14 +158,10 @@ class GeneratedSources:
 
     @property
     def instruction_class_names(self):
-        return ("InstConfig",) + tuple(
-            inst.class_name for inst in self.instructions
-        )
+        return ("InstructionConfig", "InstConfig")
 
     def generated_paths(self):
-        return tuple(
-            _content_path_list(self.functional_units, self.instructions)
-        )
+        return ("_salam_profile.py",)
 
 
 def load_source_config(path):
@@ -292,8 +262,6 @@ def load_generated_sources(spec):
                 runtime_cycles=_require_field(entry, "runtime_cycles", name),
             )
         )
-    _reject_reserved_outputs(units, tuple(instructions))
-    _validate_generated_set(units, tuple(instructions))
     return GeneratedSources(
         spec=spec,
         functional_units=units,
@@ -302,60 +270,71 @@ def load_generated_sources(spec):
     )
 
 
+_FU_FIELDS = (
+    "alias",
+    "stages",
+    "cycles",
+    "enum_value",
+    "int_size",
+    "int_sign",
+    "int_apmode",
+    "fp_size",
+    "fp_sign",
+    "fp_apmode",
+    "ptr_size",
+    "ptr_sign",
+    "ptr_apmode",
+    "limit",
+    "initiation_interval",
+    "power_units",
+    "energy_units",
+    "time_units",
+    "area_units",
+    "fu_latency",
+    "internal_power",
+    "switch_power",
+    "dynamic_power",
+    "dynamic_energy",
+    "leakage_power",
+    "area",
+    "path_delay",
+)
+_INSTRUCTION_FIELDS = (
+    "functional_unit",
+    "functional_unit_limit",
+    "opcode_num",
+    "runtime_cycles",
+)
+
+
 def generate_sources(generated):
-    aliases = list(generated.fu_aliases)
-    names = list(generated.instruction_names)
-    pairs = [
-        ("FunctionalUnits.py", _generate_functional_units_py(generated)),
-        ("InstConfig.py", _generate_inst_config_py(generated)),
-        ("HWModeling/functional_units.hh", generate_fu_list_header(aliases)),
-        ("HWModeling/functional_units.cc", generate_fu_list_source(aliases)),
-        ("HWModeling/functional_units/base.hh", generate_fu_base_header()),
+    """Embed the selected profile as data for the common SimObject types."""
+    units = tuple(
+        (unit.alias, {field: getattr(unit, field) for field in _FU_FIELDS})
+        for unit in generated.functional_units
+    )
+    instructions = tuple(
         (
-            "HWModeling/instruction_config.hh",
-            generate_instruction_config_header(names),
+            inst.name,
+            {field: getattr(inst, field) for field in _INSTRUCTION_FIELDS},
+        )
+        for inst in generated.instructions
+    )
+    values = {
+        "PROFILE_PATH": (
+            generated.spec.config_path or generated.spec.instructions
         ),
-        (
-            "HWModeling/instruction_config.cc",
-            generate_instruction_config_source(names),
+        "FUNCTIONAL_UNITS": units,
+        "INSTRUCTIONS": instructions,
+        "CHARACTERIZATION": power_model.merge(
+            unit.characterization for unit in generated.functional_units
         ),
-        (
-            "HWModeling/instructions/base.hh",
-            generate_instruction_base_header(),
-        ),
-    ]
-    for unit in generated.functional_units:
-        base = "HWModeling/functional_units/" + unit.alias
-        pairs.append(
-            (base + ".hh", generate_fu_header(unit.alias, unit.class_name))
-        )
-        pairs.append(
-            (base + ".cc", generate_fu_source(unit.alias, unit.class_name))
-        )
-    for inst in generated.instructions:
-        base = "HWModeling/instructions/" + inst.name
-        pairs.append(
-            (
-                base + ".hh",
-                generate_instruction_unit_header(inst.name, inst.class_name),
-            )
-        )
-        pairs.append(
-            (
-                base + ".cc",
-                generate_instruction_unit_source(inst.name, inst.class_name),
-            )
-        )
-    paths = [path for path, _text in pairs]
-    _reject_duplicate_values(paths, "output path")
-    declared = list(generated.generated_paths())
-    _reject_duplicate_values(declared, "output path")
-    if set(paths) != set(declared):
-        raise SourceConfigError(
-            "generated content keys do not match the declared "
-            "content target set"
-        )
-    return dict(pairs)
+    }
+    text = "# Generated SALAM profile data. Do not edit.\n\n"
+    for name, value in values.items():
+        text += name + " = " + pformat(value, sort_dicts=False, width=75)
+        text += "\n\n"
+    return {"_salam_profile.py": text}
 
 
 def write_content_files(root, outputs):
@@ -595,68 +574,6 @@ def _enrich(document, units, inst_path):
     return enriched
 
 
-def _generate_functional_units_py(model):
-    text = generate_functional_units_declaration(
-        list(model.fu_aliases),
-        "salam/HWModeling/functional_units.hh",
-        power_model.merge(
-            unit.characterization for unit in model.functional_units
-        ),
-    )
-    parts = [text]
-    for unit in model.functional_units:
-        parts.append(
-            generate_functional_unit_declaration(
-                unit.alias,
-                unit.class_name,
-                "salam/HWModeling/functional_units/" + unit.alias + ".hh",
-                stages=unit.stages,
-                cycles=unit.cycles,
-                enum_value=unit.enum_value,
-                int_size=unit.int_size,
-                int_sign=unit.int_sign,
-                int_apmode=unit.int_apmode,
-                fp_size=unit.fp_size,
-                fp_sign=unit.fp_sign,
-                fp_apmode=unit.fp_apmode,
-                ptr_size=unit.ptr_size,
-                ptr_sign=unit.ptr_sign,
-                ptr_apmode=unit.ptr_apmode,
-                limit=unit.limit,
-                initiation_interval=unit.initiation_interval,
-                power_units=unit.power_units,
-                energy_units=unit.energy_units,
-                time_units=unit.time_units,
-                area_units=unit.area_units,
-                fu_latency=unit.fu_latency,
-                internal_power=unit.internal_power,
-                switch_power=unit.switch_power,
-                dynamic_power=unit.dynamic_power,
-                dynamic_energy=unit.dynamic_energy,
-                leakage_power=unit.leakage_power,
-                area=unit.area,
-                path_delay=unit.path_delay,
-            )
-        )
-    return "".join(parts)
-
-
-def _generate_inst_config_py(model):
-    parts = [generate_instruction_config_preamble()]
-    for inst in model.instructions:
-        parts.append(
-            generate_instruction_declaration(
-                inst.name,
-                functional_unit=inst.functional_unit,
-                functional_unit_limit=inst.functional_unit_limit,
-                opcode_num=inst.opcode_num,
-                runtime_cycles=inst.runtime_cycles,
-            )
-        )
-    parts.append(generate_instconfig_declaration(model.instruction_names))
-    return "".join(parts)
-
-
 def _resolve_config_path(base, relative, config, key):
     if not isinstance(relative, str):
         raise SourceConfigError("malformed " + key + " in " + config)
@@ -676,7 +593,12 @@ def _load_yaml(text, path):
 
 
 def _check_name(name, where):
-    if not isinstance(name, str) or not _NAME.fullmatch(name):
+    if (
+        not isinstance(name, str)
+        or not _NAME.fullmatch(name)
+        or name.startswith("_")
+        or keyword.iskeyword(name)
+    ):
         raise SourceConfigError("invalid name " + str(name) + " in " + where)
 
 
@@ -686,44 +608,6 @@ def _require_field(entry, field, name):
             "missing " + field + " for instruction " + name
         )
     return entry[field]
-
-
-def _reject_reserved_outputs(units, instructions):
-    for unit in units:
-        if unit.alias == "base":
-            raise SourceConfigError(
-                "functional unit alias base collides with "
-                "functional_units/base.hh"
-            )
-    for inst in instructions:
-        if inst.name == "base":
-            raise SourceConfigError(
-                "instruction name base collides with instructions/base.hh"
-            )
-
-
-def _content_path_list(units, instructions):
-    paths = [
-        "FunctionalUnits.py",
-        "InstConfig.py",
-        "HWModeling/functional_units.hh",
-        "HWModeling/functional_units.cc",
-        "HWModeling/functional_units/base.hh",
-    ]
-    for unit in units:
-        paths.append("HWModeling/functional_units/" + unit.alias + ".hh")
-        paths.append("HWModeling/functional_units/" + unit.alias + ".cc")
-    paths.extend(
-        [
-            "HWModeling/instruction_config.hh",
-            "HWModeling/instruction_config.cc",
-            "HWModeling/instructions/base.hh",
-        ]
-    )
-    for inst in instructions:
-        paths.append("HWModeling/instructions/" + inst.name + ".hh")
-        paths.append("HWModeling/instructions/" + inst.name + ".cc")
-    return paths
 
 
 def _reject_enum_conflicts(units):
@@ -759,24 +643,6 @@ def _reject_instruction_conflicts(units):
                     + unit.alias
                 )
             owners[name] = unit.alias
-
-
-def _reject_duplicate_values(values, label):
-    seen = set()
-    for value in values:
-        if value in seen:
-            raise SourceConfigError("duplicate " + label + ": " + str(value))
-        seen.add(value)
-
-
-def _validate_generated_set(units, instructions):
-    classes = ["FunctionalUnits", "InstConfig"]
-    classes.extend(unit.class_name for unit in units)
-    classes.extend(inst.class_name for inst in instructions)
-    _reject_duplicate_values(classes, "SimObject class")
-    _reject_duplicate_values(
-        _content_path_list(units, instructions), "output path"
-    )
 
 
 def _output_path(root, relative):

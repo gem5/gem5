@@ -33,7 +33,6 @@
 
 #include "salam/HWModeling/fu_pool.hh"
 
-using gem5::MaxTick;
 using gem5::Tick;
 using SALAM::FUPool;
 
@@ -118,8 +117,7 @@ TEST(SalamFUPool, IntervalLongerThanLatencyWaitsWithNothingInFlight)
     pool.release(token); // completes at tick 1
     EXPECT_EQ(pool.inFlight(), 0u);
     EXPECT_FALSE(pool.canAccept(Unit, 2));
-    // Waiting is not a stall: the next admission is at a known tick.
-    EXPECT_EQ(pool.nextAdmission(Unit, 2), 5u);
+    EXPECT_FALSE(pool.canAccept(Unit, 4));
     EXPECT_TRUE(pool.canAccept(Unit, 5));
 
     FUPool fresh = makePool(1, 5);
@@ -137,9 +135,9 @@ TEST(SalamFUPool, UnpipelinedBusyUnitNeedsARelease)
 {
     FUPool pool = makePool(1, 0);
     FUPool::Token token = pool.acquire(Unit, 0);
-    EXPECT_EQ(pool.nextAdmission(Unit, 3), MaxTick);
+    EXPECT_FALSE(pool.canAccept(Unit, 3));
     pool.release(token);
-    EXPECT_EQ(pool.nextAdmission(Unit, 3), 3u);
+    EXPECT_TRUE(pool.canAccept(Unit, 3));
 }
 
 TEST(SalamFUPool, PipelinedOperationsShareABusyInstance)
@@ -169,7 +167,6 @@ TEST(SalamFUPool, ZeroInstancesAreNotUnlimited)
     FUPool pool = makePool(0, 0);
     EXPECT_EQ(pool.instances(Unit), 0u);
     EXPECT_FALSE(pool.canAccept(Unit, 0));
-    EXPECT_EQ(pool.nextAdmission(Unit, 0), MaxTick);
     ASSERT_ANY_THROW(pool.acquire(Unit, 0));
 }
 
@@ -202,7 +199,6 @@ TEST(SalamFUPool, ZeroLatencyDoesNotKeepAnOperationInFlight)
     EXPECT_EQ(pool.busyInstances(Unit), 0u);
     EXPECT_FALSE(pool.canAccept(Unit, 20));
     EXPECT_FALSE(pool.canAccept(Unit, 29));
-    EXPECT_EQ(pool.nextAdmission(Unit, 20), 30u);
     EXPECT_TRUE(pool.canAccept(Unit, 30));
 }
 
@@ -219,7 +215,6 @@ TEST(SalamFUPool, UnpipelinedAdmissionRequiresReleaseAndComputeEdge)
     auto token = pool.acquire(Unit, 0);
     // Passing the next edge must not pipeline an unpipelined unit.
     EXPECT_FALSE(pool.canAccept(Unit, 10));
-    EXPECT_EQ(pool.nextAdmission(Unit, 10), MaxTick);
     pool.release(token);
     EXPECT_TRUE(pool.canAccept(Unit, 10));
     token = pool.acquire(Unit, 10);

@@ -1066,7 +1066,7 @@ LLVMInterface::ActiveFunction::admitToUnit(
     token = pool.acquire(unit, curTick());
     owner->hw->fuAdmitted(unit);
     owner->hw->salam_power_model->operation(
-        owner->hw->findFunctionalUnit(unit)->get_alias(),
+        owner->hw->findFunctionalUnit(unit)->getAlias(),
         llvm::Instruction::getOpcodeName(inst->getOpode()),
         inst->getPPASignature());
     return true;
@@ -1561,22 +1561,22 @@ LLVMInterface::resolveFunctionalUnits()
             }
         }
     }
-    for (auto unit : hw->functional_units->functional_unit_list) {
-        uint32_t id = unit->get_enum_value();
+    for (auto unit : hw->functional_units->functionalUnitList) {
+        uint32_t id = unit->getEnumValue();
         uint32_t count = uses[id];
-        uint32_t instances = unit->get_limit() > 0 ? unit->get_limit() : count;
+        uint32_t instances = unit->getLimit() > 0 ? unit->getLimit() : count;
         inventory.instances[id] = instances;
         DPRINTF(SALAMFUInventory,
                 "%s (%d): %d instances, %d static instructions\n",
-                unit->get_alias(), id, instances, count);
+                unit->getAlias(), id, instances, count);
     }
     hw->setInventory(inventory);
     configurePowerModel(reached, inventory, operations);
     std::map<uint32_t, SALAM::FUPool::UnitConfig> pool;
-    for (auto unit : hw->functional_units->functional_unit_list) {
-        uint32_t id = unit->get_enum_value();
+    for (auto unit : hw->functional_units->functionalUnitList) {
+        uint32_t id = unit->getEnumValue();
         pool[id] = {inventory.instances.at(id),
-                    cyclesToTicks(Cycles(unit->get_initiation_interval()))};
+                    cyclesToTicks(Cycles(unit->getInitiationInterval()))};
     }
     hw->fuPool.configure(pool, clockPeriod());
 }
@@ -1589,13 +1589,13 @@ LLVMInterface::configurePowerModel(
 {
     auto *model = hw->salam_power_model;
     const SALAMPowerModel::Operations no_operations;
-    for (auto *unit : hw->functional_units->functional_unit_list) {
-        const auto id = unit->get_enum_value();
+    for (auto *unit : hw->functional_units->functionalUnitList) {
+        const auto id = unit->getEnumValue();
         const auto found = operations.find(id);
         model->configureFunctionalUnit(
-            unit->get_alias(), inventory.instances.at(id),
+            unit->getAlias(), inventory.instances.at(id),
             found == operations.end() ? no_operations : found->second,
-            double(cyclesToTicks(Cycles(unit->get_initiation_interval()))) /
+            double(cyclesToTicks(Cycles(unit->getInitiationInterval()))) /
                 sim_clock::as_float::s,
             double(clockPeriod()) / sim_clock::as_float::s);
     }
@@ -1656,13 +1656,12 @@ LLVMInterface::createInstruction(llvm::Instruction *inst, uint64_t id)
     uint64_t OpCode = inst->Instruction::getOpcode();
 
     uint64_t functional_unit = 0;
-    for (auto hw_inst : hw->inst_config->inst_list) {
-        if (OpCode == hw_inst->get_opcode_num()) {
-            functional_unit = hw_inst->get_functional_unit();
+    for (auto hw_inst : hw->inst_config->instList) {
+        if (OpCode == hw_inst->getOpcodeNum()) {
+            functional_unit = hw_inst->getFunctionalUnit();
             // 0 is no functional unit.
             if (functional_unit != 0) {
-                FunctionalUnitBase *unit =
-                    hw->findFunctionalUnit(functional_unit);
+                FunctionalUnit *unit = hw->findFunctionalUnit(functional_unit);
                 fatal_if(!unit,
                          "%s: instruction '%s' uses functional unit %d, "
                          "which the hardware profile does not define",

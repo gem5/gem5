@@ -283,13 +283,18 @@ coverage. Remap-profile tests use a separate tag and profile; see the
 hardware-profile section above. Use `--skip-build` only with an existing
 binary and matching build provenance.
 
+The `profile-singleton` and `profile-reordered` tags check
+ownership with separate build profiles. Run each tag in a separate test
+process, then rebuild the default profile before ordinary SALAM suites.
+
 ## Hardware Profiles
 
 `--with-salam` uses the default hardware profile
-`src/salam/hw_profiles/default/salam-hw-config.yml`. It generates the
-functional-unit and instruction sources under the variant build
-directory. Paths in that file are relative to the file. The build
-does not modify the profile YAML.
+`src/salam/hw_profiles/default/salam-hw-config.yml`. It embeds ordered
+functional-unit and instruction parameter records as `m5._salam_profile`,
+generated under the variant build directory. Paths in the profile are
+relative to that file. The build does not modify the profile YAML, and the
+simulator does not read that YAML at runtime.
 
 `--salam-hw-config=CONFIG` selects a complete replacement profile.
 It does not merge with the default hardware profile, scan
@@ -303,7 +308,7 @@ scons build/ARM/gem5.opt --with-salam \
     --salam-hw-config=/path/to/salam-hw-config.yml -j`nproc`
 ```
 
-`functional_unit_order` is the generation order. It must list every
+`functional_unit_order` is the collection order. It must list every
 non-hidden functional-unit directory once. Hidden names and files that
 are not directories are ignored.
 
@@ -314,14 +319,36 @@ workload field is not the build-time hardware profile.
 
 ### Functional unit construction
 
-`configs/SALAM/HWAccConfig.py` gives each accelerator the units and
-instructions of the profile the build used, through the generated
-`FunctionalUnits.from_profile()` and `InstConfig.from_profile()`.
-Each call creates new objects, so accelerators do not share them. A
-profile may add, remove or rename units without editing handwritten
-code. Every instruction's `functional_unit` must be the `enum_value`
-of a unit in the profile, or 0 for none; gem5 rejects an instruction
-in the IR that names any other value.
+The embedded `gem5.salam.cluster` construction gives each accelerator the
+selected profile's units and instructions through
+`FunctionalUnits.from_profile()` and `InstConfig.from_profile()`. Each call
+creates independent children. Bare `FunctionalUnits()` and `InstConfig()`
+construction uses the same profile defaults. All entries use the fixed
+`FunctionalUnit` and `InstructionConfig` SimObject types. Profiles describe
+instances rather than new Python or C++ classes.
+
+Each entry is owned by its named child path, such as
+`hw_interface.functional_units.integer_adder`. The typed
+`functional_unit_list` and `inst_list` parameters reference those same
+children in profile order. Named scalar overrides and whole-child
+replacement must happen before parameter unproxying and instantiation.
+Collection cloning preserves independent children, and
+`FunctionalUnits.characterization()` returns an independent copy of the
+embedded characterization records.
+
+Use common entry types with the complete profile parameters when replacing
+children. Per-entry class names such as `IntegerAdder` and `Add` are not
+exported. Entry names
+must be Python identifiers other than keywords, cannot start with an
+underscore, and cannot conflict with collection parameters, methods, or
+proxy selectors such as `any`, `all`, `search_self`, or `search_up`.
+Invalid aliases identify the
+selected profile and collection.
+
+A profile may add, remove or rename units without editing handwritten
+code. Every instruction's `functional_unit` must be the `enum_value` of a
+unit in the profile, or 0 for none; gem5 rejects an instruction in the IR
+that names any other value.
 
 ### Adding a functional unit
 
@@ -381,8 +408,10 @@ These unit parameters schedule it:
 Latency comes only from `CycleCounts` and the workload `hw_config`
 overrides. `cycles` and `stages` describe the unit, and the
 instruction entry's `runtime_cycles` and `functional_unit_limit` are
-copied into the generated classes; none of them changes when an
-operation completes or how many issue.
+retained as metadata on the common entry objects; none of them changes
+when an operation completes or how many issue. Legacy FU power and area
+parameters are also metadata; runtime PPA coefficients come from the
+characterization records.
 
 The supported terminators `br`, `ret` and `switch_inst` transfer control
 without a separate modeled latency. Their `CycleCounts` values and workload
@@ -425,9 +454,9 @@ instructions:
         runtime_cycles: 1
 ```
 
-- The key names the entry and its generated class (`add` becomes
-  `Add`), which `InstConfig.from_profile()` instantiates. Adding an
-  entry does not add execution support. Execution is in
+- The key names an `InstructionConfig` child, such as `inst_config.add`,
+  which `InstConfig.from_profile()` constructs. Adding an entry does not
+  add execution support. Execution is in
   `LLVMInterface::createInstruction()` and
   `src/salam/LLVMRead/instruction.cc`.
 - `opcode_num` is the LLVM `Instruction::getOpcode()` value from
@@ -440,20 +469,20 @@ instructions:
   configured value. The generator rejects an instruction listed by two
   units. To remap an instruction, move its name from one unit's list
   to another's.
-- `functional_unit_limit` is copied into the generated class. No
+- `functional_unit_limit` is retained as instruction metadata. No
   scheduling code reads it; the unit's `limit` sets its instances.
-- `runtime_cycles` is copied into the generated instruction
-  configuration. It does not set execution latency. Execution uses
+- `runtime_cycles` is retained as instruction metadata. It does not set
+  execution latency. Execution uses
   `CycleCounts`, with overrides from the workload `hw_config` mapping
   that `Profile` selects. Instructions without an override keep the
   `CycleCounts` defaults.
 
-### Exporting generated sources
+### Exporting profile data
 
 `util/SALAM-tools/hw_generator/HWProfileGenerator.py` can write the
-same generated sources outside the repository. It takes `--hw-config`
-and `--output-dir`, and it refuses to write under `src/`. A normal
-`--with-salam` build does not need this tool.
+same embedded profile-data module outside the repository. It takes
+`--hw-config` and `--output-dir`, and it refuses to write under `src/`.
+A normal `--with-salam` build does not need this tool.
 
 ## Offline CACTI characterization
 

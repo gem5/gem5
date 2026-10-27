@@ -71,10 +71,6 @@ class FUPool
     uint32_t instances(uint32_t unit) const;
 
     bool canAccept(uint32_t unit, gem5::Tick now) const;
-    // The first tick at or after now when an instance could admit an
-    // operation without any release; MaxTick if only a release can
-    // make one available.
-    gem5::Tick nextAdmission(uint32_t unit, gem5::Tick now) const;
 
     Token acquire(uint32_t unit, gem5::Tick now);
     void release(const Token &token);

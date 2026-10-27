@@ -462,17 +462,19 @@ The simulated terminal output can also be used to confirm that the host generate
 
 Plain `--with-salam` uses the default hardware profile
 `src/salam/hw_profiles/default/salam-hw-config.yml`. It generates
-sources under the variant build directory. `--salam-hw-config=CONFIG`
-selects a complete replacement profile. Paths in `CONFIG` are relative
+embedded parameter data under the variant build directory.
+`--salam-hw-config=CONFIG` selects a complete replacement profile.
+Paths in `CONFIG` are relative
 to that file. The build does not modify the profile YAML. It does not
 merge with the default hardware profile, scan `examples/`, or infer a
 technology node or cycle time. See **util/SALAM-docs/README_SALAM.md**
 for how to append a unit to `functional_unit_order` and for the
 instruction entry fields.
 
-`configs/SALAM/HWAccConfig.py` constructs every unit and instruction
-the profile contains. Remapping a supported opcode is allowed. A new
-YAML instruction name does not add `compute()` support.
+The embedded `gem5.salam.cluster` construction creates every unit and
+instruction the profile contains using common configuration types.
+Remapping a supported opcode is allowed. A new YAML instruction name does
+not add `compute()` support.
 
 The workload `Profile` field selects the **config.yml**
 `hw_config` mapping. That mapping supplies per-kernel execution latency

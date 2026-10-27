@@ -26,8 +26,10 @@
 
 # Checks the default hardware profile against the selected LLVM.
 
+import json
 import os
 import re
+import shutil
 import subprocess
 
 import salam_testlib as st
@@ -176,38 +178,22 @@ TestSuite(
 
 
 def from_profile_makes_new_objects(params):
-    # Two accelerators' units and instructions must be distinct objects,
-    # one for every parameter the generated container declares.
     gem5 = params.fixtures["salam-gem5"]
     outdir = params.fixtures[constants.tempdir_fixture_name].path
-    script = os.path.join(outdir, "from_profile.py")
-    with open(script, "w") as f:
-        f.write(
-            "from m5.objects import FunctionalUnits, InstConfig\n"
-            "from m5.SimObject import SimObject\n"
-            "for cls in (FunctionalUnits, InstConfig):\n"
-            "    a, b = cls.from_profile(), cls.from_profile()\n"
-            "    names = {\n"
-            "        name\n"
-            "        for name, param in cls._params.items()\n"
-            "        if isinstance(param.ptype, type)\n"
-            "        and issubclass(param.ptype, SimObject)\n"
-            "    }\n"
-            "    assert names, cls\n"
-            "    for obj in (a, b):\n"
-            "        assert set(obj._children.keys()) == names, cls\n"
-            "    for name in names:\n"
-            "        assert a._children[name] is not b._children[name], name\n"
-            "    print(cls.__name__, len(names), 'distinct')\n"
-        )
-    result = subprocess.run(
-        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+    script = os.path.join(
+        os.path.dirname(__file__), "check_salam_ownership.py"
     )
-    with open(os.path.join(outdir, "simout.txt")) as f:
-        out = f.read()
-    if result.returncode != 0 or out.count(" distinct") != 2:
+    expected = st._expected_profile(gem5.tools, gem5.profile)
+    result = subprocess.run(
+        [gem5.path, "-d", outdir, "-re", script, json.dumps(expected)],
+        env=gem5.tools.env(),
+        timeout=60,
+    )
+    with open(os.path.join(outdir, "simout.txt")) as stream:
+        output = stream.read()
+    if result.returncode or "SALAM_PROFILE_OWNERSHIP_PASSED" not in output:
         raise AssertionError(
-            f"from_profile() check failed (rc {result.returncode}); "
+            f"profile ownership check failed (rc {result.returncode}); "
             f"see {outdir}"
         )
 
@@ -561,3 +547,58 @@ TestSuite(
         )
     ],
 )
+
+
+# These profiles replace the selected binary. Run each suite separately,
+# then rebuild the default profile before running ordinary SALAM suites.
+def ownership_profile(singleton):
+    def edit(directory):
+        config_path = os.path.join(directory, "salam-hw-config.yml")
+        with open(config_path) as stream:
+            selected = yaml.safe_load(stream)
+        instruction_path = os.path.join(directory, selected["instructions"])
+        with open(instruction_path) as stream:
+            instructions = yaml.safe_load(stream)
+        if singleton:
+            units = os.path.join(directory, selected["functional_units"])
+            for alias in selected["functional_unit_order"]:
+                if alias != "integer_adder":
+                    shutil.rmtree(os.path.join(units, alias))
+            selected["functional_unit_order"] = ["integer_adder"]
+            unit_path = os.path.join(
+                units, "integer_adder", "integer_adder.yml"
+            )
+            with open(unit_path) as stream:
+                unit = yaml.safe_load(stream)
+            unit["functional_unit"]["parameters"]["instructions"] = ["add"]
+            with open(unit_path, "w") as stream:
+                yaml.safe_dump(unit, stream, sort_keys=False)
+            instructions["instructions"] = {
+                "add": instructions["instructions"]["add"]
+            }
+        else:
+            selected["functional_unit_order"].reverse()
+            instructions["instructions"] = dict(
+                reversed(list(instructions["instructions"].items()))
+            )
+        with open(config_path, "w") as stream:
+            yaml.safe_dump(selected, stream, sort_keys=False)
+        with open(instruction_path, "w") as stream:
+            yaml.safe_dump(instructions, stream, sort_keys=False)
+
+    return edit
+
+
+for profile_name, singleton in (("singleton", True), ("reordered", False)):
+    name = "salam-profile-" + profile_name
+    selected = os.path.join(config.build_dir, name, "salam-hw-config.yml")
+    TestSuite(
+        name=name,
+        fixtures=[
+            st.SalamProfileFixture(selected, ownership_profile(singleton)),
+            st.SalamGem5Fixture(selected),
+            TempdirFixture(),
+        ],
+        tags=["profile-ownership", "profile-" + profile_name],
+        tests=[TestFunction(from_profile_makes_new_objects, name=name)],
+    )

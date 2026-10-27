@@ -46,18 +46,17 @@ HWInterface::HWInterface(const HWInterfaceParams &params)
       cycle_counts(params.cycle_counts),
       functional_units(params.functional_units),
       inst_config(params.inst_config),
-      opcodes(params.opcodes),
       salam_power_model(params.salam_power_model),
       simulator_config(params.simulator_config)
 {
-    for (auto unit : functional_units->functional_unit_list) {
-        unitStats[unit->get_enum_value()] =
+    for (auto unit : functional_units->functionalUnitList) {
+        unitStats[unit->getEnumValue()] =
             std::make_unique<UnitStats>(this, unit);
     }
 }
 
-HWInterface::UnitStats::UnitStats(HWInterface *hw, FunctionalUnitBase *unit)
-    : statistics::Group(hw, unit->get_alias().c_str()),
+HWInterface::UnitStats::UnitStats(HWInterface *hw, FunctionalUnit *unit)
+    : statistics::Group(hw, unit->getAlias().c_str()),
       ADD_STAT(instances, statistics::units::Count::get(),
                "Instances of the unit"),
       ADD_STAT(admissions, statistics::units::Count::get(),
@@ -73,7 +72,7 @@ HWInterface::UnitStats::UnitStats(HWInterface *hw, FunctionalUnitBase *unit)
                "Busy-instance time over instances times the window; 0 "
                "with no instances")
 {
-    uint32_t id = unit->get_enum_value();
+    uint32_t id = unit->getEnumValue();
     instances.functor([hw, id] {
         return hw->fuPool.hasUnit(id) ? hw->fuPool.instances(id) : 0;
     });
@@ -110,11 +109,11 @@ HWInterface::fuDenied(uint32_t unit)
     unitStats.at(unit)->denials++;
 }
 
-FunctionalUnitBase *
+FunctionalUnit *
 HWInterface::findFunctionalUnit(uint64_t enum_value)
 {
-    for (auto unit : functional_units->functional_unit_list) {
-        if (unit->get_enum_value() == enum_value) {
+    for (auto unit : functional_units->functionalUnitList) {
+        if (unit->getEnumValue() == enum_value) {
             return unit;
         }
     }

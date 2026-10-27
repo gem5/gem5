@@ -90,19 +90,6 @@ FUPool::canAccept(uint32_t unit, gem5::Tick now) const
         [&](const Instance &instance) { return admits(u, instance, now); });
 }
 
-gem5::Tick
-FUPool::nextAdmission(uint32_t unit, gem5::Tick now) const
-{
-    const Unit &u = unitFor(unit);
-    gem5::Tick next = gem5::MaxTick;
-    for (const Instance &instance : u.instances) {
-        if (u.interval > 0 || instance.inFlight == 0) {
-            next = std::min(next, std::max(now, instance.nextIssue));
-        }
-    }
-    return next;
-}
-
 FUPool::Token
 FUPool::acquire(uint32_t unit, gem5::Tick now)
 {

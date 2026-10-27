@@ -69,7 +69,9 @@ def export_hw_sources(config_path, output_dir):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Export generated SALAM sources to an output directory"
+        description=(
+            "Export generated SALAM profile data to an output directory"
+        )
     )
     parser.add_argument(
         "--hw-config",
@@ -81,7 +83,7 @@ def main():
         "--output-dir",
         type=str,
         required=True,
-        help="Directory for generated sources; must not be under src/",
+        help="Directory for generated profile data; not under src/",
     )
     args = parser.parse_args()
     export_hw_sources(args.hw_config, args.output_dir)

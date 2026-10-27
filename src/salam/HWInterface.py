@@ -40,7 +40,6 @@
 from m5.objects.CycleCounts import CycleCounts
 from m5.objects.FunctionalUnits import FunctionalUnits
 from m5.objects.InstConfig import InstConfig
-from m5.objects.InstOpCodes import InstOpCodes
 from m5.objects.SALAMPowerModel import SALAMPowerModel
 from m5.objects.SimulatorConfig import SimulatorConfig
 from m5.params import *
@@ -58,7 +57,4 @@ class HWInterface(SimObject):
     salam_power_model = Param.SALAMPowerModel(Parent.any, "SALAM Power Model")
     simulator_config = Param.SimulatorConfig(
         Parent.any, "Simulation Configuration"
-    )
-    opcodes = Param.InstOpCodes(
-        Parent.any, "Instruction LLVM OpCode Enumeration to SALAM Type"
     )

@@ -39,9 +39,9 @@
 
 Import("*")
 
-# --with-salam generates sources from the selected hardware profile.
-# The profile YAML is env['SALAM_HW_CONFIG']. Products are written
-# under generated/salam and registered from there.
+# --with-salam embeds data from the selected hardware profile.
+# The profile YAML is env['SALAM_HW_CONFIG']; generated data stays
+# under the variant build directory.
 if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
 
     import sys
@@ -82,13 +82,11 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
         error(str(exc))
     generated_dir = Dir("generated")
     salam_out = generated_dir.Dir("salam")
-    env.Prepend(CPPPATH=[generated_dir])
     content = [salam_out.File(rel) for rel in generated.generated_paths()]
     sources = [
         File(inputs.config_path),
         File(inputs.instructions),
         File("#util/SALAM-tools/hw_generator/SALAMGeneratedSources.py"),
-        File("#util/SALAM-tools/hw_generator/SALAMClassGenerator.py"),
         File("#util/SALAM-tools/SALAM-Configurator/power_model.py"),
         Value("\n".join(generated.generated_paths())),
     ]
@@ -101,18 +99,16 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
             Transform("SALAM GEN", 0),
         ),
     )
+    PySource("m5", salam_out.File("_salam_profile.py"))
+    PySource("m5", "_salam_config.py")
     SimObject(
-        salam_out.File("FunctionalUnits.py"),
-        sim_objects=list(generated.fu_class_names),
+        "FunctionalUnits.py", sim_objects=["FunctionalUnit", "FunctionalUnits"]
     )
     SimObject(
-        salam_out.File("InstConfig.py"),
-        sim_objects=list(generated.instruction_class_names),
+        "InstConfig.py", sim_objects=["InstructionConfig", "InstConfig"]
     )
-    generated_cc = [node for node in content if str(node).endswith(".cc")]
 
     SimObject("HWInterface.py", sim_objects=["HWInterface"])
-    SimObject("InstOpCodes.py", sim_objects=["InstOpCodes"])
     SimObject("SALAMPowerModel.py", sim_objects=["SALAMPowerModel"])
     SimObject("SimulatorConfig.py", sim_objects=["SimulatorConfig"])
 
@@ -152,8 +148,8 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
     )
 
     Source("HWModeling/cycle_counts.cc")
-    for node in generated_cc:
-        Source(node)
+    Source("HWModeling/functional_units.cc")
+    Source("HWModeling/instruction_config.cc")
     Source("HWModeling/hw_interface.cc")
     Source("HWModeling/fu_pool.cc")
     GTest("latency_sample.test", "latency_sample.test.cc", "../base/random.cc")
@@ -162,7 +158,6 @@ if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
         "HWModeling/fu_pool.test.cc",
         "HWModeling/fu_pool.cc",
     )
-    Source("HWModeling/opcodes.cc")
     Source("HWModeling/salam_power_model.cc")
     GTest(
         "HWModeling/salam_power_model.test",

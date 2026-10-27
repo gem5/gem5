@@ -53,7 +53,6 @@
 #include "base/statistics.hh"
 #include "cycle_counts.hh"
 #include "fu_pool.hh"
-#include "opcodes.hh"
 #include "params/HWInterface.hh"
 #include "salam/HWModeling/functional_units.hh"
 #include "salam/HWModeling/instruction_config.hh"
@@ -73,14 +72,13 @@ class HWInterface : public SimObject
     CycleCounts *cycle_counts;
     FunctionalUnits *functional_units;
     InstConfig *inst_config;
-    InstOpCodes *opcodes;
     SALAMPowerModel *salam_power_model;
     SimulatorConfig *simulator_config;
 
     HWInterface();
     HWInterface(const HWInterfaceParams &params);
     // The unit with this enum_value, or nullptr.
-    FunctionalUnitBase *findFunctionalUnit(uint64_t enum_value);
+    FunctionalUnit *findFunctionalUnit(uint64_t enum_value);
     // Admission to this accelerator's functional units.
     SALAM::FUPool fuPool;
 
@@ -119,7 +117,7 @@ class HWInterface : public SimObject
     // statistics reset does not change them.
     struct UnitStats : public statistics::Group
     {
-        UnitStats(HWInterface *hw, FunctionalUnitBase *unit);
+        UnitStats(HWInterface *hw, FunctionalUnit *unit);
 
         statistics::Value instances;
         statistics::Scalar admissions;
