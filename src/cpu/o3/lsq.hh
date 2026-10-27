@@ -45,6 +45,7 @@
 #include <cassert>
 #include <cstdint>
 #include <list>
+#include <optional>
 #include <vector>
 
 #include "arch/generic/mmu.hh"
@@ -906,6 +907,9 @@ class LSQ
 
     RequestPort &getDataPort() { return dcachePort; }
 
+    /** Split alignment used by transferNeedsBurst / SplitDataRequest. */
+    unsigned splitGrain(const DynInstPtr &inst) const;
+
     void sendRetryResp();
 
   protected:
@@ -958,6 +962,11 @@ class LSQ
     unsigned LQEntries;
     /** Total Size of SQ Entries. */
     unsigned SQEntries;
+    /**
+     * Unit-stride vector LSU split grain in bytes.
+     * Unspecified uses the cache-line size. See BaseO3CPU.vecMemPackWidth.
+     */
+    const std::optional<unsigned> vecMemPackWidth;
 
     /** Max LQ Size - Used to Enforce Sharing Policies. */
     unsigned maxLQEntries;
