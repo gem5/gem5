@@ -593,7 +593,7 @@ class System : public SimObject, public PCEventScope
 
     FutexMap futexMap;
 
-    static const int maxPID = 32768;
+    static const int maxPID = 8388608;
 
     /** Process set to track which PIDs have already been allocated */
     std::set<int> PIDs;
