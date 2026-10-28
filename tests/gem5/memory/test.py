@@ -152,3 +152,12 @@ for test_name, basename_noext, args in null_tests:
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )
+
+gem5_verify_config(
+    name="timing-thread-bridge",
+    verifiers=(),
+    config=joinpath(getcwd(), "timing-thread-bridge-run.py"),
+    config_args=[],
+    valid_isas=(constants.null_tag,),
+    length=constants.quick_tag,
+)
