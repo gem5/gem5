@@ -268,6 +268,12 @@ class IEW
     /** Dispatches instructions to IQ and LSQ. */
     void dispatchInsts(ThreadID tid);
 
+    /**
+     * Tells rename that an instruction it sent has been processed, so that
+     * the LSQ entries it reserved are no longer counted as in progress.
+     */
+    void reportLSQDispatched(ThreadID tid, const DynInstPtr &inst);
+
     /** Executes instructions. In the case of memory operations, it informs the
      * LSQ to execute the instructions. Also handles any redirects that occur
      * due to the executed instructions.

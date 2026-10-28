@@ -48,6 +48,11 @@ if env['CONF']['BUILD_ISA']:
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'])
     SimObject('IQUnit.py', sim_objects=['IQUnit'],
         enums=['IQInsertionPolicy'])
+    SimObject('LSQOccupancy.py', sim_objects=['LSQOccupancyPolicy',
+        'ConstantOccupancy', 'PerSegmentOccupancy', 'PerBlockOccupancy',
+        'PerCacheLineOccupancy', 'PerChunkOccupancy', 'LineCrossOccupancy',
+        'MaxOccupancy', 'SumOccupancy', 'ClampOccupancy', 'LSQOpDesc'],
+        enums=['LSQOverflowMode'])
     SimObject('SMT.py',
         enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 
@@ -63,6 +68,8 @@ if env['CONF']['BUILD_ISA']:
     Source('iew.cc')
     Source('inst_queue.cc')
     Source('lsq.cc')
+    Source('lsq_occupancy.cc')
+    Source('lsq_segments.cc')
     Source('lsq_unit.cc')
     Source('mem_dep_unit.cc')
     Source('regfile.cc')
@@ -80,6 +87,7 @@ if env['CONF']['BUILD_ISA']:
     DebugFlag('IEW')
     DebugFlag('IQ')
     DebugFlag('LSQ')
+    DebugFlag('LSQOccupancy')
     DebugFlag('LSQUnit')
     DebugFlag('MemDepUnit')
     DebugFlag('O3CPU')
@@ -91,7 +99,8 @@ if env['CONF']['BUILD_ISA']:
 
     CompoundFlag('O3CPUAll', [ 'BAC', 'FTQ', 'Fetch', 'Decode', 'Rename',
         'IEW', 'Commit',
-        'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
+        'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQOccupancy', 'LSQUnit', 'StoreSet',
+        'MemDepUnit',
         'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
 
     SimObject('BaseO3Checker.py', sim_objects=['BaseO3Checker'])
