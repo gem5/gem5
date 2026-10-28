@@ -397,6 +397,13 @@ BaseRemoteGDB::BaseRemoteGDB(System *_system,
         trapEvent(this), singleStepEvent(*this)
 {
     listener = _listen_config.build(name());
+
+    // The handler is invoked after construction, so getXferFeaturesRead is
+    // dispatched to the override of the derived class.
+    queryXferReadMap.insert(
+        {"features", [this](const std::string &annex, std::string &output) {
+             return getXferFeaturesRead(annex, output);
+         }});
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
@@ -1376,9 +1383,16 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     split = splitAt(split.second, ":");
     auto operation = split.first;
 
-    // Only the "features" object and "read"ing are supported currently.
-    if (object != "features" || operation != "read")
+    // Only "read"ing is supported currently.
+    if (operation != "read") {
         throw Unsupported();
+    }
+
+    // Only the objects registered in queryXferReadMap are supported.
+    auto handler_it = queryXferReadMap.find(object);
+    if (handler_it == queryXferReadMap.end()) {
+        throw Unsupported();
+    }
 
     // Extract the annex name.
     split = splitAt(split.second, ":");
@@ -1386,8 +1400,9 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 
     // Read the contents of the annex.
     std::string content;
-    if (!getXferFeaturesRead(annex, content))
+    if (!handler_it->second(annex, content)) {
         throw CmdError("E00");
+    }
 
     // Extract the offset and length.
     split = splitAt(split.second, ",");
