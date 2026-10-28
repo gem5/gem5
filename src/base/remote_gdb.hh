@@ -44,6 +44,7 @@
 
 
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <functional>
 #include <map>
@@ -244,7 +245,11 @@ class BaseRemoteGDB
     void putbyte(uint8_t b);
 
     void recv(std::vector<char> &bp);
-    void send(const char *data);
+    void
+    send(const char *data)
+    {
+        sendBinary(data, std::strlen(data));
+    }
     void send(const std::string &data) { send(data.c_str()); }
 
     template <typename ...Args>
@@ -253,6 +258,9 @@ class BaseRemoteGDB
     {
         send(csprintf(format, args...));
     }
+
+    // Send a packet with len bytes of data, which may contain '\0'.
+    void sendBinary(const char *data, size_t len);
 
     /*
      * Process commands from remote GDB. If simulation has been

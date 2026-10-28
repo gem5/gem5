@@ -138,6 +138,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <iterator>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -270,6 +271,42 @@ char
 i2digit(int n)
 {
     return "0123456789abcdef"[n & 0x0f];
+}
+
+// Convert a byte array into a printable string. Backslash is escaped as
+// "\\", common control characters as "\n", "\r" and "\t", and other
+// non-printable bytes as "\xHH".
+std::string
+escapeNonPrintable(const char *data, size_t len)
+{
+    std::string out;
+    out.reserve(len);
+    for (size_t i = 0; i < len; i++) {
+        switch (data[i]) {
+            case '\\':
+                out += "\\\\";
+                break;
+            case '\n':
+                out += "\\n";
+                break;
+            case '\r':
+                out += "\\r";
+                break;
+            case '\t':
+                out += "\\t";
+                break;
+            default:
+                if (std::isprint(data[i], std::locale::classic())) {
+                    out += data[i];
+                } else {
+                    out += "\\x";
+                    out += i2digit(data[i] >> 4);
+                    out += i2digit(data[i]);
+                }
+                break;
+        }
+    }
+    return out;
 }
 
 // Convert a byte array into an hex string.
@@ -743,22 +780,23 @@ BaseRemoteGDB::recv(std::vector<char>& bp)
     DPRINTF(GDBRecv, "recv:  %s\n", bp.data());
 }
 
-// Send a packet to gdb
+// Send a packet with the given length to gdb
 void
-BaseRemoteGDB::send(const char *bp)
+BaseRemoteGDB::sendBinary(const char *data, size_t len)
 {
-    const char *p;
     uint8_t csum, c;
 
-    DPRINTF(GDBSend, "send:  %s\n", bp);
+    // The data may be binary, so escape it to keep the debug output readable.
+    DPRINTF(GDBSend, "send:  %s\n", escapeNonPrintable(data, len));
     //removing GDBBadP that could be waiting in the buffer
     while (try_getbyte(&c,0));
     do {
-        p = bp;
         // Start sending a packet
         putbyte(GDBStart);
         // Send the contents, and also keep a check sum.
-        for (csum = 0; (c = *p); p++) {
+        csum = 0;
+        for (size_t i = 0; i < len; i++) {
+            c = static_cast<uint8_t>(data[i]);
             putbyte(c);
             csum += c;
         }
@@ -1413,7 +1451,7 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 
     std::string encoded;
     encodeXferResponse(content, encoded, offset, length);
-    send(encoded);
+    sendBinary(encoded.data(), encoded.size());
     return true;
 }
 bool
