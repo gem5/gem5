@@ -2571,6 +2571,12 @@ RUNLTS::scheduleFeedback(Tick when)
 void
 RUNLTS::processFeedback()
 {
+    // Fetch updates take effect immediately, while decode and writeback
+    // updates are applied after their configured delays.
+    // When both are due, decode is processed first.
+    // Log-RBias restores its checkpoints on SquashDecided and ignores delayed
+    // decode events from squashed instructions, whereas Seq-RBias deliberately
+    // retains register values produced on the wrong path.
     while (!decodedEvents.empty() && decodedEvents.front().when <= curTick()) {
         const DecodeEvent &event = decodedEvents.front();
         threadState(event.tid).pred.decode(event.seqNum, event.staticInst);
