@@ -234,6 +234,7 @@ class JUnitTestSuites(XMLElement):
         state.Result.Errored: "errors",
         state.Result.Failed: "failures",
         state.Result.Passed: "tests",
+        state.Result.Skipped: "skipped",
     }
 
     def __init__(self, internal_results):
@@ -283,12 +284,19 @@ class JUnitTestCase(XMLElement):
     name = "testcase"
 
     def __init__(self, test_result):
+        # Fixture-avoided tests never enter the runner to acquire a timing.
+        elapsed = (
+            0
+            if test_result.result.value
+            in (state.Result.Skipped, state.Result.Errored)
+            else test_result.time["user_time"]
+        )
         self.attributes = [
             XMLAttribute("name", test_result.name),
             # TODO JUnit expects class of test.. add as test metadata.
             XMLAttribute("classname", str(test_result.uid)),
             XMLAttribute("status", str(test_result.result)),
-            XMLAttribute("time", str(test_result.time["user_time"])),
+            XMLAttribute("time", str(elapsed)),
         ]
 
         # TODO JUnit expects a message for the reason a test was
