@@ -359,14 +359,17 @@ void
 Plic::writeEnable(Register32& reg, const uint32_t& data,
     const int src32_id, const int context_id)
 {
-    uint32_t old_enabled = reg.get();
     uint32_t enabled = data;
     if (src32_id == 0) {
         enabled = (enabled & ~1);
     }
     reg.update(enabled);
 
-    claimedInt[src32_id] &= ~(old_enabled & ~reg.get());
+    uint32_t any_enabled = 0;
+    for (int c = 0; c < contextConfigs.size(); c++) {
+        any_enabled |= registers.enable[c][src32_id].get();
+    }
+    claimedInt[src32_id] &= any_enabled;
 
     for (int c = 0; c < contextConfigs.size(); c++) {
         for (int i = 0; i < 32; i++) {
