@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2012-2013, 2015, 2019-2021, 2023-2024 Arm Limited
  * Copyright (c) 2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2026 Google LLC
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -3370,8 +3371,14 @@ rseqFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> rseq_ptr,
          uint32_t rseq_len, int flags, uint32_t sig)
 {
     // 1 is RSEQ_FLAG_UNREGISTER
+    if (flags & ~1) {
+        return -EINVAL;
+    }
     if (flags & 1) {
         return 0;
+    }
+    if (!rseq_ptr || rseq_len < 2 * sizeof(uint32_t)) {
+        return -EINVAL;
     }
 
     // Register
