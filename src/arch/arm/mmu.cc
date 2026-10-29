@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2026 Google LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -354,7 +355,7 @@ MMU::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
 
     Process *p = tc->getProcessPtr();
     if (const auto pte = p->pTable->lookup(vaddr); !pte) {
-        return std::make_shared<GenericPageTableFault>(vaddr_tainted);
+        return std::make_shared<GenericPageTableFault>(vaddr);
     } else {
         req->setPaddr(pte->paddr + p->pTable->pageOffset(vaddr));
 
