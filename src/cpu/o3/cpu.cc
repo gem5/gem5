@@ -91,7 +91,7 @@ CPU::CPU(const BaseO3CPUParams &params)
       regFile(this, params.numPhysIntRegs, params.numPhysFloatRegs,
               params.numPhysVecRegs, params.numPhysVecPredRegs,
               params.numPhysMatRegs, params.numPhysCCRegs,
-              params.isa[0]->regClasses()),
+              params.numPhysRMiscRegs, params.isa[0]->regClasses()),
 
       freeList(name() + ".freelist", &regFile),
 
@@ -226,12 +226,21 @@ CPU::CPU(const BaseO3CPUParams &params)
             regClasses.at(CCRegClass)->numRegs() != 0,
             "Not enough physical registers, consider increasing "
             "numPhysCCRegs\n");
+    panic_if(params.numPhysRMiscRegs <=
+                     numThreads * regClasses.at(RMiscRegClass)->numRegs() &&
+                 regClasses.at(RMiscRegClass)->numRegs() != 0,
+             "Not enough physical registers, consider increasing "
+             "numPhysRMiscRegs\n");
 
     // Just make this a warning and go ahead anyway, to keep from having to
     // add checks everywhere.
     warn_if(regClasses.at(CCRegClass)->numRegs() == 0 &&
             params.numPhysCCRegs != 0,
             "Non-zero number of physical CC regs specified, even though\n"
+            "    ISA does not use them.");
+    warn_if(regClasses.at(RMiscRegClass)->numRegs() == 0 &&
+                params.numPhysRMiscRegs != 0,
+            "Non-zero number of physical RMisc regs specified, even though\n"
             "    ISA does not use them.");
 
     rename.setScoreboard(&scoreboard);
@@ -247,14 +256,18 @@ CPU::CPU(const BaseO3CPUParams &params)
     // Initialize rename map to assign physical registers to the
     // architectural registers for active threads only.
     for (ThreadID tid = 0; tid < active_threads; tid++) {
-        for (auto type = (RegClassType)0; type <= CCRegClass;
-                type = (RegClassType)(type + 1)) {
+        for (auto type = (RegClassType)0; type <= RMiscRegClass;
+             type = (RegClassType)(type + 1)) {
             for (auto &id: *regClasses.at(type)) {
                 // Note that we can't use the rename() method because we don't
                 // want special treatment for the zero register at this point
                 PhysRegIdPtr phys_reg = freeList.getReg(type);
                 renameMap[tid].setEntry(id, phys_reg);
                 commitRenameMap[tid].setEntry(id, phys_reg);
+                const RegVal init = isa[tid]->getInitialRegVal(id);
+                if (init) {
+                    regFile.setReg(phys_reg, init);
+                }
             }
         }
     }
@@ -978,6 +991,9 @@ CPU::getReg(PhysRegIdPtr phys_reg, ThreadID tid)
       case CCRegClass:
         executeStats[tid]->numCCRegReads++;
         break;
+      case RMiscRegClass:
+          executeStats[tid]->numRMiscRegReads++;
+          break;
       case VecRegClass:
       case VecElemClass:
         executeStats[tid]->numVecRegReads++;
@@ -1004,6 +1020,9 @@ CPU::getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid)
       case CCRegClass:
         executeStats[tid]->numCCRegReads++;
         break;
+      case RMiscRegClass:
+          executeStats[tid]->numRMiscRegReads++;
+          break;
       case VecRegClass:
       case VecElemClass:
         executeStats[tid]->numVecRegReads++;
@@ -1046,6 +1065,9 @@ CPU::setReg(PhysRegIdPtr phys_reg, RegVal val, ThreadID tid)
       case CCRegClass:
         executeStats[tid]->numCCRegWrites++;
         break;
+      case RMiscRegClass:
+          executeStats[tid]->numRMiscRegWrites++;
+          break;
       case VecRegClass:
       case VecElemClass:
         executeStats[tid]->numVecRegWrites++;
@@ -1072,6 +1094,9 @@ CPU::setReg(PhysRegIdPtr phys_reg, const void *val, ThreadID tid)
       case CCRegClass:
         executeStats[tid]->numCCRegWrites++;
         break;
+      case RMiscRegClass:
+          executeStats[tid]->numRMiscRegWrites++;
+          break;
       case VecRegClass:
       case VecElemClass:
         executeStats[tid]->numVecRegWrites++;

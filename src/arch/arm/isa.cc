@@ -84,6 +84,7 @@ namespace
 
 /* Not applicable to ARM */
 RegClass floatRegClass(FloatRegClass, FloatRegClassName, 0, debug::FloatRegs);
+RegClass rmiscRegClass(RMiscRegClass, RMiscRegClassName, 0, debug::FloatRegs);
 
 } // anonymous namespace
 
@@ -97,6 +98,7 @@ ISA::ISA(const Params &p) : BaseISA(p, "arm"), system(NULL),
     _regClasses.push_back(&vecPredRegClass);
     _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&rmiscRegClass);
     _regClasses.push_back(&miscRegClass);
 
     // Hook up a dummy device if we haven't been configured with a

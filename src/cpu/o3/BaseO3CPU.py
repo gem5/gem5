@@ -184,6 +184,10 @@ class BaseO3CPU(BaseCPU):
     numPhysMatRegs = Param.Unsigned(2, "Number of physical matrix registers")
     # most ISAs don't use condition-code regs, so default is 0
     numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
+    # most ISAs don't rename misc regs; RISC-V O3 sets this in RiscvCPU.py
+    numPhysRMiscRegs = Param.Unsigned(
+        0, "Number of physical renamed misc registers"
+    )
     instQueues = VectorParam.IQUnit(IQUnit(), "Vector of IQs")
     iqInsertionPolicy = Param.IQInsertionPolicy(
         "FirstMatch", "Policy for inserting instructions to IQs"

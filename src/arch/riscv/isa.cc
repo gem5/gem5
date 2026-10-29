@@ -47,6 +47,7 @@
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/renameable_misc.hh"
 #include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/system.hh"
 #include "base/bitfield.hh"
@@ -316,6 +317,7 @@ ISA::ISA(const Params &p)
     _regClasses.push_back(&vecPredRegClass);
     _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&rmiscRegClass);
     _regClasses.push_back(&miscRegClass);
 
     if (hasVectorExtension()) {
@@ -387,6 +389,16 @@ ISA::copyRegsFrom(ThreadContext *src)
 
     // Lastly copy PC/NPC
     tc->pcState(src->pcState());
+}
+
+RegVal
+ISA::getInitialRegVal(const RegId &id) const
+{
+    if (id.classValue() == RMiscRegClass &&
+        id.index() == rmisc_reg::_VtypeIdx) {
+        return VtypeReset;
+    }
+    return 0;
 }
 
 void ISA::clear()

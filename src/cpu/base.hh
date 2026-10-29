@@ -811,6 +811,10 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numCCRegReads;
         statistics::Scalar numCCRegWrites;
 
+        /* Number of renamed misc register file accesses */
+        statistics::Scalar numRMiscRegReads;
+        statistics::Scalar numRMiscRegWrites;
+
         /* number of float alu accesses */
         statistics::Scalar numFpAluAccesses;
 
