@@ -35,7 +35,9 @@
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/renameable_misc.hh"
 #include "arch/riscv/utility.hh"
+#include "base/logging.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 
@@ -80,6 +82,17 @@ class VConfOp : public RiscvStaticInst
     uint64_t uimm;
     uint32_t elen;
     uint32_t vlen;
+
+  public:
+    bool vtypeIsImm = false;
+    uint64_t earlyVtype = 0;
+
+    bool
+    isVectorConfig() const override
+    {
+        return true;
+    }
+    void commitHook(ThreadContext *tc, InstSeqNum seqNum) const override;
     VConfOp(const char *mnem, ExtMachInst _extMachInst,
             uint32_t _elen, uint32_t _vlen, OpClass __opClass)
         : RiscvStaticInst(mnem, _extMachInst, __opClass),
@@ -113,17 +126,33 @@ class VectorNonSplitInst : public RiscvStaticInst
   protected:
     uint32_t vl;
     uint8_t vtype;
+    int vmsrcIdx = -1;
+    int vlSrcIdx = -1;
     uint32_t elen;
     uint32_t vlen;
-    VectorNonSplitInst(const char* mnem, ExtMachInst _machInst,
-                   OpClass __opClass, uint32_t _elen, uint32_t _vlen)
+    VectorNonSplitInst(const char *mnem, ExtMachInst _machInst,
+                       OpClass __opClass, uint32_t _elen, uint32_t _vlen)
         : RiscvStaticInst(mnem, _machInst, __opClass),
-        vl(_machInst.vl),
-        vtype(_machInst.vtype8),
-        elen(_elen),
-        vlen(_vlen)
+          vl(vtype_VLMAX(_machInst.vtype8, _vlen)),
+          vtype(_machInst.vtype8),
+          elen(_elen),
+          vlen(_vlen)
     {
         this->flags[IsVector] = true;
+    }
+
+  public:
+    void
+    addVlSrc()
+    {
+        vlSrcIdx = _numSrcRegs;
+        setSrcRegIdx(_numSrcRegs++, VecRenamedVLReg);
+    }
+
+    uint32_t
+    readVl(ExecContext *xc) const
+    {
+        return static_cast<uint32_t>(xc->getRegOperand(this, vlSrcIdx));
     }
 
     std::string generateDisassembly(
@@ -144,17 +173,17 @@ class VectorMacroInst : public RiscvMacroInst
     const uint32_t sew;
     const float vflmul;
 
-    VectorMacroInst(const char* mnem, ExtMachInst _machInst,
-                   OpClass __opClass, uint32_t _elen, uint32_t _vlen)
+    VectorMacroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                    uint32_t _elen, uint32_t _vlen)
         : RiscvMacroInst(mnem, _machInst, __opClass),
-        vl(_machInst.vl),
-        vtype(_machInst.vtype8),
-        elen(_elen),
-        vlen(_vlen),
-        vsew(_machInst.vtype8.vsew),
-        vlmul(vtype_vlmul(_machInst.vtype8)),
-        sew((8 << vsew)),
-        vflmul(vlmul < 0 ? (1.0 / (1 << (-vlmul))) : (1 << vlmul))
+          vl(vtype_VLMAX(_machInst.vtype8, _vlen)),
+          vtype(_machInst.vtype8),
+          elen(_elen),
+          vlen(_vlen),
+          vsew(_machInst.vtype8.vsew),
+          vlmul(vtype_vlmul(_machInst.vtype8)),
+          sew((8 << vsew)),
+          vflmul(vlmul < 0 ? (1.0 / (1 << (-vlmul))) : (1 << vlmul))
     {
         this->flags[IsVector] = true;
     }
@@ -170,6 +199,9 @@ protected:
     uint32_t vlen;
     int oldDstIdx = -1;
     int vmsrcIdx = -1;
+    int vlSrcIdx = -1;
+    int fofDestIdx = -1;
+    bool vlIsMaskBits = false;
     const uint8_t vsew;
     const int8_t vlmul;
     const uint32_t sew;
@@ -189,6 +221,79 @@ protected:
         vflmul(vlmul < 0 ? (1.0 / (1 << (-vlmul))) : (1 << vlmul))
     {
         this->flags[IsVector] = true;
+    }
+
+  public:
+    void
+    setVlIsMaskBits()
+    {
+        vlIsMaskBits = true;
+    }
+
+    void
+    addVlSrc()
+    {
+        vlSrcIdx = _numSrcRegs;
+        setSrcRegIdx(_numSrcRegs++, VecRenamedVLReg);
+    }
+
+    void
+    addFofDest()
+    {
+        panic_if(microIdx >= MaxFofMicros, "fault-only-first micro index %u",
+                 microIdx);
+        fofDestIdx = _numDestRegs;
+        setDestRegIdx(_numDestRegs++,
+                      fofCountReg(static_cast<unsigned>(microIdx)));
+        _numTypedDestRegs[RMiscRegClass]++;
+    }
+
+    // Full slice unless this instruction already recorded a trim.
+    void
+    prepareFofSlice(ExecContext *xc, uint32_t slice) const
+    {
+        if (fofDestIdx < 0) {
+            return;
+        }
+        if (!xc->fofTrimmed()) {
+            xc->noteFofElems(slice, false);
+        }
+    }
+
+    void
+    writeFofCount(ExecContext *xc) const
+    {
+        if (fofDestIdx < 0) {
+            return;
+        }
+        RegVal packed = xc->fofElems();
+        if (xc->fofTrimmed()) {
+            packed |= FofTrimBit;
+        }
+        xc->setRegOperand(this, fofDestIdx, packed);
+        xc->clearFofRecord();
+    }
+
+    uint32_t
+    readVl(ExecContext *xc) const
+    {
+        return static_cast<uint32_t>(xc->getRegOperand(this, vlSrcIdx));
+    }
+
+    uint32_t
+    activeVl(ExecContext *xc) const
+    {
+        const uint32_t vl = readVl(xc);
+        if (vlIsMaskBits) {
+            const uint32_t bytes = (vl + 7) / 8;
+            return bytes < microVl ? bytes : microVl;
+        }
+        const uint64_t begin = static_cast<uint64_t>(microIdx) * microVl;
+        if (vl <= begin) {
+            return 0;
+        }
+        const uint64_t remain = static_cast<uint64_t>(vl) - begin;
+        return remain < microVl ? static_cast<uint32_t>(remain) : microVl;
     }
 };
 
@@ -398,19 +503,14 @@ class VseMacroInst : public VectorMemMacroInst
 
 class VleMicroInst : public VectorMicroInst
 {
-  public:
-    mutable bool trimVl;
-    mutable uint32_t faultIdx;
-
   protected:
     Request::Flags memAccessFlags;
 
-    VleMicroInst(const char *mnem, ExtMachInst _machInst,OpClass __opClass,
+    VleMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                  uint32_t _microVl, uint32_t _microIdx, uint32_t _elen,
                  uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
                           _elen, _vlen)
-        , trimVl(false), faultIdx(_microVl)
     {
         this->flags[IsLoad] = true;
     }
@@ -679,7 +779,7 @@ class VMvWholeMicroInst : public VectorArithMicroInst
 class VMaskMergeMicroInst : public VectorArithMicroInst
 {
   private:
-    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId srcRegIdxArr[NumVecInternalRegs + 1];
     RegId destRegIdxArr[1];
 
   public:
@@ -712,15 +812,14 @@ class VxsatMicroInst : public VectorArithMicroInst
 class VlFFTrimVlMicroOp : public VectorMicroInst
 {
   private:
-    RegId srcRegIdxArr[8];
-    RegId destRegIdxArr[0];
-    std::vector<StaticInstPtr>& microops;
+    RegId srcRegIdxArr[MaxFofMicros];
+    RegId destRegIdxArr[1];
+
+    uint32_t calcVl(ExecContext *xc) const;
 
   public:
     VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
-                      uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
-                      std::vector<StaticInstPtr>& _microops);
-    uint32_t calcVl() const;
+                      uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
     Fault execute(ExecContext *, trace::InstRecord *) const override;
     std::unique_ptr<PCStateBase> branchTarget(ThreadContext *) const override;
     std::string generateDisassembly(Addr, const loader::SymbolTable *)
@@ -744,17 +843,13 @@ class VlSegMicroInst : public VectorMicroInst
   protected:
     Request::Flags memAccessFlags;
     uint8_t regIdx;
-    mutable bool trimVl;
-    mutable uint32_t faultIdx;
 
-    VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
-                   OpClass __opClass, uint32_t _microVl,
-                   uint32_t _microIdx, uint32_t _numMicroops,
-                   uint32_t _field, uint32_t _numFields,
+    VlSegMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                   uint32_t _microVl, uint32_t _microIdx,
+                   uint32_t _numMicroops, uint32_t _field, uint32_t _numFields,
                    uint32_t _elen, uint32_t _vlen)
-        : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
-                          _microIdx, _elen, _vlen)
-        , trimVl(false), faultIdx(_microVl)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
+                          _elen, _vlen)
     {
       this->flags[IsLoad] = true;
     }
@@ -766,7 +861,7 @@ class VlSegMicroInst : public VectorMicroInst
 class VlSegDeIntrlvMicroInst : public VectorArithMicroInst
 {
   private:
-    RegId srcRegIdxArr[NumVecInternalRegs + 2];
+    RegId srcRegIdxArr[NumVecInternalRegs + 3];
     RegId destRegIdxArr[1];
     uint32_t numSrcs;
     uint32_t numMicroops;
@@ -823,7 +918,7 @@ class VsSegMicroInst : public VectorMicroInst
 class VsSegIntrlvMicroInst : public VectorArithMicroInst
 {
   private:
-    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId srcRegIdxArr[NumVecInternalRegs + 1];
     RegId destRegIdxArr[1];
     uint32_t numSrcs;
     uint32_t numMicroops;
@@ -847,8 +942,8 @@ class VsSegIntrlvMicroInst : public VectorArithMicroInst
 class VCpyVsMicroInst : public VectorArithMicroInst
 {
     private:
-        RegId srcRegIdxArr[1];
-        RegId destRegIdxArr[1];
+      RegId srcRegIdxArr[2];
+      RegId destRegIdxArr[1];
 
     public:
         VCpyVsMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
@@ -861,15 +956,16 @@ class VCpyVsMicroInst : public VectorArithMicroInst
 class VPinVdMicroInst : public VectorArithMicroInst
 {
     private:
-        RegId srcRegIdxArr[3];
-        RegId destRegIdxArr[1];
+      RegId srcRegIdxArr[4];
+      RegId destRegIdxArr[1];
 
-      public:
-        VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
-                        uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen);
-        Fault execute(ExecContext *, trace::InstRecord *) const override;
-        std::string generateDisassembly(
-                Addr pc, const loader::SymbolTable *symtab) const override;
+    public:
+      VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
+                      uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen);
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+      std::string
+      generateDisassembly(Addr pc,
+                          const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

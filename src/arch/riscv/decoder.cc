@@ -30,8 +30,10 @@
 #include "arch/riscv/decoder.hh"
 #include "arch/riscv/insts/zcmt.hh"
 #include "arch/riscv/isa.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/types.hh"
 #include "base/bitfield.hh"
+#include "cpu/thread_context.hh"
 #include "debug/Decode.hh"
 
 namespace gem5
@@ -57,7 +59,11 @@ void Decoder::reset()
     machInst = 0;
     emi = 0;
     jvtEntry = 0;
-    squashed = true;
+    // Also runs on faults and interrupts. A finished vset stays in
+    // machVtype. The spec stack is consumed by squashSpec.
+    pendingSpec = false;
+    pendingPublished = false;
+    vtypeReady = true;
 }
 
 void
@@ -121,11 +127,17 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
     DPRINTF(Decode, "Decoding instruction 0x%08x at address %#x\n",
             mach_inst.instBits, addr);
 
-    StaticInstPtr &si = instMap[mach_inst];
-    if (!si)
-        si = decodeInst(mach_inst);
+    auto it = instMap.find(mach_inst);
+    if (it != instMap.end()) {
+        it->second->size(compressed(mach_inst) ? 2 : 4);
+        DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
+                it->second->getName(), mach_inst);
+        return it->second;
+    }
 
+    StaticInstPtr si = decodeInst(mach_inst);
     si->size(compressed(mach_inst) ? 2 : 4);
+    instMap[mach_inst] = si;
 
     DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
             si->getName(), mach_inst);
@@ -153,23 +165,178 @@ Decoder::decode(PCStateBase &_next_pc)
         next_pc.compressed(false);
     }
 
-    if (GEM5_UNLIKELY(squashed || next_pc.new_vconf())) {
-        squashed = false;
-        next_pc.new_vconf(false);
-        vl = next_pc.vl();
-        vtype = next_pc.vtype();
-    } else {
-        next_pc.vl(vl);
-        next_pc.vtype(vtype);
-    }
-
-    emi.vl      = vl;
-    emi.vtype8  = vtype & 0xff;
-    emi.vill    = vtype.vill;
+    pendingSpec = false;
+    pendingPublished = false;
+    const VTYPE before = machVtype;
+    emi.vtype8 = machVtype & 0xff;
+    emi.vill = machVtype.vill;
     emi.rv_type = static_cast<int>(next_pc.rvType());
     emi.has_zcd = _hasZcd;
 
-    return decode(emi, next_pc.instAddr());
+    StaticInstPtr inst = decode(emi, next_pc.instAddr());
+    if (inst->isVectorConfig()) {
+        auto *vset = static_cast<VConfOp *>(inst.get());
+        pendingSpec = true;
+        pendingPrev = before;
+        if (vset->vtypeIsImm) {
+            pendingPublished = true;
+            pendingValue = legalizeVtype(vset->earlyVtype);
+            setVtype(pendingValue);
+            releaseFetch();
+        } else {
+            vtypeReady = false;
+        }
+    }
+    return inst;
+}
+
+VTYPE
+Decoder::legalizeVtype(RegVal requested) const
+{
+    VTYPE new_vtype = requested;
+    const float vflmul = getVflmul(new_vtype.vlmul);
+    const uint32_t sew = getSew(new_vtype.vsew);
+    const bool vill = !(vflmul >= 0.125f && vflmul <= 8.0f) ||
+                      static_cast<float>(sew) >
+                          std::min(vflmul, 1.0f) * static_cast<float>(elen) ||
+                      bits(requested, 62, 8) != 0;
+    if (vill) {
+        new_vtype = 0;
+        new_vtype.vill = 1;
+    }
+    return new_vtype;
+}
+
+void
+Decoder::setVtype(RegVal vtype)
+{
+    machVtype = vtype;
+}
+
+void
+Decoder::installYoungestPublished()
+{
+    for (auto it = specStack.rbegin(); it != specStack.rend(); ++it) {
+        if (!it->published) {
+            continue;
+        }
+        machVtype = it->value;
+        return;
+    }
+    if (!specStack.empty()) {
+        machVtype = specStack.front().prev;
+    }
+}
+
+void
+Decoder::dropSuperseded()
+{
+    bool keep = false;
+    for (size_t i = specStack.size(); i-- > 0;) {
+        if (!specStack[i].published) {
+            continue;
+        }
+        if (!keep) {
+            keep = true;
+            continue;
+        }
+        specStack.erase(specStack.begin() + i);
+    }
+}
+
+void
+Decoder::publishExecuted(ThreadContext *tc, InstSeqNum seq, RegVal vtype,
+                         uint32_t vl)
+{
+    for (auto &entry : specStack) {
+        if (entry.seq != seq) {
+            continue;
+        }
+        entry.published = true;
+        entry.value = vtype;
+        // Defer architectural CSR writes until commit so a squashed
+        // wrong-path vset cannot pollute vl/vtype (see commitVtype).
+        pendingCsrWrites[seq] = {vl, static_cast<RegVal>(vtype)};
+        installYoungestPublished();
+        dropSuperseded();
+        return;
+    }
+    // Atomic/Timing: no decode-time spec stack entry; execute commits.
+    setVtype(vtype);
+    // Write via ISA to avoid O3 ThreadContext::conditionalSquash.
+    tc->getIsaPtr()->setMiscReg(MISCREG_VL, vl);
+    tc->getIsaPtr()->setMiscReg(MISCREG_VTYPE, static_cast<RegVal>(vtype));
+}
+
+void
+Decoder::noteDecodedSeq(InstSeqNum seq)
+{
+    if (!pendingSpec) {
+        return;
+    }
+    specStack.push_back({seq, pendingPrev, pendingPublished, pendingValue});
+    pendingSpec = false;
+    pendingPublished = false;
+}
+
+void
+Decoder::squashSpec(InstSeqNum seq)
+{
+    if (pendingSpec) {
+        machVtype = pendingPrev;
+        pendingSpec = false;
+    }
+    while (!specStack.empty() && specStack.back().seq > seq) {
+        machVtype = specStack.back().prev;
+        specStack.pop_back();
+    }
+    for (auto it = pendingCsrWrites.begin(); it != pendingCsrWrites.end();) {
+        if (it->first > seq) {
+            it = pendingCsrWrites.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    vtypeReady = true;
+}
+
+void
+Decoder::discardSpec(ThreadContext *tc)
+{
+    pendingSpec = false;
+    pendingPublished = false;
+    specStack.clear();
+    pendingCsrWrites.clear();
+    // Resync decode vtype from the committed CSR (also used after cpt
+    // restore when machVtype was not serialized).
+    setVtype(tc->readMiscReg(MISCREG_VTYPE));
+    releaseFetch();
+}
+
+void
+Decoder::commitVtype(ThreadContext *tc, InstSeqNum seq)
+{
+    RegVal vtype = machVtype;
+    auto it = pendingCsrWrites.find(seq);
+    if (it != pendingCsrWrites.end()) {
+        // Architectural update happens only for instructions that commit.
+        // Use ISA::setMiscReg: O3's ThreadContext::setMiscReg would call
+        // conditionalSquash() mid-commit and trip commit asserts.
+        tc->getIsaPtr()->setMiscReg(MISCREG_VL, it->second.vl);
+        tc->getIsaPtr()->setMiscReg(MISCREG_VTYPE, it->second.vtype);
+        vtype = it->second.vtype;
+        pendingCsrWrites.erase(it);
+    }
+
+    while (!specStack.empty() && specStack.front().seq <= seq) {
+        specStack.erase(specStack.begin());
+    }
+    // A younger register vset may still be waiting on its source.
+    // Fetch stays stalled until that vset executes.
+    if (specStack.empty()) {
+        setVtype(vtype);
+        releaseFetch();
+    }
 }
 
 } // namespace RiscvISA

@@ -53,7 +53,8 @@ let {{
         zero_fill = '' if is_up else 'else { Vd_vu[i] = 0; }'
 
         return '''
-            for (uint32_t i=0; i < microVl; i++) {
+            const uint32_t active_vl = this->activeVl(xc);
+            for (uint32_t i=0; i < active_vl; i++) {
                 uint32_t vd_elem_idx = i + microIdx*micro_vlmax;
                 if (!machInst.vm && !elem_mask(v0, vd_elem_idx)) {
                     continue;
@@ -112,14 +113,17 @@ let {{
             + setSrcRegCode \
             + "}\n"
     def setSrcVm():
-        return "if (!this->vm)\n" + \
-               "    setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);"
+        # v0's index; renamed vl is appended after it.
+        return "if (!this->vm) {\n" + \
+               "    vmsrcIdx = _numSrcRegs;\n" + \
+               "    setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);\n" + \
+               "}\n"
     def vmDeclAndReadData():
         return '''
             [[maybe_unused]] RiscvISA::vreg_t tmp_v0;
             [[maybe_unused]] uint8_t* v0;
             if(!machInst.vm) {
-                xc->getRegOperand(this, _numSrcRegs-1, &tmp_v0);
+                xc->getRegOperand(this, vmsrcIdx, &tmp_v0);
                 v0 = tmp_v0.as<uint8_t>();
             }
         '''
@@ -129,9 +133,10 @@ let {{
         return 'COPY_OLD_VD_IF_VL(%d);' % vd_idx
     def loopWrapper(code, micro_inst = True):
         if micro_inst:
-            upper_bound = "this->microVl"
+            # Dynamic vl, not the decode-time capacity stored in microVl.
+            upper_bound = "this->activeVl(xc)"
         else:
-            upper_bound = "(uint32_t)machInst.vl"
+            upper_bound = "this->readVl(xc)"
         return '''
             for (uint32_t i = 0; i < %s; i++) {
                 %s
@@ -424,7 +429,9 @@ def format VectorCompressFormat(code, category, *flags) {{
     set_src_reg_idx += """
 {
             const uint32_t elems_per_reg = (vlen / 8) / sizeof(ElemType);
-            const uint32_t num_vs2_regs = (_machInst.vl + elems_per_reg - 1) / elems_per_reg;
+            const uint32_t num_vs2_regs =
+                (vtype_VLMAX(_machInst.vtype8, vlen) + elems_per_reg - 1) /
+                elems_per_reg;
             for (uint32_t g = 0; g < num_vs2_regs; g++)
                 setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + g]);
         }
@@ -1528,10 +1535,11 @@ def format VectorReduceFormat(code, category, *flags) {{
     )
 
     get_vs2_regs = '''
-        uint32_t num_elems = this->microVl;
+        uint32_t num_elems = this->activeVl(xc);
         uint32_t elems_per_reg = vtype_VLMAX(vtype, vlen, true);
         uint32_t num_vs2_regs = (num_elems+elems_per_reg-1) / elems_per_reg;
     ''' + getRegOperandGroup("vs2_regs", "num_vs2_regs", "1")
+    code = "if (num_elems != 0) {\n" + code + "\n}\n"
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
@@ -1682,9 +1690,17 @@ def format VectorSlideFormat(category, *flags) {{
         '''
 
     if is_slide1:
-        guard = "isFirstMicroop()" if is_up else "isLastMicroop()"
-        mask_idx = "0" if is_up else "microIdx*micro_vlmax + microVl-1"
-        elem_idx = "0" if is_up else "microVl-1"
+        # Insert at 0, or at vl-1 if that is not the last micro-op.
+        if is_up:
+            guard = "active_vl > 0 && isFirstMicroop()"
+            mask_idx = "0"
+            elem_idx = "0"
+        else:
+            guard = ("active_vl > 0 && "
+                     "static_cast<uint64_t>(microIdx) * microVl + "
+                     "active_vl == this->readVl(xc)")
+            mask_idx = "microIdx * microVl + active_vl - 1"
+            elem_idx = "active_vl - 1"
         scalar = "Fs1_bits" if is_vf else "Rs1_vu"
         scalar_inject = '''
             if (%s) {

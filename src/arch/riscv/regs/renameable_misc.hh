@@ -38,6 +38,11 @@ namespace gem5
 namespace RiscvISA
 {
 
+// One renamed count per vleff micro-op. EMUL is at most 8.
+inline constexpr unsigned MaxFofMicros = 8;
+// Bit 32: this slice faulted; the trim stops after it.
+inline constexpr RegVal FofTrimBit = 1ULL << 32;
+
 namespace rmisc_reg
 {
 
@@ -45,7 +50,8 @@ enum : RegIndex
 {
     _VlIdx,
     _VtypeIdx,
-    NumRegs
+    _FofIdx0,
+    NumRegs = _FofIdx0 + MaxFofMicros
 };
 
 } // namespace rmisc_reg
@@ -55,6 +61,13 @@ inline constexpr RegClass rmiscRegClass(RMiscRegClass, RMiscRegClassName,
 
 inline constexpr RegId VecRenamedVLReg(rmiscRegClass, rmisc_reg::_VlIdx);
 inline constexpr RegId VecRenamedVTYPEReg(rmiscRegClass, rmisc_reg::_VtypeIdx);
+
+inline RegId
+fofCountReg(unsigned micro)
+{
+    return RegId(rmiscRegClass,
+                 static_cast<RegIndex>(rmisc_reg::_FofIdx0 + micro));
+}
 
 // vtype.vill at reset.
 inline constexpr RegVal VtypeReset = 1ULL << 63;

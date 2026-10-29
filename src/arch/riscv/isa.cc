@@ -406,6 +406,8 @@ void ISA::clear()
     std::fill(miscRegFile.begin(), miscRegFile.end(), 0);
 
     miscRegFile[MISCREG_PRV] = PRV_M;
+    miscRegFile[MISCREG_VTYPE] = VtypeReset;
+    miscRegFile[MISCREG_VL] = 0;
     miscRegFile[MISCREG_VENDORID] = 0;
     miscRegFile[MISCREG_ARCHID] = 0;
     miscRegFile[MISCREG_IMPID] = 0;
@@ -698,17 +700,7 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_VLENB:
         {
             return getVecLenInBytes();
-        }
-      case MISCREG_VTYPE:
-        {
-            auto rpc = tc->pcState().as<PCState>();
-            return rpc.vtype();
-        }
-      case MISCREG_VL:
-        {
-            auto rpc = tc->pcState().as<PCState>();
-            return (RegVal)rpc.vl();
-        }
+      }
       case MISCREG_VCSR:
         {
             return readMiscRegNoEffect(MISCREG_VXSAT) |

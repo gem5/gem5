@@ -1023,6 +1023,8 @@ Commit::commitInsts()
 
                 // Updates misc. registers.
                 head_inst->updateMiscRegs();
+                head_inst->staticInst->commitHook(head_inst->tcBase(),
+                                                  head_inst->seqNum);
                 if (head_inst->numDestRegs(MiscRegClass)) {
                     iewStage->wakeCommittedMiscRegDependents(head_inst);
                 }
