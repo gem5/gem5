@@ -65,7 +65,9 @@ class TimingThreadBridge(ClockedObject):
     delay = Param.Cycles(
         0,
         "Cross-queue delivery latency in cycles. Must be >= "
-        "ceil(sim_quantum / clock_period) for cross-queue edges",
+        "ceil(sim_quantum / clock_period) when peer_queue differs from "
+        "this object's eventq_index; zero is only valid for a same-queue "
+        "bridge. Enforced in init().",
     )
     req_size = Param.Unsigned(16, "Request FIFO depth on the request side")
     resp_size = Param.Unsigned(16, "Response FIFO depth on the response side")

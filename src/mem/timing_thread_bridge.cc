@@ -67,6 +67,23 @@ TimingThreadBridge::init()
         fatal("Both ports of a TimingThreadBridge must be connected.\n");
     }
 
+    const uint32_t ownQueue = params().eventq_index;
+
+    if (peerQueueIdx == ownQueue) {
+        warn("%s: peer_queue (%d) equals this object's eventq_index; the "
+             "bridge provides no EventQueue isolation.\n",
+             name(), peerQueueIdx);
+    } else {
+        const Tick crossDelay = delay * clockPeriod();
+        fatal_if(crossDelay < simQuantum,
+                 "%s: delay (%llu cycles = %llu ticks) is shorter than the "
+                 "simulation quantum (%llu ticks) for a cross-queue "
+                 "boundary.\n",
+                 name(), (unsigned long long)delay,
+                 (unsigned long long)crossDelay,
+                 (unsigned long long)simQuantum);
+    }
+
     inPort.sendRangeChange();
 }
 
