@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_FLAT__FLAT_LOAD_UBYTE class methods ---
@@ -2945,4 +2948,5 @@ Inst_FLAT__FLAT_LOAD_LDS_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
     ldsComplete<4>(gpuDynInst);
 } // completeAcc
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

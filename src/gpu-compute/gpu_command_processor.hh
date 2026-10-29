@@ -46,7 +46,6 @@
 #include <cstdint>
 #include <functional>
 
-#include "arch/amdgpu/vega/gpu_registers.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
@@ -171,7 +170,7 @@ class GPUCommandProcessor : public DmaVirtDevice
     GPUDispatcher &dispatcher;
     GPUComputeDriver *_driver;
     AMDGPUDevice *gpuDevice;
-    VegaISA::Walker *walker;
+    AMDGPU::Walker *walker;
 
     // Typedefing dmaRead and dmaWrite function pointer
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event *, uint8_t *, Tick);
@@ -252,7 +251,7 @@ class GPUCommandProcessor : public DmaVirtDevice
          *  the signal is reset we should check that the runtime was
          *  successful and then proceed to launch the kernel.
          */
-        if ((task->privMemPerItem() * VegaISA::NumVecElemPerVecReg) >
+        if ((task->privMemPerItem() * task->waveSize()) >
             task->amdQueue.compute_tmpring_size_wavesize * 1024) {
             // TODO: Raising this signal will potentially nuke scratch
             // space for in-flight kernels that were launched from this

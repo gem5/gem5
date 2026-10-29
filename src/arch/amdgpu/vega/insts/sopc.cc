@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_SOPC__S_CMP_EQ_I32 class methods ---
@@ -574,4 +577,5 @@ Inst_SOPC__S_CMP_LG_U64::execute(GPUDynInstPtr gpuDynInst)
     scc.write();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_VOP3__V_CMP_CLASS_F32 class methods ---
@@ -8149,4 +8152,5 @@ Inst_VOP3__V_CMPX_T_U64::execute(GPUDynInstPtr gpuDynInst)
     sdst.write();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

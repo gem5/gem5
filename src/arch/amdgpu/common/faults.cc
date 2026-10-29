@@ -29,18 +29,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
-#define __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
+#include "arch/amdgpu/common/faults.hh"
 
-#include "base/types.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
-const Addr PageShift = 12;
-const Addr PageBytes = 1ULL << PageShift;
-} // namespace VegaISA
-} // namespace gem5
 
-#endif // __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
+void
+VegaFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    // Currently only Vega10 is supported, which is not using XNACK on
+    // translation error. On hardware the process would be killed. Emulate
+    // that behavior in gem5 by exiting simulation.
+    panic("Vega translation resulted in page fault!");
+}
+
+} // namespace AMDGPU
+} // namespace gem5
