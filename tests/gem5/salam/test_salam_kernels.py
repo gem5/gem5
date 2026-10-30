@@ -925,7 +925,7 @@ for lockstep in (False, True):
 
 
 # Latency comes from CycleCounts (and workload overrides) only. The
-# profile's descriptive fields do not change it: with all of them set
+# unit's descriptive cycles/stages do not change it: with both set
 # to 9, the multiplies still take the default 1 cycle.
 kernel_suite(
     "salam-kernel-fu-descriptive-fields",
@@ -935,8 +935,6 @@ kernel_suite(
     fs_args=[
         f"--param={MULTIPLIER}.cycles=9",
         f"--param={MULTIPLIER}.stages=9",
-        f"--param={INST_CONFIG}.mul.runtime_cycles=9",
-        f"--param={INST_CONFIG}.mul.functional_unit_limit=9",
     ],
     ir_patterns=[r"(?s)(= mul i32 .*){3}"],
     simout_counts=[("runtime", r"^\s*Compute passes:\s+5$", 1)],
@@ -983,7 +981,9 @@ def characterize_bitwise(profile):
     ]:
         raise AssertionError("bitwise profile ownership aliases changed")
     unit["parameters"]["limit"] = 1
-    unit["power_model"]["characterization"] = "synthetic-ppa.json"
+    unit.setdefault("power_model", {})[
+        "characterization"
+    ] = "synthetic-ppa.json"
     with open(path, "w") as stream:
         yaml.safe_dump(document, stream, sort_keys=False)
 

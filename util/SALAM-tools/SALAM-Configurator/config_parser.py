@@ -723,11 +723,11 @@ def _cycle_counts(hw_config, profile_name, source):
         raise CycleCountError(
             source, profile_name, "profile is not a null or instruction map"
         )
-    cycles = {}
-    for name, spec in node["instructions"].items():
-        if isinstance(spec, dict) and "runtime_cycles" in spec:
-            cycles[name] = spec["runtime_cycles"]
-    return cycles
+    workload_config.validate_hw_config({profile_name: node}, source)
+    return {
+        name: spec["runtime_cycles"]
+        for name, spec in node["instructions"].items()
+    }
 
 
 def _load_external_hw_config(path, source=None):

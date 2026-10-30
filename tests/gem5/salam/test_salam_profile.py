@@ -36,8 +36,6 @@ import salam_testlib as st
 import yaml
 from testlib import *
 
-# inst_list.yml entries whose opcode_num is not an LLVM opcode.
-SENTINELS = {"fmuladd": 99}
 # inst_list.yml names that differ from the Instruction.def names.
 ALIASES = {"gep": "getelementptr"}
 
@@ -59,11 +57,8 @@ def check_opcodes(params):
         instructions = yaml.safe_load(f)["instructions"]
     wrong = []
     for name, entry in instructions.items():
-        if name in SENTINELS:
-            expected = SENTINELS[name]
-        else:
-            llvm = ALIASES.get(name, name.removesuffix("_inst"))
-            expected = opcodes.get(llvm)
+        llvm = ALIASES.get(name, name.removesuffix("_inst"))
+        expected = opcodes.get(llvm)
         if entry["opcode_num"] != expected:
             wrong.append((name, entry["opcode_num"], expected))
     if wrong:

@@ -151,13 +151,13 @@ CYCLE_COUNT_PARAMS = frozenset(
         "frem",
     )
 )
-# Fields of an hw_config instruction entry. Only runtime_cycles is read;
-# the others follow the inst_list.yml format.
-_INSTRUCTION_ENTRY_KEYS = {
-    "runtime_cycles",
-    "functional_unit",
-    "functional_unit_limit",
-    "opcode_num",
+# Workloads override execution latency; mappings and limits belong to the
+# selected build profile.
+_INSTRUCTION_ENTRY_KEYS = {"runtime_cycles"}
+_OBSOLETE_INSTRUCTION_ENTRY_KEYS = {
+    "functional_unit": "set functional_unit in the build instruction profile",
+    "functional_unit_limit": "set limit in the functional-unit profile",
+    "opcode_num": "set opcode_num in the build instruction profile",
 }
 _UINT32_MAX = (1 << 32) - 1
 # Load and store latency comes from the memory system, not CycleCounts.
@@ -994,6 +994,16 @@ def _validate_instruction_entry(name, entry, config_path, scope):
             f"instruction {name!r} must be a mapping",
         )
     for field in entry:
+        if field in _OBSOLETE_INSTRUCTION_ENTRY_KEYS:
+            raise WorkloadConfigError(
+                config_path,
+                scope,
+                field,
+                entry[field],
+                f"obsolete field {field!r} on instruction {name!r}; "
+                + _OBSOLETE_INSTRUCTION_ENTRY_KEYS[field]
+                + "; workload entries accept only runtime_cycles",
+            )
         if field not in _INSTRUCTION_ENTRY_KEYS:
             raise WorkloadConfigError(
                 config_path,

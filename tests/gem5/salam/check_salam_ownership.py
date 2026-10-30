@@ -52,28 +52,14 @@ STRING_FIELDS = {
     "fp_sign",
     "ptr_size",
     "ptr_sign",
-    "power_units",
-    "energy_units",
-    "time_units",
-    "area_units",
 }
-FLOAT_FIELDS = {
-    "internal_power",
-    "switch_power",
-    "dynamic_power",
-    "dynamic_energy",
-    "leakage_power",
-    "area",
-    "path_delay",
-}
+
 BOOL_FIELDS = {"int_apmode", "fp_apmode", "ptr_apmode"}
 
 
 def parameter_value(name, value):
     if name in STRING_FIELDS:
         return "String", str(value)
-    if name in FLOAT_FIELDS:
-        return "Float", float(value)
     if name in BOOL_FIELDS:
         assert isinstance(value, bool), (name, value)
         return "Bool", value
@@ -167,6 +153,35 @@ def check_profile(expected):
         if isinstance(cls, type) and cls.__module__ in modules
     }
     assert registered == classes, (registered, classes)
+    obsolete = (
+        (
+            FunctionalUnit,
+            (
+                "power_units",
+                "energy_units",
+                "time_units",
+                "area_units",
+                "fu_latency",
+                "internal_power",
+                "switch_power",
+                "dynamic_power",
+                "dynamic_energy",
+                "leakage_power",
+                "area",
+                "path_delay",
+            ),
+        ),
+        (InstructionConfig, ("runtime_cycles", "functional_unit_limit")),
+    )
+    for entry_class, fields in obsolete:
+        assert not set(fields) & set(entry_class._params.keys())
+        for field in fields:
+            try:
+                entry_class(**{field: 0})
+            except AttributeError as error:
+                assert field in str(error), str(error)
+            else:
+                raise AssertionError("accepted obsolete parameter " + field)
     assert _salam_profile.PROFILE_PATH == expected["profile"]
     assert (
         json_value(_salam_profile.FUNCTIONAL_UNITS)
@@ -193,7 +208,7 @@ def check_profile(expected):
             InstructionConfig,
             "inst_list",
             "instructions",
-            "runtime_cycles",
+            "opcode_num",
         ),
     )
     for cls, entry_cls, vector_name, key, _field in collections:

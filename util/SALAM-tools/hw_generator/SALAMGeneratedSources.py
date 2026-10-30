@@ -101,18 +101,6 @@ class FunctionalUnit:
     limit: object
     initiation_interval: object
     instruction_names: tuple
-    power_units: object
-    energy_units: object
-    time_units: object
-    area_units: object
-    fu_latency: object
-    internal_power: object
-    switch_power: object
-    dynamic_power: object
-    dynamic_energy: object
-    leakage_power: object
-    area: object
-    path_delay: object
     characterization: dict
     characterization_path: str | None
 
@@ -122,9 +110,7 @@ class Instruction:
 
     name: str
     functional_unit: object
-    functional_unit_limit: object
     opcode_num: object
-    runtime_cycles: object
 
 
 @dataclass(frozen=True)
@@ -253,13 +239,31 @@ def load_generated_sources(spec):
             raise SourceConfigError(
                 "malformed instruction " + name + " in " + spec.instructions
             )
+        obsolete = sorted(set(entry) & _OBSOLETE_INSTRUCTION_FIELDS)
+        if obsolete:
+            raise SourceConfigError(
+                spec.instructions
+                + ": instructions."
+                + name
+                + ": obsolete field(s) "
+                + ", ".join(obsolete)
+                + "; use CycleCounts or workload runtime_cycles for latency"
+                + " and limit in the functional-unit profile for instance counts"
+            )
+        unknown = sorted(set(entry) - set(_INSTRUCTION_FIELDS), key=str)
+        if unknown:
+            raise SourceConfigError(
+                spec.instructions
+                + ": instructions."
+                + name
+                + ": unknown field(s) "
+                + ", ".join(str(field) for field in unknown)
+            )
         instructions.append(
             Instruction(
                 name=name,
                 functional_unit=entry.get("functional_unit"),
-                functional_unit_limit=entry.get("functional_unit_limit", 0),
                 opcode_num=_require_field(entry, "opcode_num", name),
-                runtime_cycles=_require_field(entry, "runtime_cycles", name),
             )
         )
     return GeneratedSources(
@@ -286,24 +290,26 @@ _FU_FIELDS = (
     "ptr_apmode",
     "limit",
     "initiation_interval",
-    "power_units",
-    "energy_units",
-    "time_units",
-    "area_units",
-    "fu_latency",
-    "internal_power",
-    "switch_power",
-    "dynamic_power",
-    "dynamic_energy",
-    "leakage_power",
-    "area",
-    "path_delay",
 )
 _INSTRUCTION_FIELDS = (
     "functional_unit",
-    "functional_unit_limit",
     "opcode_num",
-    "runtime_cycles",
+)
+_OBSOLETE_INSTRUCTION_FIELDS = frozenset(
+    ("functional_unit_limit", "runtime_cycles")
+)
+_OBSOLETE_POWER_FIELDS = frozenset(
+    (
+        "units",
+        "latency",
+        "internal_power",
+        "switch_power",
+        "dynamic_power",
+        "dynamic_energy",
+        "leakage_power",
+        "area",
+        "path_delay",
+    )
 )
 
 
@@ -403,11 +409,35 @@ def _load_functional_unit(fu_dir, alias):
     with open(path, encoding="utf-8") as handle:
         document = _load_yaml(handle.read(), path)
     try:
-        params = document["functional_unit"]["parameters"]
-        power = document["functional_unit"]["power_model"]
-        units = power["units"]
-    except (TypeError, KeyError) as exc:
+        unit = document["functional_unit"]
+        params = unit["parameters"]
+        power = unit.get("power_model", {})
+    except (TypeError, KeyError, AttributeError) as exc:
         raise SourceConfigError("malformed FU YAML: " + path) from exc
+    if not isinstance(params, dict):
+        raise SourceConfigError(
+            "malformed functional_unit.parameters in " + path
+        )
+    if not isinstance(power, dict):
+        raise SourceConfigError(
+            "functional_unit.power_model must be a mapping in " + path
+        )
+    obsolete = sorted(set(power) & _OBSOLETE_POWER_FIELDS)
+    if obsolete:
+        raise SourceConfigError(
+            path
+            + ": functional_unit.power_model: obsolete field(s) "
+            + ", ".join(obsolete)
+            + "; remove legacy values and use power_model.characterization"
+            + " for offline PPA records"
+        )
+    unknown_power = sorted(set(power) - {"characterization"}, key=str)
+    if unknown_power:
+        raise SourceConfigError(
+            path
+            + ": functional_unit.power_model: unknown field(s) "
+            + ", ".join(str(field) for field in unknown_power)
+        )
     declared = params.get("alias")
     if declared != alias:
         raise SourceConfigError(
@@ -484,18 +514,6 @@ def _load_functional_unit(fu_dir, alias):
         limit=params.get("limit"),
         initiation_interval=initiation_interval,
         instruction_names=tuple(instruction_names),
-        power_units=units.get("power"),
-        energy_units=units.get("energy"),
-        time_units=units.get("time"),
-        area_units=units.get("area"),
-        fu_latency=power.get("latency"),
-        internal_power=power.get("internal_power"),
-        switch_power=power.get("switch_power"),
-        dynamic_power=power.get("dynamic_power"),
-        dynamic_energy=power.get("dynamic_energy"),
-        leakage_power=power.get("leakage_power"),
-        area=power.get("area"),
-        path_delay=power.get("path_delay"),
         characterization=characterization,
         characterization_path=characterization_path,
     )

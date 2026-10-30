@@ -237,7 +237,6 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                 "        instructions:",
                 "            fadd:",
                 "                runtime_cycles: 7",
-                "                functional_unit: 6",
             ]
         )
         self.assertEqual(self.counts()["kernel"], {"fadd": 7})
@@ -249,7 +248,7 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
             "hw_config:",
             "    k:",
             "        instructions:",
-            f"            {name}:",
+            f"            {name}:" + (" {}" if not fields else ""),
         ] + [f"                {field}" for field in fields]
 
     def test_rejects_invalid_instruction_entries(self):
@@ -263,7 +262,7 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                 self._entry("add", "runtime_cycles: 4294967296"),
                 "must be an integer",
             ),
-            (self._entry("add", "opcode_num: 13"), "has no runtime_cycles"),
+            (self._entry("add"), "has no runtime_cycles"),
             (
                 self._entry("add", "runtime_cycles: 1", "latency: 2"),
                 "unknown field 'latency'",
@@ -296,6 +295,43 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
         for hw_config, message in cases:
             with self.subTest(message=message, hw_config=hw_config):
                 self.rejects(message, hw_config=hw_config)
+
+    def test_rejects_obsolete_workload_instruction_fields(self):
+        for field, destination in (
+            ("functional_unit", "build instruction profile"),
+            ("functional_unit_limit", "functional-unit profile"),
+            ("opcode_num", "build instruction profile"),
+        ):
+            for value in (0, 9):
+                with self.subTest(field=field, value=value):
+                    error = self.rejects(
+                        f"obsolete field '{field}'",
+                        hw_config=self._entry(
+                            "add", "runtime_cycles: 3", f"{field}: {value}"
+                        ),
+                    )
+                    self.assertIn(destination, str(error))
+                    self.assertIn("only runtime_cycles", str(error))
+                    with self.assertRaisesRegex(
+                        workload_config.WorkloadConfigError,
+                        f"obsolete field '{field}'",
+                    ):
+                        config_parser.resolve_cycle_counts(
+                            {
+                                "hw_config": {
+                                    "k": {
+                                        "instructions": {
+                                            "add": {
+                                                "runtime_cycles": 3,
+                                                field: value,
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "inline.yml",
+                            "k",
+                        )
 
     def test_rejects_memory_instruction_latency(self):
         for name in ("load", "store"):

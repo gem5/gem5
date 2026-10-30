@@ -56,9 +56,6 @@ class InstructionConfig(SimObject):
         "Functional unit identifier; zero is unbound"
     )
     opcode_num = Param.UInt32("LLVM instruction opcode")
-    # Retained metadata; these fields do not select scheduling policy.
-    functional_unit_limit = Param.UInt32("Descriptive instruction unit limit")
-    runtime_cycles = Param.UInt32("Descriptive latency; use CycleCounts")
 
 
 class InstConfig(SimObject):

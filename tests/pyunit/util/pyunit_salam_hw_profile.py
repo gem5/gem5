@@ -95,7 +95,7 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         )
         with open(path) as handle:
             document = yaml.safe_load(handle)
-        document["functional_unit"]["power_model"][
+        document["functional_unit"].setdefault("power_model", {})[
             "characterization"
         ] = filename
         with open(path, "w") as handle:
@@ -342,6 +342,139 @@ class FunctionalUnitFieldTest(unittest.TestCase):
     def test_missing_characterization_reference_is_not_ignored(self):
         self.bind_characterization("integer_adder", "missing.yml")
         with self.assertRaisesRegex(g.SourceConfigError, "missing.yml"):
+            self.load()
+
+    def test_default_profile_omits_inactive_configuration_fields(self):
+        model = self.load()
+        data = self.generated_data(model)
+        for _alias, parameters in data["FUNCTIONAL_UNITS"]:
+            self.assertEqual(
+                set(parameters),
+                {
+                    "alias",
+                    "stages",
+                    "cycles",
+                    "enum_value",
+                    "int_size",
+                    "int_sign",
+                    "int_apmode",
+                    "fp_size",
+                    "fp_sign",
+                    "fp_apmode",
+                    "ptr_size",
+                    "ptr_sign",
+                    "ptr_apmode",
+                    "limit",
+                    "initiation_interval",
+                },
+            )
+        for _name, parameters in data["INSTRUCTIONS"]:
+            self.assertEqual(
+                set(parameters), {"functional_unit", "opcode_num"}
+            )
+        self.assertEqual(data["CHARACTERIZATION"]["keys"], [])
+
+    def test_legacy_power_fields_are_rejected_even_when_zero(self):
+        fields = (
+            "units",
+            "latency",
+            "internal_power",
+            "switch_power",
+            "dynamic_power",
+            "dynamic_energy",
+            "leakage_power",
+            "area",
+            "path_delay",
+        )
+        for field in fields:
+            with self.subTest(field=field):
+                self.reset()
+                path = os.path.join(
+                    self.profile,
+                    "functional_units",
+                    "integer_adder",
+                    "integer_adder.yml",
+                )
+                with open(path) as handle:
+                    document = yaml.safe_load(handle)
+                document["functional_unit"]["power_model"] = {field: 0}
+                with open(path, "w") as handle:
+                    yaml.safe_dump(document, handle, sort_keys=False)
+                with self.assertRaisesRegex(
+                    g.SourceConfigError, "obsolete field"
+                ) as caught:
+                    self.load()
+                diagnostic = str(caught.exception)
+                self.assertIn(path, diagnostic)
+                self.assertIn(field, diagnostic)
+                self.assertIn("power_model.characterization", diagnostic)
+
+    def test_power_model_mapping_is_optional_and_checked(self):
+        before = self.generated_data(self.load())["CHARACTERIZATION"]
+        path = os.path.join(
+            self.profile,
+            "functional_units",
+            "integer_adder",
+            "integer_adder.yml",
+        )
+        with open(path) as handle:
+            document = yaml.safe_load(handle)
+        document["functional_unit"]["power_model"] = {}
+        with open(path, "w") as handle:
+            yaml.safe_dump(document, handle, sort_keys=False)
+        self.assertEqual(
+            self.generated_data(self.load())["CHARACTERIZATION"], before
+        )
+        for value in (None, [], "record.yml"):
+            with self.subTest(value=value):
+                document["functional_unit"]["power_model"] = value
+                with open(path, "w") as handle:
+                    yaml.safe_dump(document, handle, sort_keys=False)
+                with self.assertRaisesRegex(
+                    g.SourceConfigError, "power_model must be a mapping"
+                ):
+                    self.load()
+        document["functional_unit"]["power_model"] = {"unknown": 0, 13: 0}
+        with open(path, "w") as handle:
+            yaml.safe_dump(document, handle, sort_keys=False)
+        with self.assertRaisesRegex(
+            g.SourceConfigError, "power_model: unknown field"
+        ):
+            self.load()
+
+    def test_obsolete_instruction_fields_are_rejected(self):
+        path = os.path.join(self.profile, "instructions", "inst_list.yml")
+        for field in ("runtime_cycles", "functional_unit_limit"):
+            for value in (0, 9):
+                with self.subTest(field=field, value=value):
+                    self.reset()
+                    with open(path) as handle:
+                        document = yaml.safe_load(handle)
+                    document["instructions"]["add"][field] = value
+                    with open(path, "w") as handle:
+                        yaml.safe_dump(document, handle, sort_keys=False)
+                    with self.assertRaisesRegex(
+                        g.SourceConfigError, "instructions.add: obsolete field"
+                    ) as caught:
+                        self.load()
+                    diagnostic = str(caught.exception)
+                    self.assertIn(path, diagnostic)
+                    self.assertIn(field, diagnostic)
+                    self.assertIn("CycleCounts", diagnostic)
+                    self.assertIn(
+                        "limit in the functional-unit profile", diagnostic
+                    )
+
+    def test_unknown_instruction_fields_are_rejected(self):
+        path = os.path.join(self.profile, "instructions", "inst_list.yml")
+        with open(path) as handle:
+            document = yaml.safe_load(handle)
+        document["instructions"]["add"].update({"latency": 3, 13: 0})
+        with open(path, "w") as handle:
+            yaml.safe_dump(document, handle, sort_keys=False)
+        with self.assertRaisesRegex(
+            g.SourceConfigError, "instructions.add: unknown field.*latency"
+        ):
             self.load()
 
     def test_default_profile_is_not_pipelined(self):

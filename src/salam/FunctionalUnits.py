@@ -76,20 +76,6 @@ class FunctionalUnit(SimObject):
     ptr_sign = Param.String("Descriptive pointer signedness")
     ptr_apmode = Param.Bool("Descriptive pointer arbitrary precision mode")
 
-    # Legacy metadata is separate from SALAMPowerModel characterization.
-    power_units = Param.String("Legacy power unit")
-    energy_units = Param.String("Legacy energy unit")
-    time_units = Param.String("Legacy time unit")
-    area_units = Param.String("Legacy area unit")
-    fu_latency = Param.UInt32("Legacy functional unit latency")
-    internal_power = Param.Float("Legacy internal power")
-    switch_power = Param.Float("Legacy switching power")
-    dynamic_power = Param.Float("Legacy dynamic power")
-    dynamic_energy = Param.Float("Legacy dynamic energy")
-    leakage_power = Param.Float("Legacy leakage power")
-    area = Param.Float("Legacy area")
-    path_delay = Param.Float("Legacy path delay")
-
 
 class FunctionalUnits(SimObject):
     type = "FunctionalUnits"
