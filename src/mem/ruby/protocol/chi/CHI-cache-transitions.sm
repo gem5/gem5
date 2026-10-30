@@ -477,11 +477,26 @@ transition({RSD,RUSD,RU},
   ProcessNextState;
 }
 
-// In RSC and RUSC no upstream copy can be dirty, so the line is up to
-// date downstream and a SnpUnique without RetToSrc would return no data.
-// Invalidate the upstream sharers and forward the write data as-is.
-transition({RSC,RUSC,I},
-           {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+transition(RUSC, WriteUniqueFull_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_Writeback;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({RSC,I}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_PartialWrite;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+// In RUSC no upstream copy can be dirty and this node has no data, so a
+// SnpUnique without RetToSrc returns no data and the line can't be
+// completed for a full-line writeback. Handle a partial write as in RSC.
+transition(RUSC, WriteUniquePtl_PoC, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_PartialWrite;
   Profile_Miss;
