@@ -199,6 +199,7 @@ def create_board(args, gpu_class):
     if args.num_cus is not None:
         gpu_args["num_cus"] = args.num_cus
     gpu = gpu_class(**gpu_args)
+    gpu.shader.dispatcher.kernel_exit_events = True
 
     board = ViperBoard(
         clk_freq="3GHz",
