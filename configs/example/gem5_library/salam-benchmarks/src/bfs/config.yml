@@ -1,0 +1,144 @@
+---
+acc_cluster:
+    - Name: bfs_clstr
+    - DMA:
+          - Name: dma
+            MaxReqSize: 128
+            BufferSize: 256
+            PIOMaster: LocalBus
+            Type: NonCoherent
+            InterruptNum: 95
+    - Accelerator:
+          - Name: Top
+            IrPath: hw/top.ll
+            Profile: top
+            PIOSize: 37
+            InterruptNum: 68
+            PIOMaster: LocalBus
+            LocalSlaves: LocalBus
+            Debug: false
+    - Accelerator:
+          - Name: bfs
+            IrPath: hw/bfs.ll
+            Profile: bfs
+            Debug: false
+            PIOSize: 5
+            PIOMaster: LocalBus
+          - Var:
+                - Name: NODES
+                  Type: RegisterBank
+                  Size: 2048
+          - Var:
+                - Name: EDGES
+                  Type: RegisterBank
+                  Size: 16384
+          - Var:
+                - Name: LEVELS
+                  Type: RegisterBank
+                  Size: 256
+          - Var:
+                - Name: LEVELCOUNTS
+                  Type: RegisterBank
+                  Size: 40
+hw_config:
+    top:
+    bfs:
+        instructions:
+            add:
+                runtime_cycles: 1
+            addrspacecast:
+                runtime_cycles: 1
+            alloca:
+                runtime_cycles: 0
+            and_inst:
+                runtime_cycles: 0
+            ashr:
+                runtime_cycles: 1
+            bitcast:
+                runtime_cycles: 0
+            br:
+                runtime_cycles: 0
+            call:
+                runtime_cycles: 0
+            fadd:
+                runtime_cycles: 5
+            fcmp:
+                runtime_cycles: 1
+            fdiv:
+                runtime_cycles: 16
+            fence:
+                runtime_cycles: 0
+            fmul:
+                runtime_cycles: 4
+            fpext:
+                runtime_cycles: 0
+            fptosi:
+                runtime_cycles: 0
+            fptoui:
+                runtime_cycles: 0
+            fptrunc:
+                runtime_cycles: 0
+            frem:
+                runtime_cycles: 16
+            fsub:
+                runtime_cycles: 5
+            gep:
+                runtime_cycles: 0
+            icmp:
+                runtime_cycles: 1
+            indirectbr:
+                runtime_cycles: 0
+            inttoptr:
+                runtime_cycles: 0
+            invoke:
+                runtime_cycles: 0
+            landingpad:
+                runtime_cycles: 0
+            load:
+                runtime_cycles: 0
+            lshr:
+                runtime_cycles: 1
+            mul:
+                runtime_cycles: 1
+            or_inst:
+                runtime_cycles: 0
+            phi:
+                runtime_cycles: 0
+            ptrtoint:
+                runtime_cycles: 0
+            resume:
+                runtime_cycles: 0
+            ret:
+                runtime_cycles: 0
+            sdiv:
+                runtime_cycles: 1
+            select:
+                runtime_cycles: 0
+            sext:
+                runtime_cycles: 0
+            shl:
+                runtime_cycles: 1
+            srem:
+                runtime_cycles: 1
+            store:
+                runtime_cycles: 0
+            sub:
+                runtime_cycles: 1
+            switch_inst:
+                runtime_cycles: 0
+            trunc:
+                runtime_cycles: 0
+            udiv:
+                runtime_cycles: 1
+            uitofp:
+                runtime_cycles: 0
+            unreachable:
+                runtime_cycles: 0
+            urem:
+                runtime_cycles: 1
+            vaarg:
+                runtime_cycles: 0
+            xor_inst:
+                runtime_cycles: 1
+            zext:
+                runtime_cycles: 0

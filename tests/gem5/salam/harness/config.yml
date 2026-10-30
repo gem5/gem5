@@ -1,0 +1,36 @@
+---
+# Single-accelerator workload for SALAM kernel tests. The host writes
+# inputs to IN, starts Kernel, and prints OUT after its interrupt.
+# The DMA is unused; a cluster needs a device on its coherency bus.
+# MEM is a scratchpad, whose bandwidth limit can delay one access
+# behind another.
+acc_cluster:
+    - Name: harness_clstr
+    - DMA:
+          - Name: dma
+            MaxReqSize: 128
+            BufferSize: 256
+            PIOMaster: LocalBus
+            Type: NonCoherent
+            InterruptNum: 95
+    - Accelerator:
+          - Name: Kernel
+            IrPath: hw/kernel.ll
+            Profile: kernel
+            PIOSize: 37
+            InterruptNum: 68
+            PIOMaster: LocalBus
+          - Var:
+                - Name: IN
+                  Type: RegisterBank
+                  Size: 64
+          - Var:
+                - Name: OUT
+                  Type: RegisterBank
+                  Size: 64
+          - Var:
+                - Name: MEM
+                  Type: SPM
+                  Size: 64
+hw_config:
+    kernel:

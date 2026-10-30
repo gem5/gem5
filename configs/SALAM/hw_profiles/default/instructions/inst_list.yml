@@ -1,0 +1,149 @@
+---
+instructions:
+    add:
+        functional_unit: 1
+        opcode_num: 13
+    addrspacecast:
+        functional_unit: 0
+        opcode_num: 50
+    alloca:
+        functional_unit: 0
+        opcode_num: 31
+    and_inst:
+        functional_unit: 4
+        opcode_num: 28
+    ashr:
+        functional_unit: 3
+        opcode_num: 27
+    bitcast:
+        functional_unit: 0
+        opcode_num: 49
+    br:
+        functional_unit: 0
+        opcode_num: 2
+    call:
+        functional_unit: 0
+        opcode_num: 56
+    fadd:
+        functional_unit: 6
+        opcode_num: 14
+    fcmp:
+        functional_unit: 0
+        opcode_num: 54
+    fdiv:
+        functional_unit: 10
+        opcode_num: 21
+    fence:
+        functional_unit: 0
+        opcode_num: 35
+    fmul:
+        functional_unit: 7
+        opcode_num: 18
+    fpext:
+        functional_unit: 0
+        opcode_num: 46
+    fptosi:
+        functional_unit: 0
+        opcode_num: 42
+    fptoui:
+        functional_unit: 0
+        opcode_num: 41
+    fptrunc:
+        functional_unit: 0
+        opcode_num: 45
+    frem:
+        functional_unit: 0
+        opcode_num: 24
+    fsub:
+        functional_unit: 6
+        opcode_num: 16
+    gep:
+        functional_unit: 0
+        opcode_num: 34
+    icmp:
+        functional_unit: 0
+        opcode_num: 53
+    indirectbr:
+        functional_unit: 0
+        opcode_num: 4
+    inttoptr:
+        functional_unit: 0
+        opcode_num: 48
+    invoke:
+        functional_unit: 0
+        opcode_num: 5
+    landingpad:
+        functional_unit: 0
+        opcode_num: 66
+    load:
+        functional_unit: 0
+        opcode_num: 32
+    lshr:
+        functional_unit: 3
+        opcode_num: 26
+    mul:
+        functional_unit: 2
+        opcode_num: 17
+    or_inst:
+        functional_unit: 4
+        opcode_num: 29
+    phi:
+        functional_unit: 0
+        opcode_num: 55
+    ptrtoint:
+        functional_unit: 0
+        opcode_num: 47
+    resume:
+        functional_unit: 0
+        opcode_num: 6
+    ret:
+        functional_unit: 0
+        opcode_num: 1
+    sdiv:
+        functional_unit: 2
+        opcode_num: 20
+    select:
+        functional_unit: 0
+        opcode_num: 57
+    sext:
+        functional_unit: 0
+        opcode_num: 40
+    shl:
+        functional_unit: 3
+        opcode_num: 25
+    srem:
+        functional_unit: 0
+        opcode_num: 23
+    store:
+        functional_unit: 0
+        opcode_num: 33
+    sub:
+        functional_unit: 1
+        opcode_num: 15
+    switch_inst:
+        functional_unit: 0
+        opcode_num: 3
+    trunc:
+        functional_unit: 0
+        opcode_num: 38
+    udiv:
+        functional_unit: 2
+        opcode_num: 19
+    uitofp:
+        functional_unit: 0
+        opcode_num: 43
+    unreachable:
+        functional_unit: 0
+        opcode_num: 7
+    urem:
+        functional_unit: 0
+        opcode_num: 22
+    vaarg:
+        functional_unit: 0
+        opcode_num: 60
+    xor_inst:
+        functional_unit: 4
+        opcode_num: 30
+    zext:
+        functional_unit: 0
+        opcode_num: 39

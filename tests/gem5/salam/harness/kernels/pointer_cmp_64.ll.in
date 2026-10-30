@@ -1,0 +1,335 @@
+; Copyright (c) 2026 Akanksha Chaudhari
+; All rights reserved.
+;
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions are
+; met: redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer;
+; redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in the
+; documentation and/or other materials provided with the distribution;
+; neither the name of the copyright holders nor the names of its
+; contributors may be used to endorse or promote products derived from
+; this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+; All ten pointer comparison predicates at equality and sign boundaries.
+
+target datalayout = "e-p:64:64"
+target triple = "armv7-pc-none-eabi"
+
+define void @top() {
+  %cmp0 = icmp eq {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c0 = icmp eq i1 %cmp0, true
+  %cmp1 = icmp ne {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c1 = icmp eq i1 %cmp1, false
+  %cmp2 = icmp ugt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c2 = icmp eq i1 %cmp2, false
+  %cmp3 = icmp uge {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c3 = icmp eq i1 %cmp3, true
+  %cmp4 = icmp ult {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c4 = icmp eq i1 %cmp4, false
+  %cmp5 = icmp ule {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c5 = icmp eq i1 %cmp5, true
+  %cmp6 = icmp sgt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c6 = icmp eq i1 %cmp6, false
+  %cmp7 = icmp sge {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c7 = icmp eq i1 %cmp7, true
+  %cmp8 = icmp slt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c8 = icmp eq i1 %cmp8, false
+  %cmp9 = icmp sle {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c9 = icmp eq i1 %cmp9, true
+  %cmp10 = icmp eq {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c10 = icmp eq i1 %cmp10, false
+  %cmp11 = icmp ne {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c11 = icmp eq i1 %cmp11, true
+  %cmp12 = icmp ugt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c12 = icmp eq i1 %cmp12, false
+  %cmp13 = icmp uge {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c13 = icmp eq i1 %cmp13, false
+  %cmp14 = icmp ult {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c14 = icmp eq i1 %cmp14, true
+  %cmp15 = icmp ule {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c15 = icmp eq i1 %cmp15, true
+  %cmp16 = icmp sgt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c16 = icmp eq i1 %cmp16, false
+  %cmp17 = icmp sge {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c17 = icmp eq i1 %cmp17, false
+  %cmp18 = icmp slt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c18 = icmp eq i1 %cmp18, true
+  %cmp19 = icmp sle {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 1 to {PTR_I8})
+  %c19 = icmp eq i1 %cmp19, true
+  %cmp20 = icmp eq {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c20 = icmp eq i1 %cmp20, false
+  %cmp21 = icmp ne {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c21 = icmp eq i1 %cmp21, true
+  %cmp22 = icmp ugt {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c22 = icmp eq i1 %cmp22, true
+  %cmp23 = icmp uge {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c23 = icmp eq i1 %cmp23, true
+  %cmp24 = icmp ult {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c24 = icmp eq i1 %cmp24, false
+  %cmp25 = icmp ule {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c25 = icmp eq i1 %cmp25, false
+  %cmp26 = icmp sgt {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c26 = icmp eq i1 %cmp26, true
+  %cmp27 = icmp sge {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c27 = icmp eq i1 %cmp27, true
+  %cmp28 = icmp slt {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c28 = icmp eq i1 %cmp28, false
+  %cmp29 = icmp sle {PTR_I8} inttoptr (i64 1 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c29 = icmp eq i1 %cmp29, false
+  %cmp30 = icmp eq {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c30 = icmp eq i1 %cmp30, false
+  %cmp31 = icmp ne {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c31 = icmp eq i1 %cmp31, true
+  %cmp32 = icmp ugt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c32 = icmp eq i1 %cmp32, false
+  %cmp33 = icmp uge {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c33 = icmp eq i1 %cmp33, false
+  %cmp34 = icmp ult {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c34 = icmp eq i1 %cmp34, true
+  %cmp35 = icmp ule {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c35 = icmp eq i1 %cmp35, true
+  %cmp36 = icmp sgt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c36 = icmp eq i1 %cmp36, true
+  %cmp37 = icmp sge {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c37 = icmp eq i1 %cmp37, true
+  %cmp38 = icmp slt {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c38 = icmp eq i1 %cmp38, false
+  %cmp39 = icmp sle {PTR_I8} inttoptr (i64 0 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c39 = icmp eq i1 %cmp39, false
+  %cmp40 = icmp eq {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c40 = icmp eq i1 %cmp40, false
+  %cmp41 = icmp ne {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c41 = icmp eq i1 %cmp41, true
+  %cmp42 = icmp ugt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c42 = icmp eq i1 %cmp42, true
+  %cmp43 = icmp uge {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c43 = icmp eq i1 %cmp43, true
+  %cmp44 = icmp ult {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c44 = icmp eq i1 %cmp44, false
+  %cmp45 = icmp ule {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c45 = icmp eq i1 %cmp45, false
+  %cmp46 = icmp sgt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c46 = icmp eq i1 %cmp46, false
+  %cmp47 = icmp sge {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c47 = icmp eq i1 %cmp47, false
+  %cmp48 = icmp slt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c48 = icmp eq i1 %cmp48, true
+  %cmp49 = icmp sle {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 0 to {PTR_I8})
+  %c49 = icmp eq i1 %cmp49, true
+  %cmp50 = icmp eq {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c50 = icmp eq i1 %cmp50, false
+  %cmp51 = icmp ne {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c51 = icmp eq i1 %cmp51, true
+  %cmp52 = icmp ugt {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c52 = icmp eq i1 %cmp52, true
+  %cmp53 = icmp uge {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c53 = icmp eq i1 %cmp53, true
+  %cmp54 = icmp ult {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c54 = icmp eq i1 %cmp54, false
+  %cmp55 = icmp ule {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c55 = icmp eq i1 %cmp55, false
+  %cmp56 = icmp sgt {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c56 = icmp eq i1 %cmp56, false
+  %cmp57 = icmp sge {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c57 = icmp eq i1 %cmp57, false
+  %cmp58 = icmp slt {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c58 = icmp eq i1 %cmp58, true
+  %cmp59 = icmp sle {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 9223372036854775807 to {PTR_I8})
+  %c59 = icmp eq i1 %cmp59, true
+  %cmp60 = icmp eq {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c60 = icmp eq i1 %cmp60, false
+  %cmp61 = icmp ne {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c61 = icmp eq i1 %cmp61, true
+  %cmp62 = icmp ugt {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c62 = icmp eq i1 %cmp62, false
+  %cmp63 = icmp uge {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c63 = icmp eq i1 %cmp63, false
+  %cmp64 = icmp ult {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c64 = icmp eq i1 %cmp64, true
+  %cmp65 = icmp ule {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c65 = icmp eq i1 %cmp65, true
+  %cmp66 = icmp sgt {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c66 = icmp eq i1 %cmp66, true
+  %cmp67 = icmp sge {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c67 = icmp eq i1 %cmp67, true
+  %cmp68 = icmp slt {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c68 = icmp eq i1 %cmp68, false
+  %cmp69 = icmp sle {PTR_I8} inttoptr (i64 9223372036854775807 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c69 = icmp eq i1 %cmp69, false
+  %cmp70 = icmp eq {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c70 = icmp eq i1 %cmp70, false
+  %cmp71 = icmp ne {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c71 = icmp eq i1 %cmp71, true
+  %cmp72 = icmp ugt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c72 = icmp eq i1 %cmp72, true
+  %cmp73 = icmp uge {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c73 = icmp eq i1 %cmp73, true
+  %cmp74 = icmp ult {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c74 = icmp eq i1 %cmp74, false
+  %cmp75 = icmp ule {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c75 = icmp eq i1 %cmp75, false
+  %cmp76 = icmp sgt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c76 = icmp eq i1 %cmp76, true
+  %cmp77 = icmp sge {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c77 = icmp eq i1 %cmp77, true
+  %cmp78 = icmp slt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c78 = icmp eq i1 %cmp78, false
+  %cmp79 = icmp sle {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 9223372036854775808 to {PTR_I8})
+  %c79 = icmp eq i1 %cmp79, false
+  %cmp80 = icmp eq {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c80 = icmp eq i1 %cmp80, false
+  %cmp81 = icmp ne {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c81 = icmp eq i1 %cmp81, true
+  %cmp82 = icmp ugt {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c82 = icmp eq i1 %cmp82, false
+  %cmp83 = icmp uge {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c83 = icmp eq i1 %cmp83, false
+  %cmp84 = icmp ult {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c84 = icmp eq i1 %cmp84, true
+  %cmp85 = icmp ule {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c85 = icmp eq i1 %cmp85, true
+  %cmp86 = icmp sgt {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c86 = icmp eq i1 %cmp86, false
+  %cmp87 = icmp sge {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c87 = icmp eq i1 %cmp87, false
+  %cmp88 = icmp slt {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c88 = icmp eq i1 %cmp88, true
+  %cmp89 = icmp sle {PTR_I8} inttoptr (i64 9223372036854775808 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c89 = icmp eq i1 %cmp89, true
+  %cmp90 = icmp eq {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c90 = icmp eq i1 %cmp90, true
+  %cmp91 = icmp ne {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c91 = icmp eq i1 %cmp91, false
+  %cmp92 = icmp ugt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c92 = icmp eq i1 %cmp92, false
+  %cmp93 = icmp uge {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c93 = icmp eq i1 %cmp93, true
+  %cmp94 = icmp ult {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c94 = icmp eq i1 %cmp94, false
+  %cmp95 = icmp ule {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c95 = icmp eq i1 %cmp95, true
+  %cmp96 = icmp sgt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c96 = icmp eq i1 %cmp96, false
+  %cmp97 = icmp sge {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c97 = icmp eq i1 %cmp97, true
+  %cmp98 = icmp slt {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c98 = icmp eq i1 %cmp98, false
+  %cmp99 = icmp sle {PTR_I8} inttoptr (i64 18446744073709551615 to {PTR_I8}), inttoptr (i64 18446744073709551615 to {PTR_I8})
+  %c99 = icmp eq i1 %cmp99, true
+  %ok0 = and i1 %c0, %c1
+  %ok1 = and i1 %ok0, %c2
+  %ok2 = and i1 %ok1, %c3
+  %ok3 = and i1 %ok2, %c4
+  %ok4 = and i1 %ok3, %c5
+  %ok5 = and i1 %ok4, %c6
+  %ok6 = and i1 %ok5, %c7
+  %ok7 = and i1 %ok6, %c8
+  %ok8 = and i1 %ok7, %c9
+  %ok9 = and i1 %ok8, %c10
+  %ok10 = and i1 %ok9, %c11
+  %ok11 = and i1 %ok10, %c12
+  %ok12 = and i1 %ok11, %c13
+  %ok13 = and i1 %ok12, %c14
+  %ok14 = and i1 %ok13, %c15
+  %ok15 = and i1 %ok14, %c16
+  %ok16 = and i1 %ok15, %c17
+  %ok17 = and i1 %ok16, %c18
+  %ok18 = and i1 %ok17, %c19
+  %ok19 = and i1 %ok18, %c20
+  %ok20 = and i1 %ok19, %c21
+  %ok21 = and i1 %ok20, %c22
+  %ok22 = and i1 %ok21, %c23
+  %ok23 = and i1 %ok22, %c24
+  %ok24 = and i1 %ok23, %c25
+  %ok25 = and i1 %ok24, %c26
+  %ok26 = and i1 %ok25, %c27
+  %ok27 = and i1 %ok26, %c28
+  %ok28 = and i1 %ok27, %c29
+  %ok29 = and i1 %ok28, %c30
+  %ok30 = and i1 %ok29, %c31
+  %ok31 = and i1 %ok30, %c32
+  %ok32 = and i1 %ok31, %c33
+  %ok33 = and i1 %ok32, %c34
+  %ok34 = and i1 %ok33, %c35
+  %ok35 = and i1 %ok34, %c36
+  %ok36 = and i1 %ok35, %c37
+  %ok37 = and i1 %ok36, %c38
+  %ok38 = and i1 %ok37, %c39
+  %ok39 = and i1 %ok38, %c40
+  %ok40 = and i1 %ok39, %c41
+  %ok41 = and i1 %ok40, %c42
+  %ok42 = and i1 %ok41, %c43
+  %ok43 = and i1 %ok42, %c44
+  %ok44 = and i1 %ok43, %c45
+  %ok45 = and i1 %ok44, %c46
+  %ok46 = and i1 %ok45, %c47
+  %ok47 = and i1 %ok46, %c48
+  %ok48 = and i1 %ok47, %c49
+  %ok49 = and i1 %ok48, %c50
+  %ok50 = and i1 %ok49, %c51
+  %ok51 = and i1 %ok50, %c52
+  %ok52 = and i1 %ok51, %c53
+  %ok53 = and i1 %ok52, %c54
+  %ok54 = and i1 %ok53, %c55
+  %ok55 = and i1 %ok54, %c56
+  %ok56 = and i1 %ok55, %c57
+  %ok57 = and i1 %ok56, %c58
+  %ok58 = and i1 %ok57, %c59
+  %ok59 = and i1 %ok58, %c60
+  %ok60 = and i1 %ok59, %c61
+  %ok61 = and i1 %ok60, %c62
+  %ok62 = and i1 %ok61, %c63
+  %ok63 = and i1 %ok62, %c64
+  %ok64 = and i1 %ok63, %c65
+  %ok65 = and i1 %ok64, %c66
+  %ok66 = and i1 %ok65, %c67
+  %ok67 = and i1 %ok66, %c68
+  %ok68 = and i1 %ok67, %c69
+  %ok69 = and i1 %ok68, %c70
+  %ok70 = and i1 %ok69, %c71
+  %ok71 = and i1 %ok70, %c72
+  %ok72 = and i1 %ok71, %c73
+  %ok73 = and i1 %ok72, %c74
+  %ok74 = and i1 %ok73, %c75
+  %ok75 = and i1 %ok74, %c76
+  %ok76 = and i1 %ok75, %c77
+  %ok77 = and i1 %ok76, %c78
+  %ok78 = and i1 %ok77, %c79
+  %ok79 = and i1 %ok78, %c80
+  %ok80 = and i1 %ok79, %c81
+  %ok81 = and i1 %ok80, %c82
+  %ok82 = and i1 %ok81, %c83
+  %ok83 = and i1 %ok82, %c84
+  %ok84 = and i1 %ok83, %c85
+  %ok85 = and i1 %ok84, %c86
+  %ok86 = and i1 %ok85, %c87
+  %ok87 = and i1 %ok86, %c88
+  %ok88 = and i1 %ok87, %c89
+  %ok89 = and i1 %ok88, %c90
+  %ok90 = and i1 %ok89, %c91
+  %ok91 = and i1 %ok90, %c92
+  %ok92 = and i1 %ok91, %c93
+  %ok93 = and i1 %ok92, %c94
+  %ok94 = and i1 %ok93, %c95
+  %ok95 = and i1 %ok94, %c96
+  %ok96 = and i1 %ok95, %c97
+  %ok97 = and i1 %ok96, %c98
+  %ok98 = and i1 %ok97, %c99
+  %result = zext i1 %ok98 to i32
+  store volatile i32 %result, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  ret void
+}

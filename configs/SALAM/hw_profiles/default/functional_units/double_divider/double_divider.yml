@@ -1,0 +1,23 @@
+---
+functional_unit:
+    parameters:
+        alias: double_divider
+        stages: 3
+        cycles: 16
+        enum_value: 10
+        datatypes:
+            integer:
+                size: none
+                sign: none
+                APMode: false
+            floating_point:
+                size: double
+                sign: any
+                APMode: true
+            pointer:
+                size: none
+                sign: none
+                APMode: false
+        instructions: # LLVM instruction names
+            - fdiv
+        limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)

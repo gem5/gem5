@@ -1,0 +1,66 @@
+; Copyright (c) 2026 Akanksha Chaudhari
+; All rights reserved.
+;
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions are
+; met: redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer;
+; redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in the
+; documentation and/or other materials provided with the distribution;
+; neither the name of the copyright holders nor the names of its
+; contributors may be used to endorse or promote products derived from
+; this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+; A delayed volatile store precedes disjoint volatile loads/stores.
+; The ordinary OUT[8] store must remain free to issue during that delay.
+; The last volatile operations cross a branch and a direct call.
+
+target datalayout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64"
+target triple = "armv7-pc-none-eabi"
+
+define void @put() {
+  %v = load volatile i32, {PTR_I32} inttoptr (i32 {IN3} to {PTR_I32})
+  store volatile i32 %v, {PTR_I32} inttoptr (i32 {OUT2} to {PTR_I32})
+  ret void
+}
+
+define void @top() {
+  %a = load volatile i32, {PTR_I32} inttoptr (i32 {IN} to {PTR_I32})
+  %slow = udiv i32 %a, 2
+  store volatile i32 %slow, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  store i32 99, {PTR_I32} inttoptr (i32 {OUT8} to {PTR_I32})
+  %b = load volatile i32, {PTR_I32} inttoptr (i32 {IN1} to {PTR_I32})
+  %c = load volatile i32, {PTR_I32} inttoptr (i32 {IN2} to {PTR_I32})
+  %sum = add i32 %b, %c
+  store volatile i32 %sum, {PTR_I32} inttoptr (i32 {OUT1} to {PTR_I32})
+  %cond = icmp eq i32 %a, 6
+  br i1 %cond, label %next, label %done
+next:
+  call void @put()
+  store volatile i32 42, {PTR_I32} inttoptr (i32 {OUT3} to {PTR_I32})
+  br label %done
+done:
+  ret void
+}
+
+; A nonvolatile load must wait for an in-flight store to the same bytes.
+; Selecting this entry point isolates one dependency observation.
+define void @ordinary_raw() {
+  store i32 99, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  %v = load i32, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  store i32 %v, {PTR_I32} inttoptr (i32 {OUT1} to {PTR_I32})
+  ret void
+}

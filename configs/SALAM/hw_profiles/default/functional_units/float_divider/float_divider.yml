@@ -1,0 +1,22 @@
+---
+functional_unit:
+    parameters:
+        alias: float_divider
+        stages: 3
+        cycles: 16
+        enum_value: 8
+        datatypes:
+            integer:
+                size: none
+                sign: none
+                APMode: false
+            floating_point:
+                size: single
+                sign: any
+                APMode: true
+            pointer:
+                size: none
+                sign: none
+                APMode: false
+        instructions: [] # fdiv is owned by double_divider
+        limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)

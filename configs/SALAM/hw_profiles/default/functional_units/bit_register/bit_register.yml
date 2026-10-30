@@ -1,0 +1,23 @@
+---
+functional_unit:
+    parameters:
+        alias: bit_register
+        stages: 0
+        cycles: 0
+        enum_value: 15
+        datatypes:
+            integer:
+                size: any
+                sign: any
+                APMode: true
+            floating_point:
+                size: any
+                sign: any
+                APMode: true
+            pointer:
+                size: any
+                sign: any
+                APMode: true
+        instructions: # LLVM instruction names
+            - any
+        limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)

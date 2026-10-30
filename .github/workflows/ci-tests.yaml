@@ -299,6 +299,90 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
+    salam-link-test:
+        runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        needs: [pre-commit]
+        timeout-minutes: 90
+        env:
+            CC: /usr/bin/gcc
+            CXX: /usr/bin/g++
+        steps:
+            - uses: actions/checkout@v7
+            - name: Install SALAM dependencies
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends llvm-dev \
+                      python3-yaml clang-18 gcc-arm-none-eabi \
+                      libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+                  llvm-config --version
+            - name: Build gem5 and SALAM unit tests
+              run: |
+                  scons build/ARM/gem5.opt \
+                      build/ARM/salam/LLVMRead/value.test.opt \
+                      build/ARM/salam/latency_sample.test.opt \
+                      build/ARM/salam/HWModeling/fu_pool.test.opt \
+                      build/ARM/salam/HWModeling/salam_power_model.test.opt \
+                      build/ARM/salam/storage_access.test.opt \
+                      --with-salam -j $(nproc)
+            - name: Run SALAM unit tests
+              run: |
+                  mkdir -p tests/testing-results/unittests
+                  for test in \
+                      build/ARM/salam/LLVMRead/value.test.opt \
+                      build/ARM/salam/latency_sample.test.opt \
+                      build/ARM/salam/HWModeling/fu_pool.test.opt \
+                      build/ARM/salam/HWModeling/salam_power_model.test.opt \
+                      build/ARM/salam/storage_access.test.opt; do
+                      "$test" --gtest_output="xml:tests/testing-results/unittests/$(basename "$test").xml"
+                  done
+            - name: Run the SALAM test suites
+              id: run-salam-tests
+              working-directory: ${{ github.workspace }}/tests
+              run: |
+                  mkdir -p "${RUNNER_TEMP}/salam-results"
+                  ./main.py list -q --suites gem5/salam --include-tags salam \
+                      > "${RUNNER_TEMP}/salam-results/default-suites.txt"
+                  status=0
+                  ./main.py run gem5/salam --include-tags salam -j $(nproc) \
+                      || status=$?
+                  python3 gem5/salam/check_salam_results.py \
+                      "${RUNNER_TEMP}/salam-results/default-suites.txt" \
+                      testing-results/results.xml gem5/salam \
+                      || status=1
+                  if [ -d testing-results ]; then
+                      mv testing-results "${RUNNER_TEMP}/salam-results/default"
+                  fi
+                  exit ${status}
+            - name: Run custom hardware profiles
+              working-directory: ${{ github.workspace }}/tests
+              run: |
+                  status=0
+                  for group in fu-remap profile-singleton profile-reordered; do
+                      ./main.py list -q --suites gem5/salam \
+                          --include-tags "$group" \
+                          > "${RUNNER_TEMP}/salam-results/${group}-suites.txt"
+                      ./main.py run gem5/salam --include-tags "$group" \
+                          -j $(nproc) || status=$?
+                      python3 gem5/salam/check_salam_results.py \
+                          "${RUNNER_TEMP}/salam-results/${group}-suites.txt" \
+                          testing-results/results.xml || status=1
+                      if [ -d testing-results ]; then
+                          mv testing-results "${RUNNER_TEMP}/salam-results/${group}"
+                      fi
+                  done
+                  exit ${status}
+            - name: Upload SALAM test results
+              if: success() || failure()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ job.status }}-output
+                  path: |
+                      tests/testing-results
+                      ${{ runner.temp }}/salam-results
+                  retention-days: 30
+
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
@@ -309,5 +393,6 @@ jobs:
             - unittests-all-fast-opt
             - macos-compilation
             - pre-commit
+            - salam-link-test
         steps:
             - run: echo "This job's status is ${{ job.status }}."

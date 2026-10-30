@@ -1,0 +1,71 @@
+---
+acc_cluster:
+    - Name: # Cluster name here (Required)
+  # NonCoherent DMA Example
+    - DMA:
+          - Name: # DMA name here (Required)
+            MaxReqSize: # Positive request bytes (default: cache line size)
+            BufferSize: # Positive DMA buffer bytes (Optional, 1024)
+            PIOMaster: # LocalBus (Required)
+            Type: # Selects the type of DMA, can be NonCoherent or Stream (Required)
+            InterruptNum: # Sets the Interrupt Number (Optional)
+  # Streaming DMA Example
+    - DMA:
+          - Name: # DMA name here (Required)
+            PIOMaster: # LocalBus (Required)
+            BufferSize: # Positive read/write buffer bytes (default: 1024)
+            MaxReqSize: # Positive request bytes (default: cache line size)
+            # Stream width stays 8 bytes; maximum pending requests stays 8.
+            Type: # Selects the type of DMA, can be NonCoherent or Stream (Required)
+            ReadInt: # Interrupt Number for when read frames are finished (Optional)
+            WriteInt: # Interrupt Number for when write frames are finished (Optional)
+  # Accelerator Example
+    - Accelerator:
+          - Name: # Acc name here (Required)
+            IrPath: # Absolute or relative to the top workload directory (Required)
+            Profile: # hw_config key for this accelerator (Required)
+            HWPath: # YAML file with hw_config, relative to this file (Optional)
+      # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ll
+            # ConfigPath is unsupported and rejected by the workload reader.
+      # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ini
+            Debug: # True or False, prints acc debug messages (Optional)
+            PIOSize: # Sets the PIO register size in bytes (Required)
+            PIOMaster: # LocalBus (Required)
+    # Standard SPM Example, automatically connects to parent acc
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # SPM
+                  Size: # Positive integer bytes (Required)
+                  Ports: # Ports to parent Acc, a positive integer (Optional, default 1)
+                  ReadyMode: # Boolean (Optional, default false)
+                  ResetOnRead: # True/False | Reset ready bit on private scratchpad memory read
+                  ReadOnInvalid: # True/False | Enable reads on invalid memory segments when ready mode is used
+                  WriteOnValid: # True/False | Enable writes on valid memory sectors when ready mode is used
+    # SPM with Multiple Accs Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # SPM
+                  Size: # Positive integer bytes (Required)
+                  Ports: # Ports to parent Acc, a positive integer (Optional, default 1)
+                  Connections: # Extra ports for other accelerators in this cluster, Name:N
+        # e.g. SecondAcc:1,ThirdAccAcc:1
+    # Stream Buffer Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # Stream
+                  StreamSize: # Positive stream width in bytes (Required)
+                  BufferSize: # Positive capacity in bytes (Optional, default 256)
+                  InCon: # Input connection, Acc Name (Required)
+                  OutCon: # Output connection, Acc Name (Required)
+    # RegisterBank Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # RegisterBank
+                  # Ports, ReadyMode and Connections are unsupported and
+                  # rejected; a RegisterBank serves its own accelerator.
+                  Size: # Positive integer bytes (Required)
+    # L1 Cache Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # Cache
+                  Size: # Positive integer bytes or prefix-only string, e.g. 32Ki
