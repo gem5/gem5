@@ -221,15 +221,6 @@ class RemoteGDB : public BaseRemoteGDB
     RemoteGDB(System *_system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs() override;
     /**
-     * Informs GDB remote serial protocol that XML features are supported
-     * GDB then queries for xml blobs using qXfer:features:read:xxx.xml
-     */
-    std::vector<std::string>
-    availableFeatures() const override
-    {
-        return {"qXfer:features:read+"};
-    };
-    /**
      * Reply to qXfer:features:read:xxx.xml qeuries
      */
     bool getXferFeaturesRead(const std::string &annex,

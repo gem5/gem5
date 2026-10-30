@@ -82,11 +82,6 @@ class RemoteGDB : public BaseRemoteGDB
   public:
     RemoteGDB(System *_system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs();
-    std::vector<std::string>
-    availableFeatures() const
-    {
-        return {"qXfer:features:read+"};
-    };
     bool getXferFeaturesRead(const std::string &annex, std::string &output);
 };
 

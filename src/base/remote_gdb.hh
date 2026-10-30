@@ -45,6 +45,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -470,6 +471,26 @@ class BaseRemoteGDB
      */
     virtual bool getXferFeaturesRead(const std::string &annex,
             std::string &output);
+
+    /**
+     * Handler for qXfer:<object>:read:<annex>:<offset>,<length> queries.
+     *
+     * @param[in] annex the annex of the query
+     * @param[out] output set to the full unencoded content of the object
+     * @return true if the annex is valid and its content was read
+     */
+    using XferReadHandler =
+        std::function<bool(const std::string &annex, std::string &output)>;
+
+    /**
+     * Map from qXfer object names to their read handlers. The offset and
+     * length of the query are applied by queryXfer on the content returned
+     * by the handler.
+     *
+     * Each registered object is advertised to GDB as
+     * "qXfer:<object>:read+" by the default availableFeatures().
+     */
+    std::map<std::string, XferReadHandler> queryXferReadMap;
 };
 
 template <class T>

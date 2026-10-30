@@ -154,6 +154,10 @@ using namespace MipsISA;
 RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
     : BaseRemoteGDB(_system, _listen_config), regCache(this)
 {
+    queryXferReadMap.insert(
+        {"features", [this](const std::string &annex, std::string &output) {
+             return getXferFeaturesRead(annex, output);
+         }});
 }
 
 /*
