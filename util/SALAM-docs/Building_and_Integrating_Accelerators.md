@@ -15,14 +15,8 @@ On the software (workload) side, the user provides:
 * a YAML specification (`config.yml`) that describes the accelerator cluster topology and instruction timing,
 * an auto-generated header (`*_hw_defines.h`) that keeps software-visible MMIO addresses consistent with gem5’s address map.
 
-On the hardware side, SALAM models the datapath through a functional-unit
-inventory and per-instruction cycle counts. The default profile retains
-historical 40 nm/5 ns metadata; those labels do not establish physical
-characterization or set the simulated compute clock. Optional sourced
-coefficients select PPA estimates without changing the existing profile,
-clock, or scheduling interfaces. See
-[Power, performance, and area](PPA_and_Validation.md) for configuration,
-coverage, and physical compatibility requirements.
+The hardware profile defines functional units and instruction mappings;
+the workload YAML sets instruction timing.
 
 Together, these parts let users model and explore accelerator microarchitecture and system integration early, without writing RTL.
 
@@ -158,7 +152,7 @@ The complete controller kernel is under **bfs/hw/top.c**.
 
 ## Step 4: Describe the Accelerator in config.yml
 
-Older versions of SALAM used per-kernel INI files to describe cycle counts and device parameters. The current flow uses a single YAML file per workload: **config.yml**.
+The workload's **config.yml** describes its devices and instruction timing.
 
 The YAML file has two main roles:
 
@@ -210,9 +204,19 @@ The full file also declares the `EDGES`, `LEVELS`, and `LEVELCOUNTS` RegisterBan
 
 ### Describe instruction timing
 
-The `hw_config` section provides per-kernel instruction timing. Each accelerator's `Profile` field names the key to use. For example, `Profile: bfs` selects the `bfs:` section. The IR path is only the location of the bitcode.
+The `hw_config` section provides per-kernel instruction timing. Each
+accelerator's `Profile` field selects a key, such as `bfs`, independently
+of its LLVM IR file path. The selected mapping supplies per-instruction
+`runtime_cycles` overrides.
+Instructions without an override retain their `CycleCounts` defaults.
+`load` and `store` must stay 0 because memory responses determine their
+completion. The supported `br`, `ret`, and `switch_inst` terminators must
+also stay 0; nonzero overrides are rejected.
 
-Each listed instruction includes opcode and functional-unit metadata along with its execution latency. The `hw_config` mapping selected by `Profile` supplies per-instruction `runtime_cycles` overrides. `config_parser.resolve_cycle_counts()` extracts these values, and `AccConfig()` applies them to `CycleCounts`. Instructions without an override retain their defaults. `load` and `store` must stay 0: their latency comes from the memory system, and other values are rejected. Memory-operation latency is not configurable through `hw_config`. The other fields follow the build-time `inst_list.yml` entry format described in [Instruction entries](README_SALAM.md#instruction-entries). For example:
+A workload instruction override accepts only `runtime_cycles`. Opcode/FU
+mappings belong in the build profile's
+[instruction entries](README_SALAM.md#instruction-entries), and FU `limit`
+sets allocation. For example:
 
 ```yaml
 hw_config:
@@ -220,20 +224,38 @@ hw_config:
     bfs:
         instructions:
             add:
-                functional_unit: 1
-                functional_unit_limit: 0
-                opcode_num: 13
                 runtime_cycles: 1
             icmp:
-                functional_unit: 0
-                functional_unit_limit: 0
-                opcode_num: 53
                 runtime_cycles: 1
 ```
 
-`Profile` selects the `hw_config` key. It does not have to equal the IR file name. The BFS example uses `bfs` for `hw/bfs.ll`.
+By default, `hw_config` comes from the YAML document that declares the
+cluster. `HWPath` selects another YAML file containing `hw_config`, relative
+to the file declaring it. For example, `HWPath: timing/cycles.yml` in
+`my-workload/config.yml` selects `my-workload/timing/cycles.yml`.
+An accelerator `HWPath` applies to that accelerator; one declared beside
+`SysPath` applies to the included clusters. This selects workload timing,
+separately from the build-time hardware profile.
 
-By default the `hw_config` mapping comes from the YAML document that declares the cluster. An `HWPath` field selects another YAML file containing `hw_config`. A relative `HWPath` is relative to the YAML file that declares it, not to the directory gem5 runs from. For example, `HWPath: timing/cycles.yml` in `configs/config.yml` selects `configs/timing/cycles.yml`. An accelerator `HWPath` applies to that accelerator. A cluster `HWPath` declared beside `SysPath` applies to the included clusters. `HWPath` selects workload timing; it is not the build-time `--salam-hw-config` hardware profile.
+### Workload fields
+
+Memory `Size`, stream `StreamSize`, and explicit `BufferSize` values are
+positive integer bytes. `StreamSize` is required; a stream buffer defaults
+to 256 bytes when `BufferSize` is omitted. Cache `Size` also accepts binary
+prefixes such as `32Ki` or `32k`, without a `B` suffix.
+
+Names start with a letter and contain letters, digits, or underscores.
+DMA, accelerator, and non-cache variable names must be distinct ignoring
+case. Stream-buffer `InCon` and `OutCon` name accelerators in the same
+cluster. Accelerator `StreamIn` and `StreamOut` name streaming DMAs; each
+direction has one owner. A buffer endpoint cannot also use a DMA stream
+connection. `PIOMaster` and `LocalSlaves` support `LocalBus`.
+
+`IrPath` and included `SysPath` paths are relative to the top workload
+directory. `HWPath` and memory `Characterization` paths are relative to
+their declaring YAML file. Absolute paths are accepted. A single-function
+module uses that function as its entry; a module with multiple functions
+uses `top`. Set the clock with `Clocks.Compute` below.
 
 ### Set the cluster clocks
 
@@ -247,30 +269,21 @@ acc_cluster:
           Fabric: 2ns
 ```
 
-Each domain runs at a fixed frequency; there is no DVFS. The unsupported accelerator `ClockPeriod_ns` field is rejected; use cluster `Clocks.Compute` instead.
+Latencies count in the owning object's clock domain. Each domain has a
+fixed frequency; PIO latencies remain time values.
 
-The timing rules on these clocks are:
+| Object | Parameter | Clock | Default |
+|---|---|---|---|
+| `LLVMInterface` | instruction `runtime_cycles` | Compute | per instruction |
+| `CommInterface` | `process_cycles` | Compute | 1 |
+| `NoncoherentDma` | `process_cycles` | Fabric | 10 |
+| `StreamDma` | `process_cycles` | Fabric | 1 |
+| `ScratchpadMemory` | `access_cycles`, `access_cycles_var` | Fabric | 2, 0 |
+| `RegisterBank` | `access_cycles`, `write_cycles` | Fabric | 10, 10 |
+| `StreamBuffer` | `stream_cycles` | Fabric | 1 |
 
-- The host's run bit is seen at the compute edge after the one on or following its write, and the first compute pass runs on that edge. Each pass schedules the next compute edge.
-- A compute operation with a fixed latency L completes on compute edge k + L when issued on edge k. Loads and stores complete from memory responses, as described below. Calls complete after the callee returns under the [call timing rules](README_SALAM.md#functional-unit-scheduling); supported terminators have no separate modeled latency.
-- A `CommInterface` services memory requests every `process_cycles` compute cycles while any are outstanding; a request issued while it is idle waits exactly `process_cycles`. Its service pass runs before the compute pass on the same edge. Responses complete when they arrive, and the next compute pass sees them.
-- A scratchpad response is ready `access_cycles` fabric cycles after the first fabric edge at or after the request arrives, plus a uniformly drawn extra of up to `access_cycles_var` cycles. Each scratchpad keeps one random generator, seeded by gem5's seed, and draws once per serviced access. Identically seeded scratchpads with equal bounds can draw identical sequences; separate generator state does not imply independent seeds. A shared response queue preserves a blocked head across ports, so downstream backpressure can delay a ready response on another port.
-- A register bank batches writes until `write_cycles` fabric cycles after the first write's edge. A write response waits for both `access_cycles` after its own edge and publication of its batch; publication precedes responses on the same edge. A read issued after the write response sees the stored value. Reads sample visible storage when accepted: private-port reads complete at once, while load-port reads respond after `access_cycles`. Reads issued before a pending write completes may still sample the old value.
-- PIO latencies (`pio_delay`, `pio_latency`) stay in time units.
-
-These parameters replace the earlier time-based ones:
-
-| Object | Before | Now |
-|---|---|---|
-| `LLVMInterface` | `clock_period` (ns) | the cluster's Compute clock |
-| `CommInterface` | `clock_period` (ns) | `process_cycles`, compute cycles (1) |
-| `NoncoherentDma` | `clock_period` (ns) | `process_cycles`, fabric cycles between steps of up to `max_req_size` bytes (10) |
-| `StreamDma` | `mem_delay` (unused) | `process_cycles`, fabric cycles (1) |
-| `ScratchpadMemory` | `latency` (2 ns), `latency_var` (0 ns) | `access_cycles` (2), `access_cycles_var` (0), fabric cycles |
-| `RegisterBank` | `delta_time` (10 ns) | `access_cycles` (10), `write_cycles` (10), fabric cycles |
-| `StreamBuffer` | `stream_latency` (1 ns) | `stream_cycles`, fabric cycles (1) |
-
-With the default clocks each parameter keeps its earlier duration; what changed is that launches, service passes and responses now fall on clock edges. The `SALAMLaunch` debug flag prints each launch and completion, with the cycles and ticks taken.
+See the [timing model](SALAM_Object_Overview.md#timing-model) for operation
+completion and local-memory visibility rules.
 
 ### Generated address header
 
@@ -286,33 +299,17 @@ This file provides constants for:
 
 Both the host code and accelerator kernels include these definitions, directly or through `hw_defines.h`, so that all components use the same address map. This file is generated by the SALAM configurator; it should not be maintained by hand.
 
-## Step 5: Generate the gem5 System
+## Step 5: Construct the gem5 System
 
-SALAM uses gem5 full-system mode to run a bare-metal ARM binary on a modeled platform. The key difference from the standard gem5 full-system scripts is that SALAM inserts an accelerator cluster into the system and connects it to the system buses.
+SALAM runs a bare-metal ARM binary in gem5 full-system mode. Both launchers
+read `config.yml` and construct the accelerator devices and connections;
+you do not need a separate gem5 configuration for each workload. This guide
+uses `run_system.sh`; the
+[standard library example](README_SALAM.md#standard-library-bare-metal-example)
+provides another launcher for built workloads.
 
-Rather than requiring you to hand-write a new gem5 config for each workload, SALAM parses `config.yml` at gem5 configuration time and constructs the accelerator cluster.
-
-The main pieces involved are:
-
-* **util/SALAM-tools/SALAM-Configurator/systembuilder.py**
-  Parses `config.yml`, assigns addresses, and generates:
-
-  * `$ACC_BENCH_PATH/<bench-path>/{cluster}_hw_defines.h` (host/accelerator MMIO macros)
-
-* **configs/SALAM/fs.py**
-  The checked-in full-system gem5 configuration. On ARM it calls `HWAcc.makeHWAcc()`.
-
-* **configs/SALAM/HWAcc.py**
-  Constructs AccCluster, DMA, CommInterface, and memory SimObjects from the same YAML used for headers.
-
-* **configs/SALAM/HWAccConfig.py**
-  Contains `AccConfig(...)`, which binds a CommInterface to:
-
-  * an LLVM IR kernel (via `LLVMInterface.in_file`)
-  * a timing model loaded from `config.yml` (runtime cycles per instruction)
-  * the HWModeling instruction configuration used during execution
-
-In `HWAcc.py`, each accelerator is instantiated as a `CommInterface`, then configured by calling `AccConfig(...)` with its `.ll` path and the YAML config file.
+Generate the MMIO header before compiling the host and accelerator sources
+so their addresses match the simulated system.
 
 From the gem5 repository root, the BFS hardware header can be generated with:
 
@@ -373,7 +370,9 @@ m5_dump_stats(0, 0);
 m5_exit(0);
 ```
 
-The BFS host code is under **bfs/sw/**, and links against the shared bare-metal support code in **common/** (e.g., `syscalls.c`). Host code includes gem5’s `<gem5/m5ops.h>` from `$M5_PATH/include` rather than a copy under `common/`.
+The BFS host code is under **bfs/sw/** and links against the shared
+bare-metal support code in **common/**, including `syscalls.c`. It includes
+gem5's `<gem5/m5ops.h>` from `$M5_PATH/include`.
 
 ## Step 7: Compile the Workload
 
@@ -426,8 +425,9 @@ The script uses:
 
 Point `ACC_BENCH_PATH` at the buildable **`src/`** tree (for example `$M5_PATH/configs/example/gem5_library/salam-benchmarks/src`). The sibling **`workloads/`** tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True`.
 
-`--bench-path` selects `$ACC_BENCH_PATH/<bench-path>/`. If omitted, it
-defaults to `--bench`. For the in-tree BFS example, use
+`--bench` labels the run. `--bench-path` selects
+`$ACC_BENCH_PATH/<bench-path>/` and defaults to `--bench` if omitted.
+For the in-tree BFS example, use
 `--bench bfs --bench-path bfs`.
 
 Example for the in-tree BFS workload:
@@ -439,7 +439,8 @@ scons build/ARM/gem5.opt --with-salam -j$(nproc)
 $M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs --print
 ```
 
-The `--print` flag redirects gem5 stdout/stderr to the output directory so the SALAM performance summary is easy to inspect. See **util/SALAM-docs/README_SALAM.md** for the current LLVM/Clang and ARM cross-compiler setup.
+The `--print` flag writes gem5 standard output to `debug-trace.txt` in the
+output directory. Errors remain on the terminal.
 
 ## Step 9: Inspect the Output
 
@@ -450,86 +451,40 @@ When a SALAM workload is run, the run script places output under:
 The most common outputs to look at are:
 
 * `stats.txt`: gem5 and SALAM reset-window statistics; see
-  [counter semantics](README_SALAM.md#statistics-and-reset-windows).
-* `debug-trace.txt` (optional): if `run_system.sh --print` is used, stdout/stderr are redirected here.
+  [Statistics](#statistics) below.
+* `config.ini` and `config.json`: the simulated system configuration.
+* `debug-trace.txt` (optional): standard output with `run_system.sh --print`.
 * `system.terminal` (if produced by the platform/scripts): the simulated UART/terminal output.
 
-Each `LLVMInterface` prints a summary when its kernel finishes. The fields come from `LLVMInterface::printResults()` in **src/salam/llvm_interface.cc**. BFS produces separate summaries for the compute kernel and the Top controller. The Top runtime includes DMA control and the call to the BFS kernel.
+Each accelerator prints a summary when its kernel finishes. BFS produces
+separate summaries for the compute kernel and the Top controller. The Top
+runtime includes DMA transfers and time waiting for BFS to finish.
 
 The simulated terminal output can also be used to confirm that the host generated its input, launched the accelerator, and completed the job.
 
+## Statistics
+
+`stats.txt` records kernel execution, functional-unit usage, and memory
+transfers. It also reports power, energy, and area estimates when
+characterization data is supplied; the default profile supplies none.
+Check the coverage flags alongside estimates, since missing data leaves
+totals incomplete. Kernel summaries cover a full invocation, while
+`stats.txt` counters cover the current statistics reset window. Refer to
+`stats.txt` for detailed counters and descriptions, and to `config.ini` or
+`config.json` for the configured devices and model inputs.
+
 ## Optional: Customize the Hardware Profile
 
-Plain `--with-salam` uses the default hardware profile
-`configs/SALAM/hw_profiles/default/salam-hw-config.yml`. It generates
-embedded parameter data under the variant build directory.
-`--salam-hw-config=CONFIG` selects a complete replacement profile.
-Paths in `CONFIG` are relative
-to that file. The build does not modify the profile YAML. It does not
-merge with the default hardware profile, scan `examples/`, or infer a
-technology node or cycle time. See **util/SALAM-docs/README_SALAM.md**
-for how to append a unit to `functional_unit_order` and for the
-instruction entry fields.
-
-The embedded `gem5.salam.cluster` construction creates every unit and
-instruction the profile contains using common configuration types.
-Remapping a supported opcode is allowed. A new YAML instruction name does
-not add `compute()` support.
-
-The workload `Profile` field selects the **config.yml**
-`hw_config` mapping. That mapping supplies per-kernel execution latency
-through `CycleCounts`. It is not the build-time hardware profile. The
-**workloads/** tree is a ready-to-run artifact snapshot. It does not
-include the hardware profile.
+`--salam-hw-config` selects a complete build-time hardware profile, separately
+from the workload's instruction timing. See
+[Hardware Profiles](README_SALAM.md#hardware-profiles) for profile fields and
+an example of adding a functional unit.
 
 ```bash
 scons build/ARM/gem5.opt --with-salam \
     --salam-hw-config=/path/to/salam-hw-config.yml -j$(nproc)
 ```
 
-The same workload structure used for BFS—kernel source under `hw/`, a host program under `sw/`, and a `config.yml` that describes the cluster and timing—applies to other kernels as well (for example GEMM or stencil). Once that pattern is familiar, adding a new accelerator is largely a matter of writing a new kernel and updating the YAML, rather than rebuilding the system from scratch. Multiple kernels can also be placed in one AccCluster and connected through shared local memories and DMA, which makes it practical to assemble end-to-end workloads such as MobileNet from a set of cooperating accelerators.
-
-Additional SALAM benchmarks beyond the in-tree BFS example will be made available later through gem5 Resources.
-
-
-### Workload field validation
-
-Memory `Size`, stream `StreamSize`, and explicit `BufferSize` values are
-positive integer bytes. `StreamSize` is required; an omitted stream
-`BufferSize` uses the `StreamBuffer` default of 256 bytes. Cache `Size`
-also accepts integer strings and binary-prefix strings such as `32Ki` or
-`32k`, without a `B` suffix. These forms are normalized to integer bytes.
-SPM boolean fields accept YAML booleans, 0/1, and gem5's boolean strings
-(`true`/`false`, `t`/`f`, `yes`/`no`, `y`/`n`, `1`/`0`). Defaults are
-`ReadyMode=false`, `ResetOnRead=true`, `ReadOnInvalid=false`, and
-`WriteOnValid=true`.
-
-Names start with a letter and contain letters, digits, or underscores.
-DMA and accelerator names, and non-cache variable names, share a
-case-insensitive child namespace. Cache ownership names preserve case.
-Collisions with existing system or cluster attributes are rejected.
-Stream-buffer `InCon` and `OutCon` are required and connect both buffer
-endpoints to accelerators in the same cluster. Accelerator `StreamIn`
-and `StreamOut` name streaming DMAs; each DMA direction has one owner.
-One accelerator may own both distinct directions. Buffer endpoints
-cannot also be listed in `StreamIn` or `StreamOut`. `PIOMaster` and
-`LocalSlaves` support only `LocalBus` (also spelled `local_bus`, with
-case ignored). Named direct PIO links cannot share the required bus
-connection. These restrictions apply to workload YAML; programmatic SimObject
-construction configures ports directly. Repeated explicit YAML keys and
-repeated scalar fields across accelerator entries are rejected. YAML
-merge precedence and explicit overrides of merged values are preserved.
-
-`IrPath` and `SysPath` are relative to the top workload directory;
-`HWPath` and memory `Characterization` paths are relative to their
-declaring YAML file. Absolute paths are accepted. Included `SysPath`
-files retain the top workload directory for IR and further system paths.
-`TopName` and `ClockPeriod_ns` are unsupported and rejected: use the
-`top` entry function and cluster `Clocks.Compute` respectively. Removing
-these previously ignored keys does not change the effective default clock.
-
-The ARM cluster builder allocates devices in
-`[0x2f000000, 0x30000000)`, before the platform's PCI configuration region.
-It rejects allocations outside this range. The parser also rejects
-64-bit address overflow; the existing 64-byte allocation alignment is
-unchanged.
+To add another workload, provide kernels under `hw/`, a host program under
+`sw/`, and a `config.yml` describing the devices and timing. Multiple kernels
+can share local memories and DMA within one cluster.

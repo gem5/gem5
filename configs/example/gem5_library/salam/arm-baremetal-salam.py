@@ -25,12 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-# Run a bare-metal ARM program that uses gem5-SALAM accelerators, built from
-# gem5 standard library components.
-#
-# One O3 core runs at 2 GHz on a 1 GHz board with private L1 caches, a
-# shared L2, 16 GiB of single-channel DDR4-2400, and VExpress_GEM5_V1.
-# The cache hierarchy and board use their ordinary component defaults.
+# Run a bare-metal ARM workload with SALAM accelerators.
 #
 # Usage
 # -----
@@ -103,8 +98,6 @@ board = SALAMArmBoard(
 board.set_bare_metal_binary(args.binary)
 board.attach_accelerators(args.accpath, args.acccfg)
 
-# Use gem5's existing command-line parameter mechanism after the accelerator
-# children exist and before the simulator instantiates their C++ objects.
 board.apply_config(args.param)
 
 simulator = Simulator(board=board)

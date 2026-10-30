@@ -1,125 +1,210 @@
 # SALAM Object Overview
 
-All source code for these objects are stored in **src/salam**.
-
-At a high level, SALAM models an accelerator as a set of gem5 SimObjects with a **control plane** (software-visible MMRs over PIO) and a **data plane** (ports used to access system memory, accelerator-local memories, and optional streaming channels). A typical setup wires one or more accelerators (compute engines) to a **CommInterface** for programmability and external memory access, optionally organized inside an **AccCluster** along with scratchpads, DMAs, and stream components.
+SALAM represents accelerators with gem5 SimObjects under `src/salam`.
+Software controls devices through MMIO; accelerator ports access system
+memory, local storage, and streams.
 
 ## AccCluster
 
-This is an optional simulation object useful for organizing accelerators and resources shared between accelerators. AccCluster provides utilities for connecting accelerators and other shared resources into the larger system.
-
-Conceptually, AccCluster is where you define "what is local to the accelerator subsystem" (local bus, scratchpads, stream buffers, register banks, local DMA endpoints) and "what connects to the rest of the SoC" (system/coherent side connections). If you have multiple accelerators and shared local resources, AccCluster is the place to wire them consistently.
+`AccCluster` groups accelerators, local memories, DMAs, and buses. Its
+local bus connects devices inside the cluster; its coherency bus connects
+to the system. Workload YAML assigns devices within
+`[0x2f000000, 0x30000000)` on the supported ARM platform.
 
 ## CommInterface
 
-The communications interface is the base gem5 component of an accelerator in gem5-SALAM. It provides programmability as well as system memory access to the accelerator. It also provides mechanisms for synchronization, including memory interrupt lines.
+`CommInterface` exposes the accelerator's MMIO registers and memory ports.
+Its register map contains flags for launch/status, a reserved configuration
+region, and arguments captured when the accelerator starts.
 
-CommInterface is the software-visible control point: the CPU programs it via MMIO/PIO, it stores runtime configuration and variable addresses, and it exposes the ports that the accelerator datapath uses to interact with memory and local devices. In most SALAM systems, CommInterface is the "hub" that sits between software control and the datapath execution engine.
+| Port | Purpose |
+|---|---|
+| PIO | Program and inspect control registers |
+| Local | Access devices on the local cluster bus |
+| ACP | Access memory outside the cluster |
+| Stream | Transfer data when a producer or consumer is ready |
+| SPM | Access scratchpads with readiness controls |
 
-The memory map for the CommInterface object is broken into three sections:
+## AccComputeUnit and LLVMInterface
 
-* Flags: Provides runtime status information and switches for invoking the interface
-* Config: Currently has no function, but is reserved for a future version
-* Variables: Addresses for runtime variables or values that will be pulled upon invocation.
-
-### Ports:
-
-* PIO: Connects to MMRs and provides external devices the ability to program the CommInterface.
-
-* Local Ports: Provides access to other devices within an accelerator's local cluster.
-
-* ACP Ports: Provides access to devices outside of the accelerator's local cluster.
-
-* Stream Ports: Implements an AXI-stream like paradigm that limits read and write to data availability. It can be used in producer-consumer schemes with other devices using StreamBuffers or StreamDMAs.
-
-* SPM Ports: Provides access to scratchpads using the additional synchronization controls provided by the scratchpad memory.
-
-## AccComputeUnit
-
-AccComputeUnit is the base compute object used for accelerator datapaths in SALAM. It defines the common structure for a timed, event-driven compute engine (i.e., a “tick” that advances accelerator execution) and provides the hooks used by derived datapath models.
-
-In practice, you generally interact with the derived datapath object (LLVMInterface), but AccComputeUnit is useful to understand because it defines the shared notion of “accelerator execution advancing over time” within gem5.
-
-## LLVMInterface
-
-The LLVM Interface represents the data path of the accelerator. It is what parses the LLVM IR file to generate the hardware data path and then generates and executes the LLVM Control and Data Flow Graph (CDFG) using runtime data provided by the CommInterface.
-
-LLVMInterface is the execution engine: it drives the accelerator’s control/dataflow progression, initiates memory operations, and models completion and synchronization at the accelerator level. It relies on (1) the LLVM IR parsing support (LLVMRead) to interpret the IR and (2) the hardware modeling configuration (via HWInterface / HWModeling) to decide how instructions map to modeled hardware resources (functional units, cycle counts, opcode behaviors, etc.).
+`AccComputeUnit` is the base timed compute engine. `LLVMInterface` reads
+LLVM IR and executes its control and dataflow graph using runtime arguments
+from `CommInterface`. It issues compute and memory operations and tracks
+their completion.
 
 ## HWInterface
 
-HWInterface is the configuration and modeling interface between the LLVM-driven execution engine and the underlying hardware model used for timing and (optionally) power/statistics.
-
-It aggregates the modeled hardware description components used by the datapath, such as:
-
-* functional unit inventory and properties,
-* instruction configuration (mapping instructions to resources and costs),
-* opcode mappings,
-* cycle count models and simulator configuration knobs,
-* optional power/statistics hooks where enabled.
-
-This object is typically instantiated as part of an accelerator definition and passed to the compute engine (LLVMInterface) so execution reflects the intended microarchitectural model.
+`HWInterface` supplies instruction-to-functional-unit mappings, functional
+unit inventory, and instruction cycle counts. Each accelerator has its own
+units. See [functional unit scheduling](README_SALAM.md#functional-unit-scheduling)
+for allocation and admission settings.
 
 ## SALAMPowerModel
 
-`HWInterface.salam_power_model` observes the resolved FU inventory and a
-static SSA-storage approximation. It counts successful operation admissions,
-operand captures, and result publications without changing scheduling.
-Each ScratchpadMemory and RegisterBank has a separate `ppa` child that
-observes serviced accesses to that physical memory, including CPU and DMA
-traffic. Shared memory is counted once.
+`HWInterface.salam_power_model` observes functional-unit inventory,
+operation admissions, and a static SSA-storage approximation.
+Each scratchpad and register bank has a separate `ppa` child that observes
+serviced accesses, including CPU and DMA traffic. Shared memory is counted
+once.
 
-The model reports area, dynamic energy, leakage energy, average power, and
-independent coverage flags. Invocation summaries and resettable statistics
-windows share the same arithmetic. Characterization is optional; absent or
-incompatible data remains explicitly incomplete. See
-[PPA configuration and validation](PPA_and_Validation.md) for supported
-scope, exclusions, units, reset behavior, and reproduction commands.
+The model reports known area, energy, power, and separate coverage flags.
+Missing coefficients remain unavailable. See
+[Statistics](Building_and_Integrating_Accelerators.md#statistics) for run
+outputs.
 
 ## ScratchpadMemory
 
-ScratchpadMemory is a custom fast-access memory for accelerators. It includes access synchronization mechanisms such as ready mode. When access synchronization is activated accelerators will not be able to access data that is not marked ready. Furthermore, additional controls will be placed on reads and writes to the scratchpad in order to implement various sync mechanisms.
-
-ScratchpadMemory is usually attached on the local side of an accelerator subsystem (often via AccCluster) and accessed via the CommInterface SPM ports. It is the standard way to model accelerator-local SRAM with explicit movement (typically through DMA) rather than implicit cache behavior.
+`ScratchpadMemory` provides accelerator-local storage with optional access
+synchronization. With `ReadyMode`, accesses depend on each location's
+readiness. Workload defaults are `ReadyMode=false`, `ResetOnRead=true`,
+`ReadOnInvalid=false`, and `WriteOnValid=true`. Use YAML booleans for these
+fields.
 
 ## RegisterBank
 
-RegisterBank is a small, accelerator-local storage object used for register-like state and runtime variables. It is commonly used to hold scalar configuration values, pointers, or small arrays that are convenient to access as local state rather than through system memory.
-
-RegisterBank is typically mapped into an address range and connected within the local accelerator subsystem, so software or the accelerator can read/write it depending on how the system is wired.
+`RegisterBank` stores accelerator-local scalar values, pointers, or arrays.
+Reads sample visible storage when accepted. Writes become visible after
+their deferred write batch is published; a completed write response
+guarantees that subsequent reads see the stored value.
 
 ## NoncoherentDma
 
-NoncoherentDma provides a memory-to-memory transfer. This is useful for copying data to and from system memory and scratchpads. The MMR layout of the NoncoherentDma is described in noncoherent_dma.hh.
+`NoncoherentDma` copies data between system memory and local storage through
+two FIFOs. The MMIO layout is in `src/salam/noncoherent_dma.hh`. See
+[DMA configuration](README_SALAM.md#dma-configuration) for buffer and request
+limits.
 
-NoncoherentDma is generally used when you want explicit bulk movement (e.g., system memory → scratchpad before compute, scratchpad → system memory after compute) without stream semantics. It is programmed through its MMRs and performs timed transfers through the memory system based on the connectivity you provide (system-side and accelerator-local side).
+## StreamBuffer, StreamDma, and stream ports
 
-## StreamBuffer
+`StreamBuffer` is a FIFO for producer/consumer connections.
+`StreamDma` connects these streams to system memory and supports repeated
+frames. Its MMIO layout is in `src/salam/stream_dma.hh`.
 
-StreamBuffer is a small FIFO buffer that enables AXI-Stream like communication between devices.
+Stream ports transfer only when data or space is available. Producers and
+consumers retry after backpressure, without treating availability checks as
+data transfers.
 
-StreamBuffer is most useful when modeling producer/consumer datapaths that should naturally backpressure: a producer can only push when space is available, and a consumer can only pop when data is available. StreamBuffers are typically paired with stream ports and/or a StreamDma to bridge streaming and memory-mapped domains.
+## Timing model
 
-## StreamDma
+The workload's Compute clock drives `LLVMInterface` and `CommInterface`;
+its Fabric clock drives local buses, DMAs, streams, and local memories.
+The coherency bus and cluster cache use the system clock. See the
+[clock settings](Building_and_Integrating_Accelerators.md#set-the-cluster-clocks)
+for parameter units and defaults.
 
-The StreamDma provides DMA access between traditional memory objects, scratchpads, and an AXI-stream like interface. It also supports auto-play features commonly found in video DMAs. The memory map is defined in stream_dma.hh.
+- A launch starts on the compute edge after the edge on or following the
+  host's run-bit write. A fixed-latency operation issued on edge k completes
+  on edge k + L. Loads and stores complete from their memory responses.
+- `CommInterface` services outstanding requests every `process_cycles`
+  compute cycles. A request issued while idle waits that interval.
+  Memory service precedes compute on the same edge; the next compute pass
+  sees responses that have arrived.
+- Scratchpad responses become ready `access_cycles` fabric cycles after
+  the first fabric edge at or after arrival, plus a uniformly sampled
+  extra of up to `access_cycles_var` cycles. Response backpressure can delay
+  other ports sharing the queue.
+- Register banks publish writes in batches after `write_cycles` fabric
+  cycles from the first write's edge. Each response waits for both its
+  own `access_cycles` delay and publication of its batch. Private-port
+  reads complete immediately; load-port reads wait `access_cycles`.
+  Reads accepted before publication may sample the old value.
+- PIO delays remain time values rather than cycle counts.
 
-Conceptually, StreamDma is the “bridge” between memory-mapped buffers (system memory or scratchpads) and streaming endpoints. It is useful when you want streaming behavior at the boundary of an accelerator, but the rest of the system still uses conventional addressable memory.
+The `SALAMLaunch` debug flag reports launch/completion ticks and cycles.
 
-## Stream Ports
+## Execution semantics
 
-Stream ports implement the availability-gated transfer semantics used by StreamBuffer and StreamDma connections. They enforce the "only transfer when data is available / space is available" behavior that distinguishes the stream path from normal memory ports.
+A module containing one function uses it as the entry function. With
+multiple functions, the workload launcher uses the function named `top`.
 
-In SALAM, stream ports are exposed by the CommInterface so an accelerator datapath can participate in streaming producer/consumer patterns without treating streams as ordinary load/store memory accesses.
+Supported terminators `br`, `ret`, and `switch_inst` have no separate
+modeled latency; their cycle counts must be zero. Other terminators,
+including `indirectbr`, `invoke`, `resume`, and `unreachable`, are rejected.
+Unconditional branch chains are followed eagerly; a chain revisiting a
+block is rejected. Conditional loops follow their runtime branches.
+
+Calls complete on the caller's compute pass after the callee returns,
+plus their configured call latency in further passes. A call latency of N
+therefore completes N+1 compute edges after the return.
+
+Volatile loads/stores wait for earlier volatile accesses, even at disjoint
+addresses. Calls wait for earlier memory accesses, and younger accesses
+wait for the call to return. Ordinary accesses retain address-overlap
+dependencies. Volatile accesses do not provide atomic synchronization
+between independent requestors.
+
+Pointer and GEP index widths must be equal in each address space used by
+the accelerator graph. Unequal widths are rejected before execution.
 
 ## Statistics
 
-See [Statistics and reset windows](README_SALAM.md#statistics-and-reset-windows)
-for counter names, retry and completion semantics, active time, and buffer
-occupancy. The statistics window can cross a running accelerator or DMA
-transfer: a reset clears counters but preserves hardware state.
+Counters in `stats.txt` cover the current reset window. A reset clears
+counters while preserving device state, functional-unit occupancy, buffers,
+and queued work. A response after reset belongs to the new window even if
+its request was accepted before reset.
 
-For bare-metal systems assembled from standard library components, see the
-[standard library example](README_SALAM.md#standard-library-bare-metal-example).
-The legacy and standard library launchers share the embedded `gem5.salam`
-construction implementation.
+The printed kernel summary covers the full invocation. `Compute passes`
+counts scheduler passes, including the first and final pass.
+`Invocation duration` and `Runtime` measure elapsed simulator time from
+accepted launch to completion in ticks and microseconds. Consecutive
+passes include both endpoints: 14 passes span 13 clock periods.
+
+Names below are relative to each object's path in `config.ini`:
+
+- `SALAMPowerModel`: `knownAreaUm2`, `knownDynamicEnergyJ`,
+  `knownLeakageEnergyJ`, `knownTotalEnergyJ`, `elapsedSeconds`, and
+  `knownAveragePowerW` describe known subtotals. Independent coverage flags
+  distinguish those subtotals from complete modeled estimates. FU/SSA
+  invocation summaries remain separate from memory statistics windows.
+- `LLVMInterface`: `invocations`, `cycles`, `issued` and `completed` by
+  operation class, `opcodesIssued`, `fuDenials`, and `memoryOrderWaits`.
+  `reservedOps`, `computeOps`, `readOps`, and `writeOps` are time-weighted
+  occupancies.
+- `LLVMInterface.cycleCategories`: Each compute pass belongs to one category.
+  Priority is `issue`, `fuStall`, `memoryWait`, `computeWait`, then `other`.
+  These count passes, not simultaneous causes.
+- `HWInterface.<unit alias>`: `instances` is current inventory; `admissions`
+  and `denials` count scheduling decisions. `inFlight` and `busyInstances` are
+  time-weighted averages. `utilization` is busy-instance time divided by
+  instance count and window ticks, or zero with no instances.
+- `CommInterface`: `starts`, `finishes`, logical `requests`, send `attempts`,
+  `accepted` packets, `responses`, and response `bytes` distinguish operations
+  from retries and completion.
+- `NoncoherentDma`: `transfers` and `bytes` count starts and requested bytes;
+  `beats` counts FIFO-to-FIFO moves. `writePackets` counts
+  write FIFO requests, which may split at cache-line boundaries. `active` is
+  the time-weighted fraction with a transfer in progress.
+- DMA `memoryPackets` / `clusterPackets`: `readAttempts` / `writeAttempts`
+  include retries; `readPackets` / `writePackets` count downstream acceptance;
+  `readResponses` / `writeResponses` and `readBytes` / `writeBytes` count
+  completion. `clusterPackets` exists on `NoncoherentDma` for its
+  accelerator-side port. Direct atomic backdoor copies are not packets.
+- `StreamDma.transfers`: `readTransfers` / `writeTransfers` count starts;
+  `readFrames` / `writeFrames` count completed frames; `readBytes` /
+  `writeBytes` count requested frame bytes. `readActive` / `writeActive` are
+  time-weighted active fractions. Read means memory-to-stream; write means
+  stream-to-memory.
+- StreamBuffer / StreamDma `stream`: `readAttempts` / `writeAttempts` count
+  timing stream-port sends, including retries. `readPackets` / `writePackets`
+  count accepted beats; `readBytes` / `writeBytes` count FIFO data movement.
+  Availability polls are not attempts. Legacy StreamDma MMIO buffer accesses
+  count accepted data movement but are not stream-port attempts.
+- `StreamBuffer`: `bufferOccupancy` is time-weighted buffered bytes; it retains
+  the actual occupancy across a statistics reset.
+
+`memoryOrderWaits` counts scheduling observations of ready loads or stores
+blocked by older memory accesses. It includes the observation that creates
+an in-flight RAW dependency; it does not measure elapsed wait cycles or
+count each dependency repeatedly while that instruction is unready.
+
+The average statistics retain current state at a reset while beginning a
+new integration interval. Multiplying an active fraction by its statistics
+window gives active time, subject to the text output's decimal precision.
+Packet counts can exceed logical operations because a transfer can split
+into multiple memory packets. Attempts can exceed accepted packets because
+of retries. Repeated dumps do not clear counters; use a reset to start a
+new window.
+
+For instruction issue tracing, add `--debug-flags=SALAMIssue` before the
+configuration script on the gem5 command line. Tracing observes the same
+execution and accounting; it does not change scheduling.
