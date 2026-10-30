@@ -397,13 +397,6 @@ BaseRemoteGDB::BaseRemoteGDB(System *_system,
         trapEvent(this), singleStepEvent(*this)
 {
     listener = _listen_config.build(name());
-
-    // The handler is invoked after construction, so getXferFeaturesRead is
-    // dispatched to the override of the derived class.
-    queryXferReadMap.insert(
-        {"features", [this](const std::string &annex, std::string &output) {
-             return getXferFeaturesRead(annex, output);
-         }});
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
@@ -1541,8 +1534,22 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 std::vector<std::string>
 BaseRemoteGDB::availableFeatures() const
 {
-    return {};
+    return xferReadFeatures;
 };
+
+void
+BaseRemoteGDB::setXferReadHandler(const std::string &object,
+                                  XferReadHandler handler)
+{
+    panic_if(!handler, "Empty qXfer read handler for object '%s'.", object);
+    const bool inserted =
+        queryXferReadMap.insert_or_assign(object, std::move(handler)).second;
+    // Only a newly inserted object is added, so each object is advertised
+    // exactly once even if its handler is replaced.
+    if (inserted) {
+        xferReadFeatures.push_back(csprintf("qXfer:%s:read+", object));
+    }
+}
 
 bool
 BaseRemoteGDB::getXferFeaturesRead(

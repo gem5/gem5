@@ -121,11 +121,6 @@ class RemoteGDB : public BaseRemoteGDB
     RemoteGDB(System *_system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs() override;
     bool checkBpKind(size_t kind) override;
-    std::vector<std::string>
-    availableFeatures() const override
-    {
-        return {"qXfer:features:read+"};
-    };
     bool getXferFeaturesRead(const std::string &annex,
                              std::string &output) override;
 };
