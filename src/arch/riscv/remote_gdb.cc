@@ -189,6 +189,10 @@ RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
     : BaseRemoteGDB(_system, _listen_config),
     regCache32(this), regCache64(this)
 {
+    queryXferReadMap.insert(
+        {"features", [this](const std::string &annex, std::string &output) {
+             return getXferFeaturesRead(annex, output);
+         }});
 }
 
 RiscvType

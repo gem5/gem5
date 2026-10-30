@@ -397,13 +397,6 @@ BaseRemoteGDB::BaseRemoteGDB(System *_system,
         trapEvent(this), singleStepEvent(*this)
 {
     listener = _listen_config.build(name());
-
-    // The handler is invoked after construction, so getXferFeaturesRead is
-    // dispatched to the override of the derived class.
-    queryXferReadMap.insert(
-        {"features", [this](const std::string &annex, std::string &output) {
-             return getXferFeaturesRead(annex, output);
-         }});
 }
 
 BaseRemoteGDB::~BaseRemoteGDB()
@@ -1541,7 +1534,11 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 std::vector<std::string>
 BaseRemoteGDB::availableFeatures() const
 {
-    return {};
+    std::vector<std::string> features;
+    for (const auto &[object, handler] : queryXferReadMap) {
+        features.push_back(csprintf("qXfer:%s:read+", object));
+    }
+    return features;
 };
 
 bool

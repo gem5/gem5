@@ -483,16 +483,12 @@ class BaseRemoteGDB
         std::function<bool(const std::string &annex, std::string &output)>;
 
     /**
-     * Map from qXfer object names to their read handlers. The "features"
-     * object is registered by default and served by getXferFeaturesRead.
-     * The offset and length of the query are applied by queryXfer on the
-     * content returned by the handler.
+     * Map from qXfer object names to their read handlers. The offset and
+     * length of the query are applied by queryXfer on the content returned
+     * by the handler.
      *
-     * Registering a handler here only makes queryXfer serve the object; it
-     * does not tell GDB that the object is available. Derived classes that
-     * add an entry must also advertise the matching "qXfer:<object>:read+"
-     * in availableFeatures(), as the arch stubs do with
-     * "qXfer:features:read+" for the "features" object.
+     * Each registered object is advertised to GDB as
+     * "qXfer:<object>:read+" by the default availableFeatures().
      */
     std::map<std::string, XferReadHandler> queryXferReadMap;
 };
