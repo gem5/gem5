@@ -468,7 +468,8 @@ transition({SD, SD_RSD, SD_RSC, SC, SC_RSC},
   ProcessNextState;
 }
 
-transition({RSD,RUSD,RUSC,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+transition({RSD,RUSD,RU},
+           {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_Writeback;
   Profile_Miss;
@@ -476,7 +477,11 @@ transition({RSD,RUSD,RUSC,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_B
   ProcessNextState;
 }
 
-transition({RSC,I}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+// In RSC and RUSC no upstream copy can be dirty, so the line is up to
+// date downstream and a SnpUnique without RetToSrc would return no data.
+// Invalidate the upstream sharers and forward the write data as-is.
+transition({RSC,RUSC,I},
+           {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_PartialWrite;
   Profile_Miss;
