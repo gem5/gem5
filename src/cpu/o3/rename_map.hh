@@ -168,7 +168,7 @@ class SimpleRenameMap
 class UnifiedRenameMap
 {
   private:
-    std::array<SimpleRenameMap, CCRegClass + 1> renameMaps;
+    std::array<SimpleRenameMap, RMiscRegClass + 1> renameMaps;
 
     static inline PhysRegId invalidPhysRegId{};
 

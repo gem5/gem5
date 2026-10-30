@@ -49,13 +49,11 @@ namespace gem5
 namespace o3
 {
 
-PhysRegFile::PhysRegFile(CPU *_cpu, unsigned _numPhysicalIntRegs,
-                         unsigned _numPhysicalFloatRegs,
-                         unsigned _numPhysicalVecRegs,
-                         unsigned _numPhysicalVecPredRegs,
-                         unsigned _numPhysicalMatRegs,
-                         unsigned _numPhysicalCCRegs,
-                         const BaseISA::RegClasses &reg_classes)
+PhysRegFile::PhysRegFile(
+    CPU *_cpu, unsigned _numPhysicalIntRegs, unsigned _numPhysicalFloatRegs,
+    unsigned _numPhysicalVecRegs, unsigned _numPhysicalVecPredRegs,
+    unsigned _numPhysicalMatRegs, unsigned _numPhysicalCCRegs,
+    unsigned _numPhysicalRMiscRegs, const BaseISA::RegClasses &reg_classes)
     : cpu(_cpu),
       intRegFile(*reg_classes.at(IntRegClass), _numPhysicalIntRegs),
       floatRegFile(*reg_classes.at(FloatRegClass), _numPhysicalFloatRegs),
@@ -68,6 +66,7 @@ PhysRegFile::PhysRegFile(CPU *_cpu, unsigned _numPhysicalIntRegs,
                      _numPhysicalVecPredRegs),
       matRegFile(*reg_classes.at(MatRegClass), _numPhysicalMatRegs),
       ccRegFile(*reg_classes.at(CCRegClass), _numPhysicalCCRegs),
+      rMiscRegFile(*reg_classes.at(RMiscRegClass), _numPhysicalRMiscRegs),
       numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalVecRegs(_numPhysicalVecRegs),
@@ -77,10 +76,11 @@ PhysRegFile::PhysRegFile(CPU *_cpu, unsigned _numPhysicalIntRegs,
       numPhysicalVecPredRegs(_numPhysicalVecPredRegs),
       numPhysicalMatRegs(_numPhysicalMatRegs),
       numPhysicalCCRegs(_numPhysicalCCRegs),
+      numPhysicalRMiscRegs(_numPhysicalRMiscRegs),
       totalNumRegs(_numPhysicalIntRegs + _numPhysicalFloatRegs +
                    _numPhysicalVecRegs + numPhysicalVecElemRegs +
                    _numPhysicalVecPredRegs + _numPhysicalMatRegs +
-                   _numPhysicalCCRegs +
+                   _numPhysicalCCRegs + _numPhysicalRMiscRegs +
                    reg_classes.at(MiscRegClass)->numRegs())
 {
     RegIndex phys_reg;
@@ -131,6 +131,11 @@ PhysRegFile::PhysRegFile(CPU *_cpu, unsigned _numPhysicalIntRegs,
     for (phys_reg = 0; phys_reg < numPhysicalCCRegs; phys_reg++) {
         ccRegIds.emplace_back(*reg_classes.at(CCRegClass), phys_reg,
                 flat_reg_idx++);
+    }
+
+    for (phys_reg = 0; phys_reg < numPhysicalRMiscRegs; phys_reg++) {
+        rMiscRegIds.emplace_back(*reg_classes.at(RMiscRegClass), phys_reg,
+                                 flat_reg_idx++);
     }
 
     // Misc regs have a fixed mapping but still need PhysRegIds.
@@ -197,6 +202,11 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
         assert(ccRegIds[reg_idx].index() == reg_idx);
     }
     freeList->addRegs(ccRegIds.begin(), ccRegIds.end());
+
+    for (reg_idx = 0; reg_idx < numPhysicalRMiscRegs; reg_idx++) {
+        assert(rMiscRegIds[reg_idx].index() == reg_idx);
+    }
+    freeList->addRegs(rMiscRegIds.begin(), rMiscRegIds.end());
 }
 
 } // namespace o3

@@ -104,6 +104,41 @@ class ExecContext : public gem5::ExecContext
         inst->setMemAccPredicate(readMemAccPredicate());
     }
 
+    void
+    noteFofElems(uint32_t elems, bool trimmed) override
+    {
+        if (inst->fofIsTrimmed) {
+            return;
+        }
+        inst->fofElemCount = elems;
+        inst->fofIsTrimmed = trimmed;
+    }
+
+    InstSeqNum
+    instSeqNum() const override
+    {
+        return inst->id.fetchSeqNum;
+    }
+
+    bool
+    fofTrimmed() const override
+    {
+        return inst->fofIsTrimmed;
+    }
+
+    uint32_t
+    fofElems() const override
+    {
+        return inst->fofElemCount;
+    }
+
+    void
+    clearFofRecord() override
+    {
+        inst->fofIsTrimmed = false;
+        inst->fofElemCount = 0;
+    }
+
     Fault
     initiateMemRead(Addr addr, unsigned int size,
                     Request::Flags flags,

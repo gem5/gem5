@@ -120,6 +120,7 @@ class ISA : public BaseISA
     using Params = RiscvISAParams;
 
     void clear() override;
+    RegVal getInitialRegVal(const RegId &id) const override;
 
     PCStateBase*
     newPCState(Addr new_inst_addr=0) const override

@@ -109,7 +109,8 @@ class SimpleExecContext : public ExecContext
                   &(cpu->executeStats[thread->threadId()]->numVecRegReads),
                   &(cpu->executeStats[thread->threadId()]->numVecPredRegReads),
                   &numMatRegReads,
-                  &(cpu->executeStats[thread->threadId()]->numCCRegReads)},
+                  &(cpu->executeStats[thread->threadId()]->numCCRegReads),
+                  &(cpu->executeStats[thread->threadId()]->numRMiscRegReads)},
               numRegWrites{
                   &(cpu->executeStats[thread->threadId()]->numIntRegWrites),
                   &(cpu->executeStats[thread->threadId()]->numFpRegWrites),
@@ -118,7 +119,8 @@ class SimpleExecContext : public ExecContext
                   &(cpu->executeStats[thread->threadId()]
                         ->numVecPredRegWrites),
                   &numMatRegWrites,
-                  &(cpu->executeStats[thread->threadId()]->numCCRegWrites)}
+                  &(cpu->executeStats[thread->threadId()]->numCCRegWrites),
+                  &(cpu->executeStats[thread->threadId()]->numRMiscRegWrites)}
         {
             idleFraction = statistics::constant(1.0) - notIdleFraction;
             numIdleCycles = idleFraction * cpu->baseStats.numCycles;
@@ -158,8 +160,8 @@ class SimpleExecContext : public ExecContext
         statistics::Scalar numBranchMispred;
         /// @}
 
-        std::array<statistics::Scalar *, CCRegClass + 1> numRegReads;
-        std::array<statistics::Scalar *, CCRegClass + 1> numRegWrites;
+        std::array<statistics::Scalar *, RMiscRegClass + 1> numRegReads;
+        std::array<statistics::Scalar *, RMiscRegClass + 1> numRegWrites;
 
     } execContextStats;
 

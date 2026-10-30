@@ -74,6 +74,7 @@ class Scoreboard : public Named
     const unsigned vecRegElemOffset;
     const unsigned vecPredRegOffset;
     const unsigned matRegOffset;
+    const unsigned rmiscRegOffset;
 
     /** The number of registers in the Scoreboard.  These
      *  are just the integer, CC and float registers packed
@@ -108,25 +109,29 @@ class Scoreboard : public Named
     std::vector<InstSeqNum> writingInst;
 
   public:
-    Scoreboard(const std::string &name,
-            const BaseISA::RegClasses& reg_classes) :
-        Named(name),
-        regClasses(reg_classes),
-        intRegOffset(0),
-        floatRegOffset(intRegOffset + reg_classes.at(IntRegClass)->numRegs()),
-        ccRegOffset(floatRegOffset + reg_classes.at(FloatRegClass)->numRegs()),
-        vecRegOffset(ccRegOffset + reg_classes.at(CCRegClass)->numRegs()),
-        vecRegElemOffset(vecRegOffset + reg_classes.at(VecRegClass)->numRegs()),
-        vecPredRegOffset(vecRegElemOffset +
-                reg_classes.at(VecElemClass)->numRegs()),
-        matRegOffset(vecPredRegOffset +
-                reg_classes.at(VecPredRegClass)->numRegs()),
-        numRegs(matRegOffset + reg_classes.at(MatRegClass)->numRegs()),
-        numResults(numRegs, 0),
-        numUnpredictableResults(numRegs, 0),
-        fuIndices(numRegs, invalidFUIndex),
-        returnCycle(numRegs, Cycles(0)),
-        writingInst(numRegs, 0)
+    Scoreboard(const std::string &name, const BaseISA::RegClasses &reg_classes)
+        : Named(name),
+          regClasses(reg_classes),
+          intRegOffset(0),
+          floatRegOffset(intRegOffset +
+                         reg_classes.at(IntRegClass)->numRegs()),
+          ccRegOffset(floatRegOffset +
+                      reg_classes.at(FloatRegClass)->numRegs()),
+          vecRegOffset(ccRegOffset + reg_classes.at(CCRegClass)->numRegs()),
+          vecRegElemOffset(vecRegOffset +
+                           reg_classes.at(VecRegClass)->numRegs()),
+          vecPredRegOffset(vecRegElemOffset +
+                           reg_classes.at(VecElemClass)->numRegs()),
+          matRegOffset(vecPredRegOffset +
+                       reg_classes.at(VecPredRegClass)->numRegs()),
+          rmiscRegOffset(matRegOffset +
+                         reg_classes.at(MatRegClass)->numRegs()),
+          numRegs(rmiscRegOffset + reg_classes.at(RMiscRegClass)->numRegs()),
+          numResults(numRegs, 0),
+          numUnpredictableResults(numRegs, 0),
+          fuIndices(numRegs, invalidFUIndex),
+          returnCycle(numRegs, Cycles(0)),
+          writingInst(numRegs, 0)
     { }
 
   public:

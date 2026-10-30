@@ -44,10 +44,13 @@ def getFaultCode():
     Addr fault_addr;
     if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
         assert(fault_addr >= EA);
-        faultIdx = (fault_addr - EA) / (width_EEW(machInst.width) / 8);
-        if (microIdx != 0 || faultIdx != 0) {
+        const uint32_t idx =
+            (fault_addr - EA) / (width_EEW(machInst.width) / 8);
+        if (microIdx != 0 || idx != 0) {
             fault = NoFault;
-            trimVl = true;
+            if (fofDestIdx >= 0) {
+                xc->noteFofElems(idx, true);
+            }
         }
     }
     '''

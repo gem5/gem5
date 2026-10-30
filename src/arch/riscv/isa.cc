@@ -47,6 +47,7 @@
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/renameable_misc.hh"
 #include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/system.hh"
 #include "base/bitfield.hh"
@@ -316,6 +317,7 @@ ISA::ISA(const Params &p)
     _regClasses.push_back(&vecPredRegClass);
     _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&rmiscRegClass);
     _regClasses.push_back(&miscRegClass);
 
     if (hasVectorExtension()) {
@@ -389,11 +391,23 @@ ISA::copyRegsFrom(ThreadContext *src)
     tc->pcState(src->pcState());
 }
 
+RegVal
+ISA::getInitialRegVal(const RegId &id) const
+{
+    if (id.classValue() == RMiscRegClass &&
+        id.index() == rmisc_reg::_VtypeIdx) {
+        return VtypeReset;
+    }
+    return 0;
+}
+
 void ISA::clear()
 {
     std::fill(miscRegFile.begin(), miscRegFile.end(), 0);
 
     miscRegFile[MISCREG_PRV] = PRV_M;
+    miscRegFile[MISCREG_VTYPE] = VtypeReset;
+    miscRegFile[MISCREG_VL] = 0;
     miscRegFile[MISCREG_VENDORID] = 0;
     miscRegFile[MISCREG_ARCHID] = 0;
     miscRegFile[MISCREG_IMPID] = 0;
@@ -686,17 +700,7 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_VLENB:
         {
             return getVecLenInBytes();
-        }
-      case MISCREG_VTYPE:
-        {
-            auto rpc = tc->pcState().as<PCState>();
-            return rpc.vtype();
-        }
-      case MISCREG_VL:
-        {
-            auto rpc = tc->pcState().as<PCState>();
-            return (RegVal)rpc.vl();
-        }
+      }
       case MISCREG_VCSR:
         {
             return readMiscRegNoEffect(MISCREG_VXSAT) |
