@@ -1,0 +1,77 @@
+; Copyright (c) 2026 Akanksha Chaudhari
+; All rights reserved.
+;
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions are
+; met: redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer;
+; redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in the
+; documentation and/or other materials provided with the distribution;
+; neither the name of the copyright holders nor the names of its
+; contributors may be used to endorse or promote products derived from
+; this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+; Eager unconditional cycles are unsupported. Conditional iterations return
+; to the scheduler and remain valid, including when a loop is relaunched.
+
+target datalayout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64"
+target triple = "armv7-pc-none-eabi"
+
+define void @top() {
+entry:
+  br label %loop
+loop:
+  store volatile i32 99, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  br label %loop
+}
+
+define void @multi_cycle() {
+entry:
+  br label %first
+first:
+  br label %second
+second:
+  br label %first
+}
+
+define void @cycle_callee() {
+entry:
+  br label %loop
+loop:
+  br label %loop
+}
+
+define void @call_cycle() {
+entry:
+  call void @cycle_callee()
+  ret void
+}
+
+define void @conditional_loop() {
+entry:
+  %n = load volatile i32, {PTR_I32} inttoptr (i32 {IN} to {PTR_I32})
+  br label %loop
+loop:
+  %i = phi i32 [ 0, %entry ], [ %next, %body ]
+  %continue = icmp ult i32 %i, %n
+  br i1 %continue, label %body, label %exit
+body:
+  %next = add i32 %i, 1
+  br label %loop
+exit:
+  store volatile i32 %i, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  ret void
+}

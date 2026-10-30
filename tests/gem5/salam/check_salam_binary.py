@@ -48,7 +48,14 @@ if missing:
 print("SALAM SimObjects present")
 
 if len(sys.argv) > 1:
-    from check_salam_ownership import check_profile
+    from m5 import _salam_profile
 
-    check_profile(json.loads(sys.argv[1]))
-    print("SALAM profile: 4 registered classes; ownership checked")
+    expected = json.loads(sys.argv[1])
+    assert _salam_profile.PROFILE_PATH == expected["profile"]
+    assert [alias for alias, _params in _salam_profile.FUNCTIONAL_UNITS] == [
+        alias for alias, _params in expected["functional_units"]
+    ]
+    assert [name for name, _params in _salam_profile.INSTRUCTIONS] == [
+        name for name, _params in expected["instructions"]
+    ]
+    print("SALAM profile selected")

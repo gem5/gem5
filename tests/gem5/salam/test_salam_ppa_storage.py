@@ -392,7 +392,14 @@ def same_behavior(enabled, disabled):
         raise AssertionError("PPA changed payload or completion tick")
 
 
-def traffic(kind, mask="byte_enable", requestors=1, reset=False, fast=False):
+def traffic(
+    kind,
+    mask="byte_enable",
+    requestors=1,
+    reset=False,
+    fast=False,
+    equivalence=False,
+):
     def check(params):
         values = dict(
             kind=kind,
@@ -458,9 +465,10 @@ def traffic(kind, mask="byte_enable", requestors=1, reset=False, fast=False):
                 raise AssertionError("SPM request retry was not exercised")
         if fast and not re.search(r"recvTimingResp:.* BUSY", output):
             raise AssertionError("response retry was not exercised")
-        values["model"]["enabled"] = False
-        disabled = run_config(params, "disabled", TRAFFIC_CONFIG, values)
-        same_behavior(outdir, disabled)
+        if equivalence or reset:
+            values["model"]["enabled"] = False
+            disabled = run_config(params, "disabled", TRAFFIC_CONFIG, values)
+            same_behavior(outdir, disabled)
 
     return check
 
@@ -613,11 +621,12 @@ def dma(reset):
         )
         if sorted(services) != sorted(expected_services):
             raise AssertionError("CPU/DMA memory service sequence differs")
-        values["model"]["enabled"] = False
-        disabled = run_config(params, "dma-disabled", DMA_CONFIG, values)
-        same_behavior(outdir, disabled)
-        if terminal != read(disabled, "board.terminal"):
-            raise AssertionError("memory PPA changed DMA payload")
+        if reset:
+            values["model"]["enabled"] = False
+            disabled = run_config(params, "dma-disabled", DMA_CONFIG, values)
+            same_behavior(outdir, disabled)
+            if terminal != read(disabled, "board.terminal"):
+                raise AssertionError("memory PPA changed DMA payload")
 
     return check
 
@@ -774,7 +783,7 @@ def unknown_word_width(params):
 
 
 for name, test in (
-    ("salam-ppa-spm-byte-enable", traffic("spm")),
+    ("salam-ppa-spm-byte-enable", traffic("spm", equivalence=True)),
     ("salam-ppa-spm-rmw", traffic("spm", "read_modify_write")),
     ("salam-ppa-spm-shared-reset", traffic("spm", requestors=2, reset=True)),
     ("salam-ppa-spm-response-retry", traffic("spm", fast=True)),

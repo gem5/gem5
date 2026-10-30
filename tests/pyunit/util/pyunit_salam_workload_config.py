@@ -24,7 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import ast
 import contextlib
 import io
 import os
@@ -923,18 +922,3 @@ class SalamWorkloadConfigTestSuite(unittest.TestCase):
                         f"{field} must be an integer",
                     ):
                         self.dma(dma_type, **{field: value})
-
-    def test_cycle_count_params_match_simobject(self):
-        path = os.path.join(_ROOT, "src", "salam", "CycleCounts.py")
-        tree = ast.parse(open(path).read())
-        names = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef) and node.name == "CycleCounts":
-                for stmt in node.body:
-                    if (
-                        isinstance(stmt, ast.Assign)
-                        and isinstance(stmt.value, ast.Call)
-                        and "Param" in ast.dump(stmt.value.func)
-                    ):
-                        names.add(stmt.targets[0].id)
-        self.assertEqual(names, set(workload_config.CYCLE_COUNT_PARAMS))

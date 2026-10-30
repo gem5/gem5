@@ -214,77 +214,93 @@ void
 LLVMInterface::ActiveFunction::scheduleBB(
     std::shared_ptr<SALAM::BasicBlock> bb)
 {
-    auto schedulingStart = std::chrono::high_resolution_clock::now();
-    if (dbg) {
-        DPRINTFS(Runtime, owner, "|---[Schedule BB - UID:%i ]\n",
-                 bb->getUID());
-    }
-    bool needToScheduleBranch = false;
-    std::shared_ptr<SALAM::BasicBlock> nextBB;
-    auto instruction_list = *(bb->Instructions());
-    // The phis at the start of a block read their incoming values as of
-    // block entry. Resolve all of them before any is queued, so that one
-    // phi never reads another phi's new value.
-    std::vector<std::shared_ptr<SALAM::Instruction>> entryPhis;
-    for (auto inst : instruction_list) {
-        if (!entryPhis.empty() && !inst->isPhi()) {
-            for (auto phi : entryPhis) {
-                reservation.push_back(phi);
-            }
-            entryPhis.clear();
-        }
-        std::shared_ptr<SALAM::Instruction> clone_inst = inst->clone();
+    // Follow unconditional edges eagerly without growing the C++ stack.
+    // Conditional branches resume through a later scheduleBB call, so a
+    // block may be revisited there without constituting an eager cycle.
+    std::set<const SALAM::BasicBlock *> visited;
+    while (true) {
+        fatal_if(!visited.insert(bb.get()).second,
+                 "SALAM cannot eagerly schedule an unconditional CFG cycle "
+                 "in function %s: block %s is revisited. Perpetual streaming "
+                 "loops are unsupported; use a conditional exit or return.",
+                 func->getIRStub(), bb->getIRStub());
+        auto schedulingStart = std::chrono::high_resolution_clock::now();
         if (dbg) {
-            DPRINTFS(Runtime, owner, "\t\t Instruction Cloned [UID: %d] \n",
-                     inst->getUID());
+            DPRINTFS(Runtime, owner, "|---[Schedule BB - UID:%i ]\n",
+                     bb->getUID());
         }
-        if (clone_inst->isBr()) {
-            if (dbg) {
-                DPRINTFS(Runtime, owner, "\t\t Branch Instruction Found\n");
+        bool needToScheduleBranch = false;
+        std::shared_ptr<SALAM::BasicBlock> nextBB;
+        auto instruction_list = *(bb->Instructions());
+        // The phis at the start of a block read their incoming values as of
+        // block entry. Resolve all of them before any is queued, so that one
+        // phi never reads another phi's new value.
+        std::vector<std::shared_ptr<SALAM::Instruction>> entryPhis;
+        for (auto inst : instruction_list) {
+            if (!entryPhis.empty() && !inst->isPhi()) {
+                for (auto phi : entryPhis) {
+                    reservation.push_back(phi);
+                }
+                entryPhis.clear();
             }
-            auto branch = std::dynamic_pointer_cast<SALAM::Br>(clone_inst);
-            if (branch && !(branch->isConditional())) {
+            std::shared_ptr<SALAM::Instruction> clone_inst = inst->clone();
+            if (dbg) {
+                DPRINTFS(Runtime, owner,
+                         "\t\t Instruction Cloned [UID: %d] \n",
+                         inst->getUID());
+            }
+            if (clone_inst->isBr()) {
                 if (dbg) {
-                    DPRINTFS(
-                        Runtime, owner,
-                        "\t\t Unconditional Branch, Scheduling Next BB\n");
+                    DPRINTFS(Runtime, owner,
+                             "\t\t Branch Instruction Found\n");
                 }
-                nextBB = branch->getTarget();
-                if (dbg) {
-                    DPRINTFS(RuntimeCompute, owner,
-                             "\t\t Branching to %s from %s\n",
-                             nextBB->getIRStub(), bb->getIRStub());
+                auto branch = std::dynamic_pointer_cast<SALAM::Br>(clone_inst);
+                if (branch && !(branch->isConditional())) {
+                    if (dbg) {
+                        DPRINTFS(
+                            Runtime, owner,
+                            "\t\t Unconditional Branch, Scheduling Next BB\n");
+                    }
+                    nextBB = branch->getTarget();
+                    if (dbg) {
+                        DPRINTFS(RuntimeCompute, owner,
+                                 "\t\t Branching to %s from %s\n",
+                                 nextBB->getIRStub(), bb->getIRStub());
+                    }
+                    needToScheduleBranch = true;
+                } else {
+                    findDynamicDeps(clone_inst);
+                    reservation.push_back(clone_inst);
                 }
-                needToScheduleBranch = true;
             } else {
+                if (clone_inst->isPhi()) {
+                    if (dbg) {
+                        DPRINTFS(Runtime, owner,
+                                 "\t\t Phi Instruction Found\n");
+                    }
+                    auto phi =
+                        std::dynamic_pointer_cast<SALAM::Phi>(clone_inst);
+                    if (phi) {
+                        phi->setPrevBB(previousBB);
+                    }
+                    findDynamicDeps(clone_inst);
+                    entryPhis.push_back(clone_inst);
+                    continue;
+                }
                 findDynamicDeps(clone_inst);
                 reservation.push_back(clone_inst);
             }
-        } else {
-            if (clone_inst->isPhi()) {
-                if (dbg) {
-                    DPRINTFS(Runtime, owner, "\t\t Phi Instruction Found\n");
-                }
-                auto phi = std::dynamic_pointer_cast<SALAM::Phi>(clone_inst);
-                if (phi) {
-                    phi->setPrevBB(previousBB);
-                }
-                findDynamicDeps(clone_inst);
-                entryPhis.push_back(clone_inst);
-                continue;
-            }
-            findDynamicDeps(clone_inst);
-            reservation.push_back(clone_inst);
         }
-    }
-    for (auto phi : entryPhis) {
-        reservation.push_back(phi);
-    }
-    previousBB = bb;
-    auto schedulingStop = std::chrono::high_resolution_clock::now();
-    owner->addSchedulingTime(schedulingStop - schedulingStart);
-    if (needToScheduleBranch) {
-        scheduleBB(nextBB);
+        for (auto phi : entryPhis) {
+            reservation.push_back(phi);
+        }
+        previousBB = bb;
+        auto schedulingStop = std::chrono::high_resolution_clock::now();
+        owner->addSchedulingTime(schedulingStop - schedulingStart);
+        if (!needToScheduleBranch) {
+            return;
+        }
+        bb = nextBB;
     }
 }
 

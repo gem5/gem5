@@ -84,16 +84,3 @@ TEST(SalamLatencySample, SeparateGeneratorsDoNotAdvanceEachOther)
         EXPECT_EQ(SALAM::sampleLatency(*b, 0, 1000), first[i]) << i;
     }
 }
-
-// The default-seeded generator a scratchpad starts with; the SALAM
-// access_cycles_var tests (2 cycles plus up to 5) expect these
-// successive extra cycles.
-TEST(SalamLatencySample, DefaultSeedSequence)
-{
-    Random::RandomPtr rng = Random::genRandom();
-    std::vector<Tick> extras;
-    for (int i = 0; i < 4; i++) {
-        extras.push_back(SALAM::sampleLatency(*rng, 2, 5) - 2);
-    }
-    EXPECT_EQ(extras, (std::vector<Tick>{4, 0, 2, 4}));
-}

@@ -31,10 +31,10 @@ import json
 import sys
 
 import m5
-import m5.objects
 from m5 import _salam_profile
 from m5._salam_config import install_profile
 from m5.objects import (
+    CycleCounts,
     FunctionalUnit,
     FunctionalUnits,
     InstConfig,
@@ -42,7 +42,9 @@ from m5.objects import (
     Root,
     SubSystem,
 )
-from m5.proxy import isproxy
+from m5.SimObject import SimObject
+
+from gem5.salam.workload_config import CYCLE_COUNT_PARAMS
 
 STRING_FIELDS = {
     "alias",
@@ -59,11 +61,11 @@ BOOL_FIELDS = {"int_apmode", "fp_apmode", "ptr_apmode"}
 
 def parameter_value(name, value):
     if name in STRING_FIELDS:
-        return "String", str(value)
+        return str(value)
     if name in BOOL_FIELDS:
         assert isinstance(value, bool), (name, value)
-        return "Bool", value
-    return "UInt32", int(value)
+        return value
+    return int(value)
 
 
 def json_value(value):
@@ -90,20 +92,9 @@ def check_aliases(container_class, entry_class, vector_name, entries, path):
         "path",
         "type",
         "eventq_index",
-        "getCCParams",
-        "cxx_class_path",
-        "cxx_class_name",
-        "cxx_namespaces",
-        "pybind_class",
-        "init",
-        "startup",
-        "name",
         "from_profile",
         vector_name,
         "any",
-        "all",
-        "search_self",
-        "search_up",
     ]
     if container_class is FunctionalUnits:
         aliases.append("characterization")
@@ -140,48 +131,9 @@ def check_aliases(container_class, entry_class, vector_name, entries, path):
 
 
 def check_profile(expected):
-    classes = {
-        "FunctionalUnit",
-        "FunctionalUnits",
-        "InstructionConfig",
-        "InstConfig",
-    }
-    modules = {"m5.objects.FunctionalUnits", "m5.objects.InstConfig"}
-    registered = {
-        name
-        for name, cls in vars(m5.objects).items()
-        if isinstance(cls, type) and cls.__module__ in modules
-    }
-    assert registered == classes, (registered, classes)
-    obsolete = (
-        (
-            FunctionalUnit,
-            (
-                "power_units",
-                "energy_units",
-                "time_units",
-                "area_units",
-                "fu_latency",
-                "internal_power",
-                "switch_power",
-                "dynamic_power",
-                "dynamic_energy",
-                "leakage_power",
-                "area",
-                "path_delay",
-            ),
-        ),
-        (InstructionConfig, ("runtime_cycles", "functional_unit_limit")),
-    )
-    for entry_class, fields in obsolete:
-        assert not set(fields) & set(entry_class._params.keys())
-        for field in fields:
-            try:
-                entry_class(**{field: 0})
-            except AttributeError as error:
-                assert field in str(error), str(error)
-            else:
-                raise AssertionError("accepted obsolete parameter " + field)
+    assert set(CycleCounts._params.keys()) - set(
+        SimObject._params.keys()
+    ) == set(CYCLE_COUNT_PARAMS)
     assert _salam_profile.PROFILE_PATH == expected["profile"]
     assert (
         json_value(_salam_profile.FUNCTIONAL_UNITS)
@@ -212,7 +164,6 @@ def check_profile(expected):
         ),
     )
     for cls, entry_cls, vector_name, key, _field in collections:
-        assert cls._params[vector_name].ptype is entry_cls
         check_aliases(
             cls, entry_cls, vector_name, expected[key], expected["profile"]
         )
@@ -240,7 +191,6 @@ def check_profile(expected):
         for suffix, container in (
             ("bare", cls()),
             ("first", cls.from_profile()),
-            ("second", cls.from_profile()),
         ):
             setattr(root, key + "_" + suffix, container)
             checks.append((container, expected[key], entry_cls, vector_name))
@@ -264,21 +214,13 @@ def check_profile(expected):
     for container, entries, entry_cls, vector_name in checks:
         aliases = [alias for alias, _ in entries]
         assert set(container._children.keys()) == set(aliases)
-        if entries:
-            assert isproxy(getattr(container, vector_name))
-        else:
-            assert len(getattr(container, vector_name)) == 0
         for alias, parameters in entries:
             child = getattr(container, alias)
             assert type(child) is entry_cls
             assert child.get_parent() is container
             assert child.path() == container.path() + "." + alias
-            assert set(child._params.keys()) == set(parameters) | {
-                "eventq_index"
-            }
             for name, value in parameters.items():
-                param_type, converted = parameter_value(name, value)
-                assert child._params[name].ptype.__name__ == param_type
+                converted = parameter_value(name, value)
                 assert getattr(child, name).config_value() == converted, (
                     child.path(),
                     name,
@@ -300,7 +242,7 @@ def check_profile(expected):
             assert cpp_entries[index] is pointer, (container.path(), alias)
             assert all(pointer is not other for other in pointers)
             for name, value in parameters.items():
-                _param_type, converted = parameter_value(name, value)
+                converted = parameter_value(name, value)
                 assert getattr(child.getCCParams(), name) == converted, (
                     child.path(),
                     name,

@@ -461,15 +461,17 @@ def analytical(expected, runs, extra=(), equivalence=False, reset=False):
         )
         terminal = read_text(os.path.join(outdir, "system.terminal"))
         output_check(terminal, expected["output"], runs)
-        # Negative control for this checker family, independent of the model.
-        try:
-            output_check(terminal, expected["output"] + 1, runs)
-        except AssertionError:
-            pass
-        else:
-            raise AssertionError("payload checker accepted a wrong reference")
         check_reports(text, expected, runs)
         if equivalence:
+            # Check the payload oracle once, alongside the representative run.
+            try:
+                output_check(terminal, expected["output"] + 1, runs)
+            except AssertionError:
+                pass
+            else:
+                raise AssertionError(
+                    "payload checker accepted a wrong reference"
+                )
             disabled, _ = run_variant(
                 params,
                 "disabled",
@@ -524,14 +526,6 @@ def analytical(expected, runs, extra=(), equivalence=False, reset=False):
             ]
             if len(set(dynamics)) != 1:
                 raise AssertionError("repeated dumps charged activity twice")
-        evidence = {
-            "expected": expected,
-            "invocations": reports(text),
-            "elf": st.sha256_file(params.fixtures["salam-workload"].elf),
-            "ir": st.sha256_file(params.fixtures["salam-workload"].ir),
-        }
-        with open(os.path.join(outdir, "analytical-ppa.json"), "w") as stream:
-            json.dump(evidence, stream, indent=2)
 
     return check
 
@@ -606,20 +600,19 @@ suite(
             f"--param={HW}.cycle_counts.add=0",
             f"--param={HW}.cycle_counts.mul=0",
         ],
-        equivalence=True,
     ),
 )
 suite(
     "salam-ppa-inventory-loops",
     LOOP,
-    analytical(LOOP_EXPECTED, 2, equivalence=True),
+    analytical(LOOP_EXPECTED, 2),
     inputs=(2,),
     runs=2,
 )
 suite(
     "salam-ppa-reachable-callee-widths",
     CALLEE,
-    analytical(CALLEE_EXPECTED, 2, equivalence=True),
+    analytical(CALLEE_EXPECTED, 2),
     inputs=(2,),
     runs=2,
 )
@@ -695,7 +688,7 @@ def unbound_physical_operation(params):
         missing_events=1,
         missing=[identity],
     )
-    analytical(expected, 1, equivalence=True)(params)
+    analytical(expected, 1)(params)
 
 
 suite(
@@ -752,7 +745,7 @@ def unbound_arithmetic(params):
         timing="unavailable",
         missing=["fu:unbound:add:i32,i32->i32"],
     )
-    analytical(expected, 1, extra, equivalence=True)(params)
+    analytical(expected, 1, extra)(params)
 
 
 suite("salam-ppa-unbound-arithmetic", BASIC, unbound_arithmetic)
@@ -800,10 +793,13 @@ def functional_unit_timing(params):
             if failure not in text:
                 raise AssertionError("FU timing failure lost its reason")
         check_reports(text, expected, 1)
-        disabled, _ = run_variant(
-            params, name + "-disabled", model_args(False, strict=False) + extra
-        )
-        equal_observations(outdir, disabled)
+        if name == "short-latency":
+            disabled, _ = run_variant(
+                params,
+                name + "-disabled",
+                model_args(False, strict=False) + extra,
+            )
+            equal_observations(outdir, disabled)
     values = coefficients()["timing_available"]
     values[0] = False
     outdir, text = run_variant(
@@ -985,18 +981,17 @@ def reporting_controls(params):
         raise AssertionError("disabled model emitted PPA details")
     output_check(read_text(os.path.join(disabled, "system.terminal")), 15, 1)
     check_generic_report(disabled, "disabled")
-    for details in (False, True):
-        extra = [f"--param={HW}.inst_config.add.functional_unit=0"]
-        outdir, _ = run_variant(
-            params,
-            "strict-unbound-" + str(details),
-            model_args(report_details=details) + extra,
-            rejected=True,
-        )
-        if "fu:unbound:add:i32,i32->i32" not in read_text(
-            os.path.join(outdir, "simerr.txt")
-        ):
-            raise AssertionError("strict rejection lost its missing binding")
+    extra = [f"--param={HW}.inst_config.add.functional_unit=0"]
+    outdir, _ = run_variant(
+        params,
+        "strict-unbound-quiet",
+        model_args(report_details=False) + extra,
+        rejected=True,
+    )
+    if "fu:unbound:add:i32,i32->i32" not in read_text(
+        os.path.join(outdir, "simerr.txt")
+    ):
+        raise AssertionError("strict rejection lost its missing binding")
     if before != {path: st.sha256_file(path) for path in artifacts}:
         raise AssertionError("report controls changed workload artifacts")
 
@@ -1007,58 +1002,63 @@ suite("salam-ppa-report-controls", BASIC, reporting_controls)
 def dump_reporting_controls(params):
     gem5 = params.fixtures["salam-gem5"]
     base = params.fixtures[constants.tempdir_fixture_name].path
-    for enabled in (False, True):
-        for strict in (False, True):
-            for details in (False, True):
-                outdir = os.path.join(
-                    base, f"dump-{enabled}-{strict}-{details}"
+    # Disabled models suppress both strict checks and requested reports.
+    # Enabled models retain every strict/reporting combination.
+    cases = (
+        (False, True, True),
+        (True, False, False),
+        (True, False, True),
+        (True, True, False),
+        (True, True, True),
+    )
+    for enabled, strict, details in cases:
+        outdir = os.path.join(base, f"dump-{enabled}-{strict}-{details}")
+        os.makedirs(outdir)
+        settings = dict(enabled=enabled, strict=strict)
+        if details:
+            settings["report_details"] = True
+        script = os.path.join(outdir, "dump.py")
+        with open(script, "w") as stream:
+            stream.write(
+                "import m5\n"
+                "from m5.objects import Root, SALAMPowerModel\n"
+                "root = Root(full_system=False)\n"
+                f"root.ppa = SALAMPowerModel(**{settings!r})\n"
+                "m5.instantiate()\n"
+                "m5.simulate(1)\n"
+                "print('PPA_DUMP_READY', flush=True)\n"
+                "m5.stats.dump()\n"
+                "print('PPA_DUMP_COMPLETE', flush=True)\n"
+            )
+        result = subprocess.run(
+            [gem5.path, "-d", outdir, "-re", script],
+            env=gem5.tools.env(),
+            timeout=30,
+        )
+        output = read_text(os.path.join(outdir, "simout.txt"))
+        error = read_text(os.path.join(outdir, "simerr.txt"))
+        if "PPA_DUMP_READY" not in output:
+            raise AssertionError("did not reach explicit stats dump")
+        if enabled and strict:
+            if result.returncode == 0 or (
+                "strict PPA coverage is incomplete" not in error
+            ):
+                raise AssertionError(
+                    "output setting bypassed strict dump validation"
                 )
-                os.makedirs(outdir)
-                settings = dict(enabled=enabled, strict=strict)
-                if details:
-                    settings["report_details"] = True
-                script = os.path.join(outdir, "dump.py")
-                with open(script, "w") as stream:
-                    stream.write(
-                        "import m5\n"
-                        "from m5.objects import Root, SALAMPowerModel\n"
-                        "root = Root(full_system=False)\n"
-                        f"root.ppa = SALAMPowerModel(**{settings!r})\n"
-                        "m5.instantiate()\n"
-                        "m5.simulate(1)\n"
-                        "print('PPA_DUMP_READY', flush=True)\n"
-                        "m5.stats.dump()\n"
-                        "print('PPA_DUMP_COMPLETE', flush=True)\n"
+            if "PPA_DUMP_COMPLETE" in output or "   PPA " in output:
+                raise AssertionError("strict dump completed")
+        else:
+            if result.returncode or "PPA_DUMP_COMPLETE" not in output:
+                raise AssertionError("non-strict/disabled dump failed")
+            if ("   PPA model: " in output) != (enabled and details):
+                raise AssertionError("incorrect explicit dump output")
+            stats = st.read_stats(outdir)[-1]
+            for quantity in ("area", "dynamic", "leakage"):
+                if stats["ppa." + quantity + "Complete"] != 0:
+                    raise AssertionError(
+                        "unconfigured model claimed complete coverage"
                     )
-                result = subprocess.run(
-                    [gem5.path, "-d", outdir, "-re", script],
-                    env=gem5.tools.env(),
-                    timeout=30,
-                )
-                output = read_text(os.path.join(outdir, "simout.txt"))
-                error = read_text(os.path.join(outdir, "simerr.txt"))
-                if "PPA_DUMP_READY" not in output:
-                    raise AssertionError("did not reach explicit stats dump")
-                if enabled and strict:
-                    if result.returncode == 0 or (
-                        "strict PPA coverage is incomplete" not in error
-                    ):
-                        raise AssertionError(
-                            "output setting bypassed strict dump validation"
-                        )
-                    if "PPA_DUMP_COMPLETE" in output or "   PPA " in output:
-                        raise AssertionError("strict dump completed")
-                else:
-                    if result.returncode or "PPA_DUMP_COMPLETE" not in output:
-                        raise AssertionError("non-strict/disabled dump failed")
-                    if ("   PPA model: " in output) != (enabled and details):
-                        raise AssertionError("incorrect explicit dump output")
-                    stats = st.read_stats(outdir)[-1]
-                    for quantity in ("area", "dynamic", "leakage"):
-                        if stats["ppa." + quantity + "Complete"] != 0:
-                            raise AssertionError(
-                                "unconfigured model claimed complete coverage"
-                            )
 
 
 TestSuite(

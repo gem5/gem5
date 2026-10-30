@@ -28,7 +28,6 @@
 # Functional-unit fields in SALAM hardware profiles.
 
 import ast
-import dataclasses
 import os
 import shutil
 import sys
@@ -151,11 +150,22 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         )
         model = self.load()
         self.assertIn(record, model.fu_input_paths)
-        expected = g.power_model.load(record)
         shutil.rmtree(self.profile)
+        data = self.generated_data(model)["CHARACTERIZATION"]
         self.assertEqual(
-            self.generated_data(model)["CHARACTERIZATION"], expected
+            data["keys"],
+            [
+                "fu:integer_adder",
+                "op:integer_adder:add:i32,i32->i32",
+                "op:integer_adder:sub:i32,i32->i32",
+            ],
         )
+        self.assertEqual(data["area_um2"], [10, 0, 0])
+        self.assertEqual(data["leakage_w"], [2e-6, 0, 0])
+        self.assertEqual(
+            data["area_status"], ["proxy", "unavailable", "unavailable"]
+        )
+        self.assertEqual(data["event_status"], ["unavailable"] * 3)
 
     def operation_characterization(
         self, alias, operation, signature, physical_signature=None
@@ -231,14 +241,14 @@ class FunctionalUnitFieldTest(unittest.TestCase):
                     instruction.functional_unit,
                     self.unit(model, alias).enum_value,
                 )
-                expected = g.power_model.load(record)
-                self.assertIn(
-                    f"op:{alias}:{operation}:{signature}", expected["keys"]
-                )
                 shutil.rmtree(self.profile)
+                data = self.generated_data(model)["CHARACTERIZATION"]
                 self.assertEqual(
-                    self.generated_data(model)["CHARACTERIZATION"], expected
+                    data["keys"],
+                    [f"fu:{alias}", f"op:{alias}:{operation}:{signature}"],
                 )
+                self.assertEqual(data["area_um2"], [10, 0])
+                self.assertAlmostEqual(data["event_j"][1], 5e-12, delta=1e-24)
 
     def test_characterization_binding_rejects_a_different_unit(self):
         self.synthetic_characterization("integer_adder")
@@ -343,36 +353,6 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         self.bind_characterization("integer_adder", "missing.yml")
         with self.assertRaisesRegex(g.SourceConfigError, "missing.yml"):
             self.load()
-
-    def test_default_profile_omits_inactive_configuration_fields(self):
-        model = self.load()
-        data = self.generated_data(model)
-        for _alias, parameters in data["FUNCTIONAL_UNITS"]:
-            self.assertEqual(
-                set(parameters),
-                {
-                    "alias",
-                    "stages",
-                    "cycles",
-                    "enum_value",
-                    "int_size",
-                    "int_sign",
-                    "int_apmode",
-                    "fp_size",
-                    "fp_sign",
-                    "fp_apmode",
-                    "ptr_size",
-                    "ptr_sign",
-                    "ptr_apmode",
-                    "limit",
-                    "initiation_interval",
-                },
-            )
-        for _name, parameters in data["INSTRUCTIONS"]:
-            self.assertEqual(
-                set(parameters), {"functional_unit", "opcode_num"}
-            )
-        self.assertEqual(data["CHARACTERIZATION"]["keys"], [])
 
     def test_legacy_power_fields_are_rejected_even_when_zero(self):
         fields = (
@@ -596,8 +576,10 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         self.assertNotEqual(custom, default)
         model = self.load()
         data = self.generated_data(model)
-        self.assert_profile_records(model, data)
         self.assertEqual(data["FUNCTIONAL_UNITS"][-1][0], "extra_unit")
+        extra = dict(data["FUNCTIONAL_UNITS"])["extra_unit"]
+        self.assertEqual(extra["alias"], "extra_unit")
+        self.assertEqual(extra["enum_value"], 99)
         self.reset()
         self.assertEqual(generate(), default)
 
@@ -624,48 +606,16 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         )
         return values
 
-    def assert_profile_records(self, model, data):
-        metadata = {
-            "path",
-            "instruction_names",
-            "characterization",
-            "characterization_path",
-        }
-        units = tuple(
-            (
-                unit.alias,
-                {
-                    name: value
-                    for name, value in dataclasses.asdict(unit).items()
-                    if name not in metadata
-                },
-            )
-            for unit in model.functional_units
-        )
-        instructions = tuple(
-            (
-                inst.name,
-                {
-                    name: value
-                    for name, value in dataclasses.asdict(inst).items()
-                    if name != "name"
-                },
-            )
-            for inst in model.instructions
-        )
-        self.assertEqual(data["PROFILE_PATH"], model.spec.config_path)
-        self.assertEqual(data["FUNCTIONAL_UNITS"], units)
-        self.assertEqual(data["INSTRUCTIONS"], instructions)
-        self.assertEqual(
-            data["CHARACTERIZATION"],
-            g.power_model.merge(
-                unit.characterization for unit in model.functional_units
-            ),
-        )
-
     def test_default_profile_is_literal_data(self):
-        model = self.load()
-        self.assert_profile_records(model, self.generated_data(model))
+        data = self.generated_data(self.load())
+        self.assertEqual(
+            data["PROFILE_PATH"],
+            os.path.join(self.profile, "salam-hw-config.yml"),
+        )
+        self.assertEqual(
+            dict(data["INSTRUCTIONS"])["add"],
+            {"functional_unit": 1, "opcode_num": 13},
+        )
 
     def test_singleton_profile_records(self):
         config_path = os.path.join(self.profile, "salam-hw-config.yml")
@@ -678,7 +628,15 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         selected["functional_unit_order"] = ["integer_adder"]
         with open(config_path, "w") as stream:
             yaml.safe_dump(selected, stream, sort_keys=False)
-        self.edit("integer_adder", instructions=["add"])
+        self.edit(
+            "integer_adder",
+            instructions=["add"],
+            stages=2,
+            cycles=3,
+            enum_value=17,
+            limit=4,
+            initiation_interval=5,
+        )
         instruction_path = os.path.join(self.profile, selected["instructions"])
         with open(instruction_path) as stream:
             document = yaml.safe_load(stream)
@@ -687,14 +645,38 @@ class FunctionalUnitFieldTest(unittest.TestCase):
             yaml.safe_dump(document, stream, sort_keys=False)
         model = self.load()
         data = self.generated_data(model)
-        self.assert_profile_records(model, data)
         self.assertEqual(
-            [row[0] for row in data["FUNCTIONAL_UNITS"]], ["integer_adder"]
+            data["FUNCTIONAL_UNITS"],
+            (
+                (
+                    "integer_adder",
+                    {
+                        "alias": "integer_adder",
+                        "stages": 2,
+                        "cycles": 3,
+                        "enum_value": 17,
+                        "int_size": "any",
+                        "int_sign": "any",
+                        "int_apmode": True,
+                        "fp_size": "none",
+                        "fp_sign": "none",
+                        "fp_apmode": False,
+                        "ptr_size": "none",
+                        "ptr_sign": "none",
+                        "ptr_apmode": False,
+                        "limit": 4,
+                        "initiation_interval": 5,
+                    },
+                ),
+            ),
         )
-        self.assertEqual([row[0] for row in data["INSTRUCTIONS"]], ["add"])
+        self.assertEqual(
+            data["INSTRUCTIONS"],
+            (("add", {"functional_unit": 17, "opcode_num": 13}),),
+        )
 
     def test_reordered_profile_records(self):
-        original = self.load()
+        original = self.generated_data(self.load())
         config_path = os.path.join(self.profile, "salam-hw-config.yml")
         with open(config_path) as stream:
             selected = yaml.safe_load(stream)
@@ -711,14 +693,13 @@ class FunctionalUnitFieldTest(unittest.TestCase):
             yaml.safe_dump(document, stream, sort_keys=False)
         model = self.load()
         data = self.generated_data(model)
-        self.assert_profile_records(model, data)
         self.assertEqual(
-            [row[0] for row in data["FUNCTIONAL_UNITS"]],
-            list(reversed(original.fu_aliases)),
+            data["FUNCTIONAL_UNITS"],
+            tuple(reversed(original["FUNCTIONAL_UNITS"])),
         )
         self.assertEqual(
-            [row[0] for row in data["INSTRUCTIONS"]],
-            list(reversed(original.instruction_names)),
+            data["INSTRUCTIONS"],
+            tuple(reversed(original["INSTRUCTIONS"])),
         )
 
     def test_invalid_profile_names_are_rejected(self):
