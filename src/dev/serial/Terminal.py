@@ -55,6 +55,7 @@ class Terminal(SerialDevice):
     cxx_class = "gem5::Terminal"
     port = Param.HostSocket(3456, "listen port/socket")
     number = Param.Int(0, "terminal number")
+    bufsize = Param.Int(16384, "buffer size")
     outfile = Param.TerminalDump(
         "file", "Selects if and where the terminal is dumping its output"
     )
