@@ -538,6 +538,20 @@ class RetentionManager
      *  and clean, and keeps its write permission. */
     void wbCountWriteback(CacheBlk *blk);
 
+    /** window_mode=chang: the slot of valid row: refresh it, or drop it
+     *  (DEAD and its set below I = 6) through the window drop path. */
+    void changRow(CacheBlk *blk, unsigned row);
+
+    /** window_mode=chang: a use of row (the line becomes LIVE). */
+    void changUse(unsigned row);
+
+    /** window_mode=chang: the global tick (every chang_time frames). */
+    void changTick();
+
+    /** window_mode=chang: event F (+1) or T (-1) on the indicator of
+     *  set; I = 6 is absorbing. */
+    void changSetEvent(unsigned set, bool f);
+
     BaseCache &cache;
 
     /** Number of top MRU blocks per set the daemon keeps alive. */
@@ -819,6 +833,21 @@ class RetentionManager
     std::vector<int16_t> wbCount;
     std::vector<uint32_t> wbIdle;
 
+    /** window_mode=chang (Chang et al., HPCA 2013): on, frames per global
+     *  tick, frames since the last tick; per set the 3-bit indicator I
+     *  (0..6), and the number of sets at each I; per row the 3-bit state
+     *  (changLive, or the countdown r, 0 = DEAD) and the frames since the
+     *  last use (stats only). */
+    static constexpr unsigned changI6 = 6;
+    static constexpr uint8_t changLive = 7;
+    bool changMode = false;
+    unsigned changTime = 256;
+    unsigned changFrames = 0;
+    std::vector<uint8_t> changI;
+    std::vector<uint64_t> changSetsAt;
+    std::vector<uint8_t> changState;
+    std::vector<uint32_t> changIdle;
+
     /** Window mode: banks done with the current sweep, drops in the
      *  current frame. */
     unsigned winBanksDone = 0;
@@ -954,6 +983,38 @@ class RetentionManager
         statistics::Formula slotBalance;
     };
     std::unique_ptr<WbStats> wbStats;
+
+    struct ChangStats : public statistics::Group
+    {
+        ChangStats(RetentionManager &mgr, statistics::Group *parent);
+
+        void regStats() override;
+        void preDumpStats() override;
+
+        RetentionManager &mgr;
+
+        statistics::Scalar linesRefreshed;
+        statistics::Scalar slotsSkipped;
+        statistics::Scalar dropsClean;
+        statistics::Scalar dropsDirty;
+        statistics::Scalar wbDeferred;
+        statistics::Scalar cleanDeferred;
+        statistics::Scalar retentionMisses;
+        statistics::Scalar eventsF;
+        statistics::Scalar eventsT;
+        statistics::Scalar eventsFAtI6;
+        statistics::Scalar eventsTAtI6;
+        statistics::Scalar ticks;
+        statistics::Scalar uses;
+        statistics::Scalar deadAtTick;
+        statistics::AverageVector setsAtIAvg;
+        statistics::Vector setsAtI;
+        statistics::Scalar setsAtI6;
+        statistics::Distribution idleFramesAtDrop;
+        statistics::Formula avgValidLines;
+        statistics::Formula slotBalance;
+    };
+    std::unique_ptr<ChangStats> changStats;
 
     struct RetentionStats : public statistics::Group
     {

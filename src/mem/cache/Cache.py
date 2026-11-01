@@ -207,8 +207,10 @@ class BaseCache(ClockedObject):
     window_mode = Param.String(
         "off",
         "Adaptive-window drops on top of refresh-all strict with even "
-        "spacing (same sweep and bank occupancy): off, fixed, tcp, amc or "
-        "wb (Refrint WB(n,m): per-line countdowns, see wb_n / wb_m). "
+        "spacing (same sweep and bank occupancy): off, fixed, tcp, amc, "
+        "wb (Refrint WB(n,m): per-line countdowns, see wb_n / wb_m) or "
+        "chang (time-based dead-line predictor of Chang et al., HPCA 2013: "
+        "per-set indicators, see chang_time). "
         "The cache is split into window_groups groups (set mod groups); a "
         "group decides at a frame (one sweep) at least N frames after its "
         "last decision, and its unused lines are dropped then",
@@ -340,6 +342,16 @@ class BaseCache(ClockedObject):
         "the count at 0 it is invalidated (expired tag as the window "
         "drops). Every use reloads the count (wb_n if dirty, wb_m if "
         "clean) at the line's next slot. -1 = infinity",
+    )
+
+    chang_time = Param.Unsigned(
+        256,
+        "window_mode=chang: frames (sweeps) per global tick. At a tick a "
+        "LIVE line latches r = I of its set (I <= 5; I = 6 keeps it LIVE) "
+        "and a counting line decrements r; r = 0 is DEAD, dropped at its "
+        "slot. A use makes the line LIVE. A retention miss raises the "
+        "set's I (to 6, absorbing: no more drops), an expired tag replaced "
+        "by another address lowers it",
     )
 
     refresh_opp_age = Param.Float(
