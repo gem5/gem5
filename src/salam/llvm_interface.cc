@@ -777,9 +777,12 @@ LLVMInterface::constructStaticGraph()
     if (m->size() == 1) {
         entry = &*m->begin();
     }
-    if (entry) {
-        rejectRecursiveCalls(*entry);
-    }
+    fatal_if(!entry, "SALAM cannot select entry function '%s' in IR file '%s'",
+             topName, filename);
+    fatal_if(entry->isDeclaration() || entry->empty(),
+             "SALAM entry function '%s' has no definition in IR file '%s'",
+             entry->getName().str(), filename);
+    rejectRecursiveCalls(*entry);
 
     // Construct the LLVM::Value to SALAM::Value map
     uint64_t valueID = 0;

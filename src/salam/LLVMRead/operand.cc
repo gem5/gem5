@@ -45,6 +45,7 @@
 
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/Support/raw_ostream.h"
 #include "sim/sim_object.hh"
 
 SALAM::Constant::Constant(uint64_t id, gem5::SimObject *owner, bool dbg)
@@ -57,6 +58,28 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                             const llvm::DataLayout *layout,
                             const llvm::Value *context)
 {
+    if (!llvm::isa<llvm::ConstantInt>(irval) &&
+        !llvm::isa<llvm::ConstantFP>(irval) &&
+        !llvm::isa<llvm::ConstantPointerNull>(irval) &&
+        !llvm::isa<llvm::ConstantExpr>(irval)) {
+        // Undef/poison are ConstantData too, but are neither ConstantInt
+        // nor ConstantFP. Do not dereference a failed scalar cast or turn
+        // an undefined pointer into a null pointer in assertion-free builds.
+        std::string text;
+        llvm::raw_string_ostream stream(text);
+        stream << *irval;
+        auto *instruction = llvm::dyn_cast_or_null<llvm::Instruction>(context);
+        auto *global = llvm::dyn_cast_or_null<llvm::GlobalValue>(context);
+        const llvm::Module *module = instruction ? instruction->getModule()
+                                     : global    ? global->getParent()
+                                                 : nullptr;
+        fatal("SALAM does not support LLVM constant '%s' "
+              "(IR file: %s; function: %s)",
+              stream.str(),
+              module ? module->getModuleIdentifier() : "<unknown>",
+              instruction ? instruction->getFunction()->getName().str()
+                          : "<global>");
+    }
     // Initialize SALAM::Value
     SALAM::Value::initialize(irval, irmap);
     if (irval->getType()->isPointerTy()) {
@@ -107,6 +130,11 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
         }
         // The constant is an expression. We need to parse the expression
         for (auto op : ce->operand_values()) {
+            if (auto *global = llvm::dyn_cast<llvm::GlobalValue>(op)) {
+                fatal("SALAM does not support symbolic LLVM global address "
+                      "'@%s' in constant expression: %s",
+                      global->getName().str(), ir_string);
+            }
             // Iterate over operands and add
             // new values to our map and value list
             auto mapit = irmap->find(op);
@@ -263,10 +291,12 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                 break;
             }
             default:
-                assert(0); // We do not support this nested ConstantExpr
+                fatal("SALAM does not support LLVM constant expression "
+                      "opcode '%s': %s",
+                      ce->getOpcodeName(), ir_string);
         }
     } else {
-        assert(0); // The value is not a supported type of llvm::Constant
+        fatal("SALAM does not support LLVM constant: %s", ir_string);
     }
 }
 
@@ -284,11 +314,19 @@ SALAM::GlobalConstant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
     // Parse the initializer of the value
     auto glb = llvm::dyn_cast<llvm::GlobalVariable>(irval);
     assert(glb);
-    assert(glb->hasInitializer());
+    fatal_if(!glb->hasInitializer(),
+             "SALAM does not support external LLVM global '@%s' "
+             "(IR file: %s)",
+             glb->getName().str(), glb->getParent()->getModuleIdentifier());
 
     // Initialize SALAM::ConstantData
     SALAM::Constant::initialize(glb->getInitializer(), irmap, values,
                                 &glb->getParent()->getDataLayout(), glb);
+    fatal_if(!glb->isConstant(),
+             "SALAM does not support mutable LLVM global '@%s' "
+             "(IR file: %s); only immutable scalar initializer loads "
+             "are modeled",
+             glb->getName().str(), glb->getParent()->getModuleIdentifier());
 }
 
 SALAM::Argument::Argument(uint64_t id, gem5::SimObject *owner, bool dbg)

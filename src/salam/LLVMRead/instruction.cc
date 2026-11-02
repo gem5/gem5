@@ -110,6 +110,19 @@ resolveOperand(llvm::Value *operand, llvm::Instruction *instruction,
                SALAM::irvmap *values, SALAM::valueListTy *nodes,
                gem5::SimObject *owner, bool debug)
 {
+    if (auto *global = llvm::dyn_cast<llvm::GlobalValue>(operand)) {
+        auto *load = llvm::dyn_cast<llvm::LoadInst>(instruction);
+        auto *call = llvm::dyn_cast<llvm::CallInst>(instruction);
+        const bool direct_load = llvm::isa<llvm::GlobalVariable>(global) &&
+                                 load && load->getPointerOperand() == global;
+        const bool direct_call = call && call->getCalledFunction() == global;
+        fatal_if(!direct_load && !direct_call,
+                 "SALAM does not support LLVM global address '@%s' in %s "
+                 "in function %s (IR file: %s)",
+                 global->getName().str(), instruction->getOpcodeName(),
+                 instruction->getFunction()->getName().str(),
+                 instruction->getModule()->getModuleIdentifier());
+    }
     auto found = values->find(operand);
     if (found != values->end()) {
         return found->second;
