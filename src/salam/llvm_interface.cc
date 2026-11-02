@@ -47,6 +47,7 @@
 #include "debug/SALAMFUInventory.hh"
 #include "debug/SALAMIssue.hh"
 #include "debug/SALAMLaunch.hh"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -430,7 +431,7 @@ LLVMInterface::ActiveFunction::processQueues()
                                 (*queue_iter)->getUID());
                         }
                         queue_iter = reservation.erase(queue_iter);
-                    } else if ((inst)->isLatchingBrExiting() &&
+                    } else if ((inst)->isTopLevelLoopExit() &&
                                ((reservation.size() > 1) || !queuesClear())) {
                         ++queue_iter;
                     } else if ((inst)->isTerminator()) {
@@ -904,7 +905,8 @@ LLVMInterface::constructStaticGraph()
         }
     }
 
-    // Detect Loop Latches
+    // Only exits from top-level loops drain the current function's work.
+    // Inner-loop exits that remain within their parent get no new barrier.
     for (auto func_iter = m->begin(); func_iter != m->end(); func_iter++) {
         llvm::Function &func = *func_iter;
         // Declarations have no basic blocks and cannot contain loop latches.
@@ -915,14 +917,13 @@ LLVMInterface::constructStaticGraph()
         loopInfo->releaseMemory();
         loopInfo->analyze(*dt);
         for (auto loop = loopInfo->begin(); loop != loopInfo->end(); ++loop) {
-            if (llvm::BasicBlock *exBB = (*loop)->getExitingBlock()) {
-                auto latchingBr = exBB->getTerminator();
-                auto mapIt = vmap.find(latchingBr);
-                if (mapIt != vmap.end()) {
-                    auto salamValue = mapIt->second;
-                    if (std::shared_ptr<SALAM::Br> sBr =
-                            std::dynamic_pointer_cast<SALAM::Br>(salamValue)) {
-                        sBr->setLatching(true);
+            for (auto *block : (*loop)->blocks()) {
+                auto terminator = std::static_pointer_cast<SALAM::Instruction>(
+                    vmap.at(block->getTerminator()));
+                for (auto *successor : llvm::successors(block)) {
+                    if (!(*loop)->contains(successor)) {
+                        terminator->addTopLevelLoopExit(
+                            vmap.at(successor)->getUID());
                     }
                 }
             }

@@ -48,6 +48,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <set>
 
 #include "../HWModeling/hw_interface.hh"
 #include "basic_block.hh"
@@ -76,6 +77,9 @@ class Instruction : public Value
     uint64_t currentCycle;
     uint64_t functional_unit = 0;
     std::string ppaSignature;
+    // Target UIDs of edges leaving an enclosing top-level LLVM loop.
+    // Numeric identities avoid adding ownership edges to the static graph.
+    std::set<uint64_t> topLevelLoopExits;
 
   protected:
     // Each conditions entry is [id, OpCode, cycles].
@@ -280,11 +284,12 @@ class Instruction : public Value
     {
         return false;
     }
-    virtual bool
-    isLatchingBrExiting()
+    void
+    addTopLevelLoopExit(uint64_t target_uid)
     {
-        return false;
+        topLevelLoopExits.insert(target_uid);
     }
+    bool isTopLevelLoopExit();
     std::shared_ptr<SALAM::Instruction>
     clone() const
     {
@@ -436,7 +441,6 @@ class Br : public Instruction
     SALAM::Debugger *dbgr;
     uint64_t currentCycle;
     bool conditional = false;
-    bool isLatching = false;
 
   protected:
   public:
@@ -475,16 +479,6 @@ class Br : public Instruction
         return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
-    void
-    setLatching(bool latch)
-    {
-        isLatching = latch;
-    }
-    virtual bool
-    isLatchingBrExiting() override
-    {
-        return isLatching && (getTarget() == trueDestination);
-    }
     void
     dump()
     {

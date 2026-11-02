@@ -95,6 +95,16 @@ SALAM::Instruction::releaseGraphEdges()
     dynamicUsers.clear();
 }
 
+bool
+SALAM::Instruction::isTopLevelLoopExit()
+{
+    if (topLevelLoopExits.empty()) {
+        return false;
+    }
+    auto target = getTarget();
+    return target && topLevelLoopExits.count(target->getUID());
+}
+
 SALAM::Instruction::Instruction_Debugger::Instruction_Debugger()
 {}
 
