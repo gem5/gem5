@@ -464,14 +464,20 @@ The simulated terminal output can also be used to confirm that the host generate
 
 ## Statistics
 
-`stats.txt` records kernel execution, functional-unit usage, and memory
-transfers. It also reports power, energy, and area estimates when
-characterization data is supplied; the default profile supplies none.
-Check the coverage flags alongside estimates, since missing data leaves
-totals incomplete. Kernel summaries cover a full invocation, while
-`stats.txt` counters cover the current statistics reset window. Refer to
-`stats.txt` for detailed counters and descriptions, and to `config.ini` or
-`config.json` for the configured devices and model inputs.
+SALAM reports compute passes, issued/completed operations, functional-unit
+use and memory transfers in `stats.txt`. With characterization data,
+`SALAMPowerModel` also reports area, energy and average power. Area uses
+physical instance counts, dynamic energy uses counted operations/accesses,
+and leakage energy uses elapsed time. Average power is total energy
+divided by the reporting duration. The default profile supplies no
+characterization data.
+
+Use `m5.stats.dump()` or the guest `m5_dump_stats` to collect statistics.
+`python3 util/SALAM-tools/ppa_report.py` reads `--stats` and `--config`
+files and writes a JSON summary with `--output`; `--help` lists options.
+Statistics cover the current reset window; kernel summaries cover full
+invocations. Check `areaComplete`, `dynamicComplete` and `leakageComplete`
+alongside the estimates: missing data leaves incomplete totals, not zero.
 
 ## Optional: Customize the Hardware Profile
 
