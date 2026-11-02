@@ -87,6 +87,8 @@ NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
       tickEvent([this] { tick(); }, name()),
       accPort(this, sys, p.sid, p.ssid)
 {
+    fatal_if(processCycles == Cycles(0), "%s: process_cycles must be positive",
+             name());
     fatal_if(pioSize < RegisterBytes,
              "%s: DMA PIO size must cover %u register bytes", name(),
              RegisterBytes);

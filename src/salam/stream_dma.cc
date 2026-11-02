@@ -90,6 +90,8 @@ StreamDma::StreamDma(const StreamDmaParams &p)
       tickEvent(this),
       bandwidth(p.bandwidth)
 {
+    fatal_if(processCycles == Cycles(0), "%s: process_cycles must be positive",
+             name());
     dmaPort.enablePacketStats(this, "memoryPackets");
     readFifo =
         new ReadFifo(*this, dmaPort, rdBufferSize, maxReqSize, maxPending);

@@ -144,6 +144,8 @@ CommInterface::CommInterface(const CommInterfaceParams &p)
       reset_spm(p.reset_spm),
       stats(this)
 {
+    fatal_if(processCycles == Cycles(0), "%s: process_cycles must be positive",
+             name());
     fatal_if(flag_size == 0, "%s: CommInterface flags size must be nonzero",
              name());
     fatal_if(flag_size > io_size || config_size > io_size - flag_size,
