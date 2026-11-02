@@ -85,6 +85,30 @@ Channel::endOfSimulation()
     _sc_chan->end_of_simulation();
 }
 
+Channel *
+newChannel(sc_core::sc_prim_channel *sc_chan)
+{
+    return new Channel(sc_chan);
+}
+
+void
+destroyChannel(Channel *chan)
+{
+    delete chan;
+}
+
+void
+requestChannelUpdate(Channel *chan)
+{
+    chan->requestUpdate();
+}
+
+void
+asyncRequestChannelUpdate(Channel *chan)
+{
+    chan->asyncRequestUpdate();
+}
+
 std::set<Channel *> allChannels;
 
 } // namespace sc_gem5

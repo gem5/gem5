@@ -30,6 +30,7 @@
 
 #include <set>
 
+#include "systemc/core/channel_ops.hh"
 #include "systemc/core/list.hh"
 #include "systemc/ext/core/sc_prim.hh"
 
