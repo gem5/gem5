@@ -164,6 +164,30 @@ Port::regPort()
         getInterface(i)->register_port(*portBase, portBase->_ifTypeName());
 }
 
+void
+Port::beforeEndOfElaboration()
+{
+    portBase->before_end_of_elaboration();
+}
+
+void
+Port::endOfElaboration()
+{
+    portBase->end_of_elaboration();
+}
+
+void
+Port::startOfSimulation()
+{
+    portBase->start_of_simulation();
+}
+
+void
+Port::endOfSimulation()
+{
+    portBase->end_of_simulation();
+}
+
 std::list<Port *> allPorts;
 
 } // namespace sc_gem5

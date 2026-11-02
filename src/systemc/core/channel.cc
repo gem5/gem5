@@ -55,6 +55,36 @@ Channel::asyncRequestUpdate()
     scheduler().asyncRequestUpdate(this);
 }
 
+void
+Channel::update()
+{
+    _sc_chan->update();
+}
+
+void
+Channel::beforeEndOfElaboration()
+{
+    _sc_chan->before_end_of_elaboration();
+}
+
+void
+Channel::endOfElaboration()
+{
+    _sc_chan->end_of_elaboration();
+}
+
+void
+Channel::startOfSimulation()
+{
+    _sc_chan->start_of_simulation();
+}
+
+void
+Channel::endOfSimulation()
+{
+    _sc_chan->end_of_simulation();
+}
+
 std::set<Channel *> allChannels;
 
 } // namespace sc_gem5
