@@ -103,7 +103,7 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
 
     parent = pickParentObj();
 
-    Module *n = newModule();
+    Module *n = getUnfinishedModule();
     if (n) {
         // We are a module in the process of being constructed.
         n->finish(this);

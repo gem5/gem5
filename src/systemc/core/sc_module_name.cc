@@ -25,12 +25,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include "systemc/core/module.hh"
+#include "systemc/ext/core/sc_module_name.hh"
+#include "systemc/core/module_ops.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
-#include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
@@ -45,7 +44,7 @@ sc_module_name::sc_module_name(const char *name) :
     else if (::sc_gem5::scheduler().elaborationDone())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
     else
-        _gem5_module = new sc_gem5::Module(name);
+        _gem5_module = ::sc_gem5::newModule(name);
 }
 // clang-format on
 
@@ -56,7 +55,7 @@ sc_module_name::sc_module_name(const sc_module_name &other) :
 sc_module_name::~sc_module_name()
 {
     if (_on_the_stack) {
-        _gem5_module->pop();
+        ::sc_gem5::popModule(_gem5_module);
     }
 }
 

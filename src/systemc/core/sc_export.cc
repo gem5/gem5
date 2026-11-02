@@ -25,11 +25,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "systemc/ext/core/sc_export.hh"
 #include "base/cprintf.hh"
-#include "systemc/core/module.hh"
+#include "systemc/core/module_ops.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/messages.hh"
-#include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_main.hh"
 
 namespace sc_core
@@ -67,7 +67,7 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
     if (!m)
         reportError(SC_ID_EXPORT_OUTSIDE_MODULE_, nullptr, name(), kind());
     else
-        m->exports.push_back(this);
+        ::sc_gem5::addModuleExport(m, this);
 }
 sc_export_base::~sc_export_base() {}
 

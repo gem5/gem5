@@ -28,7 +28,7 @@
 #include <sstream>
 
 #include "base/cprintf.hh"
-#include "systemc/core/module.hh"
+#include "systemc/core/module_ops.hh"
 #include "systemc/core/port_ops.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/messages.hh"
@@ -72,7 +72,7 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
     if (!m)
         reportError(SC_ID_PORT_OUTSIDE_MODULE_, nullptr, name(), kind());
     else
-        m->ports.push_back(this);
+        ::sc_gem5::addModulePort(m, this);
     _gem5Port = ::sc_gem5::newPort(this, max_size);
 }
 
