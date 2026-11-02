@@ -55,7 +55,7 @@ class ScratchpadMemory(AbstractMemory):
 
     port = ResponsePort("Generic response port")
     spm_ports = VectorResponsePort(
-        "Response ports for private acclerator SPM accesses"
+        "Response ports for private accelerator SPM accesses"
     )
     access_cycles = Param.Cycles(
         2, "Clock cycles from a request's arrival to its response"

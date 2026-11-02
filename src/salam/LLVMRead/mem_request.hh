@@ -79,7 +79,6 @@ class MemoryRequest
     {
         delete[] readsDone;
         delete[] buffer;
-        // if (pkt) delete pkt;
     }
     void
     setCarrierPort(RequestPort *_port)

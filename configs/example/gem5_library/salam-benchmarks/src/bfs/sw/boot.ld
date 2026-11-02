@@ -30,7 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Matthias Jung
- 			Frederik Lauer
+ *          Frederik Lauer
  */
 
 
