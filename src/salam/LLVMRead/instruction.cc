@@ -102,6 +102,30 @@ void
 SALAM::Instruction::Instruction_Debugger::dumper(Instruction *inst)
 {}
 
+namespace
+{
+
+std::shared_ptr<SALAM::Value>
+resolveOperand(llvm::Value *operand, llvm::Instruction *instruction,
+               SALAM::irvmap *values, SALAM::valueListTy *nodes,
+               gem5::SimObject *owner, bool debug)
+{
+    auto found = values->find(operand);
+    if (found != values->end()) {
+        return found->second;
+    }
+    auto constant = std::make_shared<SALAM::Constant>(
+        nodes->back()->getUID() + 1, owner, debug);
+    nodes->push_back(constant);
+    values->emplace(operand, constant);
+    constant->initialize(operand, values, nodes,
+                         &instruction->getModule()->getDataLayout(),
+                         instruction);
+    return constant;
+}
+
+} // anonymous namespace
+
 void
 SALAM::Instruction::initialize(llvm::Value *irval, irvmap *irmap,
                                SALAM::valueListTy *valueList)
@@ -118,28 +142,7 @@ SALAM::Instruction::initialize(llvm::Value *irval, irvmap *irmap,
     assert(inst);
     uint64_t phiBB = 0;
     for (auto const op : iruser->operand_values()) {
-        auto mapit = irmap->find(op);
-        std::shared_ptr<SALAM::Value> opval;
-        if (mapit == irmap->end()) {
-            if (dbg) {
-                DPRINTFS(LLVMParse, owner,
-                         "Instantiate Operand as Constant Data/Expression\n");
-            }
-            uint64_t id = valueList->back()->getUID() + 1;
-            std::shared_ptr<SALAM::Constant> con =
-                std::make_shared<SALAM::Constant>(id, owner, dbg);
-            valueList->push_back(con);
-            irmap->insert(SALAM::irvmaptype(op, con));
-            con->initialize(op, irmap, valueList,
-                            &inst->getModule()->getDataLayout(), inst);
-            opval = con;
-        } else {
-            if (dbg) {
-                DPRINTFS(LLVMParse, owner,
-                         "Instantiate Operands on Value List\n");
-            }
-            opval = mapit->second;
-        }
+        auto opval = resolveOperand(op, inst, irmap, valueList, owner, dbg);
         if (dbg) {
             DPRINTFS(LLVMParse, owner,
                      "Link Operand to Static Operands List\n");
@@ -152,7 +155,7 @@ SALAM::Instruction::initialize(llvm::Value *irval, irvmap *irmap,
             llvm::PHINode *phi = llvm::dyn_cast<llvm::PHINode>(inst);
             llvm::Value *bb =
                 llvm::dyn_cast<llvm::Value>(phi->getIncomingBlock(phiBB));
-            mapit = irmap->find(bb);
+            auto mapit = irmap->find(bb);
             opval = mapit->second;
             staticDependencies.push_back(opval);
             ++phiBB;
@@ -483,32 +486,22 @@ Br::initialize(llvm::Value *irval, irvmap *irmap,
     }
     if (isConditional()) {
         llvm::Value *condValue = br->getCondition();
-        mapit = irmap->find(condValue);
+        condition =
+            resolveOperand(condValue, br, irmap, valueList, owner, dbg);
+        staticDependencies.push_back(condition);
+        trueDestination = defaultDestination;
+
+        llvm::Value *falseDestValue = br->getSuccessor(1);
+        mapit = irmap->find(falseDestValue);
         if (mapit == irmap->end()) {
             if (dbg) {
                 DPRINTFS(Runtime, owner,
-                         "ERROR. No condition for Br in IR map.");
+                         "ERROR. No secondary successor for Br in IR map.");
             }
             assert(0);
         } else {
-            condition = mapit->second;
-            staticDependencies.push_back(condition);
-            trueDestination = defaultDestination;
-
-            llvm::Value *falseDestValue = br->getSuccessor(1);
-            mapit = irmap->find(falseDestValue);
-            if (mapit == irmap->end()) {
-                if (dbg) {
-                    DPRINTFS(
-                        Runtime, owner,
-                        "ERROR. No secondary successor for Br in IR map.");
-                }
-                assert(0);
-            } else {
-                falseDestination =
-                    std::dynamic_pointer_cast<SALAM::BasicBlock>(
-                        mapit->second);
-            }
+            falseDestination =
+                std::dynamic_pointer_cast<SALAM::BasicBlock>(mapit->second);
         }
     }
 }
@@ -592,29 +585,7 @@ Switch::initialize(llvm::Value *irval, irvmap *irmap,
 
     SALAM::valueListTy tmpStaticDeps;
     for (auto const op : iruser->operand_values()) {
-        auto mapit = irmap->find(op);
-        std::shared_ptr<SALAM::Value> opval;
-        if (mapit == irmap->end()) {
-            // TODO: Handle constant data and constant expressions
-            if (dbg) {
-                DPRINTFS(LLVMParse, owner,
-                         "Instantiate Operand as Constant Data/Expression\n");
-            }
-            uint64_t id = valueList->back()->getUID() + 1;
-            std::shared_ptr<SALAM::Constant> con =
-                std::make_shared<SALAM::Constant>(id, owner, dbg);
-            valueList->push_back(con);
-            irmap->insert(SALAM::irvmaptype(op, con));
-            con->initialize(op, irmap, valueList,
-                            &inst->getModule()->getDataLayout(), inst);
-            opval = con;
-        } else {
-            if (dbg) {
-                DPRINTFS(LLVMParse, owner,
-                         "Instantiate Operands on Value List\n");
-            }
-            opval = mapit->second;
-        }
+        auto opval = resolveOperand(op, inst, irmap, valueList, owner, dbg);
         if (dbg) {
             DPRINTFS(LLVMParse, owner,
                      "Link Operand to Static Operands List\n");
