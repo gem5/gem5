@@ -33,7 +33,7 @@
 #include "systemc/core/event.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
-#include "systemc/core/object.hh"
+#include "systemc/core/object_ops.hh"
 #include "systemc/core/port.hh"
 #include "systemc/core/process_ops.hh"
 #include "systemc/core/process_types.hh"
@@ -245,13 +245,13 @@ sc_module::operator , (sc_port_base &pb)
 const std::vector<sc_object *> &
 sc_module::get_child_objects() const
 {
-    return _gem5_module->obj()->get_child_objects();
+    return ::sc_gem5::getChildObjects(_gem5_module->obj());
 }
 
 const std::vector<sc_event *> &
 sc_module::get_child_events() const
 {
-    return _gem5_module->obj()->get_child_events();
+    return ::sc_gem5::getChildEvents(_gem5_module->obj());
 }
 
 sc_module::sc_module() :

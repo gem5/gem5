@@ -25,10 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "systemc/core/object.hh"
+#include "systemc/ext/core/sc_simcontext.hh"
+#include "systemc/core/object_ops.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
-#include "systemc/ext/core/sc_simcontext.hh"
 
 namespace sc_core
 {
@@ -59,20 +59,22 @@ sc_object *
 sc_simcontext::first_object()
 {
     objIndex = 0;
-    if (!::sc_gem5::allObjects.empty())
-        return ::sc_gem5::allObjects[0];
-    else
+    if (!::sc_gem5::getAllObjects().empty()) {
+        return ::sc_gem5::getAllObjects()[0];
+    } else {
         return nullptr;
+    }
 }
 
 sc_object *
 sc_simcontext::next_object()
 {
     objIndex++;
-    if (::sc_gem5::allObjects.size() > objIndex)
-        return ::sc_gem5::allObjects[objIndex];
-    else
+    if (::sc_gem5::getAllObjects().size() > objIndex) {
+        return ::sc_gem5::getAllObjects()[objIndex];
+    } else {
         return nullptr;
+    }
 }
 
 bool

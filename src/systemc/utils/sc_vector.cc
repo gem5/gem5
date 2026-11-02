@@ -47,7 +47,7 @@
 #include <sstream>
 
 #include "base/cprintf.hh"
-#include "systemc/core/object.hh"
+#include "systemc/core/object_ops.hh"
 #include "systemc/ext/utils/messages.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/ext/utils/sc_vector.hh"

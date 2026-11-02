@@ -27,7 +27,7 @@
 
 #include <vector>
 
-#include "systemc/core/object.hh"
+#include "systemc/core/object_ops.hh"
 #include "systemc/ext/core/sc_object.hh"
 
 namespace sc_core
@@ -36,123 +36,123 @@ namespace sc_core
 const char *
 sc_object::name() const
 {
-    return _gem5_object->name();
+    return ::sc_gem5::getObjectName(_gem5_object);
 }
 
 const char *
 sc_object::basename() const
 {
-    return _gem5_object->basename();
+    return ::sc_gem5::getObjectBasename(_gem5_object);
 }
 
 void
 sc_object::print(std::ostream &out) const
 {
-    _gem5_object->print(out);
+    ::sc_gem5::printObject(_gem5_object, out);
 }
 
 void
 sc_object::dump(std::ostream &out) const
 {
-    _gem5_object->dump(out);
+    ::sc_gem5::dumpObject(_gem5_object, out);
 }
 
 const std::vector<sc_object *> &
 sc_object::get_child_objects() const
 {
-    return _gem5_object->get_child_objects();
+    return ::sc_gem5::getChildObjects(_gem5_object);
 }
 
 const std::vector<sc_event *> &
 sc_object::get_child_events() const
 {
-    return _gem5_object->get_child_events();
+    return ::sc_gem5::getChildEvents(_gem5_object);
 }
 
 sc_object *
 sc_object::get_parent_object() const
 {
-    return _gem5_object->get_parent_object();
+    return ::sc_gem5::getParentObject(_gem5_object);
 }
 
 bool
 sc_object::add_attribute(sc_attr_base &attr)
 {
-    return _gem5_object->add_attribute(attr);
+    return ::sc_gem5::addObjectAttribute(_gem5_object, attr);
 }
 
 sc_attr_base *
 sc_object::get_attribute(const std::string &name)
 {
-    return _gem5_object->get_attribute(name);
+    return ::sc_gem5::getObjectAttribute(_gem5_object, name);
 }
 
 sc_attr_base *
 sc_object::remove_attribute(const std::string &name)
 {
-    return _gem5_object->remove_attribute(name);
+    return ::sc_gem5::removeObjectAttribute(_gem5_object, name);
 }
 
 void
 sc_object::remove_all_attributes()
 {
-    return _gem5_object->remove_all_attributes();
+    return ::sc_gem5::removeAllObjectAttributes(_gem5_object);
 }
 
 int
 sc_object::num_attributes() const
 {
-    return _gem5_object->num_attributes();
+    return ::sc_gem5::getNumObjectAttributes(_gem5_object);
 }
 
 sc_attr_cltn &
 sc_object::attr_cltn()
 {
-    return _gem5_object->attr_cltn();
+    return ::sc_gem5::getObjectAttrCltn(_gem5_object);
 }
 
 const sc_attr_cltn &
 sc_object::attr_cltn() const
 {
-    return _gem5_object->attr_cltn();
+    return ::sc_gem5::getObjectAttrCltn(_gem5_object);
 }
 
 sc_simcontext *
 sc_object::simcontext() const
 {
-    return _gem5_object->simcontext();
+    return ::sc_gem5::getObjectSimcontext(_gem5_object);
 }
 
-sc_object::sc_object() : _gem5_object(new sc_gem5::Object(this))
+sc_object::sc_object() : _gem5_object(::sc_gem5::newObject(this))
 {
 }
 
 sc_object::sc_object(const char *name)
-  : _gem5_object(new sc_gem5::Object(this, name))
+    : _gem5_object(::sc_gem5::newObject(this, name))
 {
 }
 
 sc_object::sc_object(const sc_object &other)
-  : _gem5_object(new sc_gem5::Object(this, *other._gem5_object))
+    : _gem5_object(::sc_gem5::copyObject(this, other._gem5_object))
 {
 }
 
 sc_object &
 sc_object::operator = (const sc_object &other)
 {
-    *_gem5_object = *other._gem5_object;
+    ::sc_gem5::assignObject(_gem5_object, other._gem5_object);
     return *this;
 }
 
 sc_object::~sc_object()
 {
-    delete _gem5_object;
+    ::sc_gem5::destroyObject(_gem5_object);
 }
 
 const std::vector<sc_object *> &
 sc_get_top_level_objects()
 {
-    return sc_gem5::topLevelObjects;
+    return ::sc_gem5::getTopLevelObjects();
 }
 
 sc_object *
