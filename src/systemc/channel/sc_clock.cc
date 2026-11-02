@@ -25,67 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/logging.hh"
-#include "base/types.hh"
-#include "sim/eventq.hh"
-#include "systemc/core/kernel.hh"
-#include "systemc/core/process_types.hh"
-#include "systemc/core/sched_event.hh"
-#include "systemc/core/scheduler.hh"
-#include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_clock.hh"
+#include "base/logging.hh"
+#include "systemc/core/clock_tick_ops.hh"
+#include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
 #include "systemc/ext/utils/sc_report_handler.hh"
-
-namespace sc_gem5
-{
-
-class ClockTick : public ScEvent
-{
-  private:
-    ::sc_core::sc_time _period;
-    std::string name;
-    Process *p;
-    ProcessMemberFuncWrapper<::sc_core::sc_clock> funcWrapper;
-
-  public:
-    ClockTick(::sc_core::sc_clock *clock, bool to,
-            ::sc_core::sc_time _period) :
-        ScEvent([this]() { tick(); }),
-        _period(_period), name(clock->name()), p(nullptr),
-        funcWrapper(clock, to ? &::sc_core::sc_clock::tickUp :
-                                &::sc_core::sc_clock::tickDown)
-    {
-        name += std::string(to ? "_posedge_action" : "_negedge_action");
-        name = ::sc_core::sc_gen_unique_name(name.c_str());
-    }
-
-    void
-    createProcess()
-    {
-        p = new Method(name.c_str(), &funcWrapper, true);
-        p->dontInitialize(true);
-        scheduler().reg(p);
-    }
-
-    ~ClockTick()
-    {
-        if (scheduled())
-            scheduler().deschedule(this);
-        if (p)
-            p->popListNode();
-    }
-
-    void
-    tick()
-    {
-        scheduler().schedule(this, _period);
-        p->ready();
-    }
-};
-
-};
 
 namespace sc_core
 {
@@ -127,8 +73,8 @@ sc_clock::sc_clock(const char *name, const sc_time &period,
         SC_REPORT_ERROR(SC_ID_CLOCK_LOW_TIME_ZERO_, msg.c_str());
     }
 
-    _gem5UpEdge = new ::sc_gem5::ClockTick(this, true, period);
-    _gem5DownEdge = new ::sc_gem5::ClockTick(this, false, period);
+    _gem5UpEdge = ::sc_gem5::newClockTick(this, true, period);
+    _gem5DownEdge = ::sc_gem5::newClockTick(this, false, period);
 }
 
 sc_clock::sc_clock(const char *name, double period_v, sc_time_unit period_tu,
@@ -152,12 +98,14 @@ sc_clock::sc_clock(const char *name, double period, double duty_cycle,
 
 sc_clock::~sc_clock()
 {
-    if (_gem5UpEdge->scheduled())
-        ::sc_gem5::scheduler().deschedule(_gem5UpEdge);
-    if (_gem5DownEdge->scheduled())
-        ::sc_gem5::scheduler().deschedule(_gem5DownEdge);
-    delete _gem5UpEdge;
-    delete _gem5DownEdge;
+    if (::sc_gem5::isClockTickScheduled(_gem5UpEdge)) {
+        ::sc_gem5::descheduleClockTick(_gem5UpEdge);
+    }
+    if (::sc_gem5::isClockTickScheduled(_gem5DownEdge)) {
+        ::sc_gem5::descheduleClockTick(_gem5DownEdge);
+    }
+    ::sc_gem5::destroyClockTick(_gem5UpEdge);
+    ::sc_gem5::destroyClockTick(_gem5DownEdge);
 }
 
 void
@@ -180,15 +128,15 @@ sc_clock::time_stamp()
 void
 sc_clock::before_end_of_elaboration()
 {
-    _gem5UpEdge->createProcess();
-    _gem5DownEdge->createProcess();
+    ::sc_gem5::createClockTickProcess(_gem5UpEdge);
+    ::sc_gem5::createClockTickProcess(_gem5DownEdge);
     if (_posedgeFirst) {
-        ::sc_gem5::scheduler().schedule(_gem5UpEdge, _startTime);
-        ::sc_gem5::scheduler().schedule(_gem5DownEdge,
-                                        _startTime + _period * _dutyCycle);
+        ::sc_gem5::scheduleClockTick(_gem5UpEdge, _startTime);
+        ::sc_gem5::scheduleClockTick(_gem5DownEdge,
+                                     _startTime + _period * _dutyCycle);
     } else {
-        ::sc_gem5::scheduler().schedule(_gem5DownEdge, _startTime);
-        ::sc_gem5::scheduler().schedule(
+        ::sc_gem5::scheduleClockTick(_gem5DownEdge, _startTime);
+        ::sc_gem5::scheduleClockTick(
             _gem5UpEdge, _startTime + _period * (1.0 - _dutyCycle));
     }
 }

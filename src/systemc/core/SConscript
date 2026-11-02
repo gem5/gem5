@@ -32,6 +32,7 @@ if env['CONF']['USE_SYSTEMC']:
         'SystemC_Kernel', 'SystemC_ScObject', 'SystemC_ScModule'])
 
     Source('channel.cc')
+    Source('clock_tick.cc')
     Source('event.cc')
     Source('kernel.cc')
     Source('messages.cc')
