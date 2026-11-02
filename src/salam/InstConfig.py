@@ -56,6 +56,9 @@ class InstructionConfig(SimObject):
         "Functional unit identifier; zero is unbound"
     )
     opcode_num = Param.UInt32("LLVM instruction opcode")
+    opcode_name = Param.String(
+        "", "Canonical LLVM opcode name, independent of the child alias"
+    )
 
 
 class InstConfig(SimObject):

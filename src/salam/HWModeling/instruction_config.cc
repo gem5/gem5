@@ -41,6 +41,10 @@
 
 #include "salam/HWModeling/instruction_config.hh"
 
+#include <map>
+
+#include "base/logging.hh"
+#include "llvm/IR/Instruction.h"
 #include "params/InstConfig.hh"
 #include "params/InstructionConfig.hh"
 
@@ -48,7 +52,25 @@ namespace gem5
 {
 
 InstructionConfig::InstructionConfig(const Params &params) : SimObject(params)
-{}
+{
+    const char *expected = nullptr;
+    // Use the linked LLVM version's opcode definitions, including opcodes
+    // the execution engine may later reject as unsupported. Do not infer
+    // instruction identity from an arbitrary SimObject child name.
+    switch (params.opcode_num) {
+#define HANDLE_INST(number, opcode, instclass)                                \
+    case number:                                                              \
+        expected = llvm::Instruction::getOpcodeName(number);                  \
+        break;
+#include "llvm/IR/Instruction.def"
+        default:
+            fatal("%s: invalid LLVM opcode_num %u for opcode_name '%s'",
+                  name(), params.opcode_num, params.opcode_name);
+    }
+    fatal_if(params.opcode_name != expected,
+             "%s: opcode_name '%s' does not match LLVM opcode_num %u (%s)",
+             name(), params.opcode_name, params.opcode_num, expected);
+}
 
 uint32_t
 InstructionConfig::getFunctionalUnit() const
@@ -64,6 +86,15 @@ InstructionConfig::getOpcodeNum() const
 
 InstConfig::InstConfig(const Params &params)
     : SimObject(params), instList(params.inst_list)
-{}
+{
+    std::map<uint32_t, InstructionConfig *> opcodes;
+    for (auto *instruction : instList) {
+        const auto opcode = instruction->getOpcodeNum();
+        auto inserted = opcodes.emplace(opcode, instruction);
+        fatal_if(!inserted.second,
+                 "%s: duplicate LLVM opcode_num %u in %s and %s", name(),
+                 opcode, inserted.first->second->name(), instruction->name());
+    }
+}
 
 } // namespace gem5

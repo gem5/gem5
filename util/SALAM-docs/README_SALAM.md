@@ -323,11 +323,18 @@ instructions:
         opcode_num: 13
 ```
 
-- The key names an instruction mapping, such as `add`.
+- The key is the mapping's child alias, such as `add`.
 - `opcode_num` is LLVM's `Instruction::getOpcode()` value from
-  `llvm/IR/Instruction.def` for the LLVM version used to build gem5. Copy
-  the correct number for the operation; the generator does not check that
-  the entry name and number identify the same LLVM instruction.
+  `llvm/IR/Instruction.def` for the LLVM version used to build gem5.
+  Duplicate IDs and duplicate explicit YAML keys are rejected. When objects
+  are instantiated, the linked LLVM checks the number against the canonical
+  operation name, including for direct SimObject configurations.
+- Optional `opcode_name` specifies the canonical LLVM name independently
+  of the child alias. It defaults to the key, with the existing SALAM
+  spellings translated (`gep` to `getelementptr`, `and_inst` to `and`,
+  `switch_inst` to `switch`, and similarly for `or_inst`, `xor_inst` and
+  `vaarg`). A custom alias must supply the actual operation name. Direct
+  `InstructionConfig` construction must also supply `opcode_name`.
 - `functional_unit` is a functional unit's `enum_value`; 0 means none.
   The generator sets this value in memory from the `enum_value` of the
   unit whose `instructions` list contains the instruction. It does not

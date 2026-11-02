@@ -65,6 +65,8 @@ _LLVM_OPERATION_NAMES = {
     "or_inst": "or",
     "xor_inst": "xor",
     "gep": "getelementptr",
+    "switch_inst": "switch",
+    "vaarg": "va_arg",
 }
 
 
@@ -111,6 +113,7 @@ class Instruction:
     name: str
     functional_unit: object
     opcode_num: object
+    opcode_name: str
 
 
 @dataclass(frozen=True)
@@ -214,13 +217,6 @@ def load_generated_sources(spec):
         raise SourceConfigError(
             "missing instruction list: " + spec.instructions
         )
-    _validate_unit_order(fu_dir, spec.functional_unit_order)
-    units = tuple(
-        _load_functional_unit(fu_dir, alias)
-        for alias in spec.functional_unit_order
-    )
-    _reject_enum_conflicts(units)
-    _reject_instruction_conflicts(units)
     with open(spec.instructions, encoding="utf-8") as handle:
         text = handle.read()
     document = _load_yaml(text, spec.instructions)
@@ -231,8 +227,18 @@ def load_generated_sources(spec):
         raise SourceConfigError(
             "malformed instructions in " + spec.instructions
         )
+    _validate_unit_order(fu_dir, spec.functional_unit_order)
+    units = tuple(
+        _load_functional_unit(fu_dir, alias, raw)
+        for alias in spec.functional_unit_order
+    )
+    _reject_enum_conflicts(units)
+    _reject_instruction_conflicts(units)
     enriched = _enrich(document, units, spec.instructions)
     instructions = []
+    opcodes = {}
+    identities = set()
+    unit_ids = {unit.enum_value for unit in units}
     for name, entry in enriched["instructions"].items():
         _check_name(name, spec.instructions)
         if not isinstance(entry, dict):
@@ -248,7 +254,8 @@ def load_generated_sources(spec):
                 + ": obsolete field(s) "
                 + ", ".join(obsolete)
                 + "; use CycleCounts or workload runtime_cycles for latency"
-                + " and limit in the functional-unit profile for instance counts"
+                + " and limit in the functional-unit profile for instance"
+                + " counts"
             )
         unknown = sorted(set(entry) - set(_INSTRUCTION_FIELDS), key=str)
         if unknown:
@@ -259,11 +266,41 @@ def load_generated_sources(spec):
                 + ": unknown field(s) "
                 + ", ".join(str(field) for field in unknown)
             )
+        context = spec.instructions + ": instructions." + name
+        opcode = _require_uint32(entry, "opcode_num", context, minimum=1)
+        previous = opcodes.get(opcode)
+        if previous is not None:
+            raise SourceConfigError(
+                f"{context}: duplicate opcode_num {opcode} (also {previous})"
+            )
+        opcodes[opcode] = name
+        opcode_name = entry.get(
+            "opcode_name", _LLVM_OPERATION_NAMES.get(name, name)
+        )
+        if not isinstance(opcode_name, str) or not re.fullmatch(
+            r"[a-z][a-z0-9_]*", opcode_name
+        ):
+            raise SourceConfigError(
+                f"{context}: opcode_name must be a canonical LLVM name"
+            )
+        if opcode_name in identities:
+            raise SourceConfigError(
+                f"{context}: duplicate opcode_name {opcode_name!r}"
+            )
+        identities.add(opcode_name)
+        functional_unit = _require_uint32(
+            entry, "functional_unit", context, minimum=0
+        )
+        if functional_unit and functional_unit not in unit_ids:
+            raise SourceConfigError(
+                f"{context}: unknown functional_unit {functional_unit}"
+            )
         instructions.append(
             Instruction(
                 name=name,
-                functional_unit=entry.get("functional_unit"),
-                opcode_num=_require_field(entry, "opcode_num", name),
+                functional_unit=functional_unit,
+                opcode_num=opcode,
+                opcode_name=opcode_name,
             )
         )
     return GeneratedSources(
@@ -294,6 +331,7 @@ _FU_FIELDS = (
 _INSTRUCTION_FIELDS = (
     "functional_unit",
     "opcode_num",
+    "opcode_name",
 )
 _OBSOLETE_INSTRUCTION_FIELDS = frozenset(
     ("functional_unit_limit", "runtime_cycles")
@@ -401,7 +439,7 @@ def _validate_unit_order(fu_dir, order):
         )
 
 
-def _load_functional_unit(fu_dir, alias):
+def _load_functional_unit(fu_dir, alias, instruction_entries):
     _check_name(alias, fu_dir)
     path = os.path.join(fu_dir, alias, alias + ".yml")
     if not os.path.isfile(path):
@@ -478,9 +516,18 @@ def _load_functional_unit(fu_dir, alias):
             characterization = power_model.load(characterization_path)
         except (OSError, power_model.CharacterizationError) as exc:
             raise SourceConfigError(str(exc)) from exc
-        operation_names = {
-            _LLVM_OPERATION_NAMES.get(name, name) for name in instruction_names
-        }
+        operation_names = set()
+        for name in instruction_names:
+            entry = instruction_entries.get(name, {})
+            if isinstance(entry, dict):
+                operation_name = entry.get(
+                    "opcode_name", _LLVM_OPERATION_NAMES.get(name, name)
+                )
+                if not isinstance(operation_name, str):
+                    raise SourceConfigError(
+                        f"{path}: invalid opcode_name for {name!r}"
+                    )
+                operation_names.add(operation_name)
         for binding in characterization["keys"]:
             if binding.startswith("fu:") and binding != "fu:" + alias:
                 raise SourceConfigError(
@@ -602,11 +649,48 @@ def _resolve_config_path(base, relative, config, key):
     return os.path.abspath(os.path.join(base, relative))
 
 
+class _ProfileLoader(yaml.SafeLoader):
+    """Reject duplicate explicit keys without changing YAML merge rules."""
+
+    def __init__(self, stream):
+        super().__init__(stream)
+        self._checked = set()
+
+    def flatten_mapping(self, node):
+        if node not in self._checked:
+            self._checked.add(node)
+            seen = set()
+            for key_node, _ in node.value:
+                key = (
+                    "<<"
+                    if key_node.tag == "tag:yaml.org,2002:merge"
+                    else self.construct_object(key_node)
+                )
+                try:
+                    repeated = key in seen
+                    seen.add(key)
+                except TypeError as exc:
+                    raise yaml.constructor.ConstructorError(
+                        "while reading a SALAM profile",
+                        node.start_mark,
+                        "mapping keys must be scalar values",
+                        key_node.start_mark,
+                    ) from exc
+                if repeated:
+                    raise yaml.constructor.ConstructorError(
+                        "while reading a SALAM profile",
+                        node.start_mark,
+                        f"duplicate explicit key {key!r}",
+                        key_node.start_mark,
+                    )
+        super().flatten_mapping(node)
+
+
 def _load_yaml(text, path):
     try:
-        document = yaml.safe_load(text)
+        document = yaml.load(text, Loader=_ProfileLoader)
     except yaml.YAMLError as exc:
-        raise SourceConfigError("malformed YAML: " + path) from exc
+        raise SourceConfigError(f"{path}: malformed YAML: {exc}") from exc
     return document
 
 
