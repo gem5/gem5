@@ -67,6 +67,10 @@ LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
       lockstep(p.lockstep_mode),
       execStats(this)
 {
+    fatal_if(scheduling_threshold < 2,
+             "%s: sched_threshold must be at least 2 (got %u); "
+             "a queued branch must be able to advance",
+             name(), scheduling_threshold);
     dbg = comm->debug();
 }
 

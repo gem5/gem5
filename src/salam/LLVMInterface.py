@@ -55,8 +55,8 @@ class LLVMInterface(AccComputeUnit):
     )
     sched_threshold = Param.UInt32(
         10000,
-        "Scheduling window threshold. Prevents scheduling windows size"
-        " from exploding during regions of high loop parallelism",
+        "Scheduling window threshold; must be at least 2. Prevents "
+        "unbounded reservations during regions of high loop parallelism",
     )
     top_name = Param.String(
         "top", "Name of the top-level function for the accelerator"
