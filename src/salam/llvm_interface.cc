@@ -994,6 +994,20 @@ LLVMInterface::ActiveFunction::mustWaitForOlder(
     bool isCall = inst->isCall();
     bool isStore = inst->isStore();
     bool internalLoad = inst->isLoad() && inst->isLoadingInternal();
+    // This modeling opt-in waives only the extra volatile-pair veto.
+    // Alias, unresolved-address and call checks below remain authoritative.
+    const auto volatilePairMustWait = [&](const auto &older) {
+        if (!inst->isVolatileAccess() || !older->isVolatileAccess()) {
+            return false;
+        }
+        Addr currentStart, currentEnd, olderStart, olderEnd;
+        auto *comm = owner->getCommInterface();
+        return !inst->accessRange(currentStart, currentEnd) ||
+               !older->accessRange(olderStart, olderEnd) ||
+               !comm->relaxedMemory(currentStart, currentEnd) ||
+               !comm->relaxedMemory(olderStart, olderEnd);
+    };
+
     Addr start = 0;
     Addr end = 0;
     if (!isCall && !internalLoad && !inst->accessRange(start, end)) {
@@ -1004,10 +1018,8 @@ LLVMInterface::ActiveFunction::mustWaitForOlder(
         if (older->isCall()) {
             return true;
         }
-        // Volatile operations can access distinct MMIO registers with
-        // related side effects. Preserve their execution order regardless
-        // of address overlap; ordinary accesses retain the alias rules.
-        if (inst->isVolatileAccess() && older->isVolatileAccess()) {
+        // Either strict endpoint preserves ordering in both directions.
+        if (volatilePairMustWait(older)) {
             return true;
         }
         if (internalLoad) {
@@ -1032,12 +1044,12 @@ LLVMInterface::ActiveFunction::mustWaitForOlder(
     }
     if (inst->isVolatileAccess()) {
         for (const auto &entry : readQueue) {
-            if (entry.second->isVolatileAccess()) {
+            if (volatilePairMustWait(entry.second)) {
                 return true;
             }
         }
         for (const auto &entry : writeQueue) {
-            if (entry.second->isVolatileAccess()) {
+            if (volatilePairMustWait(entry.second)) {
                 return true;
             }
         }

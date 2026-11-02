@@ -64,6 +64,7 @@ using namespace std;
 RegisterBank::RegisterBank(const RegisterBankParams &p)
     : AbstractMemory(p),
       ppa(p.ppa),
+      relaxVolatileOrder(p.relax_volatile_order),
       port(name() + ".reg_port", this),
       load(name() + ".load_port", this),
       accessCycles(p.access_cycles),
@@ -163,6 +164,9 @@ RegisterBank::registerAccess(PacketPtr pkt)
 void
 RegisterBank::init()
 {
+    fatal_if(relaxVolatileOrder && privateOwners.size() != 1,
+             "%s: relaxed volatile ordering requires one private owner",
+             name());
     // allow unconnected memories as this is used in several ruby
     // systems at the moment
     if (port.isConnected()) {

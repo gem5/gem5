@@ -42,6 +42,8 @@
 #ifndef __SALAM_SCRATCHPAD_MEMORY_HH__
 #define __SALAM_SCRATCHPAD_MEMORY_HH__
 
+#include <cassert>
+#include <map>
 #include <vector>
 
 #include "base/random.hh"
@@ -52,9 +54,66 @@
 using namespace gem5;
 using namespace memory;
 
+// A side-effect-free policy query for directly connected private memories.
+// Binding records accelerator ownership; queries never inspect availability.
+class PrivateMemoryResponsePort : public ResponsePort
+{
+  public:
+    PrivateMemoryResponsePort(const std::string &name, PortID id)
+        : ResponsePort(name, id)
+    {}
+    virtual void
+    addPrivateOwner(const SimObject *owner)
+    {}
+    virtual void
+    removePrivateOwner(const SimObject *owner)
+    {}
+    virtual const AbstractMemory *
+    relaxedMemory(const SimObject *owner, Addr start, Addr end) const
+    {
+        return nullptr;
+    }
+};
+
+class PrivateMemoryRequestPort : public RequestPort
+{
+    const SimObject *privateOwner;
+    PrivateMemoryResponsePort *memoryPort = nullptr;
+
+  public:
+    PrivateMemoryRequestPort(const std::string &name, SimObject *owner,
+                             PortID id = InvalidPortID)
+        : RequestPort(name, id), privateOwner(owner)
+    {}
+    void
+    bind(Port &peer) override
+    {
+        RequestPort::bind(peer);
+        memoryPort = dynamic_cast<PrivateMemoryResponsePort *>(&peer);
+        if (memoryPort) {
+            memoryPort->addPrivateOwner(privateOwner);
+        }
+    }
+    void
+    unbind() override
+    {
+        RequestPort::unbind();
+        if (memoryPort) {
+            memoryPort->removePrivateOwner(privateOwner);
+            memoryPort = nullptr;
+        }
+    }
+    const AbstractMemory *
+    relaxedMemory(Addr start, Addr end) const
+    {
+        return memoryPort ? memoryPort->relaxedMemory(privateOwner, start, end)
+                          : nullptr;
+    }
+};
+
 class ScratchpadRequestPort;
 
-class ScratchpadResponsePort : public ResponsePort
+class ScratchpadResponsePort : public PrivateMemoryResponsePort
 {
     friend class ScratchpadRequestPort;
 
@@ -62,7 +121,7 @@ class ScratchpadResponsePort : public ResponsePort
   public:
     ScratchpadResponsePort(const std::string &_name, SimObject *_owner,
                            PortID id = InvalidPortID)
-        : ResponsePort(_name, id)
+        : PrivateMemoryResponsePort(_name, id)
     {}
 
   protected:
@@ -103,17 +162,17 @@ class ScratchpadResponsePort : public ResponsePort
     {}
 };
 
-class ScratchpadRequestPort : public RequestPort
+class ScratchpadRequestPort : public PrivateMemoryRequestPort
 {
   private:
-    ScratchpadResponsePort *_spmresp;
+    ScratchpadResponsePort *_spmresp = nullptr;
 
   protected:
     //
   public:
     ScratchpadRequestPort(const std::string &_name, SimObject *_owner,
                           PortID id = InvalidPortID)
-        : RequestPort(_name, id)
+        : PrivateMemoryRequestPort(_name, _owner, id)
     {}
     void
     setReadyStatus(bool r)
@@ -132,13 +191,13 @@ class ScratchpadRequestPort : public RequestPort
         if (spmresp) {
             _spmresp = spmresp;
         }
-        RequestPort::bind(peer);
+        PrivateMemoryRequestPort::bind(peer);
     }
     void
     unbind() override
     {
         _spmresp = nullptr;
-        RequestPort::unbind();
+        PrivateMemoryRequestPort::unbind();
     }
 };
 
@@ -148,6 +207,8 @@ class ScratchpadMemory : public AbstractMemory
 {
   private:
     SALAMPowerModel *ppa;
+    const bool relaxVolatileOrder;
+    std::map<const SimObject *, unsigned> privateOwners;
 
   protected:
     bool readyMode;
@@ -163,6 +224,28 @@ class ScratchpadMemory : public AbstractMemory
     bool isReady(Addr ad, size_t size, bool read);
     void scratchpadAccess(PacketPtr pkt, bool validateAccess = false);
     void setAllReady(bool r);
+    void
+    addPrivateOwner(const SimObject *owner)
+    {
+        ++privateOwners[owner];
+    }
+    void
+    removePrivateOwner(const SimObject *owner)
+    {
+        auto owner_it = privateOwners.find(owner);
+        assert(owner_it != privateOwners.end());
+        if (--owner_it->second == 0) {
+            privateOwners.erase(owner_it);
+        }
+    }
+    bool
+    allowsRelaxed(const SimObject *owner, Addr start, Addr end) const
+    {
+        return relaxVolatileOrder && privateOwners.size() == 1 &&
+               privateOwners.count(owner) && end > start &&
+               !range.interleaved() && range.contains(start) &&
+               range.contains(end - 1);
+    }
 
   private:
     /**
@@ -214,6 +297,22 @@ class ScratchpadMemory : public AbstractMemory
         {}
 
       protected:
+        void
+        addPrivateOwner(const SimObject *owner) override
+        {
+            memory->addPrivateOwner(owner);
+        }
+        void
+        removePrivateOwner(const SimObject *owner) override
+        {
+            memory->removePrivateOwner(owner);
+        }
+        const AbstractMemory *
+        relaxedMemory(const SimObject *owner, Addr start,
+                      Addr end) const override
+        {
+            return memory->allowsRelaxed(owner, start, end) ? memory : nullptr;
+        }
         bool
         canAccess(Addr add, size_t len, bool read) override
         {

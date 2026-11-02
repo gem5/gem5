@@ -70,10 +70,17 @@ _SPM_KEYS = {
     "ResetOnRead",
     "ReadOnInvalid",
     "WriteOnValid",
+    "RelaxVolatileOrder",
     "Characterization",
     "Connections",
 }
-_REGISTER_KEYS = {"Name", "Type", "Size", "Characterization"}
+_REGISTER_KEYS = {
+    "Name",
+    "Type",
+    "Size",
+    "Characterization",
+    "RelaxVolatileOrder",
+}
 # RegisterBank has no consumer for Ports or ReadyMode. Its single
 # reg_port connects to the owning accelerator only, so extra
 # Connections cannot be honored.
@@ -755,6 +762,12 @@ def _validate_variable(variable, config_path, acc_name):
                 "Characterization must name an offline record",
             )
     if var_type in ("SPM", "RegisterBank"):
+        variable["RelaxVolatileOrder"] = _boolean(
+            variable.get("RelaxVolatileOrder", False),
+            config_path,
+            scope,
+            "RelaxVolatileOrder",
+        )
         variable["Size"] = _positive_bytes(
             variable.get("Size"), config_path, scope, "Size"
         )
@@ -785,6 +798,31 @@ def _validate_variable(variable, config_path, acc_name):
                 variable[field] = _boolean(
                     variable[field], config_path, scope, field
                 )
+        if variable["RelaxVolatileOrder"]:
+            if variable.get("ReadyMode", False):
+                raise WorkloadConfigError(
+                    config_path,
+                    scope,
+                    "RelaxVolatileOrder",
+                    True,
+                    "relaxed volatile ordering does not support ready mode",
+                )
+            connections = (
+                parse_connections(
+                    variable["Connections"], config_path, var_name
+                )
+                if "Connections" in variable
+                else ()
+            )
+            for owner, _ports in connections:
+                if owner.lower() != acc_name.lower():
+                    raise WorkloadConfigError(
+                        config_path,
+                        scope,
+                        "RelaxVolatileOrder",
+                        True,
+                        "relaxed volatile ordering requires one private owner",
+                    )
         variable["Ports"] = _spm_ports(
             variable.get("Ports", 1),
             config_path,

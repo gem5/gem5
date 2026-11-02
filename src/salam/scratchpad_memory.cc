@@ -94,6 +94,7 @@ tracePacket(System *sys, const char *label, PacketPtr pkt)
 ScratchpadMemory::ScratchpadMemory(const ScratchpadMemoryParams &p)
     : AbstractMemory(p),
       ppa(p.ppa),
+      relaxVolatileOrder(p.relax_volatile_order),
       readyMode(p.ready_mode),
       readOnInvalid(p.read_on_invalid),
       writeOnValid(p.write_on_valid),
@@ -105,6 +106,9 @@ ScratchpadMemory::ScratchpadMemory(const ScratchpadMemoryParams &p)
       bandwidth(p.bandwidth),
       dequeueEvent([this] { dequeue(); }, name())
 {
+    fatal_if(relaxVolatileOrder && readyMode,
+             "%s: relaxed volatile ordering does not support ready mode",
+             name());
     ready = new bool[range.size()];
     if (readyMode) {
         for (auto i = 0; i < range.size(); i++) {
@@ -310,6 +314,9 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
 void
 ScratchpadMemory::init()
 {
+    fatal_if(relaxVolatileOrder && privateOwners.size() != 1,
+             "%s: relaxed volatile ordering requires one private owner",
+             name());
     // allow unconnected memories as this is used in several ruby
     // systems at the moment
     if (port.isConnected()) {

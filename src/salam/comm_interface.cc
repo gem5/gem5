@@ -400,6 +400,56 @@ CommInterface::checkMMR()
     }
 }
 
+const AbstractMemory *
+CommInterface::relaxedMemory(Addr start, Addr end) const
+{
+    if (end <= start) {
+        return nullptr;
+    }
+    const auto touches = [start, end](const AddrRange &range) {
+        return range.contains(start) || range.contains(end - 1) ||
+               (start < range.start() && range.start() < end);
+    };
+    // Match the register bypass and stream-before-SPM dispatch priority.
+    // Availability and readiness are deliberately absent from this query.
+    bool registerOverlap = false;
+    const AbstractMemory *selected = nullptr;
+    for (auto *port : regPorts) {
+        for (const auto &range : port->getAddrRanges()) {
+            if (touches(range)) {
+                registerOverlap = true;
+                const auto *memory = port->relaxedMemory(start, end);
+                if (!memory || (selected && selected != memory)) {
+                    return nullptr;
+                }
+                selected = memory;
+            }
+        }
+    }
+    if (registerOverlap) {
+        return selected;
+    }
+    for (auto *port : streamPorts) {
+        for (const auto &range : port->getAddrRanges()) {
+            if (touches(range)) {
+                return nullptr;
+            }
+        }
+    }
+    for (auto *port : spmPorts) {
+        for (const auto &range : port->getAddrRanges()) {
+            if (touches(range)) {
+                const auto *memory = port->relaxedMemory(start, end);
+                if (!memory || (selected && selected != memory)) {
+                    return nullptr;
+                }
+                selected = memory;
+            }
+        }
+    }
+    return selected;
+}
+
 bool
 CommInterface::inStreamRange(Addr add)
 {

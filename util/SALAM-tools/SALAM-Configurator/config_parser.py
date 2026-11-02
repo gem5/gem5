@@ -628,6 +628,7 @@ class Variable:
         # Read the type first
         self.type = kwargs.get("Type")
         self.characterization = kwargs.get("Characterization")
+        self.relaxVolatileOrder = kwargs.get("RelaxVolatileOrder", False)
         if self.type == "SPM":
             self.connections = []
             # Read in SPM args

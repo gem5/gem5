@@ -46,6 +46,9 @@ from m5.proxy import *
 class ScratchpadMemory(AbstractMemory):
     type = "ScratchpadMemory"
     cxx_header = "salam/scratchpad_memory.hh"
+    relax_volatile_order = Param.Bool(
+        False, "Opt in to alias ordering for exclusively owned passive data"
+    )
     ppa = Param.SALAMPowerModel(
         SALAMPowerModel(), "Physical memory characterization and accounting"
     )

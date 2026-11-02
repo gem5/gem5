@@ -46,6 +46,9 @@ from m5.proxy import *
 class RegisterBank(AbstractMemory):
     type = "RegisterBank"
     cxx_header = "salam/register_bank.hh"
+    relax_volatile_order = Param.Bool(
+        False, "Opt in to alias ordering for exclusively owned passive data"
+    )
     ppa = Param.SALAMPowerModel(
         SALAMPowerModel(), "Physical memory characterization and accounting"
     )

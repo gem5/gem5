@@ -42,12 +42,15 @@
 #ifndef __SALAM_REGISTER_BANK_HH__
 #define __SALAM_REGISTER_BANK_HH__
 
+#include <cassert>
+#include <map>
 #include <vector>
 
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 #include "mem/tport.hh"
 #include "salam/HWModeling/salam_power_model.hh"
+#include "salam/scratchpad_memory.hh"
 
 using namespace gem5;
 using namespace memory;
@@ -58,11 +61,35 @@ class RegisterBank : public AbstractMemory
 {
   private:
     SALAMPowerModel *ppa;
+    const bool relaxVolatileOrder;
+    std::map<const SimObject *, unsigned> privateOwners;
 
   public:
     PARAMS(RegisterBank);
     RegisterBank(const RegisterBankParams &p);
     void registerAccess(PacketPtr pkt);
+    void
+    addPrivateOwner(const SimObject *owner)
+    {
+        ++privateOwners[owner];
+    }
+    void
+    removePrivateOwner(const SimObject *owner)
+    {
+        auto owner_it = privateOwners.find(owner);
+        assert(owner_it != privateOwners.end());
+        if (--owner_it->second == 0) {
+            privateOwners.erase(owner_it);
+        }
+    }
+    bool
+    allowsRelaxed(const SimObject *owner, Addr start, Addr end) const
+    {
+        return relaxVolatileOrder && privateOwners.size() == 1 &&
+               privateOwners.count(owner) && end > start &&
+               !range.interleaved() && range.contains(start) &&
+               range.contains(end - 1);
+    }
 
   private:
     class DeferredPacket
@@ -74,7 +101,7 @@ class RegisterBank : public AbstractMemory
         DeferredPacket(PacketPtr _pkt, Tick _tick) : tick(_tick), pkt(_pkt) {}
     };
 
-    class RegPort : public ResponsePort
+    class RegPort : public PrivateMemoryResponsePort
     {
       private:
         RegisterBank *memory;
@@ -82,10 +109,26 @@ class RegisterBank : public AbstractMemory
       public:
         RegPort(const std::string &_name, RegisterBank *_memory,
                 PortID id = InvalidPortID)
-            : ResponsePort(_name, id), memory(_memory)
+            : PrivateMemoryResponsePort(_name, id), memory(_memory)
         {}
 
       protected:
+        void
+        addPrivateOwner(const SimObject *owner) override
+        {
+            memory->addPrivateOwner(owner);
+        }
+        void
+        removePrivateOwner(const SimObject *owner) override
+        {
+            memory->removePrivateOwner(owner);
+        }
+        const AbstractMemory *
+        relaxedMemory(const SimObject *owner, Addr start,
+                      Addr end) const override
+        {
+            return memory->allowsRelaxed(owner, start, end) ? memory : nullptr;
+        }
         Tick
         recvAtomic(PacketPtr pkt) override
         {

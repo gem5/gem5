@@ -127,8 +127,14 @@ Calls complete on the caller's compute pass after the callee returns,
 plus their configured call latency in further passes. A call latency of N
 therefore completes N+1 compute edges after the return.
 
-Volatile loads/stores wait for earlier volatile accesses, even at disjoint
-addresses. Calls wait for earlier memory accesses, and younger accesses
+Volatile accesses preserve order by default, even at disjoint addresses.
+`RelaxVolatileOrder: true` (`relax_volatile_order=True`) lets independent
+accesses to opted-in SPMs and RegisterBanks owned by one accelerator
+overlap. This modeling option requires no concurrent external access or
+observation; alias and call dependencies still apply. MMIO, DMA registers
+and streams remain ordered; ready-mode SPMs cannot opt in.
+
+Calls wait for earlier memory accesses, and younger accesses
 wait for the call to return. Ordinary accesses retain address-overlap
 dependencies. Volatile accesses do not provide atomic synchronization
 between independent requestors.

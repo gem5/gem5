@@ -77,6 +77,7 @@ class CommInterface : public BasicPioDevice
     bool debugEnabled;
 
   public:
+    const AbstractMemory *relaxedMemory(Addr start, Addr end) const;
     // The service pass process_cycles after now, on a compute edge.
     Tick
     serviceEdge() const
@@ -262,7 +263,7 @@ class CommInterface : public BasicPioDevice
         }
     };
 
-    class RegPort : public RequestPort
+    class RegPort : public PrivateMemoryRequestPort
     {
         friend class CommInterface;
 
@@ -275,7 +276,7 @@ class CommInterface : public BasicPioDevice
       public:
         RegPort(const std::string &name, CommInterface *_owner,
                 PortID id = InvalidPortID)
-            : RequestPort(name),
+            : PrivateMemoryRequestPort(name, _owner, id),
               owner(_owner),
               readReq(nullptr),
               writeReq(nullptr)

@@ -289,6 +289,7 @@ def _attach_variable(clstr, var):
         if var.characterization:
             spm.ppa = SALAMPowerModel(**power_model.load(var.characterization))
         spm.conf_table_reported = False
+        spm.relax_volatile_order = var.relaxVolatileOrder
         spm.ready_mode = var.readyMode
         spm.reset_on_scratchpad_read = var.resetOnRead
         spm.read_on_invalid = var.readOnInvalid
@@ -303,6 +304,7 @@ def _attach_variable(clstr, var):
         reg = getattr(clstr, var.name.lower())
         if var.characterization:
             reg.ppa = SALAMPowerModel(**power_model.load(var.characterization))
+        reg.relax_volatile_order = var.relaxVolatileOrder
         reg.load_port = clstr.local_bus.mem_side_ports
         for con in var.connections:
             getattr(clstr, con.conName.lower()).reg = reg.reg_port
