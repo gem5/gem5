@@ -391,6 +391,12 @@ written when that path exists; otherwise it is resolved relative to
 `ACC_BENCH_PATH`. The remaining two fields are labels written to the
 `Benchmark` and `Config` columns of `SALAM-out.csv`; they are not YAML keys.
 `--bench-list` defaults to `$ACC_BENCH_PATH/benchmarks.list` when omitted.
+The collector resolves `SysPath` through the simulator's workload loader;
+omitted SPM `Ports` defaults to one. Paths in includes use the same top-level
+workload root as simulation. When that root differs from the main YAML's
+directory, pass `--workload-root /path/to/workload`. Logs identify the
+declaring YAML, and the CSV `Acc` label is `cluster/accelerator/memory` so
+equal memory names in different clusters remain distinct.
 
 Then:
 
@@ -399,7 +405,10 @@ python3 ./run_cacti_SALAM.py --bench-list $ACC_BENCH_PATH/benchmarks.list --dela
 ```
 
 `run_cacti_SALAM.py` only models YAML Vars with `Type: SPM` and `Name`,
-`Size`, and `Ports` fields. The CACTI binary at
+`Size`, and normalized `Ports` fields. `Ports` retains its workload-field
+meaning; it is not an inferred total of every connected memory endpoint.
+Use explicit matching physical geometry when importing characterization.
+The CACTI binary at
 `$M5_PATH/ext/mcpat/cacti/cacti` is needed only when a configuration has
 such SPMs. The in-tree BFS configuration uses RegisterBanks; the helper
 skips it without running CACTI or producing a new `results/SALAM-out.csv`.

@@ -54,10 +54,8 @@ import yaml
 _configurator = Path(__file__).resolve().parents[1] / "SALAM-Configurator"
 if str(_configurator) not in sys.path:
     sys.path.insert(0, str(_configurator))
-from workload_config import (  # noqa: E402
-    WorkloadConfigError,
-    load_documents,
-)
+from config_parser import load_clusters  # noqa: E402
+from workload_config import WorkloadConfigError  # noqa: E402
 
 # Configuration variables
 M5_PATH_ENV = os.environ.get("M5_PATH")
@@ -88,34 +86,55 @@ INTERMEDIATE_CSV = RESULTS_DIR / "out.csv"
 MASTER_CSV = RESULTS_DIR / "SALAM-out.csv"
 
 
-# Recursive function to find memory objects
-def find_mem_objects(data):
-    spms_found = []
-    if isinstance(data, dict):
-        obj_type = data.get("Type")
-        is_potential_mem = all(k in data for k in ("Name", "Size", "Ports"))
-        if obj_type == "SPM" and is_potential_mem:
-            print(
-                f"  Found SPM: {data['Name']} (Size: {data['Size']},"
-                f" Ports: {data['Ports']})"
-            )
-            spms_found.append(data)
-        elif obj_type and obj_type != "SPM" and is_potential_mem:
-            print(
-                f"  INFO: Ignoring non-SPM Var Type='{obj_type}'"
-                f" Name='{data.get('Name', 'N/A')}'"
-            )
-        if not (obj_type and is_potential_mem):
-            for value in data.values():
-                spms_found.extend(find_mem_objects(value))
-    elif isinstance(data, list):
-        for item in data:
-            spms_found.extend(find_mem_objects(item))
-    return spms_found
+def collect_mem_objects(config_path, working_dir=None):
+    """Collect SPMs from the simulator's include-resolved workload model.
+
+    Ports retains the normalized workload field's meaning. Connections are
+    recorded separately: this discovery helper does not infer a characterized
+    physical organization from the simulator's connected endpoints.
+    """
+    config_path = Path(os.path.abspath(config_path))
+    working_dir = (
+        config_path.parent
+        if working_dir is None
+        else Path(os.path.abspath(working_dir))
+    )
+    clusters = load_clusters(str(working_dir), str(config_path))
+    memories = []
+    for cluster in clusters:
+        for accelerator in cluster.accs:
+            for variable in accelerator.variables:
+                if variable.type != "SPM":
+                    continue
+                memories.append(
+                    {
+                        "Identity": (
+                            f"{cluster.name}/{accelerator.name}/"
+                            f"{variable.name}"
+                        ),
+                        "Name": variable.name,
+                        "Size": variable.size,
+                        "Ports": variable.ports,
+                        "Source": cluster.config_path,
+                        "Address": variable.address,
+                        "Characterization": variable.characterization,
+                        "Connections": tuple(
+                            (connection.conName, connection.numPorts)
+                            for connection in variable.connections
+                        ),
+                    }
+                )
+    return memories
 
 
 def main():
     parser = argparse.ArgumentParser(description="Run CACTI for SALAM SPMs.")
+    parser.add_argument(
+        "--workload-root",
+        type=Path,
+        help="Root for SysPath/IrPath, as in the simulator; defaults to each "
+        "top-level configuration's directory.",
+    )
     parser.add_argument(
         "--bench-list",
         default=BENCH_LIST,
@@ -173,11 +192,7 @@ def main():
 
         memobjects = []
         try:
-            documents = load_documents(config_path)
-            for document in documents:
-                memobjects.extend(
-                    find_mem_objects(document.get("acc_cluster", []))
-                )
+            memobjects = collect_mem_objects(config_path, args.workload_root)
         except FileNotFoundError:
             print(
                 f"ERROR: YAML file not found: {config_path}", file=sys.stderr
@@ -225,14 +240,15 @@ def main():
         overall_cacti_success = True
         with open(STDOUT_LOG, "a") as f_out, open(STDERR_LOG, "a") as f_err:
             for spm in memobjects:
-                spm_name = spm["Name"]
+                spm_name = spm["Identity"]
                 spm_size = int(spm["Size"])
                 spm_ports = int(spm["Ports"])
                 run_size = max(spm_size, MIN_CACTI_SIZE)
 
                 print(
-                    f"  Running CACTI for"
-                    f"{spm_name} (Size={run_size}, Ports={spm_ports})"
+                    f"  Running CACTI for {spm_name} "
+                    f"(Size={run_size}, Ports={spm_ports}, "
+                    f"source={spm['Source']})"
                 )
                 # Generate temp config from template
                 modified_cfg_lines = []
