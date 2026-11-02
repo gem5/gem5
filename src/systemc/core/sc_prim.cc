@@ -27,20 +27,11 @@
 
 #include "systemc/ext/core/sc_prim.hh"
 #include "systemc/core/channel_ops.hh"
-#include "systemc/core/scheduler.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
-
-namespace sc_gem5
-{
-
-uint64_t
-getChangeStamp()
-{
-    return scheduler().changeStamp();
-}
-
-} // namespace sc_gem5
+#include "systemc/ext/core/sc_module.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -50,7 +41,7 @@ sc_prim_channel::sc_prim_channel() : _gem5_channel(nullptr)
     if (sc_is_running()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "simulation running");
     }
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "elaboration done");
     }
     _gem5_channel = ::sc_gem5::newChannel(this);
@@ -62,7 +53,7 @@ sc_prim_channel::sc_prim_channel(const char *_name) :
     if (sc_is_running()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "simulation running");
     }
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "elaboration done");
     }
     _gem5_channel = ::sc_gem5::newChannel(this);

@@ -27,7 +27,7 @@
 
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/core/module_ops.hh"
-#include "systemc/core/scheduler.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -41,7 +41,7 @@ sc_module_name::sc_module_name(const char *name) :
 {
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
-    else if (::sc_gem5::scheduler().elaborationDone())
+    else if (::sc_gem5::elaborationDone())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
     else
         _gem5_module = ::sc_gem5::newModule(name);

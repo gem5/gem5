@@ -30,20 +30,19 @@
 #include <vector>
 
 #include "base/logging.hh"
-#include "systemc/core/event.hh"
-#include "systemc/core/kernel.hh"
-#include "systemc/core/module.hh"
 #include "systemc/core/module_ops.hh"
 #include "systemc/core/object_ops.hh"
-#include "systemc/core/port.hh"
 #include "systemc/core/process_ops.hh"
 #include "systemc/core/process_types.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/core/sensitivity.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/sc_in.hh"
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_out.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/messages.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/dt/bit/sc_logic.hh"
@@ -266,7 +265,7 @@ sc_module::sc_module()
 {
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
     }
 }
@@ -832,33 +831,25 @@ sc_gen_unique_name(const char *seed)
         seed = "unnamed";
     }
 
-    auto mod = sc_gem5::pickParentModule();
-    if (mod)
-        return mod->uniqueName(seed);
-
-    sc_gem5::Process *p = sc_gem5::scheduler().current();
-    if (p)
-        return p->uniqueName(seed);
-
-    return ::sc_gem5::globalNameGen().gen(seed);
+    return ::sc_gem5::genUniqueName(seed);
 }
 
 bool
 sc_hierarchical_name_exists(const char *name)
 {
-    return sc_gem5::findEvent(name) || ::sc_gem5::findObject(name);
+    return ::sc_gem5::hierarchicalNameExists(name);
 }
 
 bool
 sc_start_of_simulation_invoked()
 {
-    return ::sc_gem5::kernel->startOfSimulationComplete();
+    return ::sc_gem5::startOfSimulationComplete();
 }
 
 bool
 sc_end_of_simulation_invoked()
 {
-    return ::sc_gem5::kernel->endOfSimulationComplete();
+    return ::sc_gem5::endOfSimulationComplete();
 }
 
 sc_module *

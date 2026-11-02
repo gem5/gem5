@@ -28,7 +28,7 @@
 #include "systemc/ext/core/sc_export.hh"
 #include "base/cprintf.hh"
 #include "systemc/core/module_ops.hh"
-#include "systemc/core/scheduler.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 
@@ -59,7 +59,7 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
         reportError(SC_ID_INSERT_EXPORT_, "simulation running",
                 name(), kind());
     }
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         reportError(SC_ID_INSERT_EXPORT_, "elaboration done", name(), kind());
     }
 

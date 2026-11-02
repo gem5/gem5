@@ -28,6 +28,7 @@
 #include "systemc/ext/core/sc_simcontext.hh"
 #include "systemc/core/object_ops.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/core/sc_main.hh"
 
 namespace sc_core
@@ -80,7 +81,7 @@ sc_simcontext::next_object()
 bool
 sc_simcontext::elaboration_done()
 {
-    return ::sc_gem5::scheduler().elaborationDone();
+    return ::sc_gem5::elaborationDone();
 }
 
 sc_simcontext *

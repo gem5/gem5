@@ -30,7 +30,7 @@
 #include "base/cprintf.hh"
 #include "systemc/core/module_ops.hh"
 #include "systemc/core/port_ops.hh"
-#include "systemc/core/scheduler.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_port.hh"
@@ -63,7 +63,7 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
         reportError(SC_ID_INSERT_PORT_, "simulation running",
                 name(), kind());
     }
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         reportError(SC_ID_INSERT_PORT_, "elaboration done",
                 name(), kind());
     }
