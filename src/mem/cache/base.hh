@@ -350,6 +350,8 @@ class BaseCache : public ClockedObject
 
     /** Prefetcher */
     prefetch::Base *prefetcher;
+    PrefetchAccounting *accounting;
+    const int accountingLevel;
 
     /** To probe when a cache hit occurs */
     ProbePointArg<PacketPtr> *ppHit;

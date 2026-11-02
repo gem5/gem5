@@ -67,6 +67,8 @@ Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
         req->setFlags(Request::SECURE);
     }
     req->taskId(context_switch_task_id::Prefetcher);
+    if (pfInfo.accountingRecord)
+        req->setExtension(std::make_shared<PrefetchProvenance>(pfInfo.accountingRecord));
     pkt = new Packet(req, MemCmd::HardPFReq);
     pkt->allocate();
     if (tag_prefetch && pfInfo.hasPC()) {
@@ -184,6 +186,7 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
                         "(cl: %#x), demand request going to the same addr\n",
                         itr->pfInfo.getAddr(),
                         blockAddress(itr->pfInfo.getAddr()));
+                if (accounting) accounting->drop(itr->pfInfo.accountingRecord, "dropDemandCancel");
                 delete itr->pkt;
                 itr = pfq.erase(itr);
                 statsQueued.pfRemovedDemand++;
@@ -200,9 +203,15 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
     // Get the maximu number of prefetches that we are allowed to generate
     size_t max_pfs = getMaxPermittedPrefetches(addresses.size());
 
+    // Account for every candidate, including those skipped by throttling.
+    std::vector<AccountingPtr> candidates;
+    for (size_t i = 0; i < addresses.size(); ++i)
+        candidates.push_back(accounting ? accounting->generate(accountingSource, accountingTarget) : nullptr);
+    size_t candidate_index = 0;
     // Queue up generated prefetches
     size_t num_pfs = 0;
     for (AddrPriority& addr_prio : addresses) {
+        auto record = candidates[candidate_index++];
 
         // Block align prefetch address
         addr_prio.first = blockAddress(addr_prio.first);
@@ -218,6 +227,7 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
         bool can_cross_page = (mmu != nullptr);
         if (can_cross_page || samePage(addr_prio.first, pfi.getAddr())) {
             PrefetchInfo new_pfi(pfi,addr_prio.first);
+            new_pfi.accountingRecord = record;
             statsQueued.pfIdentified++;
             DPRINTF(HWPrefetch, "Found a pf candidate addr: %#x, "
                     "inserting into prefetch queue.\n", new_pfi.getAddr());
@@ -228,9 +238,12 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
                 break;
             }
         } else {
+            if (accounting) accounting->drop(record, "dropPage");
             DPRINTF(HWPrefetch, "Ignoring page crossing prefetch.\n");
         }
     }
+    for (; candidate_index < candidates.size(); ++candidate_index)
+        if (accounting) accounting->drop(candidates[candidate_index], "dropThrottle");
 }
 
 PacketPtr
@@ -250,6 +263,7 @@ Queued::getPacket()
     }
 
     PacketPtr pkt = pfq.front().pkt;
+    if (accounting) accounting->dequeue(pfq.front().pfInfo.accountingRecord);
     pfq.pop_front();
 
     prefetchStats.pfIssued++;
@@ -317,6 +331,7 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
         // check if this prefetch is already redundant
         if (cacheSnoop && (inCache(target_paddr, it->pfInfo.isSecure()) ||
                     inMissQueue(target_paddr, it->pfInfo.isSecure()))) {
+            if (accounting) accounting->drop(it->pfInfo.accountingRecord, "dropSnoop");
             statsQueued.pfInCache++;
             DPRINTF(HWPrefetch, "Dropping redundant in "
                     "cache/MSHR prefetch addr:%#x\n", target_paddr);
@@ -327,6 +342,7 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
             addToQueue(pfq, *it);
         }
     } else {
+        if (accounting) accounting->drop(it->pfInfo.accountingRecord, "dropTranslation");
         DPRINTF(HWPrefetch, "%s Translation of vaddr %#x failed, dropping "
                 "prefetch request %#x \n", mmu->name(),
                 it->translationRequest->getVaddr());
@@ -386,9 +402,11 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
 {
     if (queueFilter) {
         if (alreadyInQueue(pfq, new_pfi, priority)) {
+            if (accounting) accounting->drop(new_pfi.accountingRecord, "dropQueueDuplicate");
             return;
         }
         if (alreadyInQueue(pfqMissingTranslation, new_pfi, priority)) {
+            if (accounting) accounting->drop(new_pfi.accountingRecord, "dropQueueDuplicate");
             return;
         }
     }
@@ -430,6 +448,7 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
 
         // ContextID is needed for translation
         if (!pkt->req->hasContextId()) {
+            if (accounting) accounting->drop(new_pfi.accountingRecord, "dropNoTranslation");
             return;
         }
         if (useVirtualAddresses) {
@@ -447,12 +466,14 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
         } else {
             // Using PA for training but the request does not have a VA,
             // unable to process this page crossing prefetch.
+            if (accounting) accounting->drop(new_pfi.accountingRecord, "dropNoTranslation");
             return;
         }
     }
     if (has_target_pa && cacheSnoop &&
             (inCache(target_paddr, new_pfi.isSecure()) ||
             inMissQueue(target_paddr, new_pfi.isSecure()))) {
+        if (accounting) accounting->drop(new_pfi.accountingRecord, "dropSnoop");
         statsQueued.pfInCache++;
         DPRINTF(HWPrefetch, "Dropping redundant in "
                 "cache/MSHR prefetch addr:%#x\n", target_paddr);
@@ -507,10 +528,12 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
         }
         DPRINTF(HWPrefetch, "Prefetch queue full, removing lowest priority "
                             "oldest packet, addr: %#x\n",it->pfInfo.getAddr());
+        if (accounting) accounting->drop(it->pfInfo.accountingRecord, "dropQueueFull");
         delete it->pkt;
         queue.erase(it);
     }
 
+    if (accounting) accounting->queue(dpp.pfInfo.accountingRecord);
     if ((queue.size() == 0) || (dpp <= queue.back())) {
         queue.emplace_back(dpp);
     } else {

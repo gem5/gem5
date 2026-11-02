@@ -45,6 +45,7 @@
  */
 
 #include "mem/cache/cache.hh"
+#include "mem/cache/prefetch/accounting.hh"
 
 #include <cassert>
 
@@ -948,6 +949,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 PacketPtr
 Cache::evictBlock(CacheBlk *blk)
 {
+    if (accounting) accounting->remove(blk->prefetchOrigin, accountingLevel,
+        blk == tempBlock ? "unusedNoRetention" : "unusedReplacement");
     PacketPtr pkt = (blk->isSet(CacheBlk::DirtyBit) || writebackClean) ?
         writebackBlk(blk) : cleanEvictBlk(blk);
 

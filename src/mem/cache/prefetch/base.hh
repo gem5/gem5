@@ -53,6 +53,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/prefetch/accounting.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
@@ -121,6 +122,8 @@ class Base : public ClockedObject
          * Obtains the address value of this Prefetcher address.
          * @return the addres value.
          */
+        AccountingPtr accountingRecord;
+
         Addr getAddr() const
         {
             return address;
@@ -367,6 +370,12 @@ class Base : public ClockedObject
     BaseMMU * mmu;
 
   public:
+    PrefetchAccounting *accounting;
+    int accountingSource, accountingTarget;
+    virtual void setAccounting(PrefetchAccounting *a, int s, int t) {
+        accounting = a; accountingSource = s; accountingTarget = t;
+    }
+
     Base(const BasePrefetcherParams &p);
     virtual ~Base() = default;
 

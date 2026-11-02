@@ -102,7 +102,8 @@ Base::Base(const BasePrefetcherParams &p)
       prefetchOnPfHit(p.prefetch_on_pf_hit),
       useVirtualAddresses(p.use_virtual_addresses),
       prefetchStats(this), issuedPrefetches(0),
-      usefulPrefetches(0), mmu(nullptr)
+      usefulPrefetches(0), mmu(nullptr), accounting(p.accounting),
+      accountingSource(p.accounting_source), accountingTarget(p.accounting_target)
 {
 }
 

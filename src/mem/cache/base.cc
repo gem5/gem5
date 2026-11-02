@@ -44,6 +44,7 @@
  */
 
 #include "mem/cache/base.hh"
+#include "mem/cache/prefetch/accounting.hh"
 
 #include "base/compiler.hh"
 #include "base/logging.hh"
@@ -86,6 +87,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       tags(p.tags),
       compressor(p.compressor),
       prefetcher(p.prefetcher),
+      accounting(p.accounting), accountingLevel(p.accounting_level),
       writeAllocator(p.write_allocator),
       writebackClean(p.writeback_clean),
       tempBlockWriteback(nullptr),
@@ -363,6 +365,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
         // no MSHR
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
+        if (accounting && accountingDemand(pkt)) accounting->demandMiss(accountingLevel);
         if (prefetcher && pkt->isDemand())
             prefetcher->incrDemandMhsrMisses();
 
@@ -445,6 +448,20 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
 
+    if (accounting) {
+        auto origin = prefetchRecord(pkt);
+        if (origin) {
+            accounting->layer("requestEvents", origin->source, accountingLevel);
+            accounting->layer("requestBytes", origin->source, accountingLevel, pkt->getSize());
+            if (satisfied) accounting->layer("hitEvents", origin->source, accountingLevel);
+        } else if (accountingDemand(pkt)) {
+            if (blk && blk->prefetchOrigin)
+                accounting->demand(blk->prefetchOrigin, accountingLevel, satisfied);
+            auto pending = mshrQueue.findMatch(pkt->getBlockAddr(blkSize), pkt->isSecure());
+            if (pending) accounting->demand(prefetchRecord(pending->getTarget()->pkt), accountingLevel, false);
+        }
+    }
+
     if (satisfied) {
         // notify before anything else as later handleTimingReqHit might turn
         // the packet in a response
@@ -489,6 +506,14 @@ void
 BaseCache::recvTimingResp(PacketPtr pkt)
 {
     assert(pkt->isResponse());
+    if (accounting) {
+        auto origin = prefetchRecord(pkt);
+        if (origin) {
+            accounting->layer("responseEvents", origin->source, accountingLevel);
+            if (pkt->hasData())
+                accounting->layer("responseDataBytes", origin->source, accountingLevel, pkt->getSize());
+        }
+    }
 
     // all header delay should be paid for by the crossbar, unless
     // this is a prefetch response from above
@@ -538,6 +563,11 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     }
 
     PacketList writebacks;
+
+    if (accounting && is_error) {
+        auto r = prefetchRecord(pkt);
+        if (r && r->target == accountingLevel) accounting->abort(r);
+    }
 
     bool is_fill = !mshr->isForward &&
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp ||
@@ -901,23 +931,33 @@ BaseCache::getNextQueueEntry()
         // If we have a miss queue slot, we can try a prefetch
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
+            if (accounting) {
+                auto origin = prefetchRecord(pkt);
+                if (origin) {
+                    accounting->layer("requestEvents", origin->source, accountingLevel);
+                    accounting->layer("requestBytes", origin->source, accountingLevel, pkt->getSize());
+                }
+            }
             Addr pf_addr = pkt->getBlockAddr(blkSize);
             if (tags->findBlock(pf_addr, pkt->isSecure())) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in cache, "
                         "dropped.\n", pf_addr);
                 prefetcher->pfHitInCache();
+                if (accounting) accounting->drop(prefetchRecord(pkt), "dropCache");
                 // free the request and packet
                 delete pkt;
             } else if (mshrQueue.findMatch(pf_addr, pkt->isSecure())) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in a MSHR, "
                         "dropped.\n", pf_addr);
                 prefetcher->pfHitInMSHR();
+                if (accounting) accounting->drop(prefetchRecord(pkt), "dropMSHR");
                 // free the request and packet
                 delete pkt;
             } else if (writeBuffer.findMatch(pf_addr, pkt->isSecure())) {
                 DPRINTF(HWPrefetch, "Prefetch %#x has hit in the "
                         "Write Buffer, dropped.\n", pf_addr);
                 prefetcher->pfHitInWB();
+                if (accounting) accounting->drop(prefetchRecord(pkt), "dropWriteBuffer");
                 // free the request and packet
                 delete pkt;
             } else {
@@ -929,6 +969,7 @@ BaseCache::getNextQueueEntry()
                 // allocate an MSHR and return it, note
                 // that we send the packet straight away, so do not
                 // schedule the send
+                if (accounting) accounting->accept(prefetchRecord(pkt));
                 return allocateMissBuffer(pkt, curTick(), false);
             }
         }
@@ -1600,6 +1641,13 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
                       pkt->payloadDelay);
 
+    if (accounting) {
+        auto origin = prefetchRecord(pkt);
+        if (origin) {
+            accounting->fill(origin, accountingLevel, blk->getWhenReady());
+            blk->prefetchOrigin = origin;
+        }
+    }
     return blk;
 }
 
@@ -1663,6 +1711,8 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 void
 BaseCache::invalidateBlock(CacheBlk *blk)
 {
+    if (accounting) accounting->remove(blk->prefetchOrigin, accountingLevel,
+        blk == tempBlock ? "unusedNoRetention" : "unusedInvalidation");
     // If block is still marked as prefetched, then it hasn't been used
     if (blk->wasPrefetched()) {
         prefetcher->prefetchUnused();

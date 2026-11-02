@@ -62,6 +62,9 @@ class HWPProbeEvent(object):
 class BasePrefetcher(ClockedObject):
     type = "BasePrefetcher"
     abstract = True
+    accounting = Param.PrefetchAccounting(NULL, "Shared project event accounting")
+    accounting_source = Param.Int(-1, "-1 disabled; 0 Multi, 1 T2, 2 P1, 3 C1")
+    accounting_target = Param.Int(-1, "0 L1I, 1 L1D, 2 L2, 3 L3")
     cxx_class = "gem5::prefetch::Base"
     cxx_header = "mem/cache/prefetch/base.hh"
     cxx_exports = [PyBindMethod("addEventProbe"), PyBindMethod("addMMU")]

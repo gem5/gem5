@@ -55,8 +55,17 @@ Multi::Multi(const MultiPrefetcherParams &p)
 void
 Multi::setCache(BaseCache *_cache)
 {
-    for (auto pf : prefetchers)
+    for (auto pf : prefetchers) {
+        pf->setAccounting(accounting, accountingSource, accountingTarget);
         pf->setCache(_cache);
+    }
+}
+
+void
+Multi::setAccounting(PrefetchAccounting *a, int s, int t)
+{
+    Base::setAccounting(a, s, t);
+    for (auto pf : prefetchers) pf->setAccounting(a, s, t);
 }
 
 Tick

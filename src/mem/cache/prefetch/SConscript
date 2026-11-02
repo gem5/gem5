@@ -28,6 +28,9 @@
 
 Import('*')
 
+SimObject('PrefetchAccounting.py', sim_objects=['PrefetchAccounting'])
+Source('accounting.cc')
+
 SimObject('Prefetcher.py', sim_objects=[
     'BasePrefetcher', 'MultiPrefetcher', 'QueuedPrefetcher',
     'StridePrefetcherHashedSetAssociative', 'StridePrefetcher',

@@ -80,6 +80,8 @@ class WriteAllocator(SimObject):
 class BaseCache(ClockedObject):
     type = "BaseCache"
     abstract = True
+    accounting = Param.PrefetchAccounting(NULL, "Shared project event accounting")
+    accounting_level = Param.Int(-1, "0 L1I, 1 L1D, 2 L2, 3 L3; -1 disabled")
     cxx_header = "mem/cache/base.hh"
     cxx_class = "gem5::BaseCache"
 
