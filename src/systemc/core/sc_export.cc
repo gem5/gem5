@@ -25,12 +25,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "systemc/ext/core/sc_export.hh"
-#include "base/cprintf.hh"
+#include <sstream>
+
 #include "systemc/core/module_ops.hh"
 #include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/messages.hh"
+#include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -42,13 +44,12 @@ void
 reportError(const char *id, const char *add_msg,
         const char *name, const char *kind)
 {
-    std::string msg;
+    std::ostringstream ss;
     if (add_msg)
-        msg = gem5::csprintf("%s: export '%s' (%s)", add_msg, name, kind);
-    else
-        msg = gem5::csprintf("export '%s' (%s)", name, kind);
+        ss << add_msg << ": ";
+    ss << "export '" << name << "' (" << kind << ")";
 
-    SC_REPORT_ERROR(id, msg.c_str());
+    SC_REPORT_ERROR(id, ss.str().c_str());
 }
 
 }

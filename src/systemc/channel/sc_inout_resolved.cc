@@ -25,7 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/cprintf.hh"
+#include <sstream>
+
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_inout_resolved.hh"
 #include "systemc/ext/channel/sc_signal_resolved.hh"
@@ -47,8 +48,9 @@ sc_inout_resolved::end_of_elaboration()
 {
     sc_inout<sc_dt::sc_logic>::end_of_elaboration();
     if (!dynamic_cast<sc_signal_resolved *>(get_interface())) {
-        std::string msg = gem5::csprintf("port '%s' (%s)", name(), kind());
-        SC_REPORT_ERROR(SC_ID_RESOLVED_PORT_NOT_BOUND_, msg.c_str());
+        std::ostringstream ss;
+        ss << "port '" << name() << "' (" << kind() << ")";
+        SC_REPORT_ERROR(SC_ID_RESOLVED_PORT_NOT_BOUND_, ss.str().c_str());
     }
 }
 

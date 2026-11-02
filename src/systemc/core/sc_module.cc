@@ -26,6 +26,7 @@
  */
 
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -671,8 +672,9 @@ void
 wait(int n)
 {
     if (n <= 0) {
-        std::string msg = gem5::csprintf("n = %d", n);
-        SC_REPORT_ERROR(SC_ID_WAIT_N_INVALID_, msg.c_str());
+        std::ostringstream ss;
+        ss << "n = " << n;
+        SC_REPORT_ERROR(SC_ID_WAIT_N_INVALID_, ss.str().c_str());
     }
     sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->waitCount(n - 1);

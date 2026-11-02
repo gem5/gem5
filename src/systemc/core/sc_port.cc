@@ -27,13 +27,13 @@
 
 #include <sstream>
 
-#include "base/cprintf.hh"
 #include "systemc/core/module_ops.hh"
 #include "systemc/core/port_ops.hh"
 #include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_port.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -45,13 +45,12 @@ void
 reportError(const char *id, const char *add_msg,
         const char *name, const char *kind)
 {
-    std::string msg;
+    std::ostringstream ss;
     if (add_msg)
-        msg = gem5::csprintf("%s: port '%s' (%s)", add_msg, name, kind);
-    else
-        msg = gem5::csprintf("port '%s' (%s)", name, kind);
+        ss << add_msg << ": ";
+    ss << "port '" << name << "' (" << kind << ")";
 
-    SC_REPORT_ERROR(id, msg.c_str());
+    SC_REPORT_ERROR(id, ss.str().c_str());
 }
 
 }
