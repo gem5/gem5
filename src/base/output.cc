@@ -144,6 +144,29 @@ OutputDirectory::checkForStdio(const std::string &name)
 }
 
 void
+OutputDirectory::flushAll()
+{
+    for (auto &f : files) {
+        if (!f.second) {
+            continue;
+        }
+        std::ostream *os = f.second->stream();
+        // A flush only hands a gzofstream's data to zlib, which keeps it
+        // until a deflate block is full; close() writes it and the trailer.
+        if (auto *gz = dynamic_cast<gzofstream *>(os)) {
+            gz->close();
+        } else {
+            os->flush();
+        }
+    }
+    for (auto &d : dirs) {
+        if (d.second) {
+            d.second->flushAll();
+        }
+    }
+}
+
+void
 OutputDirectory::close(OutputStream *file)
 {
     if (file == &stdout || file == &stderr) {
