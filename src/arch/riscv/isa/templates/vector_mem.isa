@@ -1398,7 +1398,8 @@ def template VlSegConstructor {{
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     } else {
-        // 按地址顺序生成原始数据块，与 deinterleave 的源寄存器分组一致。
+        // Generate raw blocks in address order to match the deinterleave
+        // source-register groups.
         for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
             for (int f = 0; f < NFIELDS; ++f) {
                 bool illegal = (_machInst.vd + i + (f * num_microops)) >= 32;
@@ -1606,7 +1607,8 @@ Fault
         v0 = tmp_v0.as<uint8_t>();
     }
 
-    // 完全抑制访存故障时没有 packet，与普通 FoF 完成路径一致。
+    // A fully suppressed access has no packet, as in the unit-stride
+    // fault-only-first completion path.
     if (xc->readMemAccPredicate()) {
         memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
     }

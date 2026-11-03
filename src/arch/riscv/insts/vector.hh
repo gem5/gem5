@@ -721,7 +721,7 @@ class VlSegMacroInst : public VectorMemMacroInst
 class VlSegMicroInst : public VectorMicroInst
 {
   public:
-    // faultIdx 按原始 EEW slot 计数，trim 微指令将其转换为 segment 数。
+    // faultIdx counts raw EEW slots; the trim microop converts to segments.
     mutable bool trimVl;
     mutable uint32_t faultIdx;
     Fault handleMemFault(const Fault &fault, Addr vaddr) const override;

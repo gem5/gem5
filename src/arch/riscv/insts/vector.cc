@@ -610,7 +610,7 @@ VlFFTrimVlMicroOp::calcVl() const
             }
         }
     }
-    // segmented load 的连续原始 slot 前缀只计入完整 segment。
+    // Count only complete segments in the contiguous raw-slot prefix.
     return vl / (machInst.nf + 1);
 }
 
@@ -681,10 +681,11 @@ namespace
  * @param fault     Fault raised by the memory access.
  * @param vaddr     Virtual address the access was initiated at, i.e. the EA
  *                  of element 0 of this microop.
- * @param elem_offset 本 microop 起点相对于整个访问的原始 EEW slot 偏移。
+ * @param elem_offset Offset of this microop in raw EEW slots relative to
+ *                    the start of the entire access.
  * @param micro_vl  Number of elements this microop covers.
  * @param eew_bytes Size of a single element in bytes.
- * @param num_fields 每个 segment 的 field 数，普通 unit-stride load 为 1。
+ * @param num_fields Number of fields per segment; 1 for unit-stride loads.
  * @param trim_vl   Set when the fault is suppressed.
  * @param fault_idx Receives the index of the first faulting element within
  *                  this microop (== number of cleanly loaded elements).
@@ -698,10 +699,11 @@ faultOnlyFirstTrim(const Fault &fault, Addr vaddr, uint32_t elem_offset,
     Addr fault_addr;
     if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
         assert(fault_addr >= vaddr);
-        // 限制为本次访问的 slot 数，防止越界 fault 地址撑大 vl。
+        // Clamp to this access's slot count so an out-of-range fault
+        // address cannot inflate vl.
         fault_idx =
             std::min<uint64_t>((fault_addr - vaddr) / eew_bytes, micro_vl);
-        // 一个 segment 的任意 field 故障都属于同一架构元素。
+        // All fields of a segment belong to the same architectural element.
         if ((elem_offset + fault_idx) / num_fields != 0) {
             trim_vl = true;
             return NoFault;
