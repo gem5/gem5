@@ -62,8 +62,9 @@ command line to manually re-format staged files.
 
 In `--pre-commit` mode, only the filenames supplied by pre-commit are
 formatted, respecting its inclusion and exclusion rules. An empty file
-list skips formatting. Manual invocations may also supply filenames;
-without them, all changed files are considered.
+list skips formatting. Manual invocations may also supply filenames
+relative to the repository root; without them, all changed files are
+considered.
 
 To support in-place checking of a PR in GitHub Actions, the
 `--ci-pr-base-commit` option and `GEM5_CI_PR_BASE_COMMIT` environment
@@ -266,7 +267,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "files",
         nargs="*",
-        help="Restrict formatting to these files.",
+        help="Format only these files (paths relative to the repo root).",
     )
     args = parser.parse_args()
 

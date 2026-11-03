@@ -104,6 +104,8 @@ repos:
             name: gem5 clang-format
             entry: python util/run-git-clang-format.py
             args: [--pre-commit]
+            # Let git-clang-format choose extensions, including .proto
+            # and .json, so the hook and manual runs use the same list.
             require_serial: true
             language: python
             additional_dependencies: [clang-format==18.1.8]
