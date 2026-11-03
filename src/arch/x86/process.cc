@@ -112,9 +112,14 @@ X86_64Process::X86_64Process(const ProcessParams &params,
 
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7FFFFFFFF000ULL;
+    Addr mmap_top = 0x7FFFF7FFF000ULL;
+
+    stack_base += params.addrSpaceShift;
+    mmap_top += params.addrSpaceShift;
+
     Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
-    Addr mmap_end = std::min<Addr>(0x7FFFF7FFF000ULL, next_thread_stack_base);
+    Addr mmap_end = std::min<Addr>(mmap_top, next_thread_stack_base);
 
     memState = std::make_shared<MemState>(
             this, brk_point, stack_base, max_stack_size,

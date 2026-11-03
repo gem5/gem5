@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
@@ -114,6 +115,25 @@ class MemState : public Serializable
      * @return true if all pages in the range are unmapped in page table
      */
     bool isUnmapped(Addr start_addr, Addr length);
+
+    /**
+     * Find the memory region containing a virtual address.
+     *
+     * @param vaddr Virtual address to look up.
+     *
+     * @return the VMA containing vaddr, or nullptr if vaddr is not mapped.
+     */
+    const VMA *getVMA(Addr vaddr) const;
+
+    /**
+     * Callback to invoke when a virtual address range is unmapped.
+     */
+    using UnmapCallback = std::function<void(Addr start_addr, Addr length)>;
+
+    /** Register the unmap callback. */
+    void
+    setUnmapCallback(UnmapCallback callback)
+    { _unmapCallback = std::move(callback); }
 
     /**
      * Add a new memory region. The region represents a contiguous virtual
@@ -290,6 +310,8 @@ class MemState : public Serializable
      * support this or the unmapping method must be changed.
      */
     std::list<VMA> _vmaList;
+
+    UnmapCallback _unmapCallback;
 };
 
 } // namespace gem5

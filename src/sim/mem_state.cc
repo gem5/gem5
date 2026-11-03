@@ -103,6 +103,15 @@ MemState::isUnmapped(Addr start_addr, Addr length)
     return true;
 }
 
+const VMA *
+MemState::getVMA(Addr vaddr) const
+{
+    auto vma_it = std::find_if(
+        _vmaList.begin(), _vmaList.end(),
+        [vaddr](const VMA &vma) -> bool { return vma.contains(vaddr); });
+    return vma_it == _vmaList.end() ? nullptr : &*vma_it;
+}
+
 void
 MemState::updateBrkRegion(Addr old_brk, Addr new_brk)
 {
@@ -193,6 +202,10 @@ MemState::unmapRegion(Addr start_addr, Addr length)
 {
     Addr end_addr = start_addr + length;
     const AddrRange range(start_addr, end_addr);
+
+    if (_unmapCallback) {
+        _unmapCallback(start_addr, length);
+    }
 
     auto vma = std::begin(_vmaList);
     while (vma != std::end(_vmaList)) {
@@ -285,6 +298,10 @@ MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
 
     Addr end_addr = start_addr + length;
     const AddrRange range(start_addr, end_addr);
+
+    if (_unmapCallback) {
+        _unmapCallback(start_addr, length);
+    }
 
     auto vma = std::begin(_vmaList);
     while (vma != std::end(_vmaList)) {
