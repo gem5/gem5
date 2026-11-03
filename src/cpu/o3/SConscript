@@ -100,3 +100,5 @@ if env['CONF']['BUILD_ISA']:
     # For backwards compatibility
     SimObject('O3CPU.py', sim_objects=[], tags=['isa'])
     SimObject('O3Checker.py', sim_objects=[], tags=['isa'])
+
+    GTest('vec_mem_pack.test', 'vec_mem_pack.test.cc')
