@@ -26,7 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-from slicc.ast.ExprAST import ExprAST
+from .ExprAST import ExprAST
 
 
 class OodAST(ExprAST):

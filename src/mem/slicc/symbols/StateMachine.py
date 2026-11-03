@@ -41,9 +41,9 @@
 import re
 from collections import OrderedDict
 
-import slicc.generate.html as html
-from slicc.symbols.Symbol import Symbol
-from slicc.symbols.Var import Var
+from ..generate import html
+from .Symbol import Symbol
+from .Var import Var
 
 python_class_map = {
     "int": "Int",
