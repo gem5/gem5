@@ -28,6 +28,7 @@
 
 #include "arch/riscv/insts/vector.hh"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -591,14 +592,26 @@ uint32_t
 VlFFTrimVlMicroOp::calcVl() const
 {
     uint32_t vl = 0;
-    for (uint8_t i=0; i<microIdx; i++) {
-        VleMicroInst& micro = static_cast<VleMicroInst&>(*microops[i]);
-        vl += micro.faultIdx;
-
-        if (micro.trimVl)
-            break;
+    for (uint32_t i = 0; i < microIdx; i++) {
+        if (microops[i]->opClass() ==
+            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+            const auto &micro =
+                static_cast<const VlSegMicroInst &>(*microops[i]);
+            vl += micro.faultIdx;
+            if (micro.trimVl) {
+                break;
+            }
+        } else {
+            const auto &micro =
+                static_cast<const VleMicroInst &>(*microops[i]);
+            vl += micro.faultIdx;
+            if (micro.trimVl) {
+                break;
+            }
+        }
     }
-    return vl;
+    // segmented load 的连续原始 slot 前缀只计入完整 segment。
+    return vl / (machInst.nf + 1);
 }
 
 Fault
@@ -668,33 +681,28 @@ namespace
  * @param fault     Fault raised by the memory access.
  * @param vaddr     Virtual address the access was initiated at, i.e. the EA
  *                  of element 0 of this microop.
- * @param micro_idx Index of this microop within the macro-op.
+ * @param elem_offset 本 microop 起点相对于整个访问的原始 EEW slot 偏移。
  * @param micro_vl  Number of elements this microop covers.
  * @param eew_bytes Size of a single element in bytes.
+ * @param num_fields 每个 segment 的 field 数，普通 unit-stride load 为 1。
  * @param trim_vl   Set when the fault is suppressed.
  * @param fault_idx Receives the index of the first faulting element within
  *                  this microop (== number of cleanly loaded elements).
  * @return NoFault if the fault was suppressed, otherwise the original fault.
  */
 Fault
-faultOnlyFirstTrim(const Fault &fault, Addr vaddr, uint32_t micro_idx,
-                   uint32_t micro_vl, uint64_t eew_bytes, bool &trim_vl,
-                   uint32_t &fault_idx)
+faultOnlyFirstTrim(const Fault &fault, Addr vaddr, uint32_t elem_offset,
+                   uint32_t micro_vl, uint64_t eew_bytes, uint32_t num_fields,
+                   bool &trim_vl, uint32_t &fault_idx)
 {
     Addr fault_addr;
     if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
         assert(fault_addr >= vaddr);
-        // The first faulting element must lie within this micro-op's access:
-        // for an unsplit access the fault address is vaddr, and for a split
-        // access it is the start of the faulting fragment, always inside
-        // [vaddr, vaddr + micro_vl * eew_bytes).  An address past the end
-        // would signal a bogus fault address (e.g. from the MMU), so surface
-        // it rather than silently clamping it into a plausible-looking vl.
-        panic_if((fault_addr - vaddr) / eew_bytes > micro_vl,
-                 "FoF fault address %#x outside micro-op access at %#x",
-                 fault_addr, vaddr);
-        fault_idx = (fault_addr - vaddr) / eew_bytes;
-        if (micro_idx != 0 || fault_idx != 0) {
+        // 限制为本次访问的 slot 数，防止越界 fault 地址撑大 vl。
+        fault_idx =
+            std::min<uint64_t>((fault_addr - vaddr) / eew_bytes, micro_vl);
+        // 一个 segment 的任意 field 故障都属于同一架构元素。
+        if ((elem_offset + fault_idx) / num_fields != 0) {
             trim_vl = true;
             return NoFault;
         }
@@ -713,8 +721,9 @@ VleMicroInst::handleMemFault(const Fault &fault, Addr vaddr) const
         return fault;
     }
 
-    return faultOnlyFirstTrim(fault, vaddr, microIdx, microVl,
-                              width_EEW(machInst.width) / 8, trimVl, faultIdx);
+    return faultOnlyFirstTrim(
+        fault, vaddr, microIdx * (vlen / width_EEW(machInst.width)), microVl,
+        width_EEW(machInst.width) / 8, 1, trimVl, faultIdx);
 }
 
 Fault
@@ -724,8 +733,9 @@ VlSegMicroInst::handleMemFault(const Fault &fault, Addr vaddr) const
         return fault;
     }
 
-    return faultOnlyFirstTrim(fault, vaddr, microIdx, microVl,
-                              width_EEW(machInst.width) / 8, trimVl, faultIdx);
+    return faultOnlyFirstTrim(fault, vaddr, elemOffset, microVl,
+                              width_EEW(machInst.width) / 8, numFields, trimVl,
+                              faultIdx);
 }
 
 std::string VlSegMacroInst::generateDisassembly(Addr pc,

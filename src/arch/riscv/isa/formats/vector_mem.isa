@@ -257,7 +257,7 @@ def format VsIndexOp(
 def format VlSegOp(
     memacc_code,
     ea_code={{
-        EA = Rs1 + mem_size * (microIdx + (field * numMicroops));
+        EA = Rs1 + elemOffset * (width_EEW(machInst.width) / 8);
     }},
     mem_flags=[],
     inst_flags=[]
