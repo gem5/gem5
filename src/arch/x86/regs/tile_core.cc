@@ -32,6 +32,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/AMX.hh"
+#include "sim/serialize.hh"
 
 namespace gem5
 {
@@ -55,6 +56,53 @@ AmxTileState::reset()
     const bool keep_enable = seEnabled;
     *this = AmxTileState{};
     seEnabled = keep_enable;
+}
+
+void
+AmxTileState::copyArchStateFrom(const AmxTileState &other)
+{
+    const bool keep_enable = seEnabled;
+    *this = other;
+    seEnabled = keep_enable;
+}
+
+void
+AmxTileState::serialize(CheckpointOut &cp) const
+{
+    if (!seEnabled && !configured) {
+        return;
+    }
+
+    bool amx_configured = configured;
+    SERIALIZE_SCALAR(amx_configured);
+    arrayParamOut(cp, "amxConfig", reinterpret_cast<const uint8_t *>(&config),
+                  AmxTileConfigBytes);
+    arrayParamOut(cp, "amxTmm", reinterpret_cast<const uint8_t *>(tmm.data()),
+                  sizeof(tmm));
+}
+
+void
+AmxTileState::unserialize(CheckpointIn &cp)
+{
+    bool amx_configured = false;
+    if (UNSERIALIZE_OPT_SCALAR(amx_configured)) {
+        configured = amx_configured;
+        arrayParamIn(cp, "amxConfig", reinterpret_cast<uint8_t *>(&config),
+                     AmxTileConfigBytes);
+        arrayParamIn(cp, "amxTmm", reinterpret_cast<uint8_t *>(tmm.data()),
+                     sizeof(tmm));
+    } else {
+        reset();
+    }
+}
+
+RegVal
+amxSeXcr0(RegVal xcr0, bool enable_amx)
+{
+    if (!enable_amx) {
+        return xcr0;
+    }
+    return xcr0 | AmxLegacyXcr0Mask | AmxTileXcr0Mask;
 }
 
 bool

@@ -84,31 +84,6 @@ tileAllEqual(const AmxTileRegister &tile, uint8_t value)
     return true;
 }
 
-void
-serializeAmxState(CheckpointOut &cp, const AmxTileState &state)
-{
-    bool amx_configured = state.configured;
-    SERIALIZE_SCALAR(amx_configured);
-    arrayParamOut(cp, "amxConfig",
-                  reinterpret_cast<const uint8_t *>(&state.config),
-                  AmxTileConfigBytes);
-    arrayParamOut(cp, "amxTmm",
-                  reinterpret_cast<const uint8_t *>(state.tmm.data()),
-                  sizeof(state.tmm));
-}
-
-void
-unserializeAmxState(CheckpointIn &cp, AmxTileState &state)
-{
-    bool amx_configured = false;
-    UNSERIALIZE_SCALAR(amx_configured);
-    state.configured = amx_configured;
-    arrayParamIn(cp, "amxConfig", reinterpret_cast<uint8_t *>(&state.config),
-                 AmxTileConfigBytes);
-    arrayParamIn(cp, "amxTmm", reinterpret_cast<uint8_t *>(state.tmm.data()),
-                 sizeof(state.tmm));
-}
-
 } // anonymous namespace
 
 TEST(AmxTile, TileZeroClearsTargetOnly)
@@ -250,7 +225,7 @@ TEST_F(AmxCheckpointFixture, AmxStateRoundTrip)
     Serializable::generateCheckpointOut(getDirName(), cpt_stream);
     {
         Serializable::ScopedCheckpointSection sec(cpt_stream, "AmxState");
-        serializeAmxState(cpt_stream, before);
+        before.serialize(cpt_stream);
     }
     cpt_stream.close();
 
@@ -259,7 +234,7 @@ TEST_F(AmxCheckpointFixture, AmxStateRoundTrip)
     CheckpointIn cpt_in(getDirName());
     {
         Serializable::ScopedCheckpointSection sec(cpt_in, "AmxState");
-        unserializeAmxState(cpt_in, after);
+        after.unserialize(cpt_in);
     }
 
     EXPECT_TRUE(after.seEnabled);
@@ -271,4 +246,179 @@ TEST_F(AmxCheckpointFixture, AmxStateRoundTrip)
     EXPECT_EQ(
         std::memcmp(after.tmm.data(), before.tmm.data(), sizeof(before.tmm)),
         0);
+}
+
+TEST_F(AmxCheckpointFixture, DisabledStateIsOmitted)
+{
+    AmxTileState state{};
+
+    std::ofstream cpt_stream;
+    Serializable::generateCheckpointOut(getDirName(), cpt_stream);
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_stream, "AmxState");
+        state.serialize(cpt_stream);
+    }
+    cpt_stream.close();
+
+    CheckpointIn cpt_in(getDirName());
+    bool configured = true;
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_in, "AmxState");
+        EXPECT_FALSE(optParamIn(cpt_in, "amx_configured", configured));
+        EXPECT_FALSE(cpt_in.entryExists("AmxState", "amxConfig"));
+        EXPECT_FALSE(cpt_in.entryExists("AmxState", "amxTmm"));
+    }
+}
+
+TEST_F(AmxCheckpointFixture, EnabledUnconfiguredStateRoundTrip)
+{
+    AmxTileState before{};
+    before.seEnabled = true;
+    before.config.paletteId = 0x2b;
+    fillTilePattern(before.tmm[0], 0x91);
+
+    std::ofstream cpt_stream;
+    Serializable::generateCheckpointOut(getDirName(), cpt_stream);
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_stream, "AmxState");
+        before.serialize(cpt_stream);
+    }
+    cpt_stream.close();
+
+    AmxTileState after{};
+    after.seEnabled = true;
+    CheckpointIn cpt_in(getDirName());
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_in, "AmxState");
+        after.unserialize(cpt_in);
+    }
+
+    EXPECT_TRUE(after.seEnabled);
+    EXPECT_FALSE(after.configured);
+    EXPECT_EQ(after.config.paletteId, 0x2b);
+    EXPECT_TRUE(tileAllEqual(after.tmm[0], 0x91));
+}
+
+TEST_F(AmxCheckpointFixture, MissingLegacyStateResetsAndKeepsEnable)
+{
+    std::ofstream cpt_stream;
+    Serializable::generateCheckpointOut(getDirName(), cpt_stream);
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_stream, "AmxState");
+    }
+    cpt_stream.close();
+
+    AmxTileState state{};
+    state.seEnabled = true;
+    state.configured = true;
+    state.config.paletteId = 1;
+    fillTilePattern(state.tmm[0], 0xa5);
+
+    CheckpointIn cpt_in(getDirName());
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_in, "AmxState");
+        state.unserialize(cpt_in);
+    }
+
+    EXPECT_TRUE(state.seEnabled);
+    EXPECT_FALSE(state.configured);
+    EXPECT_EQ(state.config.paletteId, 0);
+    EXPECT_TRUE(tileAllZero(state.tmm[0]));
+}
+
+TEST_F(AmxCheckpointFixture, CompleteLegacyFalseConfiguredStateIsRead)
+{
+    AmxTileState before{};
+    before.config.paletteId = 0x5a;
+    fillTilePattern(before.tmm[0], 0xc3);
+
+    std::ofstream cpt_stream;
+    Serializable::generateCheckpointOut(getDirName(), cpt_stream);
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_stream, "AmxState");
+        bool amx_configured = false;
+        paramOut(cpt_stream, "amx_configured", amx_configured);
+        arrayParamOut(cpt_stream, "amxConfig",
+                      reinterpret_cast<const uint8_t *>(&before.config),
+                      AmxTileConfigBytes);
+        arrayParamOut(cpt_stream, "amxTmm",
+                      reinterpret_cast<const uint8_t *>(before.tmm.data()),
+                      sizeof(before.tmm));
+    }
+    cpt_stream.close();
+
+    AmxTileState after{};
+    after.seEnabled = true;
+    CheckpointIn cpt_in(getDirName());
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_in, "AmxState");
+        after.unserialize(cpt_in);
+    }
+
+    EXPECT_TRUE(after.seEnabled);
+    EXPECT_FALSE(after.configured);
+    EXPECT_EQ(after.config.paletteId, 0x5a);
+    EXPECT_TRUE(tileAllEqual(after.tmm[0], 0xc3));
+}
+
+TEST_F(AmxCheckpointFixture, ConfiguredStateSurvivesOnDisabledInstance)
+{
+    AmxTileState before{};
+    before.configured = true;
+    before.config = decodeAmxTileConfig(makePalette1Raw());
+    fillTilePattern(before.tmm[0], 0x6d);
+
+    std::ofstream cpt_stream;
+    Serializable::generateCheckpointOut(getDirName(), cpt_stream);
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_stream, "AmxState");
+        before.serialize(cpt_stream);
+    }
+    cpt_stream.close();
+
+    AmxTileState after{};
+    CheckpointIn cpt_in(getDirName());
+    {
+        Serializable::ScopedCheckpointSection sec(cpt_in, "AmxState");
+        after.unserialize(cpt_in);
+    }
+
+    EXPECT_FALSE(after.seEnabled);
+    EXPECT_TRUE(after.configured);
+    EXPECT_EQ(after.config.paletteId, 1);
+    EXPECT_TRUE(tileAllEqual(after.tmm[0], 0x6d));
+}
+
+TEST(AmxTile, CopyArchStateKeepsDestinationEnable)
+{
+    AmxTileState source{};
+    source.seEnabled = true;
+    source.configured = true;
+    source.config = decodeAmxTileConfig(makePalette1Raw());
+    fillTilePattern(source.tmm[0], 0x47);
+
+    AmxTileState destination{};
+    destination.copyArchStateFrom(source);
+
+    EXPECT_FALSE(destination.seEnabled);
+    EXPECT_TRUE(destination.configured);
+    EXPECT_EQ(destination.config.paletteId, 1);
+    EXPECT_TRUE(tileAllEqual(destination.tmm[0], 0x47));
+}
+
+TEST(AmxTile, SeXcr0EnablesOnlyRequiredLegacyAndTileState)
+{
+    constexpr RegVal unrelated = (1ULL << 9) | (1ULL << 42);
+
+    const RegVal without_avx = amxSeXcr0(unrelated, true);
+    EXPECT_EQ(without_avx & AmxLegacyXcr0Mask, AmxLegacyXcr0Mask);
+    EXPECT_EQ(without_avx & AmxTileXcr0Mask, AmxTileXcr0Mask);
+    EXPECT_EQ(without_avx & (1ULL << 2), 0);
+    EXPECT_EQ(without_avx & unrelated, unrelated);
+
+    const RegVal with_avx = amxSeXcr0(unrelated | (1ULL << 2), true);
+    EXPECT_NE(with_avx & (1ULL << 2), 0);
+    EXPECT_EQ(with_avx & unrelated, unrelated);
+
+    EXPECT_EQ(amxSeXcr0(unrelated, false), unrelated);
 }

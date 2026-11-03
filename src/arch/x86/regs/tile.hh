@@ -37,6 +37,7 @@
 #include "arch/x86/types.hh"
 #include "base/types.hh"
 #include "sim/faults.hh"
+#include "sim/serialize.hh"
 
 namespace gem5
 {
@@ -51,6 +52,8 @@ inline constexpr int AmxMaxRows = 16;
 inline constexpr int AmxMaxColumnBytes = 64;
 inline constexpr int AmxNumTiles = 8;
 inline constexpr size_t AmxTileConfigBytes = 64;
+inline constexpr RegVal AmxLegacyXcr0Mask = (1ULL << 0) | (1ULL << 1);
+inline constexpr RegVal AmxTileXcr0Mask = (1ULL << 17) | (1ULL << 18);
 
 using AmxRawTileConfig = std::array<uint8_t, AmxTileConfigBytes>;
 
@@ -80,10 +83,14 @@ struct AmxTileState
     std::array<AmxTileRegister, AmxNumTiles> tmm = {};
 
     void reset();
+    void copyArchStateFrom(const AmxTileState &other);
+    void serialize(CheckpointOut &cp) const;
+    void unserialize(CheckpointIn &cp);
 };
 
 AmxTileConfig decodeAmxTileConfig(const AmxRawTileConfig &raw);
 bool validateAmxTileConfig(const AmxTileConfig &config, std::string &reason);
+RegVal amxSeXcr0(RegVal xcr0, bool enable_amx);
 
 AmxTileState &getAmxState(ThreadContext *tc);
 Fault amxRequireEnabled(ThreadContext *tc);

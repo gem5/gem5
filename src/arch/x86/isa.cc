@@ -220,9 +220,7 @@ ISA::copyRegsFrom(ThreadContext *src)
         tc->setReg(id, src->getReg(id));
     copyMiscRegs(src, tc);
     tc->pcState(src->pcState());
-    const bool se_enabled = amxState.seEnabled;
-    amxState = getAmxState(src);
-    amxState.seEnabled = se_enabled;
+    amxState.copyArchStateFrom(getAmxState(src));
 }
 
 RegVal
@@ -514,33 +512,14 @@ ISA::serialize(CheckpointOut &cp) const
     BaseISA::serialize(cp);
 
     SERIALIZE_ARRAY(regVal, misc_reg::NumRegs);
-    bool amx_configured = amxState.configured;
-    SERIALIZE_SCALAR(amx_configured);
-    arrayParamOut(cp, "amxConfig",
-                  reinterpret_cast<const uint8_t *>(&amxState.config),
-                  AmxTileConfigBytes);
-    arrayParamOut(cp, "amxTmm",
-                  reinterpret_cast<const uint8_t *>(amxState.tmm.data()),
-                  sizeof(amxState.tmm));
+    amxState.serialize(cp);
 }
 
 void
 ISA::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(regVal, misc_reg::NumRegs);
-    bool amx_configured = false;
-    if (UNSERIALIZE_OPT_SCALAR(amx_configured)) {
-        amxState.configured = amx_configured;
-        arrayParamIn(cp, "amxConfig",
-                     reinterpret_cast<uint8_t *>(&amxState.config),
-                     AmxTileConfigBytes);
-        arrayParamIn(cp, "amxTmm",
-                     reinterpret_cast<uint8_t *>(amxState.tmm.data()),
-                     sizeof(amxState.tmm));
-    } else {
-        // Checkpoints made before AMX support have no tile state.
-        amxState.reset();
-    }
+    amxState.unserialize(cp);
     updateHandyM5Reg(regVal[misc_reg::Efer],
                      regVal[misc_reg::Cr0],
                      regVal[misc_reg::CsAttr],

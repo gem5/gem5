@@ -400,8 +400,8 @@ X86_64Process::initState()
             if (enable_amx) {
                 // Internal XCR0 mirror: bit17=XTILECFG, bit18=XTILEDATA.
                 // Not a substitute for XGETBV/XSAVE correctness.
-                RegVal xcr0 = tc->readMiscRegNoEffect(misc_reg::Xcr0);
-                xcr0 |= (1ULL << 17) | (1ULL << 18) | 0x7;
+                RegVal xcr0 = amxSeXcr0(
+                    tc->readMiscRegNoEffect(misc_reg::Xcr0), enable_amx);
                 tc->setMiscRegNoEffect(misc_reg::Xcr0, xcr0);
             }
 
@@ -648,8 +648,8 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::Cr4, cr4);
 
             if (enable_amx) {
-                RegVal xcr0 = tc->readMiscRegNoEffect(misc_reg::Xcr0);
-                xcr0 |= (1ULL << 17) | (1ULL << 18) | 0x7;
+                RegVal xcr0 = amxSeXcr0(
+                    tc->readMiscRegNoEffect(misc_reg::Xcr0), enable_amx);
                 tc->setMiscRegNoEffect(misc_reg::Xcr0, xcr0);
             }
         }
