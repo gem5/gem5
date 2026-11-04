@@ -145,6 +145,40 @@ def aggregate(stats, config, prefix=""):
                 else "compatible"
             )
         )
+        owner_type = component["owner_type"]
+        if owner_type == "HWInterface":
+            component["memory_timing_status"] = "not_applicable"
+            component["timing_status"] = component["fu_timing_status"]
+            if component["timing_status"] == "compatible" and not all(
+                component["coverage"].values()
+            ):
+                # FU compatibility starts true before graph inventory is
+                # resolved. It alone cannot qualify an unlaunched model.
+                component["timing_status"] = "unavailable"
+            component["timing_basis"] = (
+                "runtime FU constraint checks and complete runtime coverage"
+            )
+        elif owner_type in ("ScratchpadMemory", "RegisterBank"):
+            # Memory checks currently invalidate coverage on a violation;
+            # they do not export a separate compatibility flag. Complete
+            # coverage plus declared constraints is a conservative witness
+            # that the device's initialization checks accepted those bounds.
+            component["fu_timing_status"] = "not_applicable"
+            component["memory_timing_status"] = (
+                "compatible"
+                if model.get("memory_timing_available") is True
+                and all(component["coverage"].values())
+                else "unavailable"
+            )
+            component["timing_status"] = component["memory_timing_status"]
+            component["timing_basis"] = (
+                "declared memory constraints and complete runtime coverage; "
+                "incomplete coverage cannot identify a timing violation"
+            )
+        else:
+            component["memory_timing_status"] = "unavailable"
+            component["timing_status"] = "unavailable"
+            component["timing_basis"] = "unsupported or missing owner type"
         for key in ("known_area_um2", "known_dynamic_j", "known_leakage_j"):
             if component[key] < 0:
                 raise ValueError(f"negative component quantity {path}:{key}")
@@ -166,6 +200,7 @@ def aggregate(stats, config, prefix=""):
         return {
             "scope": "cluster/statistics window",
             "status": "disabled" if disabled else "unavailable",
+            "timing_status": "unavailable",
             "components": [],
             "disabled": disabled,
         }
@@ -206,13 +241,35 @@ def aggregate(stats, config, prefix=""):
         "known_total_j",
     ):
         result[key] = math.fsum(component[key] for component in components)
+    fu_components = [
+        c for c in components if c["fu_timing_status"] != "not_applicable"
+    ]
     result["fu_timing_status"] = (
+        "not_applicable"
+        if not fu_components
+        else (
+            "incompatible"
+            if any(
+                c["fu_timing_status"] == "incompatible" for c in fu_components
+            )
+            else (
+                "unavailable"
+                if disabled
+                or any(
+                    c["fu_timing_status"] == "unavailable"
+                    for c in fu_components
+                )
+                else "compatible"
+            )
+        )
+    )
+    result["timing_status"] = (
         "incompatible"
-        if any(c["fu_timing_status"] == "incompatible" for c in components)
+        if any(c["timing_status"] == "incompatible" for c in components)
         else (
             "unavailable"
             if disabled
-            or any(c["fu_timing_status"] == "unavailable" for c in components)
+            or any(c["timing_status"] != "compatible" for c in components)
             else "compatible"
         )
     )
@@ -231,6 +288,12 @@ def main():
     parser.add_argument("--window", type=int, default=-1)
     parser.add_argument("--prefix", default="")
     parser.add_argument("--strict", action="store_true")
+    parser.add_argument(
+        "--require-timing",
+        action="store_true",
+        help="Require known compatible declared timing for every component; "
+        "this is a model-constraint check, not physical validation",
+    )
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     try:
@@ -249,6 +312,12 @@ def main():
     )
     if args.strict and result["status"] != "complete":
         parser.error("modeled PPA coverage is incomplete; see output record")
+    if args.require_timing and result["timing_status"] != "compatible":
+        parser.error(
+            "declared timing qualification is "
+            + result["timing_status"]
+            + "; see output record"
+        )
 
 
 if __name__ == "__main__":
