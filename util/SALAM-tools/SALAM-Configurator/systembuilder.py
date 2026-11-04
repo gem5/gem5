@@ -156,6 +156,15 @@ def generate_header_region(cluster):
         lines.extend(_generate_dma(dma))
     for acc in cluster.accs:
         lines.extend(_generate_accelerator(acc))
+    names = set()
+    for line in lines:
+        if line.startswith("#define "):
+            name = line.split()[1]
+            if name in names:
+                raise ValueError(
+                    f"Cluster {cluster.name}: duplicate generated macro {name}"
+                )
+            names.add(name)
     lines.append("// END GENERATED CODE\n")
     return lines
 
@@ -166,44 +175,45 @@ def write_generated_header(path, lines):
 
 
 def load_og_header(clusters, working_dir: str):
-    # Read in existing header
     header_list = []
-    for i in clusters:
-        begin = None
-        end = None
+    for cluster in clusters:
         try:
-            f = open(working_dir + i.name + "_hw_defines.h")
-            oldHeader = f.readlines()
-            for line_num in range(0, len(oldHeader)):
-                if is_generated_begin(oldHeader[line_num]):
-                    begin = line_num
-                elif is_generated_end(oldHeader[line_num]):
-                    end = line_num
-            if begin is not None and end is not None and begin <= end:
-                del oldHeader[begin : end + 1]
-            header_list.append(oldHeader)
-        except Exception:
-            print("No Header Found")
-            emptyList = []
-            header_list.append(emptyList)
+            path = os.path.join(working_dir, cluster.name + "_hw_defines.h")
+            with open(path, newline="") as header:
+                header_list.append(header.readlines())
+        except FileNotFoundError:
+            header_list.append([])
     return header_list
 
 
 def gen_header(header_list, clusters, working_dir: str):
-    # Write out headers. Pair each preserved header with its cluster so
-    # multi-cluster configs do not append every cluster into every file.
     if len(header_list) != len(clusters):
         raise ValueError(
             "Header and cluster counts must match when generating headers."
         )
-    for preserved, cluster in zip(header_list, clusters):
-        # Preserved lines keep their relative order, including text that
-        # originally followed the old generated region. The new region is
-        # appended, matching the previous loader.
-        region = list(preserved) + generate_header_region(cluster)
-        write_generated_header(
-            working_dir + cluster.name + "_hw_defines.h", region
-        )
+    headers = []
+    for original, cluster in zip(header_list, clusters):
+        path = os.path.join(working_dir, cluster.name + "_hw_defines.h")
+        begins = [
+            i for i, line in enumerate(original) if is_generated_begin(line)
+        ]
+        ends = [i for i, line in enumerate(original) if is_generated_end(line)]
+        if not begins and not ends:
+            begin = end = len(original)
+        elif len(begins) == len(ends) == 1 and begins[0] < ends[0]:
+            begin, end = begins[0], ends[0] + 1
+        else:
+            raise ValueError(
+                f"{path}: expected one generated code marker pair"
+            )
+        prefix = list(original[:begin])
+        if prefix and not prefix[-1].endswith("\n"):
+            prefix[-1] += "\n"
+        lines = prefix + generate_header_region(cluster) + original[end:]
+        headers.append((path, lines))
+    # Validate every header before replacing any existing file.
+    for path, lines in headers:
+        write_generated_header(path, lines)
 
 
 def main():
