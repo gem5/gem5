@@ -151,6 +151,9 @@ convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             uint32_t shifted_out = mant & mask(shift);
             mant >>= shift;
 
+            // Rounding needs fewer mantissa bits in dFMT, which also makes
+            // shift at least 1. A conversion that only narrowed the exponent
+            // would not round, so its subnormal results would be truncated.
             if (int(sFMT::mbits) > int(dFMT::mbits) &&
                 mode == roundTiesToEven) {
                 // roundTiesToEven is the only required rounding mode for MXFP
@@ -172,6 +175,8 @@ convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                 uint32_t discarded = in.mant & mask(sFMT::mbits - dFMT::mbits);
                 uint32_t max_mant = mask(sFMT::mbits);
 
+                // For a result that becomes subnormal, the extra bits shifted
+                // out above discarded are not part of this probability.
                 float round_prob = float(discarded) / float(max_mant);
 
                 // Use a stochastic rounding function with the seed value to
@@ -210,7 +215,10 @@ convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                 max_bits -= 1;
             }
 
-            // Values too large for the format convert like an infinity.
+            // Values too large for the format convert like an infinity. This
+            // follows the ISA with MODE.FP16_OVFL clear (gem5 ignores the
+            // bit): infinity where the format has one and NaN for E4M3.
+            // Conversions to FP6 and FP4 always saturate to max().
             if (bits > max_bits) {
                 if (std::numeric_limits<dFMT>::has_infinity) {
                     out = std::numeric_limits<dFMT>::infinity();
