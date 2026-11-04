@@ -56,6 +56,8 @@ class PciVirtIO : public PciEndpoint
 
     void kick();
 
+    void unserialize(CheckpointIn &cp) override;
+
   protected:
     Tick readDevice(PacketPtr pkt) override;
     Tick writeDevice(PacketPtr pkt) override;

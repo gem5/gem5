@@ -227,4 +227,23 @@ PciVirtIO::kick()
     intrPost();
 }
 
+void
+PciVirtIO::unserialize(CheckpointIn &cp)
+{
+    PciEndpoint::unserialize(cp);
+
+    // Warn if a restored BAR is not aligned to its current size.
+    for (int i = 0; i < BARs.size(); i++) {
+        const PciBar *bar = BARs[i];
+        if (!bar->isIo() && !bar->isMem()) {
+            continue;
+        }
+        const Addr flags = bar->isIo() ? 0x3 : 0x7;
+        const Addr addr = letoh(config().baseAddr[i]) & ~flags;
+        warn_if(addr & (bar->size() - 1),
+                "%s: Restored BAR%d %#x is not aligned to size %#x.", name(),
+                i, addr, bar->size());
+    }
+}
+
 } // namespace gem5
