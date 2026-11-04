@@ -356,65 +356,50 @@ A normal `--with-salam` build does not need this tool.
 
 ## Offline CACTI characterization
 
-The `setup_cacti_SALAM.py` and `run_cacti_SALAM.py` scripts below are
-offline batch helpers for workload YAML; gem5 does not run CACTI during
-simulation.
+CACTI is an offline analytical characterization tool; gem5 does not run it
+during simulation. Use a supported pinned CACTI source/binary and explicit
+physical geometry for each selected SPM. The producer rejects physical
+padding or mismatched ports instead of changing the requested device.
 
-On x86_64 Ubuntu, CACTI's 32-bit build needs a 32-bit C/C++ toolchain.
-The ordinary gem5 and SALAM packages above do not provide `gcc -m32` /
-`g++ -m32`. Install:
-
-```bash
-sudo apt install g++-multilib
-```
-
-`setup_cacti_SALAM.py` and `run_cacti_SALAM.py` both require **M5_PATH**
-and **ACC_BENCH_PATH** (the same exports used by `run_system.sh`).
-Build CACTI with the setup helper only for configurations containing SPMs:
+Discover include-resolved identities using the simulator's shared loader:
 
 ```bash
-export M5_PATH=/path/to/gem5
-export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
-cd $M5_PATH/util/SALAM-tools/cacti-SALAM
-./setup_cacti_SALAM.py
+python3 -B util/SALAM-tools/cacti-SALAM/run_cacti_SALAM.py \
+    --config /path/to/workload.yml --list
 ```
 
-Create `$ACC_BENCH_PATH/benchmarks.list` with three whitespace-separated
-fields per line (no spaces within a field):
+`--workload-root` supplies the simulator's SysPath/IrPath root when it
+is different from the main YAML's directory. The list retains each SPM's
+qualified `cluster/accelerator/memory` identity, declaring YAML, exact size,
+normalized owning `Ports`, and all private connections. Only `Type: SPM`
+is selected; RegisterBank requires a different physical storage model.
 
-```
-path/to/config.yml <benchmark-name> <config-name>
-```
-
-The first field is the path to a workload YAML configuration. It is used as
-written when that path exists; otherwise it is resolved relative to
-`ACC_BENCH_PATH`. The remaining two fields are labels written to the
-`Benchmark` and `Config` columns of `SALAM-out.csv`; they are not YAML keys.
-`--bench-list` defaults to `$ACC_BENCH_PATH/benchmarks.list` when omitted.
-The collector resolves `SysPath` through the simulator's workload loader;
-omitted SPM `Ports` defaults to one. Paths in includes use the same top-level
-workload root as simulation. When that root differs from the main YAML's
-directory, pass `--workload-root /path/to/workload`. Logs identify the
-declaring YAML, and the CSV `Acc` label is `cluster/accelerator/memory` so
-equal memory names in different clusters remain distinct.
-
-Then:
+Then provide the existing importer's geometry JSON and a fresh evidence
+directory outside the repository:
 
 ```bash
-python3 ./run_cacti_SALAM.py --bench-list $ACC_BENCH_PATH/benchmarks.list --delay 1.0
+python3 -B util/SALAM-tools/cacti-SALAM/run_cacti_SALAM.py \
+    --config /path/to/workload.yml --memory Cluster/kernel/Buf \
+    --geometry /path/to/geometry.json --format hp-cacti-7.0 \
+    --source-dir /path/to/pinned/cacti --binary /path/to/pinned/cacti/cacti \
+    --output-dir /path/to/new-memory-evidence
 ```
 
-`run_cacti_SALAM.py` only models YAML Vars with `Type: SPM` and `Name`,
-`Size`, and normalized `Ports` fields. `Ports` retains its workload-field
-meaning; it is not an inferred total of every connected memory endpoint.
-Use explicit matching physical geometry when importing characterization.
-The CACTI binary at
-`$M5_PATH/ext/mcpat/cacti/cacti` is needed only when a configuration has
-such SPMs. The in-tree BFS configuration uses RegisterBanks; the helper
-skips it without running CACTI or producing a new `results/SALAM-out.csv`.
+The explicit organization must match every resolved private endpoint plus
+one generic host port. Banks and word width are physical assumptions that
+must be supplied, not inferred from owning `Ports`. Each run retains its
+input, raw output, command, identity and hashes, and emits a runtime
+characterization record only after the existing importer accepts it. The
+geometry JSON supplies `capacity_bytes`, `word_bytes`, `banks`,
+`rw_ports`, `read_ports`, `write_ports`, and `mask_model`.
 
-When SPMs are present, results are written to
-`util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`.
+The former `--bench-list` sweep and positional `SALAM-out.csv` are replaced
+by discovery and explicit per-memory production. The producer requires no
+`M5_PATH` or `ACC_BENCH_PATH` environment variables. The legacy
+`setup_cacti_SALAM.py` build helper still uses both variables and builds the
+in-tree CACTI; on x86_64 Ubuntu that Makefile's 32-bit target requires
+`g++-multilib`. That helper is separate from characterization and is not
+needed to consume an already built pinned producer.
 
 # Resources
 

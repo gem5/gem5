@@ -40,50 +40,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import csv
+import json
+import math
 import os
 import shutil
 import subprocess
 import sys
-import tempfile
-import time
 from pathlib import Path
 
+import import_cacti
 import yaml
 
 _configurator = Path(__file__).resolve().parents[1] / "SALAM-Configurator"
 if str(_configurator) not in sys.path:
     sys.path.insert(0, str(_configurator))
 from config_parser import load_clusters  # noqa: E402
+from power_model import CharacterizationError  # noqa: E402
 from workload_config import WorkloadConfigError  # noqa: E402
 
-# Configuration variables
-M5_PATH_ENV = os.environ.get("M5_PATH")
-ACC_BENCH_PATH_ENV = os.environ.get("ACC_BENCH_PATH")
-if not M5_PATH_ENV or not ACC_BENCH_PATH_ENV:
-    sys.exit(
-        "ERROR: M5_PATH and/or ACC_BENCH_PATH environment variables not set."
-    )
-
-M5_PATH = Path(M5_PATH_ENV).resolve()
-ACC_BENCH_PATH = Path(ACC_BENCH_PATH_ENV).resolve()
-CACTI_DIR = M5_PATH / "ext" / "mcpat" / "cacti"
-CACTI_EXE = CACTI_DIR / "cacti"
 SCRIPT_DIR = Path(__file__).parent.resolve()
-RESULTS_DIR = SCRIPT_DIR / "results"
-DEFAULT_DELAY_S = 1.0
-MIN_CACTI_SIZE = 2048
-BENCH_LIST = ACC_BENCH_PATH / "benchmarks.list"
-
-# Cacti SALAM default args
 CACTI_DEFAULT_FILE = SCRIPT_DIR / "cacti_salam.cfg"
-
-# Define output/log file paths
-STDOUT_LOG = RESULTS_DIR / "stdout.log"
-STDERR_LOG = RESULTS_DIR / "stderr.log"
-CACTI_OUT_CSV = CACTI_DIR / "out.csv"
-INTERMEDIATE_CSV = RESULTS_DIR / "out.csv"
-MASTER_CSV = RESULTS_DIR / "SALAM-out.csv"
 
 
 def collect_mem_objects(config_path, working_dir=None):
@@ -127,304 +103,342 @@ def collect_mem_objects(config_path, working_dir=None):
     return memories
 
 
+def read_geometry(path):
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise CharacterizationError(f"duplicate geometry key {key}")
+            result[key] = value
+        return result
+
+    return json.loads(Path(path).read_text(), object_pairs_hook=unique)
+
+
+def prepare_input(memory, geometry, template):
+    """Validate an explicit physical organization against resolved endpoints.
+
+    The shared cluster builder connects one generic host port and every
+    private connection. Matching that endpoint count does not infer banks,
+    word width, arbitration, or multiplexing for a physical implementation.
+    """
+    identity = f"{memory['Identity']} ({memory['Source']})"
+    fields = {
+        "capacity_bytes": "-size (bytes)",
+        "word_bytes": "-block size (bytes)",
+        "banks": "-UCA bank count",
+        "rw_ports": "-read-write port",
+        "read_ports": "-exclusive read port",
+        "write_ports": "-exclusive write port",
+    }
+    if not isinstance(geometry, dict) or set(geometry) != {
+        *fields,
+        "mask_model",
+    }:
+        raise CharacterizationError(
+            f"{identity}: explicit importer geometry is required: "
+            f"{sorted([*fields, 'mask_model'])}"
+        )
+    for key in fields:
+        value = geometry[key]
+        if type(value) is not int or value < 0:
+            raise CharacterizationError(f"{identity}: invalid {key}")
+        if key not in {"read_ports", "write_ports"} and not value:
+            raise CharacterizationError(f"{identity}: {key} must be positive")
+    if geometry["capacity_bytes"] != memory["Size"]:
+        raise CharacterizationError(
+            f"{identity}: capacity must equal resolved Size={memory['Size']}; "
+            "padding/substitution is not same-device characterization"
+        )
+    endpoints = 1 + sum(count for _, count in memory["Connections"])
+    if (
+        geometry["read_ports"] != 0
+        or geometry["write_ports"] != 0
+        or geometry["rw_ports"] != endpoints
+    ):
+        raise CharacterizationError(
+            f"{identity}: physical organization must explicitly provide "
+            f"{endpoints} RW ports (all private connections plus one generic "
+            "host port), with no dedicated read/write ports; an arbiter or "
+            "multiplexed alternative is not modeled"
+        )
+    if geometry["mask_model"] not in ("read_modify_write", "unsupported"):
+        raise CharacterizationError(
+            f"{identity}: CACTI does not establish byte-enable support"
+        )
+    replacements = {
+        prefix: str(geometry[key]) for key, prefix in fields.items()
+    }
+    replacements["-output/input bus width"] = str(8 * geometry["word_bytes"])
+    seen = set()
+    lines = []
+    for line in template.splitlines():
+        prefix = next(
+            (
+                key
+                for key in replacements
+                if line.strip().startswith(key + " ")
+            ),
+            None,
+        )
+        if prefix is not None:
+            if prefix in seen:
+                raise CharacterizationError(
+                    f"{identity}: duplicate template field {prefix}"
+                )
+            seen.add(prefix)
+            line = f"{prefix} {replacements[prefix]}"
+        lines.append(line)
+    if seen != set(replacements):
+        raise CharacterizationError(
+            f"{identity}: template lacks {sorted(set(replacements) - seen)}"
+        )
+    text = "\n".join(lines) + "\n"
+    import_cacti.read_config(text)
+    return text
+
+
+def produce(
+    memory,
+    geometry,
+    template,
+    source_dir,
+    binary,
+    format_id,
+    output_dir,
+    timeout=300,
+):
+    """Run one producer in a new directory and import exactly one result."""
+    text = prepare_input(memory, geometry, Path(template).read_text())
+    source_dir = Path(source_dir).resolve()
+    binary = Path(binary).resolve()
+    selected = import_cacti.FORMATS[format_id]
+    if any(
+        import_cacti.digest(source_dir / name) != digest
+        for name, digest in selected["hashes"].items()
+    ):
+        raise CharacterizationError("CACTI source identity mismatch")
+    if not binary.is_file() or not os.access(binary, os.X_OK):
+        raise CharacterizationError(
+            f"CACTI binary is not executable: {binary}"
+        )
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise CharacterizationError("timeout must be positive and finite")
+    runtime_files = {}
+    if format_id == "hp-cacti-7.0":
+        # HP CACTI opens technology tables relative to its working directory.
+        # Retain the exact tables alongside the raw producer input/output.
+        runtime_files = {
+            path.relative_to(source_dir): path
+            for path in sorted((source_dir / "tech_params").glob("*.dat"))
+        }
+        if not runtime_files:
+            raise CharacterizationError(
+                "HP CACTI source-dir must include tech_params/*.dat"
+            )
+    if (source_dir / "contention.dat").is_file():
+        runtime_files[Path("contention.dat")] = source_dir / "contention.dat"
+    output_dir = Path(output_dir).absolute()
+    # Never consume stale CSVs or overwrite evidence from an earlier run.
+    output_dir.mkdir(parents=True, exist_ok=False)
+
+    def save(name, value):
+        (output_dir / name).write_text(
+            json.dumps(value, indent=2, allow_nan=False) + "\n"
+        )
+
+    config = output_dir / "input.cfg"
+    config.write_text(text)
+    runtime_hashes = {}
+    for relative, original in runtime_files.items():
+        target = output_dir / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(original, target)
+        runtime_hashes[str(relative)] = import_cacti.digest(target)
+    save("geometry.json", geometry)
+    command = [str(binary), "-infile", str(config)]
+    save("command.json", command)
+    source = Path(memory["Source"])
+    (output_dir / "declaring-workload.yaml").write_bytes(source.read_bytes())
+    evidence = {
+        "memory": memory,
+        "declaring_workload_sha256": import_cacti.digest(source),
+        "template_path": str(Path(template).resolve()),
+        "template_sha256": import_cacti.digest(template),
+        "format": format_id,
+        "source_dir": str(source_dir),
+        "source_hashes": selected["hashes"],
+        "binary_sha256": import_cacti.digest(binary),
+        "input_sha256": import_cacti.digest(config),
+        "runtime_input_sha256": runtime_hashes,
+        "command": command,
+        "cwd": str(output_dir),
+        "environment": {
+            key: os.environ.get(key)
+            for key in ("LANG", "LC_ALL", "OMP_NUM_THREADS")
+        },
+        "timeout_s": timeout,
+        "status": "running",
+    }
+    save("execution.json", evidence)
+    try:
+        try:
+            process = subprocess.run(
+                command,
+                cwd=output_dir,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            for name, data in (
+                ("stdout.log", exc.stdout),
+                ("stderr.log", exc.stderr),
+            ):
+                (output_dir / name).write_bytes(
+                    data.encode() if isinstance(data, str) else data or b""
+                )
+            raise CharacterizationError("CACTI producer timed out") from exc
+        (output_dir / "stdout.log").write_text(process.stdout)
+        (output_dir / "stderr.log").write_text(process.stderr)
+        evidence["exit_code"] = process.returncode
+        if process.returncode != 0 or "ERROR:" in process.stdout:
+            raise CharacterizationError(
+                f"CACTI producer failed (exit {process.returncode}); see logs"
+            )
+        csv_path = output_dir / (
+            "out.csv" if format_id == "gem5-cacti-6.5" else "input.cfg.out"
+        )
+        if evidence["input_sha256"] != import_cacti.digest(config):
+            raise CharacterizationError("CACTI input changed during run")
+        if any(
+            import_cacti.digest(output_dir / relative) != digest
+            for relative, digest in runtime_hashes.items()
+        ):
+            raise CharacterizationError(
+                "CACTI runtime data changed during run"
+            )
+        document = import_cacti.import_record(
+            csv_path,
+            config,
+            source_dir,
+            geometry,
+            memory["Identity"],
+            command,
+            binary,
+            format_id,
+        )
+        if evidence["binary_sha256"] != import_cacti.digest(binary):
+            raise CharacterizationError("CACTI binary changed during run")
+        if evidence["declaring_workload_sha256"] != import_cacti.digest(
+            source
+        ):
+            raise CharacterizationError(
+                "declaring workload changed during run"
+            )
+        save("characterization.json", document)
+        evidence.update(
+            status="imported", output_sha256=import_cacti.digest(csv_path)
+        )
+    except (CharacterizationError, OSError) as exc:
+        evidence.update(status="rejected", error=str(exc))
+        raise CharacterizationError(
+            f"{memory['Identity']} ({memory['Source']}): {exc}; "
+            f"evidence retained in {output_dir}"
+        ) from exc
+    finally:
+        save("execution.json", evidence)
+    return document
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Run CACTI for SALAM SPMs.")
+    parser = argparse.ArgumentParser(
+        description="Produce an exact CACTI characterization for one SALAM SPM.",
+        epilog="The old --bench-list sweep did not establish physical "
+        "organizations. Use --list to discover include-resolved identities, "
+        "then run each memory with explicit importer geometry and a new "
+        "--output-dir. No M5_PATH/ACC_BENCH_PATH variables are required.",
+    )
+    parser.add_argument("--config", type=Path)
+    parser.add_argument("--bench-list", help=argparse.SUPPRESS)
+    parser.add_argument("--delay", help=argparse.SUPPRESS)
     parser.add_argument(
         "--workload-root",
         type=Path,
-        help="Root for SysPath/IrPath, as in the simulator; defaults to each "
-        "top-level configuration's directory.",
+        help="SysPath/IrPath root, as in the simulator",
     )
     parser.add_argument(
-        "--bench-list",
-        default=BENCH_LIST,
+        "--list",
+        action="store_true",
+        help="Print resolved SPM identities/topology as JSON",
+    )
+    parser.add_argument("--memory", help="Exact identity printed by --list")
+    parser.add_argument(
+        "--geometry",
         type=Path,
-        help="Input file listing configs.",
+        help="Explicit importer geometry JSON for this memory",
     )
+    parser.add_argument("--template", type=Path, default=CACTI_DEFAULT_FILE)
+    parser.add_argument("--source-dir", type=Path)
+    parser.add_argument("--binary", type=Path)
+    parser.add_argument("--format", choices=import_cacti.FORMATS)
     parser.add_argument(
-        "--delay",
-        type=float,
-        default=DEFAULT_DELAY_S,
-        help="Delay between configs (sec).",
+        "--output-dir",
+        type=Path,
+        help="New evidence directory; must not already exist",
     )
+    parser.add_argument("--timeout", type=float, default=300)
     args = parser.parse_args()
-
-    if not args.bench_list.is_file():
-        sys.exit(f"ERROR: Benchmark list file not found: {args.bench_list}")
-    if not CACTI_DEFAULT_FILE.is_file():
-        sys.exit(
-            f"ERROR: CACTI template file not found at {CACTI_DEFAULT_FILE}"
+    if args.bench_list is not None or args.delay is not None:
+        parser.error(
+            "the --bench-list sweep is replaced by explicit per-memory "
+            "production: use --config PATH --list, then select --memory "
+            "with --geometry and a fresh --output-dir; see --help"
         )
-
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"Starting CACTI Sweep from {args.bench_list}")
-    print(f"Using CACTI template: {CACTI_DEFAULT_FILE}\n")
+    if args.config is None:
+        parser.error("--config is required; add --list to discover memories")
     try:
-        with open(args.bench_list) as f:
-            bench_lines = f.readlines()
-    except OSError as e:
-        sys.exit(
-            f"ERROR: Cannot read benchmark list file {args.bench_list}: {e}"
+        memories = collect_mem_objects(args.config, args.workload_root)
+        if args.list:
+            print(json.dumps(memories, indent=2))
+            return
+        for name in (
+            "memory",
+            "geometry",
+            "source_dir",
+            "binary",
+            "format",
+            "output_dir",
+        ):
+            if getattr(args, name) is None:
+                parser.error(
+                    f"--{name.replace('_', '-')} is required without --list"
+                )
+        selected = [m for m in memories if m["Identity"] == args.memory]
+        if len(selected) != 1:
+            raise CharacterizationError(
+                f"{args.config}: --memory {args.memory!r} must select exactly "
+                "one resolved SPM; use --list"
+            )
+        produce(
+            selected[0],
+            read_geometry(args.geometry),
+            args.template,
+            args.source_dir,
+            args.binary,
+            args.format,
+            args.output_dir,
+            args.timeout,
         )
-
-    # Process each benchmark config
-    for line_num, line in enumerate(bench_lines, 1):
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        parts = line.split()
-        if len(parts) != 3:
-            print(
-                f"Warning: Skipping malformed line {line_num}: '{line}'",
-                file=sys.stderr,
-            )
-            continue
-
-        config_file, bench_name, sub_name = parts
-        config_path = Path(config_file)
-        if not config_path.is_absolute() and not config_path.exists():
-            potential_path = ACC_BENCH_PATH / config_path
-            if potential_path.exists():
-                config_path = potential_path
-
-        print(f"\nProcessing: {bench_name}/{sub_name} ({config_path})...")
-
-        memobjects = []
-        try:
-            memobjects = collect_mem_objects(config_path, args.workload_root)
-        except FileNotFoundError:
-            print(
-                f"ERROR: YAML file not found: {config_path}", file=sys.stderr
-            )
-            continue  # Skip this config
-        except (yaml.YAMLError, WorkloadConfigError) as exc:
-            print(
-                f"ERROR: Failed to parse YAML {config_path}: {exc}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-
-        if not memobjects:
-            print("INFO: No SPMs found in config. Skipping CACTI run.")
-            if args.delay > 0 and line_num < len(bench_lines):
-                time.sleep(args.delay)
-            continue
-
-        # Cleanup intermediate files
-        CACTI_OUT_CSV.unlink(missing_ok=True)
-        INTERMEDIATE_CSV.unlink(missing_ok=True)
-        STDOUT_LOG.unlink(missing_ok=True)
-        STDERR_LOG.unlink(missing_ok=True)
-
-        # Read cacti salam args (default)
-        try:
-            with open(CACTI_DEFAULT_FILE) as f_template:
-                template_lines = f_template.readlines()
-        except OSError as e:
-            print(
-                f"ERROR: Cannot read CACTI template {CACTI_DEFAULT_FILE}: {e}",
-                file=sys.stderr,
-            )
-            continue
-
-        # The no-SPM path does not need the CACTI binary.
-        if not CACTI_EXE.is_file():
-            sys.exit(
-                f"ERROR: CACTI executable not found at {CACTI_EXE}."
-                "Run setup script."
-            )
-
-        # Run CACTI for each SPM
-        spm_names_processed = []
-        overall_cacti_success = True
-        with open(STDOUT_LOG, "a") as f_out, open(STDERR_LOG, "a") as f_err:
-            for spm in memobjects:
-                spm_name = spm["Identity"]
-                spm_size = int(spm["Size"])
-                spm_ports = int(spm["Ports"])
-                run_size = max(spm_size, MIN_CACTI_SIZE)
-
-                print(
-                    f"  Running CACTI for {spm_name} "
-                    f"(Size={run_size}, Ports={spm_ports}, "
-                    f"source={spm['Source']})"
-                )
-                # Generate temp config from template
-                modified_cfg_lines = []
-                size_replaced = False
-                ports_replaced = False
-                for t_line in template_lines:
-                    stripped_line = t_line.strip()
-                    # Replace specific lines, keep others
-                    if stripped_line.startswith("-size (bytes)"):
-                        modified_cfg_lines.append(
-                            f"-size (bytes) {run_size}\n"
-                        )
-                        size_replaced = True
-                    elif stripped_line.startswith("-read-write port"):
-                        modified_cfg_lines.append(
-                            f"-read-write port {spm_ports}\n"
-                        )
-                        ports_replaced = True
-                    else:
-                        modified_cfg_lines.append(
-                            t_line
-                        )  # Keep original template line
-
-                if not size_replaced:
-                    print(
-                        "Warning: '-size (bytes)' not"
-                        " found/replaced in template.",
-                        file=sys.stderr,
-                    )
-                if not ports_replaced:
-                    print(
-                        "Warning: '-read-write port' not"
-                        " found/replaced in template.",
-                        file=sys.stderr,
-                    )
-                tmp_cfg_path = None
-                cacti_run_ok = False
-                try:
-                    with tempfile.NamedTemporaryFile(
-                        mode="w+",
-                        suffix=".cfg",
-                        prefix="cacti_salam_",
-                        dir=CACTI_DIR,
-                        delete=False,
-                    ) as tmp_cfg:
-                        tmp_cfg_path = Path(tmp_cfg.name)
-                        tmp_cfg.writelines(modified_cfg_lines)
-                        tmp_cfg.flush()
-
-                    cmd = [str(CACTI_EXE), "-infile", str(tmp_cfg_path.name)]
-                    process = subprocess.run(
-                        cmd,
-                        cwd=CACTI_DIR,
-                        capture_output=True,
-                        text=True,
-                        check=False,
-                        timeout=300,
-                    )
-                    f_out.write(
-                        f"# Output: {bench_name}/{sub_name}/{spm_name}\n"
-                        f"{process.stdout or '<No stdout>'}\n"
-                    )
-                    if process.stderr:
-                        f_err.write(
-                            f"# Stderr: {bench_name}/{sub_name}/{spm_name}\n"
-                            f"{process.stderr}\n"
-                        )
-
-                    # More robust check for CACTI success
-                    if (
-                        process.returncode != 0
-                        or "ERROR:" in process.stdout
-                        or not CACTI_OUT_CSV.exists()
-                    ):
-                        print(
-                            f"  ERROR: CACTI failed for {spm_name}."
-                            f" Code: {process.returncode}. Check logs.",
-                            file=sys.stderr,
-                        )
-                        overall_cacti_success = False
-                    else:
-                        spm_names_processed.append(spm_name)
-                        cacti_run_ok = True
-                except subprocess.TimeoutExpired:
-                    print(
-                        f"  ERROR: CACTI timed out for {spm_name}",
-                        file=sys.stderr,
-                    )
-                    overall_cacti_success = False
-                except Exception as e:
-                    print(
-                        f"  ERROR: Exception during CACTI run for"
-                        f" {spm_name}: {e}",
-                        file=sys.stderr,
-                    )
-                    overall_cacti_success = False
-                finally:
-                    if tmp_cfg_path and tmp_cfg_path.exists():
-                        tmp_cfg_path.unlink()
-
-        # Move results
-        if not overall_cacti_success or not spm_names_processed:
-            print("INFO: Skipping results processing due to CACTI failures.")
-            if args.delay > 0 and line_num < len(bench_lines):
-                time.sleep(args.delay)
-            continue
-        if not CACTI_OUT_CSV.exists():
-            print(
-                f"ERROR: CACTI output {CACTI_OUT_CSV} missing before move.",
-                file=sys.stderr,
-            )
-            if args.delay > 0 and line_num < len(bench_lines):
-                time.sleep(args.delay)
-            continue
-        try:
-            shutil.move(str(CACTI_OUT_CSV), str(INTERMEDIATE_CSV))
-        except Exception as e:
-            print(f"ERROR: Failed to move CACTI output: {e}", file=sys.stderr)
-            if args.delay > 0 and line_num < len(bench_lines):
-                time.sleep(args.delay)
-            continue
-
-        # Process results
-        results_csv = []
-        try:
-            with open(INTERMEDIATE_CSV, newline="") as infile:
-                reader = csv.reader(infile)
-                header = next(reader, None)
-                if not header:
-                    raise ValueError("CSV file is empty")
-                results_csv.append(["Benchmark", "Config", "Acc"] + header)
-                num_results = 0
-                for i, row in enumerate(reader):
-                    num_results += 1
-                    spm_name = (
-                        spm_names_processed[i]
-                        if i < len(spm_names_processed)
-                        else f"UNKNOWN_SPM_{i+1}"
-                    )
-                    results_csv.append([bench_name, sub_name, spm_name] + row)
-            if num_results != len(spm_names_processed):
-                print(
-                    f"  Warning: Mismatch between result rows ({num_results})"
-                    f" and successful SPMs ({len(spm_names_processed)})",
-                    file=sys.stderr,
-                )
-        except Exception as e:
-            print(
-                f"ERROR: Failed to process intermediate CSV"
-                f" {INTERMEDIATE_CSV}: {e}",
-                file=sys.stderr,
-            )
-            if args.delay > 0 and line_num < len(bench_lines):
-                time.sleep(args.delay)
-            continue
-
-        # Append to master CSV
-        write_header = not MASTER_CSV.exists()
-        try:
-            with open(MASTER_CSV, "a", newline="") as outfile:
-                writer = csv.writer(outfile)
-                if write_header:
-                    writer.writerow(results_csv[0])
-                writer.writerows(results_csv[1:])
-            print(f"  Appended {len(results_csv)-1} rows to {MASTER_CSV}")
-        except Exception as e:
-            print(
-                f"ERROR: Failed to write to master CSV {MASTER_CSV}: {e}",
-                file=sys.stderr,
-            )
-
-        # Delay
-        if args.delay > 0 and line_num < len(bench_lines):
-            time.sleep(args.delay)
-
-    print("\nCACTI Sweep Finished.")
+    except (
+        CharacterizationError,
+        WorkloadConfigError,
+        yaml.YAMLError,
+        OSError,
+        ValueError,
+    ) as exc:
+        parser.exit(1, f"{exc}\n")
 
 
 if __name__ == "__main__":
