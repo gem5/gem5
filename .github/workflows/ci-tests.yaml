@@ -60,7 +60,7 @@ jobs:
                   extra_args: >-
                       gem5-git-clang-format
                       --from-ref ${{ steps.get-base-commit.outputs.base_commit }}
-                      --to-ref ${{ github.event.pull_request.head.sha }}
+                      --to-ref HEAD
               env:
                   GEM5_CI_PR_BASE_COMMIT: ${{ steps.get-base-commit.outputs.base_commit }}
 
