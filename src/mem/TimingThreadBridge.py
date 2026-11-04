@@ -1,4 +1,4 @@
-# Copyright (c) 2026 ZhangJian
+# Copyright (c) 2026 Jann Zhang
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
