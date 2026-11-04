@@ -221,7 +221,8 @@ class ScratchpadMemory : public AbstractMemory
   public:
     PARAMS(ScratchpadMemory);
     ScratchpadMemory(const ScratchpadMemoryParams &p);
-    bool isReady(Addr ad, size_t size, bool read);
+    bool isReady(Addr ad, size_t size, bool read,
+                 const std::vector<bool> &byte_enable = {});
     void scratchpadAccess(PacketPtr pkt, bool validateAccess = false);
     void setAllReady(bool r);
     void

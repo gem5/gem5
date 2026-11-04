@@ -41,6 +41,7 @@
 
 #include "salam/comm_interface.hh"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -575,13 +576,16 @@ CommInterface::getValidStreamPort(Addr add, size_t len, bool read)
 CommInterface::SPMPort *
 CommInterface::getValidSPMPort(Addr add, size_t len, bool read)
 {
+    // Match the packet fragment sent by tryRead and tryWrite.
+    const auto packet_size =
+        std::min<size_t>(len, cacheLineSize - add % cacheLineSize);
     for (auto port : spmPorts) {
         AddrRangeList adl = port->getAddrRanges();
         for (auto address : adl) {
             if (address.contains(add) && !(port->isStalled())) {
                 if (((read && !(port->readReq)) ||
                      (!read && !(port->writeReq)))) {
-                    if (port->canAccess(add, len, read)) {
+                    if (port->canAccess(add, packet_size, read)) {
                         return port;
                     }
                 }

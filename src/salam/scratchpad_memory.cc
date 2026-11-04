@@ -127,8 +127,14 @@ ScratchpadMemory::ScratchpadMemory(const ScratchpadMemoryParams &p)
 }
 
 bool
-ScratchpadMemory::isReady(Addr ad, size_t size, bool read)
+ScratchpadMemory::isReady(Addr ad, size_t size, bool read,
+                          const std::vector<bool> &byte_enable)
 {
+    panic_if(!size || !range.contains(ad) ||
+                 size > range.size() - (ad - range.start()),
+             "%s: scratchpad readiness query exceeds memory range", name());
+    panic_if(!byte_enable.empty() && byte_enable.size() != size,
+             "%s: scratchpad readiness byte-enable size mismatch", name());
     if (!readyMode) {
         return true;
     } else if (read) {
@@ -153,7 +159,8 @@ ScratchpadMemory::isReady(Addr ad, size_t size, bool read)
         Addr start_offset = ad - range.start();
         Addr end_offset = start_offset + size;
         for (auto i = start_offset; i < end_offset; i++) {
-            if (ready[i]) {
+            if ((byte_enable.empty() || byte_enable[i - start_offset]) &&
+                ready[i]) {
                 return false;
             }
         }
@@ -175,7 +182,6 @@ ScratchpadMemory::setAllReady(bool r)
 void
 ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
 {
-    initial = false;
     if (pkt->cacheResponding()) {
         DPRINTF(MemoryAccess, "Cache responding to %#llx: not responding\n",
                 pkt->getAddr());
@@ -191,6 +197,15 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
     assert(AddrRange(pkt->getAddr(), pkt->getAddr() + pkt->getSize())
                .isSubset(range));
 
+    // Validate reads before registering a load-locked reservation. Failed
+    // conditional stores and read-only writes do not consume readiness.
+    if (validateAccess && pkt->cmd != MemCmd::SwapReq && pkt->isRead()) {
+        panic_if(!isReady(pkt->getAddr(), pkt->getSize(), true),
+                 "Scratchpad read at address: 0x%lx is invalid! "
+                 "Sector has not been written yet!\n",
+                 pkt->getAddr());
+    }
+    initial = false;
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 
     if (pkt->cmd == MemCmd::SwapReq) {
@@ -244,18 +259,11 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
             // to do the LL/SC tracking here
             trackLoadLocked(pkt);
         }
-        if (validateAccess) {
-            if (!isReady(pkt->getAddr(), pkt->getSize(), true)) {
-                panic("Scratchpad read at address: 0x%lx is invalid! "
-                      "Sector has not been written yet!\n",
-                      pkt->getAddr());
-            }
-            if (resetOnScratchpadRead) {
-                Addr start_offset = pkt->getAddr() - range.start();
-                Addr end_offset = start_offset + pkt->getSize();
-                for (auto i = start_offset; i < end_offset; i++) {
-                    ready[i] = false;
-                }
+        if (readyMode && validateAccess && resetOnScratchpadRead) {
+            Addr start_offset = pkt->getAddr() - range.start();
+            Addr end_offset = start_offset + pkt->getSize();
+            for (auto i = start_offset; i < end_offset; i++) {
+                ready[i] = false;
             }
         }
         if (pmemAddr) {
@@ -276,6 +284,15 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
         // no need to do anything
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
+            // Validate only a successful write, before changing data,
+            // readiness or PPA. Disabled bytes do not need to be available.
+            if (validateAccess) {
+                panic_if(!isReady(pkt->getAddr(), pkt->getSize(), false,
+                                  pkt->req->getByteEnable()),
+                         "Scratchpad write at address: 0x%lx is invalid! "
+                         "Sector has not been cleared yet!\n",
+                         pkt->getAddr());
+            }
             if (pmemAddr) {
                 pkt->writeData(hostAddr);
                 DPRINTF(MemoryAccess, "%s wrote %i bytes to address %x\n",
@@ -286,20 +303,15 @@ ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
             ppa->accountStorageAccess(*pkt, range.start());
             stats.numWrites[pkt->req->requestorId()]++;
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
-        }
-        if (validateAccess) {
-            if (!isReady(pkt->getAddr(), pkt->getSize(), false)) {
-                panic("Scratchpad write at address: 0x%lx is invalid! "
-                      "Sector has not been cleared yet!\n",
-                      pkt->getAddr());
-            }
-        }
-        // Set ready bits on external writes
-        if (readyMode) {
-            Addr start_offset = pkt->getAddr() - range.start();
-            Addr end_offset = start_offset + pkt->getSize();
-            for (auto i = start_offset; i < end_offset; i++) {
-                ready[i] = true;
+            // Publish only the bytes whose successful write supplied data.
+            if (readyMode) {
+                const Addr start_offset = pkt->getAddr() - range.start();
+                const auto &enabled = pkt->req->getByteEnable();
+                for (unsigned i = 0; i < pkt->getSize(); ++i) {
+                    if (!pkt->isMaskedWrite() || enabled[i]) {
+                        ready[start_offset + i] = true;
+                    }
+                }
             }
         }
     } else {
