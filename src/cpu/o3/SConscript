@@ -70,6 +70,9 @@ if env['CONF']['BUILD_ISA']:
     Source('lsq.cc')
     Source('lsq_occupancy.cc')
     Source('lsq_segments.cc')
+    GTest('lsq_segments.test', 'lsq_segments.test.cc', 'lsq_segments.cc')
+    GTest('lsq_occupancy.test', 'lsq_occupancy.test.cc', 'lsq_occupancy.cc',
+        'lsq_segments.cc', with_tag('gem5 simobject'))
     Source('lsq_unit.cc')
     Source('mem_dep_unit.cc')
     Source('regfile.cc')
