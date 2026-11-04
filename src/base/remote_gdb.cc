@@ -1376,9 +1376,16 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     split = splitAt(split.second, ":");
     auto operation = split.first;
 
-    // Only the "features" object and "read"ing are supported currently.
-    if (object != "features" || operation != "read")
+    // Only "read"ing is supported currently.
+    if (operation != "read") {
         throw Unsupported();
+    }
+
+    // Only the objects registered in queryXferReadMap are supported.
+    auto handler_it = queryXferReadMap.find(object);
+    if (handler_it == queryXferReadMap.end()) {
+        throw Unsupported();
+    }
 
     // Extract the annex name.
     split = splitAt(split.second, ":");
@@ -1386,8 +1393,9 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 
     // Read the contents of the annex.
     std::string content;
-    if (!getXferFeaturesRead(annex, content))
+    if (!handler_it->second(annex, content)) {
         throw CmdError("E00");
+    }
 
     // Extract the offset and length.
     split = splitAt(split.second, ",");
@@ -1526,14 +1534,21 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 std::vector<std::string>
 BaseRemoteGDB::availableFeatures() const
 {
-    return {};
+    return xferReadFeatures;
 };
 
-bool
-BaseRemoteGDB::getXferFeaturesRead(
-    const std::string &annex, std::string &output)
+void
+BaseRemoteGDB::setXferReadHandler(const std::string &object,
+                                  XferReadHandler handler)
 {
-    return false;
+    panic_if(!handler, "Empty qXfer read handler for object '%s'.", object);
+    const bool inserted =
+        queryXferReadMap.insert_or_assign(object, std::move(handler)).second;
+    // Only a newly inserted object is added, so each object is advertised
+    // exactly once even if its handler is replaced.
+    if (inserted) {
+        xferReadFeatures.push_back(csprintf("qXfer:%s:read+", object));
+    }
 }
 
 void
