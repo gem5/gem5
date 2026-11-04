@@ -1288,7 +1288,7 @@ let {{
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1), "=m" (FpDest_uw)
                                 : "m" (FpOp1), "m" (FpDest_uw));
-        FpDest_uw = insertBits(FpDest_uw, 31, 16,,
+        FpDest_uw = insertBits(FpDest_uw, 31, 16,
                                vcvtFpSFpH(fpscr, fpscr.fz, fpscr.dn,
                                fpscr.rMode, fpscr.ahp, FpOp1));
         __asm__ __volatile__("" :: "m" (FpDest_uw));
@@ -1296,7 +1296,7 @@ let {{
         FpscrExc = fpscr;
     '''
     vcvtFpSFpHTIop = ArmInstObjParams("vcvtt", "VcvtFpSFpHT", "FpRegRegOp",
-                                      { "code": vcvtFpHTFpSCode,
+                                      { "code": vcvtFpSFpHTCode,
                                         "predicate_test": predicateTest,
                                         "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHTIop);
