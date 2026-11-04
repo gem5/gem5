@@ -213,6 +213,9 @@ class StreamDma : public DmaDevice
     BaseGic *gic;
     uint32_t rdInt;
     uint32_t wrInt;
+    // Positive IRQ IDs must be unique across live interrupt sources.
+    bool rdIntPending = false;
+    bool wrIntPending = false;
 
     bool rdRunning;
     bool wrRunning;

@@ -67,8 +67,14 @@ class StreamDma(DmaDevice):
         Parent.cache_line_size, "Maximum size of a DMA request"
     )
     gic = Param.BaseGic(Parent.any, "Gic on which to trigger interrupts")
-    rd_int = Param.UInt32(210, "Interrupt for read buffer")
-    wr_int = Param.UInt32(211, "Interrupt for write buffer")
+    rd_int = Param.UInt32(
+        210,
+        "Read IRQ: 0 disables; positive IDs must be unique across live sources",
+    )
+    wr_int = Param.UInt32(
+        211,
+        "Write IRQ: 0 disables; positive IDs must be unique across live sources",
+    )
 
     bandwidth = Param.MemoryBandwidth(
         "12.6GiB/s", "Combined read and write bandwidth"

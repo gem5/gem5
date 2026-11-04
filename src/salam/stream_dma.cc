@@ -92,6 +92,9 @@ StreamDma::StreamDma(const StreamDmaParams &p)
 {
     fatal_if(processCycles == Cycles(0), "%s: process_cycles must be positive",
              name());
+    fatal_if(rdInt != 0 && rdInt == wrInt,
+             "%s: read and write interrupts require distinct positive IDs",
+             name());
     dmaPort.enablePacketStats(this, "memoryPackets");
     readFifo =
         new ReadFifo(*this, dmaPort, rdBufferSize, maxReqSize, maxPending);
@@ -237,11 +240,13 @@ StreamDma::tick()
         writeFifo->startEmpty(writePtr, writeFrameSize);
     }
 
-    if ((*FLAGS & RD_INT_MASK) != RD_INT_MASK) {
+    if (rdIntPending && !(*FLAGS & RD_INT_MASK)) {
+        rdIntPending = false;
         gic->clearInt(rdInt);
     }
 
-    if ((*FLAGS & WR_INT_MASK) != WR_INT_MASK) {
+    if (wrIntPending && !(*FLAGS & WR_INT_MASK)) {
+        wrIntPending = false;
         gic->clearInt(wrInt);
     }
 
@@ -251,7 +256,10 @@ StreamDma::tick()
         DPRINTF(StreamDma, "Frame %d of %d read\n", framesRead, framesToRead);
         if (readIntFrames != 0) {
             if (framesRead % readIntFrames == 0) {
-                gic->sendInt(rdInt);
+                if (rdInt != 0 && !rdIntPending) {
+                    rdIntPending = true;
+                    gic->sendInt(rdInt);
+                }
                 *FLAGS |= RD_INT_MASK;
             }
         }
@@ -279,7 +287,10 @@ StreamDma::tick()
                 framesToWrite);
         if (writeIntFrames != 0) {
             if (framesWritten % writeIntFrames == 0) {
-                gic->sendInt(wrInt);
+                if (wrInt != 0 && !wrIntPending) {
+                    wrIntPending = true;
+                    gic->sendInt(wrInt);
+                }
                 *FLAGS |= WR_INT_MASK;
             }
         }

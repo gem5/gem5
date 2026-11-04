@@ -228,7 +228,50 @@ def load_clusters(
                 f"duplicate cluster Name {cluster.name!r}",
             )
         names.add(child)
+    _validate_unique_interrupts(clusters)
     return clusters
+
+
+def _validate_unique_interrupts(clusters):
+    # All clusters attached by the SALAM builder share the platform GIC.
+    # Include omitted SimObject defaults; zero disables an interrupt source.
+    owners = {}
+    for cluster in clusters:
+        for device in cluster.dmas + cluster.accs:
+            if getattr(device, "dmaType", None) == "Stream":
+                interrupts = (
+                    (
+                        "ReadInt",
+                        210 if device.rd_int is None else device.rd_int,
+                    ),
+                    (
+                        "WriteInt",
+                        211 if device.wr_int is None else device.wr_int,
+                    ),
+                )
+            else:
+                default = 200 if getattr(device, "dmaType", None) else 0
+                interrupts = (
+                    (
+                        "InterruptNum",
+                        default if device.int_num is None else device.int_num,
+                    ),
+                )
+            for field, number in interrupts:
+                if number <= 0:
+                    continue
+                source = f"cluster {cluster.name} device {device.name} {field}"
+                if number in owners:
+                    raise workload_config.WorkloadConfigError(
+                        cluster.config_path,
+                        f"device {device.name}",
+                        field,
+                        number,
+                        f"interrupt ID {number} is already used by "
+                        f"{owners[number]}; live SALAM interrupt sources "
+                        "require unique positive IDs (0 disables a source)",
+                    )
+                owners[number] = source
 
 
 def _advance_address(address, increment, path, scope, field):
