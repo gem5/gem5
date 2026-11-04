@@ -47,6 +47,13 @@ class TimingThreadBridge(ClockedObject):
 
     sys.requestor.out_port = sys.bridge.in_port
     sys.bridge.out_port = sys.responder.in_port
+
+    The bridge buffers packets on each side of the EventQueue boundary and
+    does not serialize those queues. m5.drain(), checkpoint(), and
+    switch_cpus() are therefore not supported while timing packets are
+    buffered or in flight. Atomic and functional accesses migrate to
+    peer_queue with EventQueue::ScopedMigration and are intended only for
+    initialization or debug when no timing traffic is in flight.
     """
 
     type = "TimingThreadBridge"

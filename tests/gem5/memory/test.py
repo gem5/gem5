@@ -154,10 +154,30 @@ for test_name, basename_noext, args in null_tests:
     )
 
 gem5_verify_config(
-    name="timing-thread-bridge",
+    name="timing-thread-bridge-read",
     verifiers=(),
     config=joinpath(getcwd(), "timing-thread-bridge-run.py"),
-    config_args=[],
+    config_args=[
+        "--config",
+        joinpath(getcwd(), "tgen-thread-bridge-read.cfg"),
+    ],
+    valid_isas=(constants.null_tag,),
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="timing-thread-bridge-retry",
+    verifiers=(),
+    config=joinpath(getcwd(), "timing-thread-bridge-run.py"),
+    config_args=[
+        "--config",
+        joinpath(getcwd(), "tgen-thread-bridge-read.cfg"),
+        "--req-size",
+        "1",
+        "--resp-size",
+        "1",
+        "--expect-retries",
+    ],
     valid_isas=(constants.null_tag,),
     length=constants.quick_tag,
 )

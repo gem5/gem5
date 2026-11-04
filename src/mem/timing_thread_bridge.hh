@@ -88,6 +88,27 @@ class TimingThreadBridge : public ClockedObject
     const Cycles delay;
     const int peerQueueIdx;
 
+    /*
+     * Thread ownership of mutable state.
+     *
+     * Each side of the bridge is driven by exactly one EventQueue thread,
+     * and every port callback must run on its owner thread:
+     *
+     *   - This object's queue (eventq_index) owns inPort and the response
+     *     side: respQueue, respFreeSlots, and retryReq. sendTimingResp and
+     *     sendRetryReq on inPort must run on this thread.
+     *
+     *   - The peer queue (peer_queue) owns outPort and the request side:
+     *     reqQueue. sendTimingReq on outPort must run on the peer thread.
+     *
+     *   - Cross-thread state is atomic: reqFreeSlots is decremented by this
+     *     thread when a request is accepted and incremented by the peer
+     *     thread when it is forwarded; reqNotifyPending coordinates the
+     *     "request queue has space" notification. Never touch respQueue or
+     *     retryReq from the peer thread, nor reqQueue from this thread.
+     *
+     * delay and peerQueueIdx are immutable after construction.
+     */
     std::deque<PacketPtr> reqQueue;
     std::atomic<int> reqFreeSlots;
 
