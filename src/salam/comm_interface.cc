@@ -62,7 +62,6 @@ constexpr uint8_t MmrRun = 0x01;
 constexpr uint8_t MmrBusy = 0x02;
 constexpr uint8_t MmrDone = 0x04;
 
-constexpr uint8_t MmrClearRunMask = 0xfe;
 constexpr uint8_t MmrClearRunBusyMask = 0xfc;
 
 template <typename T>
@@ -386,8 +385,9 @@ CommInterface::checkMMR()
             DPRINTF(CommInterface, "Checking MMR to see if Run bit set\n");
         }
         if (*mmreg & MmrRun) {
-            *mmreg &= MmrClearRunMask;
+            *mmreg &= ~(MmrRun | MmrDone);
             *mmreg |= MmrBusy;
+            clearInterrupt();
             computationNeeded = true;
             stats.starts++;
             cu->initialize();
@@ -1163,6 +1163,17 @@ CommInterface::enqueueWrite(MemoryRequest *req)
 }
 
 void
+CommInterface::clearInterrupt()
+{
+    if (int_flag) {
+        if (int_num > 0) {
+            gic->clearInt(int_num);
+        }
+        int_flag = false;
+    }
+}
+
+void
 CommInterface::finish()
 {
     stats.finishes++;
@@ -1240,7 +1251,17 @@ CommInterface::write(PacketPtr pkt)
     if (debug()) {
         DPRINTF(DeviceMMR, "Packet val %d\n", pkt->get<uint8_t>(endian));
     }
+    const uint8_t old_flags = *mmreg;
     pkt->writeData(mmreg + offset);
+    // Busy and Done are device status. Software may acknowledge Done by
+    // writing zero, but cannot set it or change Busy. Ignore Run while
+    // busy: arguments/configuration may be updated for the next launch,
+    // but no invocation is queued behind the current one.
+    *mmreg = (*mmreg & ~(MmrBusy | MmrDone)) | (old_flags & *mmreg & MmrDone) |
+             (computationNeeded ? MmrBusy : 0);
+    if (computationNeeded) {
+        *mmreg &= ~MmrRun;
+    }
 
     std::stringstream mm;
     for (int i = io_size - 1; i >= 0; i--) {
@@ -1266,11 +1287,8 @@ CommInterface::write(PacketPtr pkt)
 
     pkt->makeAtomicResponse();
 
-    if (((*mmreg & MmrDone) == 0x00) && int_flag) {
-        if (int_num > 0) {
-            gic->clearInt(int_num);
-        }
-        int_flag = false;
+    if (!(*mmreg & MmrDone)) {
+        clearInterrupt();
     }
     if (*mmreg & MmrRun) {
         DPRINTF(SALAMLaunch, "run bit written; checked at %d\n",
