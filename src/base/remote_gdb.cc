@@ -1551,13 +1551,6 @@ BaseRemoteGDB::setXferReadHandler(const std::string &object,
     }
 }
 
-bool
-BaseRemoteGDB::getXferFeaturesRead(
-    const std::string &annex, std::string &output)
-{
-    return false;
-}
-
 void
 BaseRemoteGDB::encodeBinaryData(
     const std::string &unencoded, std::string &encoded) const

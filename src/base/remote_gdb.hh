@@ -463,16 +463,6 @@ class BaseRemoteGDB
     virtual std::vector<std::string> availableFeatures() const;
 
     /**
-     * Get an XML target description.
-     *
-     * @param[in] annex the XML filename
-     * @param[out] output set to the decoded XML
-     * @return true if the given annex was found
-     */
-    virtual bool getXferFeaturesRead(const std::string &annex,
-            std::string &output);
-
-    /**
      * Handler for qXfer:<object>:read:<annex>:<offset>,<length> queries.
      *
      * @param[in] annex the annex of the query

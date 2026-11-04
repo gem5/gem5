@@ -223,8 +223,7 @@ class RemoteGDB : public BaseRemoteGDB
     /**
      * Reply to qXfer:features:read:xxx.xml qeuries
      */
-    bool getXferFeaturesRead(const std::string &annex,
-                             std::string &output) override;
+    bool getXferFeaturesRead(const std::string &annex, std::string &output);
 
     virtual RiscvType getRvType(ThreadContext* tc);
 

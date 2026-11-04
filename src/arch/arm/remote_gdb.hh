@@ -121,8 +121,7 @@ class RemoteGDB : public BaseRemoteGDB
     RemoteGDB(System *_system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs() override;
     bool checkBpKind(size_t kind) override;
-    bool getXferFeaturesRead(const std::string &annex,
-                             std::string &output) override;
+    bool getXferFeaturesRead(const std::string &annex, std::string &output);
 };
 
 } // namespace ArmISA
