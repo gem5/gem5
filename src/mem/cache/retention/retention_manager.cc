@@ -312,6 +312,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailEpsShift = p.tail_eps_shift;
             tailEpochFrames = p.tail_epoch;
             tailDamp = p.tail_damp;
+            tailLogHistOn = p.tail_log_hist;
+            tailLogFrameOn = p.tail_log_frame;
             fatal_if(tailEpochFrames < 1, "%s: tail_epoch must be >= 1",
                      cache.name());
             fatal_if(tailEpsShift > 32, "%s: tail_eps_shift must be <= 32",
@@ -508,6 +510,24 @@ RetentionManager::startup()
                     ccprintf(os, ",r%u", b);
                 ccprintf(os, "\n");
                 tailLog("init", tailW, -1);
+                if (tailLogHistOn) {
+                    tailHistLog = simout.create(
+                        cache.name() + ".tail_hist.csv", false, true);
+                    std::ostream &hs = *tailHistLog->stream();
+                    ccprintf(hs, "tick,frame,W_before,K,W_after,total");
+                    for (unsigned b = 0; b < tailBins; b++)
+                        ccprintf(hs, ",e%u", b);
+                    for (unsigned b = 0; b < tailBins; b++)
+                        ccprintf(hs, ",r%u", b);
+                    ccprintf(hs, "\n");
+                }
+                if (tailLogFrameOn) {
+                    tailFrameLog = simout.create(
+                        cache.name() + ".tail_frame.csv", false, true);
+                    ccprintf(*tailFrameLog->stream(),
+                             "tick,frame,W,demandR,expMatches,expPresent,"
+                             "expMeanAge,valid,drops,expRepl,demandA\n");
+                }
                 inform("%s: window mode tail: per-line age in slots since "
                        "the last use (kept on expired tags); at its slot a "
                        "valid line with age > W is dropped; W %s; epoch "
@@ -2177,10 +2197,13 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
         // tail: the expired tag ends (refilled, or replaced)
         if (tailMode) {
             tailEnd(row, false);
-            if (other)
+            if (other) {
                 tailStats->endsReplExpired++;
-            else
+                tailFrRepl++;
+            } else {
                 tailStats->endsExpired++;
+                tailFrMatch++;
+            }
         }
         windowClearExpired(row);
     }
@@ -2193,6 +2216,7 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
             if (tailMode) {
                 tailEnd(unsigned(m), false);
                 tailStats->endsExpired++;
+                tailFrMatch++;
             }
             windowClearExpired(m);
         }
@@ -2315,10 +2339,13 @@ RetentionManager::windowVictim(Addr addr, bool is_secure,
         // replaced
         if (tailMode) {
             tailEnd(unsigned(row), false);
-            if (same)
+            if (same) {
                 tailStats->endsExpired++;
-            else
+                tailFrMatch++;
+            } else {
                 tailStats->endsReplExpired++;
+                tailFrRepl++;
+            }
         }
         if (same) {
             ws.expiredWbCleared++;
@@ -2397,6 +2424,8 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
     const int row = windowExpiredMatch(set, blk_addr, secure);
     if (row < 0)
         return;
+    if (tailMode)
+        tailFrMatch++;
     if (demand && winExpProb[row]) {
         // A miss on a line probation dropped: counted apart, not in R
         winStats->probationRetentionMisses++;
@@ -2860,6 +2889,23 @@ RetentionManager::tailEpoch()
         }
     }
     tailLog("epoch", w_before, k_log);
+    if (tailHistLog) {
+        auto ws = [](uint32_t w) {
+            return w == tailInf ? std::string("inf") : std::to_string(w);
+        };
+        std::ostream &hs = *tailHistLog->stream();
+        ccprintf(hs, "%d,%d,%s,%s,%s,%d", curTick(), winFrameNo,
+                 ws(w_before),
+                 k_log == -2 ? std::string("inf") :
+                 k_log < 0 ? std::string("") : std::to_string(k_log),
+                 ws(tailW), total);
+        for (unsigned b = 0; b < tailBins; b++)
+            ccprintf(hs, ",%d", tailEnded[b]);
+        for (unsigned b = 0; b < tailBins; b++)
+            ccprintf(hs, ",%d", tailReuses[b]);
+        ccprintf(hs, "\n");
+        hs.flush();
+    }
     for (unsigned b = 0; b < tailBins; b++) {
         tailEnded[b] >>= 1;
         tailReuses[b] >>= 1;
@@ -2902,6 +2948,34 @@ RetentionManager::tailLog(const char *event, uint32_t w_before, int64_t k)
         ccprintf(os, ",%d", tailReuses[b]);
     ccprintf(os, "\n");
     os.flush();
+}
+
+void
+RetentionManager::tailFrameRow()
+{
+    // Expired tags present and their mean age, valid lines: a scan of
+    // every row (stats only)
+    uint64_t exp_n = 0, exp_age = 0, valid = 0;
+    for (unsigned row = 0; row < winExpAddr.size(); row++) {
+        if (winExpAddr[row] != MaxAddr) {
+            exp_n++;
+            exp_age += tailAge[row];
+        }
+        const CacheBlk *b = static_cast<const CacheBlk *>(
+            cache.tags->findBlockBySetAndWay(row / assoc, row % assoc));
+        if (b->isValid())
+            valid++;
+    }
+    panic_if(exp_n != winExpLive, "%s: %d expired tags, %d counted",
+             cache.name(), exp_n, winExpLive);
+    // frame = the index of the frame that just ended (winFrameNo has
+    // moved on), as in window_frames.csv
+    std::ostream &os = *tailFrameLog->stream();
+    ccprintf(os, "%d,%d,%s,%d,%d,%d,%.3f,%d,%d,%d,%d\n", curTick(),
+             winFrameNo - 1, tailW == tailInf ? std::string("inf") :
+             std::to_string(tailW), winFrR, tailFrMatch, exp_n,
+             exp_n ? double(exp_age) / double(exp_n) : 0.0, valid,
+             winFrDc + winFrDd, tailFrRepl, winFrA);
 }
 
 void
@@ -3025,6 +3099,9 @@ RetentionManager::windowFrameEnd()
             dd < 256 ? 3 : dd < 1024 ? 4 : 5;
         st.ddropsPerFrame[bin]++;
         tailDdMax = std::max(tailDdMax, dd);
+        if (tailFrameLog)
+            tailFrameRow();
+        tailFrMatch = tailFrRepl = 0;
         if (++tailFrames == tailEpochFrames) {
             tailFrames = 0;
             tailEpoch();

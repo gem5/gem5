@@ -575,6 +575,9 @@ class RetentionManager
     /** window_mode=tail: one row of the W log; k < 0: no decision. */
     void tailLog(const char *event, uint32_t w_before, int64_t k);
 
+    /** tail_log_frame: this frame's row of tail_frame.csv. */
+    void tailFrameRow();
+
     /** window_mode=tail: the histogram bin of an age (its bit width,
      *  capped at 10), also the rung of a W value (inf: 10). */
     static unsigned tailBin(uint64_t age);
@@ -907,6 +910,15 @@ class RetentionManager
     Tick tailTimeSince = 0;
     uint64_t tailDdMax = 0;
     OutputStream *tailWLog = nullptr;
+    /** tail_log_hist / tail_log_frame (stats only): the epoch histogram
+     *  rows and one row per frame; this frame's accesses matching an
+     *  expired tag and expired tags replaced by another address */
+    bool tailLogHistOn = false;
+    bool tailLogFrameOn = false;
+    OutputStream *tailHistLog = nullptr;
+    OutputStream *tailFrameLog = nullptr;
+    uint64_t tailFrMatch = 0;
+    uint64_t tailFrRepl = 0;
 
     /** Window mode: banks done with the current sweep, drops in the
      *  current frame. */

@@ -392,6 +392,24 @@ class BaseCache(ClockedObject):
         "the histograms are still kept)",
     )
 
+    tail_log_hist = Param.Bool(
+        False,
+        "window_mode=tail (stats only): <cache>.tail_hist.csv, one row per "
+        "epoch before the halving: tick, frame, W before, K, W after, "
+        "total, ended[0..10], reuses[0..10] (with tail_fixed: K is "
+        "computed and logged, never applied)",
+    )
+
+    tail_log_frame = Param.Bool(
+        False,
+        "window_mode=tail (stats only): <cache>.tail_frame.csv, one row per "
+        "frame end (W in effect during the frame): tick, frame, W, demand "
+        "retention misses, accesses matching an expired tag, expired tags "
+        "present, their mean age (slots), valid lines, drops, expired tags "
+        "replaced by another address, demand accesses (all per frame "
+        "except the present counts)",
+    )
+
     refresh_opp_age = Param.Float(
         0.8,
         "Age, as a fraction of DRT, from which the daemon refreshes a "
