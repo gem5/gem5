@@ -87,6 +87,12 @@ class AMDGPUDevice(PciEndpoint):
     checkpoint_before_mmios = Param.Bool(
         False, "Take a checkpoint before the device begins sending MMIOs"
     )
+    is_sparse_restore = Param.Bool(
+        Parent.any,
+        "Optimizes host RAM footprint by skipping zero-filled pages "
+        "during restore, preventing physical memory allocation for "
+        "unused guest regions. Uses System class value by default.",
+    )
 
     # SDMA engines. There are a different number depending on device,
     # therefore an array is used.
