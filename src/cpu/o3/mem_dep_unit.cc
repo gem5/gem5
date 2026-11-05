@@ -70,6 +70,7 @@ MemDepUnit::MemDepUnit(const BaseO3CPUParams &params)
       stats(nullptr)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
+    depPred.setFoldIndex(params.SSITFoldIndex, params.SSITAssoc);
 }
 
 MemDepUnit::~MemDepUnit()
@@ -108,6 +109,7 @@ MemDepUnit::init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu)
     depPred.init(params.store_set_clear_period,
                  params.SSITSize, params.SSITAssoc, params.SSITReplPolicy,
                  params.SSITIndexingPolicy, params.LFSTSize);
+    depPred.setFoldIndex(params.SSITFoldIndex, params.SSITAssoc);
 
     std::string stats_group_name = csprintf("MemDepUnit__%i", tid);
     cpu->addStatGroup(stats_group_name.c_str(), &stats);
