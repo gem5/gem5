@@ -70,6 +70,14 @@ class BaseO3CPU(BaseCPU):
     def support_take_over(cls):
         return True
 
+    def unproxyParams(self):
+        # Resolve SSITAssoc = 0 before the SSIT indexing policy, a child,
+        # reads it through Parent.SSITAssoc. A folded index makes PCs about
+        # 2 kB apart share a set; two ways let both keep their store sets.
+        if int(self.SSITAssoc) == 0:
+            self.SSITAssoc = 2 if self.SSITFoldIndex else 1
+        super().unproxyParams()
+
     activity = Param.Unsigned(0, "Initial count")
 
     cacheStorePorts = Param.Unsigned(
@@ -160,7 +168,11 @@ class BaseO3CPU(BaseCPU):
     )
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.MemorySize("1024", "Store set ID table size")
-    SSITAssoc = Param.Unsigned(1, "SSIT table associativity")
+    SSITAssoc = Param.Unsigned(
+        0,
+        "SSIT table associativity. 0 (the default) selects 1, or 2 when "
+        "SSITFoldIndex is set",
+    )
     SSITReplPolicy = Param.BaseReplacementPolicy(
         LRURP(), "SSIT replacement policy"
     )
@@ -171,6 +183,16 @@ class BaseO3CPU(BaseCPU):
             entry_size=4,
         ),
         "SSIT indexing policy",
+    )
+    SSITFoldIndex = Param.Bool(
+        False,
+        "Fold the PC bits above the SSIT set index back into it. Only "
+        "correct with an SSITIndexingPolicy of entry_size 2 and size "
+        "SSITSize * 2. Off by default: it removes false store-set sharing "
+        "between 2-byte neighbours (e.g. RISC-V C extension code), but its "
+        "sets can conflict for PCs further apart, so it can also slow some "
+        "programs down. With SSITAssoc left at 0, folding selects a 2-way "
+        "SSIT, which removes most of these conflicts",
     )
 
     numRobs = Param.Unsigned(1, "Number of Reorder Buffers")

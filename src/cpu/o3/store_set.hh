@@ -100,6 +100,16 @@ class StoreSet : public Named
     /** Default destructor. */
     ~StoreSet();
 
+    /**
+     * For ISAs with 2-byte instruction steps (RISC-V C extension), look
+     * the SSIT up under a key whose set index, with an indexing policy of
+     * entry_size 2, is ((PC >> 1) ^ (PC >> (1 + log2(sets)))) & mask.
+     * Instructions 2 bytes apart then get different sets, and 4-byte code
+     * still uses every set. The key is a bijection of the PC. A
+     * single-set (fully associative) SSIT is left unfolded.
+     */
+    void setFoldIndex(bool fold, int ssit_assoc);
+
     /** Initializes the store set predictor with the given table sizes. */
     void init(uint64_t clear_period,
               size_t SSIT_entries, int SSIT_assoc,
@@ -144,6 +154,16 @@ class StoreSet : public Named
     void dump();
 
   private:
+    /** The key under which a PC is stored in the SSIT. */
+    inline Addr
+    ssitKey(Addr PC) const
+    {
+        return foldShift ? (PC ^ ((PC >> foldShift) << 1)) : PC;
+    }
+
+    /** Shift of the folded bits; 0 means no folding. */
+    int foldShift = 0;
+
     /** Calculates a Store Set ID based on the PC. */
     inline SSID calcSSID(Addr PC)
     { return ((PC ^ (PC >> 10)) % LFSTSize); }
