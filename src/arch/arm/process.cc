@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2026 Google LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,6 +144,11 @@ ArmProcess64::initState()
         FPEXC fpexc = tc->readMiscReg(MISCREG_FPEXC);
         fpexc.en = 1;
         tc->setMiscReg(MISCREG_FPEXC, fpexc);
+        // Enable Top Byte Ignore for user-space addresses (TTBR0_EL1),
+        // matching the Linux arm64 tagged address ABI.
+        TCR tcr = tc->readMiscReg(MISCREG_TCR_EL1);
+        tcr.tbi0 = 1;
+        tc->setMiscReg(MISCREG_TCR_EL1, tcr);
     }
 }
 
