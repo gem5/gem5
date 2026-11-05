@@ -196,7 +196,7 @@ _EXTENSION_REGISTRY = {
     "Zalasr": {"implemented": False},
     "Zalrsc": {"implemented": True},
     "Zama16b": {"implemented": False},
-    "Zawrs": {"implemented": False},
+    "Zawrs": {"implemented": True},
     "Zba": {"implemented": True},
     "Zbb": {"implemented": True},
     "Zbc": {"implemented": True},

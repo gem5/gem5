@@ -88,6 +88,7 @@ class ISA : public BaseISA
     const int WARN_FAILURE = 10000;
     const Addr INVALID_RESERVATION_ADDR = (Addr)-1;
     std::unordered_map<int, Addr> load_reservation_addrs;
+    bool _wrsWaiting = false;
 
     /** Length of each vector register in bits.
      *  VLEN in Ch. 2 of RISC-V vector spec
@@ -187,6 +188,24 @@ class ISA : public BaseISA
     {
         Addr& load_reservation_addr = load_reservation_addrs[cid];
         load_reservation_addr = INVALID_RESERVATION_ADDR;
+    }
+
+    // Zawrs support
+    static constexpr uint64_t WRS_NTO_CYCLES = 1000;
+    static constexpr uint64_t WRS_STO_CYCLES = 100;
+
+    bool
+    hasLoadReservation(ContextID cid)
+    {
+        auto it = load_reservation_addrs.find(cid);
+        return it != load_reservation_addrs.end() &&
+               it->second != INVALID_RESERVATION_ADDR;
+    }
+
+    void
+    setWrsWaiting(bool w)
+    {
+        _wrsWaiting = w;
     }
 
     /** Methods for getting VLEN, VLENB and ELEN values */
