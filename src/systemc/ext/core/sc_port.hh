@@ -104,7 +104,6 @@ class sc_port_base : public sc_object
 
   private:
     friend class ::sc_gem5::Port;
-    friend class ::sc_gem5::Kernel;
 
     virtual sc_interface *_gem5Interface(int n) const = 0;
     virtual void _gem5AddInterface(sc_interface *i) = 0;
