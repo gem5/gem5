@@ -58,6 +58,7 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "mem/cache/prefetch/accounting_record.hh"
+#include "mem/cache/prefetch/instruction_state.hh"
 #include "sim/cur_tick.hh"
 
 namespace gem5
@@ -72,6 +73,7 @@ class CacheBlk : public TaggedEntry
 {
   public:
     prefetch::AccountingPtr prefetchOrigin;
+    std::unique_ptr<prefetch::InstructionLineState> instructionState;
     /**
      * Cache block's enum listing the supported coherence bits. The valid
      * bit is not defined here because it is part of a TaggedEntry.
@@ -189,6 +191,7 @@ class CacheBlk : public TaggedEntry
         setRefCount(other.getRefCount());
         setSrcRequestorId(other.getSrcRequestorId());
         prefetchOrigin = std::move(other.prefetchOrigin);
+        instructionState = std::move(other.instructionState);
         std::swap(lockList, other.lockList);
 
         other.invalidate();
@@ -205,6 +208,7 @@ class CacheBlk : public TaggedEntry
         TaggedEntry::invalidate();
 
         prefetchOrigin.reset();
+        instructionState.reset();
         clearPrefetched();
         clearCoherenceBits(AllBits);
 

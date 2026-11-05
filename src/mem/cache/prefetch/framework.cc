@@ -74,6 +74,12 @@ CacheView TPCComponent::cacheView(int level) const {
     fatal_if(!controller, "Component has no controller");
     return controller->cacheView(level);
 }
+int TPCComponent::instructionState(const InstructionSource &s) const {
+    return controller->instructionState(s, source());
+}
+bool TPCComponent::updateInstructionState(const InstructionSource &s, int expected, int state) {
+    return controller->updateInstructionState(s, source(), expected, state);
+}
 FrameworkQueue::FrameworkQueue(const FrameworkQueueParams &p) : Queued(p) {}
 void FrameworkQueue::queueReady() {
     Tick next = nextPrefetchReadyTime();
@@ -155,6 +161,14 @@ void TPCController::bindCache(int level, BaseCache *c) {
     // L1's route is hidden behind the controller's gem5 packet interface.
     if (level == 1) routes[0]->setCache(c);
 }
+void TPCController::bindInstructionCache(BaseCache *cache) {
+    fatal_if(initialized || instructionCache, "Duplicate instruction cache binding");
+    instructionCache = cache;
+    cache->addInstructionObserver(this);
+}
+void TPCController::instructionInvalidated(const InstructionSource &s) {
+    for (auto *component : components) component->onInstructionInvalidated(s);
+}
 void TPCController::regProbeListeners() {
     for (int level = 1; level <= 3; ++level) {
         fatal_if(!caches[level], "All three data cache levels must be bound");
@@ -193,7 +207,8 @@ std::vector<SubmissionResult> TPCController::submit(TPCComponent *component,
     std::vector<SubmissionResult> result;
     for (const auto &candidate : candidates) {
         auto record = accounting->generate(component->source(), candidate.target);
-        if (!allowCandidate(*component, candidate)) {
+        if (!validSource(instructionSource(context.request)) ||
+            !allowCandidate(*component, candidate)) {
             accounting->drop(record, "dropController");
             result.push_back(SubmissionResult::ControllerRejected); continue;
         }

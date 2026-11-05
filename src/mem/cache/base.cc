@@ -113,8 +113,11 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       missCount(p.max_miss_count),
       addrRanges(p.addr_ranges.begin(), p.addr_ranges.end()),
       system(p.system),
-      stats(*this)
+      stats(*this),
+      instructionStats(this)
 {
+    instructionStatesEnabled = p.instruction_states;
+    fatal_if(instructionStatesEnabled && !p.is_read_only, "Instruction states require a read-only cache");
     // the MSHR queue has no reserve entries as we check the MSHR
     // queue on every single allocation, whereas the write queue has
     // as many reserve entries as we have MSHRs, since every MSHR may
@@ -1161,6 +1164,13 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
     assert(pkt->isRequest());
 
     assert(blk && blk->isValid());
+    if (instructionStatesEnabled && pkt->req->isInstFetch()) {
+        prefetch::InstructionSource source;
+        if (blk != tempBlock && blk->instructionState)
+            source = {this, regenerateBlkAddr(blk), blk->instructionState->generation,
+                      unsigned(pkt->getAddr() % blkSize), blk->isSecure()};
+        prefetch::setInstructionSource(pkt->req, source);
+    }
     // Occasionally this is not true... if we are a lower-level cache
     // satisfying a string of Read and ReadEx requests from
     // upper-level caches, a Read will mark the block as shared but we
@@ -1614,6 +1624,11 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         // don't want to lose that
     }
 
+    if (instructionStatesEnabled && !has_old_data && blk != tempBlock) {
+        blk->instructionState = std::make_unique<prefetch::InstructionLineState>();
+        blk->instructionState->initialize(++instructionGeneration, blkSize);
+        instructionStats.residencies++;
+    }
     // Block is guaranteed to be valid at this point
     assert(blk->isValid());
     assert(blk->isSecure() == is_secure);
@@ -1740,6 +1755,15 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 void
 BaseCache::invalidateBlock(CacheBlk *blk)
 {
+    if (blk->instructionState) {
+        prefetch::InstructionSource source{this, regenerateBlkAddr(blk),
+            blk->instructionState->generation, 0, blk->isSecure()};
+        // Revoke the capability before callbacks can attempt deferred work.
+        blk->instructionState->generation = 0;
+        for (auto *observer : instructionObservers)
+            observer->instructionInvalidated(source);
+        instructionStats.invalidations++;
+    }
     if (accounting) accounting->remove(blk->prefetchOrigin, accountingLevel,
         blk == tempBlock ? "unusedNoRetention" : "unusedInvalidation");
     // If block is still marked as prefetched, then it hasn't been used
@@ -2067,6 +2091,42 @@ BaseCache::sendWriteQueuePacket(WriteQueueEntry* wq_entry)
         markInService(wq_entry);
         return false;
     }
+}
+
+BaseCache::InstructionStats::InstructionStats(statistics::Group *parent)
+    : statistics::Group(parent, "instructionStates"),
+      ADD_STAT(residencies, statistics::units::Count::get(), "New instruction residencies"),
+      ADD_STAT(invalidations, statistics::units::Count::get(), "Instruction line invalidations"),
+      ADD_STAT(reads, statistics::units::Count::get(), "Classification reads"),
+      ADD_STAT(updates, statistics::units::Count::get(), "Classification updates"),
+      ADD_STAT(stale, statistics::units::Count::get(), "Rejected stale instruction sources") {}
+
+CacheBlk *
+BaseCache::instructionBlock(const prefetch::InstructionSource &s) const
+{
+    if (!instructionStatesEnabled || s.cache != this || !s.valid() ||
+        s.offset >= blkSize) return nullptr;
+    auto *blk = tags->findBlock(s.line, s.secure);
+    return blk && blk->instructionState &&
+        blk->instructionState->matches(s) ? blk : nullptr;
+}
+int
+BaseCache::readInstructionState(const prefetch::InstructionSource &s, int component)
+{
+    auto *blk = instructionBlock(s);
+    if (!blk) { instructionStats.stale++; return -1; }
+    instructionStats.reads++;
+    return blk->instructionState->read(s.offset, component);
+}
+bool
+BaseCache::updateInstructionState(const prefetch::InstructionSource &s, int component,
+                                 int expected, int state)
+{
+    auto *blk = instructionBlock(s);
+    if (!blk) { instructionStats.stale++; return false; }
+    bool updated = blk->instructionState->update(s.offset, component, expected, state);
+    if (updated) instructionStats.updates++;
+    return updated;
 }
 
 void

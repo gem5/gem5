@@ -58,6 +58,10 @@ class TPCComponent : public Base {
     virtual bool canHandle(const AccessEvent &) const = 0;
     virtual void onPredict(const AccessEvent &, const SubmissionContext &) = 0;
     virtual void onFill(const FillEvent &) {}
+    virtual void onInstructionInvalidated(const InstructionSource &) {}
+    int instructionState(const InstructionSource &) const;
+    bool updateInstructionState(const InstructionSource &, int expected, int state);
+
     std::vector<SubmissionResult> submitCandidates(
         const SubmissionContext &, const std::vector<Candidate> &);
     CacheView cacheView(int level) const;
@@ -82,11 +86,12 @@ class FrameworkQueue : public Queued {
     void demand(Addr address, bool secure) { cancelDemand(blockAddress(address), secure); }
     size_t permitted(size_t n) const { return getMaxPermittedPrefetches(n); }
 };
-class TPCController : public Base, public CacheObserver {
+class TPCController : public Base, public CacheObserver, public InstructionStateObserver {
     friend class TPCComponent;
     std::array<BaseCache *, 4> caches{};
     std::vector<FrameworkQueue *> routes;
     bool initialized = false;
+    BaseCache *instructionCache = nullptr;
     void notify(const PacketPtr &, const PrefetchInfo &) final {}
     void notifyFill(const PacketPtr &) final {}
     void regProbeListeners() override;
@@ -101,6 +106,17 @@ class TPCController : public Base, public CacheObserver {
   public:
     explicit TPCController(const TPCControllerParams &);
     void bindCache(int level, BaseCache *);
+    void bindInstructionCache(BaseCache *);
+    void instructionInvalidated(const InstructionSource &) override;
+    bool validSource(const InstructionSource &s) const {
+        return instructionCache && s.cache == instructionCache && instructionCache->isSourceValid(s);
+    }
+    int instructionState(const InstructionSource &s, int component) const {
+        return instructionCache ? instructionCache->readInstructionState(s, component) : -1;
+    }
+    bool updateInstructionState(const InstructionSource &s, int component, int expected, int state) {
+        return instructionCache && instructionCache->updateInstructionState(s, component, expected, state);
+    }
     void cacheAccess(const AccessEvent &) final;
     void cacheFill(const FillEvent &) final;
     CacheView cacheView(int level) const;

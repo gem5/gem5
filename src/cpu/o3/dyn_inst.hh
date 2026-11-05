@@ -51,6 +51,7 @@
 #include "base/refcnt.hh"
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"
+#include "mem/cache/prefetch/instruction_state.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_res.hh"
@@ -122,6 +123,7 @@ class DynInst : public ExecContext, public RefCounted
 
     /** The sequence number of the instruction. */
     InstSeqNum seqNum = 0;
+    prefetch::InstructionSource instructionSource;
 
     /** The StaticInst used by this BaseDynInst. */
     const StaticInstPtr staticInst;

@@ -84,6 +84,7 @@ namespace gem5
 namespace prefetch
 {
     class Base;
+    class StateFixture;
 }
 class MSHR;
 class RequestPort;
@@ -95,6 +96,7 @@ struct BaseCacheParams;
  */
 class BaseCache : public ClockedObject
 {
+    friend class prefetch::StateFixture;
   protected:
     /**
      * Indexes to enumerate the MSHR queues.
@@ -1150,6 +1152,15 @@ class BaseCache : public ClockedObject
     void regProbePoints() override;
     std::vector<prefetch::CacheObserver *> prefetchObservers;
     uint64_t observationSequence = 0;
+    bool instructionStatesEnabled = false;
+    uint64_t instructionGeneration = 0;
+    std::vector<prefetch::InstructionStateObserver *> instructionObservers;
+    CacheBlk *instructionBlock(const prefetch::InstructionSource &) const;
+    struct InstructionStats : public statistics::Group {
+        statistics::Scalar residencies, invalidations, reads, updates, stale;
+        InstructionStats(statistics::Group *parent);
+    } instructionStats;
+
 
   public:
     void addPrefetchObserver(prefetch::CacheObserver *observer) {
@@ -1157,6 +1168,20 @@ class BaseCache : public ClockedObject
                  != prefetchObservers.end(), "Duplicate cache observer");
         prefetchObservers.push_back(observer);
     }
+    void addInstructionObserver(prefetch::InstructionStateObserver *o) {
+        fatal_if(!instructionStatesEnabled, "Instruction states are disabled");
+        fatal_if(std::find(instructionObservers.begin(), instructionObservers.end(), o)
+                 != instructionObservers.end(), "Duplicate instruction observer");
+        instructionObservers.push_back(o);
+    }
+    bool isSourceValid(const prefetch::InstructionSource &s) {
+        bool valid = instructionBlock(s) != nullptr;
+        if (!valid) instructionStats.stale++;
+        return valid;
+    }
+    int readInstructionState(const prefetch::InstructionSource &, int component);
+    bool updateInstructionState(const prefetch::InstructionSource &, int component,
+                                int expected, int state);
     BaseCache(const BaseCacheParams &p, unsigned blk_size);
     ~BaseCache();
 

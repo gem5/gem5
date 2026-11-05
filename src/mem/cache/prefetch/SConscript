@@ -58,5 +58,13 @@ Source('stride.cc')
 Source('tagged.cc')
 
 SimObject('Framework.py', sim_objects=['TPCComponent', 'FrameworkQueue',
-    'TPCController'])
+    'TPCController', 'C1Prefetcher', 'DivisionOfLaborController'])
 Source('framework.cc')
+
+Source('c1.cc')
+
+# Directed fixtures are excluded from normal builds and experimental profiles.
+import os
+if os.environ.get('TPC_TESTS') == '1':
+    SimObject('StateFixture.py', sim_objects=['TPCStateFixture', 'TPCFixtureComponent'])
+    Source('state_fixture.cc')

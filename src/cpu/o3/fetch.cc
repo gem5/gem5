@@ -283,6 +283,7 @@ Fetch::clearStates(ThreadID tid)
     stalls[tid].drain = false;
     fetchBufferPC[tid] = 0;
     fetchBufferValid[tid] = false;
+    bufferSource[tid] = {}; decodeSource[tid] = {}; sourceStarted[tid] = false;
     fetchQueue[tid].clear();
 
     // TODO not sure what to do with priorityList for now
@@ -313,6 +314,7 @@ Fetch::resetStage()
 
         fetchBufferPC[tid] = 0;
         fetchBufferValid[tid] = false;
+        bufferSource[tid] = {}; decodeSource[tid] = {}; sourceStarted[tid] = false;
 
         fetchQueue[tid].clear();
 
@@ -342,6 +344,7 @@ Fetch::processCacheCompletion(PacketPtr pkt)
 
     memcpy(fetchBuffer[tid], pkt->getConstPtr<uint8_t>(), fetchBufferSize);
     fetchBufferValid[tid] = true;
+    bufferSource[tid] = prefetch::instructionSource(pkt->req);
 
     // Wake up the CPU (if it went to sleep and was waiting on
     // this completion event).
@@ -696,6 +699,9 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
     else
         macroop[tid] = NULL;
     decoder[tid]->reset();
+    sourceStarted[tid] = bool(macroop[tid]);
+    decodeSource[tid] = macroop[tid] ? squashInst->instructionSource : prefetch::InstructionSource{};
+    sourcePC[tid] = new_pc.instAddr();
 
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
@@ -1201,6 +1207,17 @@ Fetch::fetch(bool &status_change)
                 break;
             }
 
+            if (!sourceStarted[tid] || sourcePC[tid] != this_pc.instAddr()) {
+                decodeSource[tid] = bufferSource[tid];
+                sourcePC[tid] = this_pc.instAddr();
+                sourceStarted[tid] = true;
+                if (this_pc.instAddr() >= fetchBufferPC[tid] &&
+                    this_pc.instAddr() < fetchBufferPC[tid] + fetchBufferSize) {
+                    decodeSource[tid].offset += this_pc.instAddr() - fetchBufferPC[tid];
+                } else {
+                    decodeSource[tid] = {};
+                }
+            }
             memcpy(dec_ptr->moreBytesPtr(),
                     fetchBuffer[tid] + blkOffset * instSize, instSize);
             decoder[tid]->moreBytes(this_pc, fetchAddr);
@@ -1250,6 +1267,9 @@ Fetch::fetch(bool &status_change)
             DynInstPtr instruction = buildInst(
                     tid, staticInst, curMacroop, this_pc, *next_pc, true);
 
+            instruction->instructionSource =
+                sourceStarted[tid] && sourcePC[tid] == this_pc.instAddr() ?
+                decodeSource[tid] : prefetch::InstructionSource{};
             ppFetch->notify(instruction);
             numInst++;
 
@@ -1276,6 +1296,7 @@ Fetch::fetch(bool &status_change)
             inRom = isRomMicroPC(this_pc.microPC());
 
             if (newMacro) {
+                sourceStarted[tid] = false;
                 fetchAddr = this_pc.instAddr() & pc_mask;
                 blkOffset = (fetchAddr - fetchBufferPC[tid]) / instSize;
                 pcOffset = 0;

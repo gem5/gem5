@@ -105,6 +105,7 @@ class BaseCache(ClockedObject):
     tgts_per_mshr = Param.Unsigned("Max number of accesses per MSHR")
     write_buffers = Param.Unsigned(8, "Number of write buffers")
 
+    instruction_states = Param.Bool(False, "Track I-cache-resident TPC instruction states")
     is_read_only = Param.Bool(False, "Is this cache read only (e.g. inst)")
 
     prefetcher = Param.BasePrefetcher(NULL, "Prefetcher attached to cache")

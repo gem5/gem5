@@ -53,6 +53,7 @@
 #include "cpu/translation.hh"
 #include "enums/SMTFetchPolicy.hh"
 #include "mem/packet.hh"
+#include "mem/cache/prefetch/instruction_state.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
@@ -494,6 +495,10 @@ class Fetch
 
     /** Whether or not the fetch buffer data is valid. */
     bool fetchBufferValid[MaxThreads];
+    prefetch::InstructionSource bufferSource[MaxThreads];
+    prefetch::InstructionSource decodeSource[MaxThreads];
+    Addr sourcePC[MaxThreads] = {};
+    bool sourceStarted[MaxThreads] = {};
 
     /** Size of instructions. */
     int instSize;
