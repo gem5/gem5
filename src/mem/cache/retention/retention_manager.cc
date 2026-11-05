@@ -9,6 +9,7 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/output.hh"
+#include "base/str.hh"
 #include "base/trace.hh"
 #include "debug/Cache.hh"
 #include "mem/cache/base.hh"
@@ -222,9 +223,10 @@ RetentionManager::RetentionManager(BaseCache &_cache,
              "%s: window_probation_frames needs window_mode", cache.name());
     fatal_if(p.window_mode != "off" && p.window_mode != "fixed" &&
              p.window_mode != "tcp" && p.window_mode != "amc" &&
-             p.window_mode != "wb" && p.window_mode != "chang",
-             "%s: window_mode must be off, fixed, tcp, amc, wb or chang",
-             cache.name());
+             p.window_mode != "wb" && p.window_mode != "chang" &&
+             p.window_mode != "tail",
+             "%s: window_mode must be off, fixed, tcp, amc, wb, chang or "
+             "tail", cache.name());
     if (p.window_mode != "off") {
         const unsigned num_sets = cache.tags->getNumSets();
         // The window mode decides at the refresh-all slots, so it keeps
@@ -240,13 +242,16 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         WindowController::Params wp;
         wbMode = p.window_mode == "wb";
         changMode = p.window_mode == "chang";
-        wp.mode = p.window_mode == "fixed" || wbMode || changMode ?
+        tailMode = p.window_mode == "tail";
+        const bool own_rule = wbMode || changMode || tailMode;
+        wp.mode = p.window_mode == "fixed" || own_rule ?
             WindowController::Mode::Fixed :
             p.window_mode == "tcp" ? WindowController::Mode::Tcp :
             WindowController::Mode::Amc;
-        // wb and chang: the controller stays as fixed N = 2^20 (no group
-        // is ever due); the per-line counts / states decide instead
-        wp.nFixed = wbMode || changMode ? 1u << 20 : p.window_n_fixed;
+        // wb, chang and tail: the controller stays as fixed N = 2^20 (no
+        // group is ever due); the per-line counts / states / ages decide
+        // instead
+        wp.nFixed = own_rule ? 1u << 20 : p.window_n_fixed;
         wp.tcpNInit = p.window_tcp_n_init;
         wp.amcNInit = p.window_amc_n_init;
         wp.ssthreshInit = p.window_ssthresh_init;
@@ -303,6 +308,39 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             fatal_if(winProbM > 0, "%s: window_mode=chang has no "
                      "probation", cache.name());
         }
+        if (tailMode) {
+            tailEpsShift = p.tail_eps_shift;
+            tailEpochFrames = p.tail_epoch;
+            tailDamp = p.tail_damp;
+            fatal_if(tailEpochFrames < 1, "%s: tail_epoch must be >= 1",
+                     cache.name());
+            fatal_if(tailEpsShift > 32, "%s: tail_eps_shift must be <= 32",
+                     cache.name());
+            fatal_if(tailDamp > 1, "%s: tail_damp must be 0 or 1",
+                     cache.name());
+            fatal_if(p.tail_w0 > 511 || ((p.tail_w0 + 1) & p.tail_w0) != 0,
+                     "%s: tail_w0 must be 2^k - 1 <= 511", cache.name());
+            tailW = p.tail_w0;
+            if (p.tail_fixed == "inf") {
+                tailFixed = true;
+                tailW = tailInf;
+            } else {
+                long long f = 0;
+                fatal_if(!to_number(p.tail_fixed, f) || f < -1 ||
+                         f >= (long long)tailInf,
+                         "%s: tail_fixed must be -1, inf or n >= 0",
+                         cache.name());
+                if (f >= 0) {
+                    tailFixed = true;
+                    tailW = uint32_t(f);
+                }
+            }
+            // Every fill and writeback allocation is a use (as wb)
+            fatal_if(!winFillUAlways, "%s: window_mode=tail needs "
+                     "window_fill_u_always", cache.name());
+            fatal_if(winProbM > 0, "%s: window_mode=tail has no "
+                     "probation", cache.name());
+        }
         window->setListener([this](WindowController::Event e,
                                    unsigned old_val, unsigned new_val) {
             windowEvent(e, old_val, new_val);
@@ -331,6 +369,12 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             changState.assign(rows, changLive);
             changIdle.assign(rows, 0);
             changStats = std::make_unique<ChangStats>(*this, &stats);
+        }
+        if (tailMode) {
+            tailAge.assign(rows, 0);
+            tailEnded.assign(tailBins, 0);
+            tailReuses.assign(tailBins, 0);
+            tailStats = std::make_unique<TailStats>(*this, &stats);
         }
         if (wp.mode == WindowController::Mode::Amc) {
             winAmcInterval = p.window_amc_interval_cycles;
@@ -450,6 +494,29 @@ RetentionManager::startup()
                        "countdown r latched from I at a tick (DEAD after "
                        "I + 1 ticks without a use); DEAD lines dropped at "
                        "their slot", cache.name(), changTime);
+            }
+            if (tailMode) {
+                tailTimeW = tailW;
+                tailTimeSince = curTick();
+                tailWLog = simout.create(cache.name() + ".tail_w.csv",
+                                         false, true);
+                std::ostream &os = *tailWLog->stream();
+                ccprintf(os, "tick,cycle,frame,event,W_before,total,K,W");
+                for (unsigned b = 0; b < tailBins; b++)
+                    ccprintf(os, ",e%u", b);
+                for (unsigned b = 0; b < tailBins; b++)
+                    ccprintf(os, ",r%u", b);
+                ccprintf(os, "\n");
+                tailLog("init", tailW, -1);
+                inform("%s: window mode tail: per-line age in slots since "
+                       "the last use (kept on expired tags); at its slot a "
+                       "valid line with age > W is dropped; W %s; epoch "
+                       "every %u frames (P %lu cycles), eps 2^-%u, damp %u, "
+                       "W0 %s", cache.name(),
+                       tailFixed ? "fixed (controller off)" :
+                       "set by the controller", tailEpochFrames, p_cyc,
+                       tailEpsShift, tailDamp,
+                       tailW == tailInf ? "inf" : std::to_string(tailW));
             }
             if (wbMode) {
                 inform("%s: window mode wb (Refrint WB(n,m)): n %d, m %d "
@@ -911,6 +978,13 @@ RetentionManager::chargedByWriteback(const CacheBlk *blk) const
 void
 RetentionManager::onEvict(CacheBlk *blk)
 {
+    // tail: a valid line replaced by an allocation ends its interval
+    if (tailMode && tailRepl && blk != cache.tempBlock && blk->isValid() &&
+        !winDropping) {
+        tailRepl = false;
+        tailEnd(blk->getSet() * assoc + blk->getWay(), false);
+        tailStats->endsReplValid++;
+    }
     // The temp block is outside the tags and never charged
     if (blk == cache.tempBlock || !blk->isValid() ||
         !cache.tags->isExpired(blk)) {
@@ -2054,13 +2128,15 @@ RetentionManager::processRaPorts(unsigned bank, bool opp_step)
 
 
 void
-RetentionManager::windowUse(unsigned row)
+RetentionManager::windowUse(unsigned row, bool demand)
 {
     winUsed[row] = 1;
     if (wbStats)
         wbStats->usesCountReload++;
     if (changMode)
         changUse(row);
+    if (tailMode)
+        tailUse(row, demand);
     if (winPend[row]) {
         winPend[row] = 0;
         winPendLive--;
@@ -2080,7 +2156,7 @@ RetentionManager::onDemandHit(PacketPtr pkt, CacheBlk *blk)
 {
     if (!window || !pkt->isDemand())
         return;
-    windowUse(blk->getSet() * assoc + blk->getWay());
+    windowUse(blk->getSet() * assoc + blk->getWay(), true);
 }
 
 void
@@ -2094,9 +2170,18 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
     if (winExpAddr[row] != MaxAddr) {
         winStats->expiredOverwritten++;
         // chang: an expired tag replaced by another address (event T)
-        if (changMode && (winExpAddr[row] != cache.regenerateBlkAddr(blk) ||
-                          bool(winExpSecure[row]) != blk->isSecure()))
+        const bool other = winExpAddr[row] != cache.regenerateBlkAddr(blk) ||
+            bool(winExpSecure[row]) != blk->isSecure();
+        if (changMode && other)
             changSetEvent(set, false);
+        // tail: the expired tag ends (refilled, or replaced)
+        if (tailMode) {
+            tailEnd(row, false);
+            if (other)
+                tailStats->endsReplExpired++;
+            else
+                tailStats->endsExpired++;
+        }
         windowClearExpired(row);
     }
     if (winSetExpired[set]) {
@@ -2104,6 +2189,11 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
                                          blk->isSecure());
         if (m >= 0) {
             winStats->expiredSameAddrCleared++;
+            // tail: an access matching the expired tag (a refill)
+            if (tailMode) {
+                tailEnd(unsigned(m), false);
+                tailStats->endsExpired++;
+            }
             windowClearExpired(m);
         }
     }
@@ -2116,6 +2206,15 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
     // chang: a fill (or a writeback allocation) is a use
     if (changMode)
         changUse(row);
+    // tail: a fill (or a writeback allocation) is a use: age 0; a
+    // writeback that allocates calls windowUse next, which must not end
+    // an interval of the new line
+    if (tailMode) {
+        tailAge[row] = 0;
+        tailFresh = int64_t(row);
+        tailRepl = false;
+        tailStats->uses++;
+    }
     // Probation: a demand fill (not a writeback that allocates, which is
     // a use) starts it, p = 0
     if (winProbM && fill) {
@@ -2161,6 +2260,9 @@ RetentionManager::windowVictim(Addr addr, bool is_secure,
 {
     if (!window)
         return nullptr;
+    // tail: a valid victim the tags pick is evicted next (onEvict)
+    if (tailMode)
+        tailRepl = true;
     const Addr blk_addr = addr & ~Addr(cache.blkSize - 1);
     const unsigned set = cache.tags->getSetIndex({blk_addr, is_secure});
     if (winSetExpired[set] == 0)
@@ -2180,7 +2282,17 @@ RetentionManager::windowVictim(Addr addr, bool is_secure,
         }
     }
     bool expired = same;
-    if (row < 0) {
+    if (row < 0 && tailMode) {
+        // tail: the expired tag with the oldest last use (largest age;
+        // ties: the lowest way)
+        for (unsigned w = 0; w < assoc; w++) {
+            const unsigned r = set * assoc + w;
+            if (winExpAddr[r] != MaxAddr &&
+                (row < 0 || tailAge[r] > tailAge[unsigned(row)]))
+                row = int(r);
+        }
+        expired = true;
+    } else if (row < 0) {
         for (unsigned w = 0; w < assoc && row < 0; w++) {
             if (winExpAddr[set * assoc + w] != MaxAddr)
                 row = int(set * assoc + w);
@@ -2199,6 +2311,15 @@ RetentionManager::windowVictim(Addr addr, bool is_secure,
         ws.victimsInvalid++;
     } else {
         ws.victimsExpired++;
+        // tail: the expired tag ends, refilled by a writeback (same) or
+        // replaced
+        if (tailMode) {
+            tailEnd(unsigned(row), false);
+            if (same)
+                tailStats->endsExpired++;
+            else
+                tailStats->endsReplExpired++;
+        }
         if (same) {
             ws.expiredWbCleared++;
         } else {
@@ -2230,6 +2351,11 @@ RetentionManager::windowVictim(Addr addr, bool is_secure,
 void
 RetentionManager::windowOnAccess(PacketPtr pkt)
 {
+    // tail: a new access; no allocation of an earlier one is open
+    if (tailMode) {
+        tailFresh = -1;
+        tailRepl = false;
+    }
     const bool demand = pkt->isDemand();
     // An invalidating cache maintenance request (clflush) invalidates
     // an SRAM copy too, and takes the line off the level below's list
@@ -2289,6 +2415,13 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             changStats->retentionMisses++;
             changSetEvent(set, true);
         }
+        // tail: a demand access matching the expired tag: a reuse at the
+        // tag's age
+        if (tailStats) {
+            tailStats->retentionMisses++;
+            tailEnd(unsigned(row), true);
+            tailStats->endsExpired++;
+        }
         window->retentionMiss();
         windowClearExpired(unsigned(row));
     } else if (inval) {
@@ -2317,6 +2450,10 @@ RetentionManager::windowRow(unsigned bank)
         cache.tags->findBlockBySetAndWay(set, way));
     WindowStats &ws = *winStats;
 
+    // tail: every slot of the row ages it, an expired tag's too
+    if (tailMode && tailAge[row] != UINT32_MAX)
+        tailAge[row]++;
+
     if (!blk->isValid()) {
         ws.slotsSkipped++;
         if (winExpAddr[row] != MaxAddr)
@@ -2325,6 +2462,8 @@ RetentionManager::windowRow(unsigned bank)
             wbStats->slotsSkipped++;
         if (changStats)
             changStats->slotsSkipped++;
+        if (tailStats)
+            tailStats->slotsSkipped++;
         return;
     }
     if (wbMode) {
@@ -2333,6 +2472,10 @@ RetentionManager::windowRow(unsigned bank)
     }
     if (changMode) {
         changRow(blk, row);
+        return;
+    }
+    if (tailMode) {
+        tailRow(blk, row);
         return;
     }
 
@@ -2589,6 +2732,178 @@ RetentionManager::changRow(CacheBlk *blk, unsigned row)
     windowDrop(blk, row, dirty);
 }
 
+unsigned
+RetentionManager::tailBin(uint64_t age)
+{
+    unsigned b = 0;
+    while (age && b < tailBins - 1) {
+        age >>= 1;
+        b++;
+    }
+    return b;
+}
+
+double
+RetentionManager::tailWValue(uint32_t w)
+{
+    return w == tailInf ? 1023.0 : double(w);
+}
+
+void
+RetentionManager::tailEnd(unsigned row, bool demand)
+{
+    TailStats &st = *tailStats;
+    const unsigned b = tailBin(tailAge[row]);
+    tailEnded[b]++;
+    st.ended[b]++;
+    if (demand) {
+        tailReuses[b]++;
+        st.reuses[b]++;
+    }
+}
+
+void
+RetentionManager::tailUse(unsigned row, bool demand)
+{
+    TailStats &st = *tailStats;
+    st.uses++;
+    if (int64_t(row) == tailFresh) {
+        // The writeback that allocated this line: the allocation was the
+        // use, there is no earlier interval
+        tailFresh = -1;
+        return;
+    }
+    tailEnd(row, demand);
+    st.endsUse++;
+    tailAge[row] = 0;
+}
+
+void
+RetentionManager::tailRow(CacheBlk *blk, unsigned row)
+{
+    WindowStats &ws = *winStats;
+    TailStats &st = *tailStats;
+    if (tailW == tailInf || tailAge[row] <= tailW) {
+        // Kept; a line deferred under a smaller W is no longer due
+        if (winPend[row]) {
+            winPend[row] = 0;
+            winPendLive--;
+        }
+        ws.linesRefreshed++;
+        st.linesRefreshed++;
+        return;
+    }
+    // Dropped through the window drop path, unless the line is the only
+    // copy and cannot leave now (a request to it in flight, or dirty
+    // with the write buffer full): refreshed, retried at the next slot
+    const bool dirty = blk->isSet(CacheBlk::DirtyBit);
+    const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
+                                   blk->isSecure());
+    if (inflight || (dirty && cache.writeBuffer.isFull())) {
+        if (!winPend[row]) {
+            winPend[row] = 1;
+            winPendLive++;
+            winPendPeak = std::max(winPendPeak, winPendLive);
+        }
+        if (dirty)
+            st.wbDeferred++;
+        else
+            st.cleanDeferred++;
+        ws.linesRefreshed++;
+        st.linesRefreshed++;
+        return;
+    }
+    if (dirty)
+        st.dropsDirty++;
+    else
+        st.dropsClean++;
+    st.ageAtDrop.sample(tailAge[row]);
+    windowDrop(blk, row, dirty);
+}
+
+void
+RetentionManager::tailEpoch()
+{
+    TailStats &st = *tailStats;
+    st.epochs++;
+    uint64_t total = 0;
+    for (unsigned b = 0; b < tailBins; b++)
+        total += tailEnded[b];
+    const uint32_t w_before = tailW;
+    int64_t k_log = -1;
+    if (total > 0) {
+        // K: the smallest rung whose reuse tail is at most total * 2^-eps
+        uint32_t k = 0;
+        uint64_t tail = 0;
+        for (unsigned b = tailBins - 1; b >= 1; b--) {
+            tail += tailReuses[b];
+            if ((tail << tailEpsShift) > total) {
+                k = b == tailBins - 1 ? tailInf : (1u << b) - 1;
+                break;
+            }
+        }
+        k_log = k == tailInf ? -2 : int64_t(k);
+        if (!tailFixed) {
+            uint32_t w;
+            if (tailDamp == 0 || k >= tailW) {
+                w = k;
+            } else {
+                // Shrink one rung at most
+                w = std::max(k, tailW == tailInf ? 511u : (tailW - 1) / 2);
+            }
+            if (w != tailW) {
+                tailAccountW();
+                tailW = w;
+                tailTimeW = w;
+                st.wChanges++;
+            }
+        }
+    }
+    tailLog("epoch", w_before, k_log);
+    for (unsigned b = 0; b < tailBins; b++) {
+        tailEnded[b] >>= 1;
+        tailReuses[b] >>= 1;
+    }
+}
+
+void
+RetentionManager::tailAccountW()
+{
+    const double cycles = double(curTick() - tailTimeSince) /
+        double(cache.clockPeriod());
+    TailStats &st = *tailStats;
+    st.wCycles[tailTimeW == tailInf ? tailBins - 1 : tailBin(tailTimeW)] +=
+        cycles;
+    st.wCyclesTotal += cycles;
+    st.wCyclesTimesW += tailWValue(tailTimeW) * cycles;
+    tailTimeSince = curTick();
+}
+
+void
+RetentionManager::tailLog(const char *event, uint32_t w_before, int64_t k)
+{
+    if (!tailWLog)
+        return;
+    auto ws = [](uint32_t w) {
+        return w == tailInf ? std::string("inf") : std::to_string(w);
+    };
+    uint64_t total = 0;
+    for (unsigned b = 0; b < tailBins; b++)
+        total += tailEnded[b];
+    std::ostream &os = *tailWLog->stream();
+    ccprintf(os, "%d,%d,%d,%s,%s,%d,%s,%s", curTick(),
+             curTick() / cache.clockPeriod(), winFrameNo, event,
+             ws(w_before), total,
+             k == -2 ? std::string("inf") :
+             k < 0 ? std::string("") : std::to_string(k), ws(tailW));
+    for (unsigned b = 0; b < tailBins; b++)
+        ccprintf(os, ",%d", tailEnded[b]);
+    for (unsigned b = 0; b < tailBins; b++)
+        ccprintf(os, ",%d", tailReuses[b]);
+    ccprintf(os, "\n");
+    os.flush();
+}
+
 void
 RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
                              bool probation)
@@ -2700,6 +3015,20 @@ RetentionManager::windowFrameEnd()
     if (changMode && ++changFrames == changTime) {
         changFrames = 0;
         changTick();
+    }
+    // tail: this frame's dirty drops, then the epoch every tail_epoch
+    // frames
+    if (tailMode) {
+        TailStats &st = *tailStats;
+        const uint64_t dd = winFrDd;
+        const unsigned bin = dd == 0 ? 0 : dd < 16 ? 1 : dd < 64 ? 2 :
+            dd < 256 ? 3 : dd < 1024 ? 4 : 5;
+        st.ddropsPerFrame[bin]++;
+        tailDdMax = std::max(tailDdMax, dd);
+        if (++tailFrames == tailEpochFrames) {
+            tailFrames = 0;
+            tailEpoch();
+        }
     }
     winFrR = winFrRp = winFrA = winFrDc = winFrDd = winFrCwb = 0;
     window->frameEnd();
@@ -3434,6 +3763,131 @@ RetentionManager::ChangStats::preDumpStats()
         setsAtI[i] = double(mgr.changSetsAt[i]);
     setsAtI6 = double(mgr.changSetsAt[changI6]);
     statistics::Group::preDumpStats();
+}
+
+RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
+                                      statistics::Group *parent)
+    : statistics::Group(parent, "tail"),
+      mgr(_mgr),
+      ADD_STAT(linesRefreshed, statistics::units::Count::get(),
+               "valid lines refreshed at their slot (age <= W, or a line "
+               "due but deferred)"),
+      ADD_STAT(slotsSkipped, statistics::units::Count::get(),
+               "slots of invalid lines (skipped; an expired tag still "
+               "ages)"),
+      ADD_STAT(dropsClean, statistics::units::Count::get(),
+               "clean lines with age > W invalidated at their slot "
+               "(expired tag kept)"),
+      ADD_STAT(dropsDirty, statistics::units::Count::get(),
+               "dirty lines with age > W written back and invalidated at "
+               "their slot (expired tag kept)"),
+      ADD_STAT(wbDeferred, statistics::units::Count::get(),
+               "slots where a due dirty line was only refreshed (write "
+               "buffer full or a request to it in flight)"),
+      ADD_STAT(cleanDeferred, statistics::units::Count::get(),
+               "slots where a due clean line was only refreshed (a request "
+               "to it in flight)"),
+      ADD_STAT(deferredPeak, statistics::units::Count::get(),
+               "most lines deferred at once (window.deferredPeak)"),
+      ADD_STAT(retentionMisses, statistics::units::Count::get(),
+               "demand misses that matched an expired tag"),
+      ADD_STAT(ended, statistics::units::Count::get(),
+               "ended intervals by bin of the age at the end (bin = bit "
+               "width of the age, 10 = 512 and more): uses of valid lines, "
+               "accesses matching an expired tag, replacements of valid "
+               "lines and expired tags; cumulative (not halved)"),
+      ADD_STAT(reuses, statistics::units::Count::get(),
+               "the demand ones of ended (demand hits and retention "
+               "misses); cumulative"),
+      ADD_STAT(endsUse, statistics::units::Count::get(),
+               "ended: uses of a valid line (demand hit, writeback or "
+               "CleanEvict from above)"),
+      ADD_STAT(endsExpired, statistics::units::Count::get(),
+               "ended: accesses matching an expired tag (retention misses, "
+               "writeback refills)"),
+      ADD_STAT(endsReplValid, statistics::units::Count::get(),
+               "ended: valid lines replaced by an allocation"),
+      ADD_STAT(endsReplExpired, statistics::units::Count::get(),
+               "ended: expired tags replaced by another address"),
+      ADD_STAT(uses, statistics::units::Count::get(),
+               "uses (fills and writeback allocations, demand hits, "
+               "writebacks and CleanEvicts from above), each age 0"),
+      ADD_STAT(epochs, statistics::units::Count::get(),
+               "controller epochs (every tail_epoch frames)"),
+      ADD_STAT(wChanges, statistics::units::Count::get(),
+               "epochs that changed W"),
+      ADD_STAT(wCycles, statistics::units::Cycle::get(),
+               "cycles at each W rung (0, 1, 3, ..., 511, inf)"),
+      ADD_STAT(wCyclesTotal, statistics::units::Cycle::get(),
+               "cycles accounted in wCycles"),
+      ADD_STAT(wCyclesTimesW, statistics::units::Cycle::get(),
+               "sum of W x cycles (inf counted as 1023)"),
+      ADD_STAT(meanW, statistics::units::Count::get(),
+               "time-weighted mean W (inf counted as 1023)"),
+      ADD_STAT(finalW, statistics::units::Count::get(),
+               "W at the dump (inf = 1023)"),
+      ADD_STAT(ddropsPerFrame, statistics::units::Count::get(),
+               "frames by their dirty drops (0, 1-15, 16-63, 64-255, "
+               "256-1023, 1024 and more)"),
+      ADD_STAT(maxDdropsPerFrame, statistics::units::Count::get(),
+               "most dirty drops in one frame"),
+      ADD_STAT(ageAtDrop, statistics::units::Count::get(),
+               "age (slots since the last use) of a line at its drop"),
+      ADD_STAT(avgValidLines, statistics::units::Count::get(),
+               "valid lines per frame ((linesRefreshed + dropsClean + "
+               "dropsDirty) / window.frames)"),
+      ADD_STAT(slotBalance, statistics::units::Count::get(),
+               "linesRefreshed + dropsClean + dropsDirty + slotsSkipped - "
+               "raRowRefreshes (0)")
+{
+}
+
+void
+RetentionManager::TailStats::regStats()
+{
+    statistics::Group::regStats();
+
+    ended.init(tailBins);
+    reuses.init(tailBins);
+    wCycles.init(tailBins);
+    for (unsigned b = 0; b < tailBins; b++) {
+        ended.subname(b, csprintf("b%u", b));
+        reuses.subname(b, csprintf("b%u", b));
+        wCycles.subname(b, b == tailBins - 1 ? std::string("inf") :
+                        csprintf("W%u", (1u << b) - 1));
+    }
+    ddropsPerFrame.init(6);
+    const char *dd[] = {"0", "1_15", "16_63", "64_255", "256_1023",
+                        "1024plus"};
+    for (unsigned i = 0; i < 6; i++)
+        ddropsPerFrame.subname(i, dd[i]);
+    deferredPeak.functor([this] { return double(mgr.winPendPeak); });
+    finalW.functor([this] { return tailWValue(mgr.tailW); });
+    maxDdropsPerFrame.functor([this] { return double(mgr.tailDdMax); });
+    meanW = wCyclesTimesW / wCyclesTotal;
+    ageAtDrop.init(0, 1023, 1);
+    ageAtDrop.flags(statistics::nozero);
+    avgValidLines = (linesRefreshed + dropsClean + dropsDirty) /
+        mgr.winStats->frames;
+    slotBalance = linesRefreshed + dropsClean + dropsDirty + slotsSkipped -
+        mgr.stats.raRowRefreshes;
+}
+
+void
+RetentionManager::TailStats::preDumpStats()
+{
+    mgr.tailAccountW();
+    mgr.tailLog("dump", mgr.tailW, -1);
+    statistics::Group::preDumpStats();
+}
+
+void
+RetentionManager::TailStats::resetStats()
+{
+    statistics::Group::resetStats();
+    mgr.tailTimeSince = curTick();
+    mgr.tailDdMax = 0;
+    mgr.tailLog("reset", mgr.tailW, -1);
 }
 
 } // namespace gem5

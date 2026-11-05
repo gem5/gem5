@@ -210,7 +210,8 @@ class BaseCache(ClockedObject):
         "spacing (same sweep and bank occupancy): off, fixed, tcp, amc, "
         "wb (Refrint WB(n,m): per-line countdowns, see wb_n / wb_m) or "
         "chang (time-based dead-line predictor of Chang et al., HPCA 2013: "
-        "per-set indicators, see chang_time). "
+        "per-set indicators, see chang_time) or tail (per-line ages and a "
+        "global window W from a reuse-age histogram, see tail_*). "
         "The cache is split into window_groups groups (set mod groups); a "
         "group decides at a frame (one sweep) at least N frames after its "
         "last decision, and its unused lines are dropped then",
@@ -352,6 +353,43 @@ class BaseCache(ClockedObject):
         "slot. A use makes the line LIVE. A retention miss raises the "
         "set's I (to 6, absorbing: no more drops), an expired tag replaced "
         "by another address lowers it",
+    )
+
+    tail_eps_shift = Param.Unsigned(
+        9,
+        "window_mode=tail: W covers the reuse ages whose tail holds more "
+        "than 2^-tail_eps_shift of the ended intervals: at an epoch, for "
+        "b = 10 down to 1, tail += reuses[b]; the first b with tail << "
+        "tail_eps_shift > total gives K = 2^b - 1 (b = 10: inf), else K = 0",
+    )
+
+    tail_epoch = Param.Unsigned(
+        64,
+        "window_mode=tail: frames (sweeps) per controller epoch. At an "
+        "epoch W follows K (see tail_damp), then every ended[] and reuses[] "
+        "counter is halved",
+    )
+
+    tail_w0 = Param.Unsigned(
+        7,
+        "window_mode=tail: initial W (2^k - 1 <= 511). At its slot a valid "
+        "line's age (its set's slots since its last use) grows by 1; age "
+        "<= W refreshes it, else it is dropped (clean: invalidated, dirty: "
+        "written back, both keep an expired tag)",
+    )
+
+    tail_damp = Param.Unsigned(
+        1,
+        "window_mode=tail: 1 = W grows to K at once but shrinks at most "
+        "one rung per epoch (W = max(K, 511 if W = inf else (W - 1) / 2)); "
+        "0 = W = K",
+    )
+
+    tail_fixed = Param.String(
+        "-1",
+        "window_mode=tail: -1 = the controller sets W; inf = W never drops "
+        "(refresh-all behaviour); n >= 0 = W fixed at n (controller off, "
+        "the histograms are still kept)",
     )
 
     refresh_opp_age = Param.Float(

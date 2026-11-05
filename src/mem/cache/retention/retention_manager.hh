@@ -526,8 +526,9 @@ class RetentionManager
     /** Window mode: stats of the grant just made for the next frame. */
     void windowGranted();
 
-    /** Window mode: row was used (U = 1, D cleared). */
-    void windowUse(unsigned row);
+    /** Window mode: row was used (U = 1, D cleared); demand: by a demand
+     *  hit (window_mode=tail counts it as a reuse). */
+    void windowUse(unsigned row, bool demand = false);
 
     /** window_mode=wb: the slot of valid row (instead of the group
      *  decision): reload the count if used, then refresh, write back
@@ -551,6 +552,36 @@ class RetentionManager
     /** window_mode=chang: event F (+1) or T (-1) on the indicator of
      *  set; I = 6 is absorbing. */
     void changSetEvent(unsigned set, bool f);
+
+    /** window_mode=tail: the slot of valid row (its age already
+     *  advanced): refresh it (age <= W), or drop it through the window
+     *  drop path (deferred if it cannot leave now). */
+    void tailRow(CacheBlk *blk, unsigned row);
+
+    /** window_mode=tail: a use of row: ends the line's interval (unless
+     *  the row was just allocated by this access) and resets its age. */
+    void tailUse(unsigned row, bool demand);
+
+    /** window_mode=tail: an interval of row ends at its current age:
+     *  ended[b] += 1, and reuses[b] += 1 if demand. */
+    void tailEnd(unsigned row, bool demand);
+
+    /** window_mode=tail: the controller step, every tail_epoch frames. */
+    void tailEpoch();
+
+    /** window_mode=tail: add the cycles at the current W up to now. */
+    void tailAccountW();
+
+    /** window_mode=tail: one row of the W log; k < 0: no decision. */
+    void tailLog(const char *event, uint32_t w_before, int64_t k);
+
+    /** window_mode=tail: the histogram bin of an age (its bit width,
+     *  capped at 10), also the rung of a W value (inf: 10). */
+    static unsigned tailBin(uint64_t age);
+
+    /** window_mode=tail: W as a number (inf counts as 1023, the rung
+     *  above 511). */
+    static double tailWValue(uint32_t w);
 
     BaseCache &cache;
 
@@ -848,6 +879,35 @@ class RetentionManager
     std::vector<uint8_t> changState;
     std::vector<uint32_t> changIdle;
 
+    /** window_mode=tail: on; W (tailInf: never drop), fixed (tail_fixed)
+     *  or set by the controller; the controller params; frames since
+     *  the last epoch; per row the age, the number of its slots since
+     *  the line's last use (it keeps counting on an expired tag until
+     *  the tag is replaced); the decayed histograms ended / reuses (bin
+     *  = bit width of the age at the end, capped at 10), halved every
+     *  epoch; the row an allocation just filled (the next windowUse of
+     *  the same access is that allocation's own use); an allocation is
+     *  evicting its victim; the W being timed since this tick; the
+     *  largest dirty drops in a frame since the last reset; the W log. */
+    static constexpr unsigned tailBins = 11;
+    static constexpr uint32_t tailInf = UINT32_MAX;
+    bool tailMode = false;
+    bool tailFixed = false;
+    uint32_t tailW = 7;
+    unsigned tailEpsShift = 9;
+    unsigned tailEpochFrames = 64;
+    unsigned tailDamp = 1;
+    unsigned tailFrames = 0;
+    std::vector<uint32_t> tailAge;
+    std::vector<uint64_t> tailEnded;
+    std::vector<uint64_t> tailReuses;
+    int64_t tailFresh = -1;
+    bool tailRepl = false;
+    uint32_t tailTimeW = 0;
+    Tick tailTimeSince = 0;
+    uint64_t tailDdMax = 0;
+    OutputStream *tailWLog = nullptr;
+
     /** Window mode: banks done with the current sweep, drops in the
      *  current frame. */
     unsigned winBanksDone = 0;
@@ -1015,6 +1075,50 @@ class RetentionManager
         statistics::Formula slotBalance;
     };
     std::unique_ptr<ChangStats> changStats;
+
+    struct TailStats : public statistics::Group
+    {
+        TailStats(RetentionManager &mgr, statistics::Group *parent);
+
+        void regStats() override;
+
+        /** Adds the time at the current W up to the dump; logs it. */
+        void preDumpStats() override;
+
+        /** Restarts the time accounting and the frame maximum. */
+        void resetStats() override;
+
+        RetentionManager &mgr;
+
+        statistics::Scalar linesRefreshed;
+        statistics::Scalar slotsSkipped;
+        statistics::Scalar dropsClean;
+        statistics::Scalar dropsDirty;
+        statistics::Scalar wbDeferred;
+        statistics::Scalar cleanDeferred;
+        statistics::Value deferredPeak;
+        statistics::Scalar retentionMisses;
+        statistics::Vector ended;
+        statistics::Vector reuses;
+        statistics::Scalar endsUse;
+        statistics::Scalar endsExpired;
+        statistics::Scalar endsReplValid;
+        statistics::Scalar endsReplExpired;
+        statistics::Scalar uses;
+        statistics::Scalar epochs;
+        statistics::Scalar wChanges;
+        statistics::Vector wCycles;
+        statistics::Scalar wCyclesTotal;
+        statistics::Scalar wCyclesTimesW;
+        statistics::Formula meanW;
+        statistics::Value finalW;
+        statistics::Vector ddropsPerFrame;
+        statistics::Value maxDdropsPerFrame;
+        statistics::Distribution ageAtDrop;
+        statistics::Formula avgValidLines;
+        statistics::Formula slotBalance;
+    };
+    std::unique_ptr<TailStats> tailStats;
 
     struct RetentionStats : public statistics::Group
     {
