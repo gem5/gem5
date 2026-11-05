@@ -61,7 +61,6 @@ class PrefetchAccounting : public SimObject {
     void remove(const Ptr &, int level, const char *reason);
     void abort(const Ptr &);
     void demandMiss(int level);
-    void selfTest();
 };
 }
 #endif

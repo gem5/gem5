@@ -47,6 +47,7 @@
 #define __MEM_CACHE_BASE_HH__
 
 #include <cassert>
+#include <algorithm>
 #include <cstdint>
 #include <string>
 
@@ -59,6 +60,7 @@
 #include "debug/CachePort.hh"
 #include "enums/Clusivity.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/prefetch/framework_events.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/tags/base.hh"
@@ -1146,8 +1148,15 @@ class BaseCache : public ClockedObject
 
     /** Registers probes. */
     void regProbePoints() override;
+    std::vector<prefetch::CacheObserver *> prefetchObservers;
+    uint64_t observationSequence = 0;
 
   public:
+    void addPrefetchObserver(prefetch::CacheObserver *observer) {
+        fatal_if(std::find(prefetchObservers.begin(), prefetchObservers.end(), observer)
+                 != prefetchObservers.end(), "Duplicate cache observer");
+        prefetchObservers.push_back(observer);
+    }
     BaseCache(const BaseCacheParams &p, unsigned blk_size);
     ~BaseCache();
 

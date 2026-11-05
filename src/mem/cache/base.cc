@@ -462,6 +462,24 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         }
     }
 
+    // Snapshot before a hit converts the Packet into a response. Deliver after
+    // the miss handler so observers see the newly allocated MSHR as well.
+    prefetch::AccessEvent observation;
+    const bool observeDemand = !prefetchObservers.empty() && accountingDemand(pkt);
+    if (observeDemand) {
+        observation.id = ++observationSequence;
+        observation.level = accountingLevel;
+        observation.tick = curTick();
+        observation.request = std::make_shared<Request>(*pkt->req);
+        observation.address = pkt->getAddr();
+        observation.size = pkt->getSize();
+        observation.hit = satisfied;
+        observation.primaryMiss = !satisfied &&
+            !mshrQueue.findMatch(pkt->getBlockAddr(blkSize), pkt->isSecure());
+        observation.write = pkt->isWrite();
+        observation.secure = pkt->isSecure();
+    }
+
     if (satisfied) {
         // notify before anything else as later handleTimingReqHit might turn
         // the packet in a response
@@ -479,6 +497,9 @@ BaseCache::recvTimingReq(PacketPtr pkt)
 
         ppMiss->notify(pkt);
     }
+
+    if (observeDemand)
+        for (auto observer : prefetchObservers) observer->cacheAccess(observation);
 
     if (prefetcher) {
         // track time of availability of next prefetch, if any
@@ -588,6 +609,14 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
         ppFill->notify(pkt);
+        if (!prefetchObservers.empty()) {
+            prefetch::FillEvent event{accountingLevel, curTick(), pkt->getAddr(), {}, prefetchRecord(pkt)};
+            if (pkt->hasData()) {
+                const auto *data = pkt->getConstPtr<uint8_t>();
+                event.data.assign(data, data + pkt->getSize());
+            }
+            for (auto observer : prefetchObservers) observer->cacheFill(event);
+        }
     }
 
     // Don't want to promote the Locked RMW Read until

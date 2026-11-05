@@ -207,7 +207,10 @@ class Queued : public Base
 
     void printQueue(const std::list<DeferredPacket> &queue) const;
 
-  private:
+  protected:
+    // Reusable transport hooks; legacy predictors retain their default path.
+    virtual void queueReady() {}
+    void cancelDemand(Addr block, bool secure);
 
     /**
      * Adds a DeferredPacket to the specified queue

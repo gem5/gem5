@@ -56,3 +56,7 @@ Source('slim_ampm.cc')
 Source('spatio_temporal_memory_streaming.cc')
 Source('stride.cc')
 Source('tagged.cc')
+
+SimObject('Framework.py', sim_objects=['TPCComponent', 'FrameworkQueue',
+    'TPCController'])
+Source('framework.cc')

@@ -1468,6 +1468,18 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
                     "Deallocating mshr target %#x.\n",
                     mshr->blkAddr);
 
+            // This request was already accepted when its MSHR was allocated.
+            // An upper-level copy cancels it before any response/fill exists.
+            // Keep the real cancellation as a terminal outcome, not a lost weak
+            // record or an invented unused cache-line eviction.
+            if (accounting) {
+                auto origin = prefetchRecord(tgt_pkt);
+                if (origin && origin->target == accountingLevel && origin->accepted &&
+                    origin->outcome == prefetch::Outcome::Pending) {
+                    accounting->count("abortedSnoop", origin->source);
+                    accounting->abort(origin);
+                }
+            }
             // Deallocate the mshr target
             if (mshrQueue.forceDeallocateTarget(mshr)) {
                 // Clear block if this deallocation resulted freed an

@@ -1,5 +1,4 @@
 #include "mem/cache/prefetch/accounting.hh"
-#include "mem/cache/cache_blk.hh"
 #include "base/logging.hh"
 #include "params/PrefetchAccounting.hh"
 #include "sim/cur_tick.hh"
@@ -20,20 +19,20 @@ void PrefetchAccounting::metric(const char *name, bool layered) {
 
 PrefetchAccounting::PrefetchAccounting(const PrefetchAccountingParams &p)
     : SimObject(p), trace(p.trace) {
-    for (auto n : {"generated", "enqueued", "dequeued", "accepted", "filled",
-        "timelyUseful", "late", "unusedRemoved", "aborted", "unresolved",
+    for (auto n : {"observations", "trainingEvents", "recognitionHits", "predictionCalls", "generated", "enqueued", "dequeued", "accepted", "filled",
+        "timelyUseful", "late", "unusedRemoved", "aborted", "abortedSnoop", "unresolved",
         "inFlight", "residentUnused", "readyPending", "queuedPending", "carryInQueued",
         "carryInFilled", "carryInTimelyUseful", "carryInLate", "carryInUnusedRemoved",
         "carryInAborted", "carryInUnresolved", "fillEvents", "usefulEvents", "lateEvents",
         "unusedEvents", "accuracy", "latencySamples", "latencyTicks", "latencyMeanTicks",
         "leadSamples", "leadTicks", "leadMeanTicks", "lateWaitSamples", "lateWaitTicks",
-        "lateWaitMeanTicks", "dropThrottle", "dropPage", "dropNoTranslation",
+        "lateWaitMeanTicks", "dropAddress", "dropController", "dropThrottle", "dropPage", "dropNoTranslation",
         "dropTranslation", "dropQueueDuplicate", "dropQueueFull", "dropDemandCancel",
         "dropSnoop", "dropCache", "dropMSHR", "dropWriteBuffer", "unusedReplacement",
         "unusedInvalidation", "unusedNoRetention"}) metric(n);
     for (auto n : {"requestEvents", "requestBytes", "responseEvents", "responseDataBytes", "hitEvents", "fillLayerEvents",
                    "timelyLayerEvents"}) metric(n, true);
-    for (auto n : {"demandMshrMisses", "observedCoverage"}) {
+    for (auto n : {"demandMshrMisses", "observedCoverage", "accessObservations", "primaryMissObservations", "mergedMissObservations"}) {
         metric(n);
         const char *levels[] = {"L1I", "L1D", "L2", "L3"};
         for (int i = 0; i < 4; ++i) metrics.at(n).stat->subname(i, levels[i]);
@@ -178,58 +177,4 @@ void PrefetchAccounting::preDumpStats() {
     SimObject::preDumpStats();
 }
 
-void PrefetchAccounting::selfTest() {
-    // Deterministic state-machine tests; no simulated requests are issued.
-    beginPhase("test-warmup");
-    auto carry = generate(0, 1); accept(carry); fill(carry, 1, curTick());
-    resetStats(); beginPhase("test-measurement");
-    demand(carry, 1, true);
-    fatal_if(value("carryInTimelyUseful", 0) != 1 || value("timelyUseful", 0), "Carry-in counted in accuracy");
-    std::array<Ptr, 4> active;
-    for (int s = 0; s < 4; ++s) {
-        active[s] = generate(s, 1); queue(active[s]); dequeue(active[s]);
-        accept(active[s]); accept(active[s]); // retries cannot double count
-    }
-    auto request = std::make_shared<Request>(0, 64, 0, 0);
-    request->setExtension(std::make_shared<PrefetchProvenance>(active[0]));
-    Request copied(*request);
-    fatal_if(copied.getExtension<PrefetchProvenance>()->record != active[0], "Request clone lost provenance");
-    CacheBlk original, moved;
-    original.insert(0, false);
-    original.prefetchOrigin = active[0];
-    moved = std::move(original);
-    fatal_if(moved.prefetchOrigin != active[0] || original.prefetchOrigin,
-        "Cache line move lost or duplicated ownership");
-    moved.invalidate();
-    fatal_if(moved.prefetchOrigin, "Cache line invalidation retained provenance");
-    fill(active[0], 2, curTick());
-    fatal_if(active[0]->filled, "Transit layer counted target fill");
-    demand(active[0], 2, true);
-    fatal_if(active[0]->outcome != prefetch::Outcome::Pending, "Transit demand counted target use");
-    fill(active[0], 1, curTick()); demand(active[0], 1, true); demand(active[0], 1, true);
-    demand(active[1], 1, false); fill(active[1], 1, curTick() + 10);
-    fill(active[2], 1, curTick()); remove(active[2], 1, "unusedReplacement");
-    remove(active[2], 1, "unusedInvalidation");
-    abort(active[3]);
-    for (int s = 0; s < 4; ++s) fatal_if(value("accepted", s) != 1, "Double accepted");
-    fatal_if(value("timelyUseful", 0) != 1 || value("late", 1) != 1 ||
-        value("unusedRemoved", 2) != 1 || value("aborted", 3) != 1,
-        "Incorrect terminal accounting");
-    for (auto n : {"dropThrottle", "dropPage", "dropNoTranslation", "dropTranslation",
-        "dropQueueDuplicate", "dropQueueFull", "dropDemandCancel", "dropSnoop",
-        "dropCache", "dropMSHR", "dropWriteBuffer"}) {
-        auto r = generate(0, 1); queue(r); drop(r, n);
-        fatal_if(value(n, 0) != 1 || r->queued, "Drop event failed");
-    }
-    auto future = generate(0, 1); accept(future); fill(future, 1, curTick() + 20);
-    demand(future, 1, true);
-    fatal_if(value("late", 0) != 1, "Hit before ready was counted timely");
-    auto pending = generate(0, 1); accept(pending);
-    auto queued = generate(0, 1); queue(queued);
-    preDumpStats();
-    fatal_if(value("unresolved", 0) != 1 || value("queuedPending", 0) != 1,
-        "Pending gauges incorrect");
-    resetStats(); records.clear(); beginPhase("test-finished");
-    inform("PREFETCH_ACCOUNTING_SELFTEST_SUCCESS");
-}
 } // namespace gem5

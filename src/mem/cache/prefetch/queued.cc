@@ -171,11 +171,8 @@ Queued::getMaxPermittedPrefetches(size_t total) const
 }
 
 void
-Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
+Queued::cancelDemand(Addr blk_addr, bool is_secure)
 {
-    Addr blk_addr = blockAddress(pfi.getAddr());
-    bool is_secure = pfi.isSecure();
-
     // Squash queued prefetches if demand miss to same line
     if (queueSquash) {
         auto itr = pfq.begin();
@@ -195,6 +192,16 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
             }
         }
     }
+
+}
+
+void
+Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
+{
+    Addr blk_addr = blockAddress(pfi.getAddr());
+    bool is_secure = pfi.isSecure();
+
+    cancelDemand(blk_addr, is_secure);
 
     // Calculate prefetches given this access
     std::vector<AddrPriority> addresses;
@@ -390,7 +397,7 @@ Queued::createPrefetchRequest(Addr addr, PrefetchInfo const &pfi,
                                         PacketPtr pkt)
 {
     RequestPtr translation_req = std::make_shared<Request>(
-            addr, blkSize, pkt->req->getFlags(), requestorId, pfi.getPC(),
+            addr, blkSize, pkt->req->getFlags(), requestorId, pfi.hasPC() ? pfi.getPC() : 0,
             pkt->req->contextId());
     translation_req->setFlags(Request::PREFETCH);
     return translation_req;
@@ -548,6 +555,7 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
         queue.insert(it, dpp);
     }
 
+    queueReady();
     if (debug::HWPrefetchQueue)
         printQueue(queue);
 }
