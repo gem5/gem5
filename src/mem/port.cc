@@ -52,6 +52,74 @@
 namespace gem5
 {
 
+std::unique_ptr<ExtensionBase>
+TracingExtension::clone() const
+{
+    return std::make_unique<TracingExtension>(trace_);
+}
+
+void
+TracingExtension::add(const RequestPort *request_port, gem5::Addr addr)
+{
+    trace_.push_back(TraceEntry{.request_port = request_port, .addr = addr});
+}
+
+void
+TracingExtension::remove()
+{
+    if (!trace_.empty()) {
+        trace_.pop_back();
+    }
+}
+
+bool
+TracingExtension::empty() const
+{
+    return trace_.empty();
+}
+
+std::string
+TracingExtension::getTraceInString() const
+{
+    std::stringstream port_trace;
+    port_trace << "Port trace of the Packet (" << std::endl
+               << "[Destination] ";
+    for (auto rit = trace_.rbegin(); rit != trace_.rend(); ++rit) {
+        const RequestPort *req_port = rit->request_port;
+        if (req_port) {
+            const ResponsePort *resp_port = req_port->getResponsePort();
+            if (resp_port) {
+                port_trace << resp_port->name() << std::endl;
+            }
+            if (std::next(rit) == trace_.rend()) {
+                port_trace << "[Source] ";
+            }
+            port_trace << req_port->name()
+                       << csprintf(" addr=%#llx", rit->addr) << std::endl;
+        }
+    }
+    port_trace << ")";
+    return port_trace.str();
+}
+
+std::optional<std::string>
+TracingExtension::getTraceSource() const
+{
+    if (trace_.empty() || !trace_[0].request_port) {
+        return std::nullopt;
+    }
+    return trace_[0].request_port->name();
+}
+
+void
+TracingExtension::dumpPortTrace(const gem5::PacketPtr pkt)
+{
+    auto ext = pkt->getExtension<gem5::TracingExtension>();
+    if (ext) {
+        warn("%s", ext->getTraceInString());
+    }
+}
+
 namespace
 {
 
@@ -179,7 +247,7 @@ RequestPort::addTrace(PacketPtr pkt) const
         ext = std::make_shared<TracingExtension>();
         pkt->setExtension(ext);
     }
-    ext->add(name(), _responsePort->name(), pkt->getAddr());
+    ext->add(this, pkt->getAddr());
 }
 
 void
@@ -188,8 +256,13 @@ RequestPort::removeTrace(PacketPtr pkt) const
     if (!gem5::debug::PortTrace || !pkt)
         return;
     auto ext = pkt->getExtension<TracingExtension>();
-    panic_if(!ext, "There is no TracingExtension in the packet.");
-    ext->remove();
+    // PortTrace might be enabled at any time in the simulation,
+    // thus relaxing the logic here.
+    if (!ext) {
+        warn("There is no TracingExtension in the packet.");
+    } else {
+        ext->remove();
+    }
 }
 
 /**
