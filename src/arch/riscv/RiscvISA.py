@@ -178,7 +178,7 @@ _EXTENSION_REGISTRY = {
     "Svade": {"implemented": False},
     "Svadu": {"implemented": False},
     "Svbare": {"implemented": True},
-    "Svinval": {"implemented": False},
+    "Svinval": {"implemented": True},
     "Svnapot": {
         "implemented": True,
         "isa": "svnapot",
