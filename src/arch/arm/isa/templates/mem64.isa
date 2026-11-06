@@ -654,6 +654,8 @@ def template LoadStoreImmU64Constructor {{
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
+        if (noAlloc)
+            memAccessFlags.set(Request::NON_TEMPORAL);
     }
 }};
 
@@ -668,6 +670,8 @@ def template LoadStoreImmDU64Constructor {{
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
+        if (noAlloc)
+            memAccessFlags.set(Request::NON_TEMPORAL);
     }
 }};
 
@@ -719,6 +723,8 @@ def template LoadStoreRegU64Constructor {{
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
+        if (noAlloc)
+            memAccessFlags.set(Request::NON_TEMPORAL);
     }
 }};
 
@@ -774,6 +780,8 @@ def template LoadStoreLitU64Constructor {{
         %(constructor)s;
         assert(!%(use_uops)d);
         setExcAcRel(exclusive, acrel);
+        if (noAlloc)
+            memAccessFlags.set(Request::NON_TEMPORAL);
     }
 }};
 

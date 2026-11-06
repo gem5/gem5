@@ -320,7 +320,7 @@ in_port(reqRdyPort, CHIRequestMsg, reqRdy, rank=3,
         // DVM transactions do not directly relate to the Cache,
         // and do not have cache entries
         trigger(
-          reqToEvent(in_msg.type, in_msg.is_local_pf),
+          reqToEvent(in_msg.type, in_msg.is_local_pf, in_msg.nonTemporal),
           in_msg.txnId,
           nullCacheEntry(),
           preexistingTBE);
@@ -359,7 +359,8 @@ in_port(reqRdyPort, CHIRequestMsg, reqRdy, rank=3,
         }
 
         // Normal request path
-        trigger(reqToEvent(in_msg.type, in_msg.is_local_pf), in_msg.addr, cache_entry, tbe);
+        trigger(reqToEvent(in_msg.type, in_msg.is_local_pf, in_msg.nonTemporal),
+                in_msg.addr, cache_entry, tbe);
       }
     }
   }
