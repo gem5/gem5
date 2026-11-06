@@ -1,0 +1,5 @@
+
+---------- Begin Simulation Statistics ----------
+system.cpu.numCycles not_a_number # malformed
+
+---------- End Simulation Statistics   ----------
