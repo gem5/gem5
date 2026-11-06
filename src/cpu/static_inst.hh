@@ -52,6 +52,7 @@
 #include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
 #include "base/refcnt.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"
@@ -213,6 +214,16 @@ class StaticInst : public RefCounted, public StaticInstFlags
     /// Operation class.  Used to select appropriate function unit in issue.
     OpClass opClass() const { return _opClass; }
 
+    virtual bool
+    isVectorConfig() const
+    {
+        return false;
+    }
+
+    // After misc-reg updates at commit.
+    virtual void
+    commitHook(ThreadContext *tc, InstSeqNum seqNum) const
+    {}
 
     /// Return logical index (architectural reg num) of i'th destination reg.
     /// Only the entries from 0 through numDestRegs()-1 are valid.

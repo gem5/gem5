@@ -43,7 +43,6 @@
 #define __ARCH_RISCV_PCSTATE_HH__
 
 #include "arch/generic/pcstate.hh"
-#include "arch/riscv/regs/vector.hh"
 #include "enums/PrivilegeModeSet.hh"
 #include "enums/RiscvType.hh"
 
@@ -65,17 +64,16 @@ class PCState : public GenericISA::UPCState<4>
 
     bool _compressed = false;
     RiscvType _rvType = RV64;
-    bool _new_vconf = false;
-    VTYPE _vtype = (1ULL << 63); // vtype.vill = 1 at initial;
-    uint32_t _vl = 0;
     bool _zcmtSecondFetch = false;
     Addr _zcmtPc = 0;
 
   public:
-    PCState(const PCState &other) : Base(other),
-        _compressed(other._compressed),
-        _rvType(other._rvType), _new_vconf(other._new_vconf), _vtype(other._vtype),
-        _vl(other._vl), _zcmtSecondFetch(other._zcmtSecondFetch), _zcmtPc(other._zcmtPc)
+    PCState(const PCState &other)
+        : Base(other),
+          _compressed(other._compressed),
+          _rvType(other._rvType),
+          _zcmtSecondFetch(other._zcmtSecondFetch),
+          _zcmtPc(other._zcmtPc)
     {}
     PCState &operator=(const PCState &other) = default;
     PCState() = default;
@@ -95,9 +93,6 @@ class PCState : public GenericISA::UPCState<4>
         auto &pcstate = other.as<PCState>();
         _compressed = pcstate._compressed;
         _rvType = pcstate._rvType;
-        _new_vconf = pcstate._new_vconf;
-        _vtype = pcstate._vtype;
-        _vl = pcstate._vl;
         _zcmtSecondFetch = pcstate._zcmtSecondFetch;
         _zcmtPc = pcstate._zcmtPc;
     }
@@ -107,15 +102,6 @@ class PCState : public GenericISA::UPCState<4>
 
     void rvType(RiscvType rvType) { _rvType = rvType; }
     RiscvType rvType() const { return _rvType; }
-
-    void new_vconf(bool v) { _new_vconf = v; }
-    bool new_vconf() const { return _new_vconf; }
-
-    void vtype(VTYPE v) { _vtype = v; }
-    VTYPE vtype() const { return _vtype; }
-
-    void vl(uint32_t v) { _vl = v; }
-    uint32_t vl() const { return _vl; }
 
     void zcmtSecondFetch(bool z) { _zcmtSecondFetch = z; }
     bool zcmtSecondFetch() const { return _zcmtSecondFetch; }
@@ -135,26 +121,15 @@ class PCState : public GenericISA::UPCState<4>
     equals(const PCStateBase &other) const override
     {
         auto &opc = other.as<PCState>();
-        // Skip vl/vtype unless this PC carries a new vset (#1709): otherwise
-        // every later control inst looks mispredicted on O3.
         return Base::equals(other) &&
-            (_new_vconf == opc._new_vconf) &&
-            (!_new_vconf || (_vtype == opc._vtype && _vl == opc._vl)) &&
-            _zcmtSecondFetch == opc._zcmtSecondFetch &&
-            _zcmtPc == opc._zcmtPc;
+               _zcmtSecondFetch == opc._zcmtSecondFetch &&
+               _zcmtPc == opc._zcmtPc;
     }
 
     bool
     fullEquals(const PCStateBase &other) const override
     {
-        auto &opc = other.as<PCState>();
-        // Always compare vl/vtype. Used by Minor to recover the decoder
-        // when a predicted loop branch cloned a stale vector config (#2742).
-        return Base::equals(other) &&
-            (_new_vconf == opc._new_vconf) &&
-            (_vtype == opc._vtype && _vl == opc._vl) &&
-            _zcmtSecondFetch == opc._zcmtSecondFetch &&
-            _zcmtPc == opc._zcmtPc;
+        return equals(other);
     }
 
     void
@@ -162,9 +137,6 @@ class PCState : public GenericISA::UPCState<4>
     {
         Base::serialize(cp);
         SERIALIZE_SCALAR(_rvType);
-        SERIALIZE_SCALAR(_new_vconf);
-        SERIALIZE_SCALAR(_vtype);
-        SERIALIZE_SCALAR(_vl);
         SERIALIZE_SCALAR(_compressed);
         SERIALIZE_SCALAR(_zcmtSecondFetch);
         SERIALIZE_SCALAR(_zcmtPc);
@@ -175,9 +147,6 @@ class PCState : public GenericISA::UPCState<4>
     {
         Base::unserialize(cp);
         UNSERIALIZE_SCALAR(_rvType);
-        UNSERIALIZE_SCALAR(_new_vconf);
-        UNSERIALIZE_SCALAR(_vtype);
-        UNSERIALIZE_SCALAR(_vl);
         UNSERIALIZE_SCALAR(_compressed);
         UNSERIALIZE_SCALAR(_zcmtSecondFetch);
         UNSERIALIZE_SCALAR(_zcmtPc);

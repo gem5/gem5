@@ -81,6 +81,10 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
         scoreboard_index = ccRegOffset + reg.index();
         ret = true;
         break;
+      case RMiscRegClass:
+          scoreboard_index = rmiscRegOffset + reg.index();
+          ret = true;
+          break;
       case MiscRegClass:
           /* Don't bother with Misc registers */
         ret = false;

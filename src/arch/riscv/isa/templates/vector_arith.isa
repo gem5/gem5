@@ -145,7 +145,7 @@ class %(class_name)s : public %(base_class)s
 private:
     // vs1, vs2, vs3(old_vd), vm for *.vv, *.vx
     // vs2, (old_vd), vm for *.vi
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -172,6 +172,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -229,7 +230,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[3];
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -408,7 +409,7 @@ class %(class_name)s : public %(base_class)s
 {
 private:
     // vs1, vs2, vs3(old_vd), vm for *.vv, *.vx
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -436,6 +437,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -581,7 +583,7 @@ class %(class_name)s : public %(base_class)s
 {
 private:
     // vs1, vs2, vs3(old_vd), vm for *.vv, *.vx
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
     bool *vxsatptr;
@@ -612,6 +614,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -726,7 +729,7 @@ class %(class_name)s : public %(base_class)s
 {
 private:
     // vs1, vs2, vs3(old_vd), vm
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -752,6 +755,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -828,7 +832,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[3];
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1036,7 +1040,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[3];
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
     int* cnt;
@@ -1074,6 +1078,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1116,7 +1121,7 @@ def template Vector1Vs1VdMaskDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    RegId srcRegIdxArr[2];
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1139,6 +1144,7 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
     %(set_vm_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1177,7 +1183,7 @@ def template Vector1Vs1RdMaskDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    RegId srcRegIdxArr[2];
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1199,6 +1205,7 @@ template<typename ElemType>
     %(set_reg_idx_arr)s;
     %(constructor)s;
     %(set_vm_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1287,7 +1294,7 @@ class %(class_name)s : public %(base_class)s
 private:
     // vs1(rs1), vs2, old_vd, v0 for *.vv[m] or *.vx[m]
     // vs2, old_vd, v0 for *.vi[m]
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1315,6 +1322,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1408,7 +1416,7 @@ class %(class_name)s : public %(base_class)s
 {
 private:
     // vs1(rs1), vs2, old_vd, v0 for *.vv or *.vf
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1436,6 +1444,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1515,7 +1524,7 @@ def template VMvWholeMicroDeclare {{
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[1];
+    RegId srcRegIdxArr[2];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1541,6 +1550,7 @@ def template VMvWholeMicroConstructor {{
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _microIdx]);
+    this->addVlSrc();
 }
 
 }};
@@ -1578,7 +1588,7 @@ def template VectorMaskDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    RegId srcRegIdxArr[2];
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _elen, uint32_t _vlen);
@@ -1598,6 +1608,7 @@ template<typename ElemType>
     %(set_reg_idx_arr)s;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1646,7 +1657,7 @@ def template VectorNonSplitDeclare {{
 template<typename ElemType>
 class %(class_name)s : public %(base_class)s {
 private:
-    RegId srcRegIdxArr[2];
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _elen, uint32_t _vlen);
@@ -1667,6 +1678,7 @@ template<typename ElemType>
     %(constructor)s;
     %(set_vm_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1800,7 +1812,7 @@ class %(class_name)s : public %(base_class)s
 {
 private:
     // vs1, vs2 group (up to 8 regs), old vd (optional), vm (optional)
-    RegId srcRegIdxArr[11];
+    RegId srcRegIdxArr[12];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1828,6 +1840,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1923,7 +1936,7 @@ class %(class_name)s : public %(base_class)s
 {
 private:
     // vs2 (up to 8), rs1/vs1 (up to 2), old_vd (optional), vm (optional)
-    RegId srcRegIdxArr[12];
+    RegId srcRegIdxArr[13];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1952,6 +1965,7 @@ template<typename ElemType, typename IndexType>
 
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -1989,7 +2003,7 @@ Fault
     %(copy_old_vd)s;
     %(get_vs_regs)s
 
-    for (uint32_t i=0; i < microVl; i++) {
+    for (uint32_t i=0; i < this->activeVl(xc); i++) {
         if (!this->vm && !elem_mask(v0, i + microIdx*vd_elems)) {
             continue;
         }
@@ -2105,7 +2119,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[4];
+    RegId srcRegIdxArr[5];
     RegId destRegIdxArr[1];
     bool vm;
     bool* vxsatptr;
@@ -2135,6 +2149,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -2147,7 +2162,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[10];
+    RegId srcRegIdxArr[11];
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
@@ -2202,6 +2217,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;
@@ -2262,7 +2278,7 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[11];
+    RegId srcRegIdxArr[12];
     RegId destRegIdxArr[1];
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
@@ -2288,6 +2304,7 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
     SET_VM_SRC();
+    this->addVlSrc();
 }
 
 %(declare_varith_template)s;

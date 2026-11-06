@@ -27,6 +27,7 @@
  */
 
 #include "arch/riscv/insts/vector.hh"
+#include "arch/riscv/decoder.hh"
 
 #include <sstream>
 #include <string>
@@ -37,6 +38,7 @@
 #include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -125,6 +127,15 @@ VConfOp::generateZimmDisassembly() const
     }
     s << ", " << vta << ", " << vma;
     return s.str();
+}
+
+void
+VConfOp::commitHook(ThreadContext *tc, InstSeqNum seqNum) const
+{
+    // Apply the vl/vtype produced at execute for this seqNum. Do not read
+    // the CSR here: a younger executed-but-uncommitted vset must not win.
+    auto &decoder = tc->getDecoderPtr()->as<Decoder>();
+    decoder.commitVtype(tc, seqNum);
 }
 
 std::string
@@ -517,6 +528,7 @@ VMaskMergeMicroInst::VMaskMergeMicroInst(ExtMachInst extMachInst,
     for (uint8_t i=0; i<_numSrcs; i++) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + i]);
     }
+    addVlSrc();
 }
 
 Fault
@@ -529,7 +541,7 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     const uint32_t elems_per_vreg = vlenb / elemSize;
 
     vreg_t tmp_s;
-    for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
+    for (uint8_t i = 0; i < vlSrcIdx; i++) {
         xc->getRegOperand(this, i, &tmp_s);
         auto s = tmp_s.as<uint8_t>();
         if (elems_per_vreg < 8) {
@@ -546,7 +558,7 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
 
     // Handle tail: mask-producing instructions are always tail-agnostic.
     // We treat agnostic as 1s.
-    uint32_t vl = machInst.vl;
+    uint32_t vl = readVl(xc);
     for (uint32_t i = vl; i < vlen; ++i) {
         Vd[i / 8] |= (1 << (i % 8));
     }
@@ -592,39 +604,38 @@ VxsatMicroInst::generateDisassembly(Addr pc,
 }
 
 VlFFTrimVlMicroOp::VlFFTrimVlMicroOp(ExtMachInst _machInst, uint32_t _microVl,
-    uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
-    std::vector<StaticInstPtr>& _microops)
-    : VectorMicroInst("vlff_trimvl_v_micro", _machInst, SimdConfigOp,
-                      _microVl, _microIdx, _elen, _vlen),
-      microops(_microops)
+                                     uint32_t _microIdx, uint32_t _elen,
+                                     uint32_t _vlen)
+    : VectorMicroInst("vlff_trimvl_v_micro", _machInst, SimdConfigOp, _microVl,
+                      _microIdx, _elen, _vlen)
 {
+    // A null dest array corrupts the owning macro-op.
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
             &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
-        nullptr
-    );
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
 
-    // Create data dependency with load micros
-    for (uint8_t i=0; i<microIdx; i++) {
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + i]);
+    panic_if(microIdx > MaxFofMicros, "fault-only-first microops %u",
+             microIdx);
+    for (uint32_t i = 0; i < microIdx; i++) {
+        setSrcRegIdx(_numSrcRegs++, fofCountReg(i));
     }
 
-    this->flags[IsControl] = true;
-    this->flags[IsIndirectControl] = true;
-    this->flags[IsInteger] = true;
-    this->flags[IsUncondControl] = true;
+    setDestRegIdx(_numDestRegs++, VecRenamedVLReg);
+    _numTypedDestRegs[RMiscRegClass]++;
 }
 
 uint32_t
-VlFFTrimVlMicroOp::calcVl() const
+VlFFTrimVlMicroOp::calcVl(ExecContext *xc) const
 {
     uint32_t vl = 0;
-    for (uint8_t i=0; i<microIdx; i++) {
-        VleMicroInst& micro = static_cast<VleMicroInst&>(*microops[i]);
-        vl += micro.faultIdx;
-
-        if (micro.trimVl)
+    for (uint32_t i = 0; i < microIdx; i++) {
+        const RegVal packed = xc->getRegOperand(this, i);
+        vl += static_cast<uint32_t>(packed);
+        if ((packed & FofTrimBit) != 0) {
             break;
+        }
     }
     return vl;
 }
@@ -638,21 +649,15 @@ VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
-    PCState pc;
-    set(pc, xc->pcState());
-
-    uint32_t new_vl = calcVl();
+    uint32_t new_vl = calcVl(xc);
 
     tc->setMiscReg(MISCREG_VSTART, 0);
+    tc->setMiscReg(MISCREG_VL, new_vl);
+    xc->setRegOperand(this, 0, static_cast<RegVal>(new_vl));
 
-    RegVal final_val = new_vl;
     if (traceData) {
-        traceData->setData(miscRegClass, final_val);
+        traceData->setData(rmiscRegClass, static_cast<RegVal>(new_vl));
     }
-
-    pc.vl(new_vl);
-    pc.new_vconf(true);
-    xc->pcState(pc);
 
     return NoFault;
 }
@@ -660,12 +665,7 @@ VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
 std::unique_ptr<PCStateBase>
 VlFFTrimVlMicroOp::branchTarget(ThreadContext *tc) const
 {
-    PCStateBase *pc_ptr = tc->pcState().clone();
-
-    uint32_t new_vl = calcVl();
-
-    pc_ptr->as<PCState>().vl(new_vl);
-    return std::unique_ptr<PCStateBase>{pc_ptr};
+    return std::unique_ptr<PCStateBase>{tc->pcState().clone()};
 }
 
 std::string
@@ -742,6 +742,7 @@ VlSegDeIntrlvMicroInst::VlSegDeIntrlvMicroInst(ExtMachInst extMachInst,
         vmsrcIdx = _numSrcRegs;
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
+    addVlSrc();
 }
 
 Fault
@@ -776,8 +777,15 @@ VlSegDeIntrlvMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) c
         xc->getRegOperand(this, i, &tmp_s);
         s = tmp_s.as<uint8_t>();
 
+        const uint32_t vl_now = readVl(xc);
+        const uint64_t begin = static_cast<uint64_t>(microIdx) * micro_vl;
+        const uint32_t active =
+            vl_now <= begin ? 0 : std::min<uint32_t>(vl_now - begin, micro_vl);
         while (index < (i + 1) * elems_per_vreg)
         {
+            if (elem >= active) {
+                break;
+            }
             size_t ei = elem + micro_vlmax * microIdx;
             if (machInst.vm || elem_mask(v0, ei)) {
                 memcpy(Vd + (elem * sizeOfElement),
@@ -862,6 +870,7 @@ VsSegIntrlvMicroInst::VsSegIntrlvMicroInst(ExtMachInst extMachInst,
         setSrcRegIdx(_numSrcRegs++, vecRegClass[_dstReg + (i * numMicroops) +
             (microIdx)]);
     }
+    addVlSrc();
 }
 
 Fault
@@ -881,7 +890,11 @@ VsSegIntrlvMicroInst::execute(ExecContext* xc,
     uint32_t srcReg = (field * elems_per_vreg) % numSrcs;
     uint32_t indexs = (field * elems_per_vreg) / numSrcs;
 
-    while (indexVd < elems_per_vreg) {
+    const uint32_t vl_now = readVl(xc);
+    const uint64_t begin = static_cast<uint64_t>(microIdx) * micro_vl;
+    const uint32_t active =
+        vl_now <= begin ? 0 : std::min<uint32_t>(vl_now - begin, micro_vl);
+    while (indexVd < elems_per_vreg && indexVd < active) {
         xc->getRegOperand(this, srcReg, &tmp_s);
         s = tmp_s.as<uint8_t>();
 
@@ -988,8 +1001,10 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     }
 
     if (!_machInst.vm) {
+        vmsrcIdx = _numSrcRegs;
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
+    addVlSrc();
 
     RegId Vd = destRegIdx(0);
     Vd.setNumPinnedWrites(_numVdPins);
@@ -1004,10 +1019,12 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
-    const uint32_t vl = machInst.vl;
+    const uint32_t vl = readVl(xc);
     const uint32_t sewb = getSew(machInst.vtype8.vsew) >> 3;
     const uint32_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-    const uint32_t micro_vl = std::min(vl - micro_vlmax*microIdx, micro_vlmax);
+    const uint64_t begin = static_cast<uint64_t>(micro_vlmax) * microIdx;
+    const uint32_t micro_vl =
+        vl <= begin ? 0 : std::min<uint32_t>(vl - begin, micro_vlmax);
     const uint32_t active_bytes = micro_vl * sewb;
     const uint32_t total_bytes  = micro_vlmax*sewb;
 
@@ -1032,7 +1049,7 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     // apply mask policy
     if (!machInst.vm) {
         vreg_t v0_container;
-        xc->getRegOperand(this, _numSrcRegs-1, &v0_container);
+        xc->getRegOperand(this, vmsrcIdx, &v0_container);
         uint8_t* v0 = v0_container.as<uint8_t>();
 
         for (uint32_t i=0; i<micro_vl; i++) {

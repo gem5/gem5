@@ -44,6 +44,7 @@
 
 #include "base/types.hh"
 #include "cpu/base.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
@@ -196,6 +197,43 @@ class ExecContext
     /** Returns a pointer to the ThreadContext. */
     virtual ThreadContext *tcBase() const = 0;
 
+    // 0 when this model does not number instructions.
+    virtual InstSeqNum
+    instSeqNum() const
+    {
+        return 0;
+    }
+
+    // Per dynamic instruction. Replay must not replace a recorded trim.
+    virtual void
+    noteFofElems(uint32_t elems, bool trimmed)
+    {
+        if (fofIsTrimmed) {
+            return;
+        }
+        fofElemCount = elems;
+        fofIsTrimmed = trimmed;
+    }
+
+    virtual bool
+    fofTrimmed() const
+    {
+        return fofIsTrimmed;
+    }
+
+    virtual uint32_t
+    fofElems() const
+    {
+        return fofElemCount;
+    }
+
+    virtual void
+    clearFofRecord()
+    {
+        fofIsTrimmed = false;
+        fofElemCount = 0;
+    }
+
     /**
      * @{
      * @name ARM-Specific Interfaces
@@ -229,6 +267,10 @@ class ExecContext
     virtual AddressMonitor *getAddrMonitor() = 0;
 
     /** @} */
+
+  private:
+    bool fofIsTrimmed = false;
+    uint32_t fofElemCount = 0;
 };
 
 } // namespace gem5

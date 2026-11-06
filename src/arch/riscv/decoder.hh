@@ -30,12 +30,17 @@
 #ifndef __ARCH_RISCV_DECODER_HH__
 #define __ARCH_RISCV_DECODER_HH__
 
+#include <map>
+#include <vector>
+
 #include "arch/generic/decode_cache.hh"
 #include "arch/generic/decoder.hh"
 #include "arch/riscv/insts/vector.hh"
+#include "arch/riscv/regs/renameable_misc.hh"
 #include "arch/riscv/types.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
 #include "params/RiscvDecoder.hh"
@@ -65,9 +70,34 @@ class Decoder : public InstDecoder
     bool _hasZcd;
     Addr jvtEntry;
 
-    VTYPE vtype = (1ULL << 63); // vtype.vill = 1 at initial;
-    uint32_t vl = 0;
-    bool squashed = false;
+    VTYPE machVtype = VtypeReset;
+    bool vtypeReady = true;
+    bool pendingSpec = false;
+    bool pendingPublished = false;
+    VTYPE pendingPrev = VtypeReset;
+    VTYPE pendingValue = VtypeReset;
+
+    struct SpecVtype
+    {
+        InstSeqNum seq;
+        VTYPE prev;
+        bool published;
+        VTYPE value;
+    };
+    std::vector<SpecVtype> specStack;
+
+    // Survives dropSuperseded so commit can still write the architectural
+    // CSRs for an older vset after a younger one has published.
+    struct PendingCsrWrite
+    {
+        uint32_t vl;
+        RegVal vtype;
+    };
+    std::map<InstSeqNum, PendingCsrWrite> pendingCsrWrites;
+
+    VTYPE legalizeVtype(RegVal requested) const;
+    void installYoungestPublished();
+    void dropSuperseded();
 
     virtual StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
@@ -88,6 +118,32 @@ class Decoder : public InstDecoder
     void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
 
     StaticInstPtr decode(PCStateBase &nextPC) override;
+
+    bool
+    stall() const override
+    {
+        return !vtypeReady;
+    }
+
+    void noteDecodedSeq(InstSeqNum seq) override;
+
+    void squashSpec(InstSeqNum seq) override;
+
+    void discardSpec(ThreadContext *tc) override;
+
+    // Write architectural vl/vtype at commit (or immediately for Atomic).
+    void commitVtype(ThreadContext *tc, InstSeqNum seq);
+
+    void setVtype(RegVal vtype);
+    void publishExecuted(ThreadContext *tc, InstSeqNum seq, RegVal vtype,
+                         uint32_t vl);
+    void
+    releaseFetch()
+    {
+        vtypeReady = true;
+    }
+    VTYPE
+    vtype() const { return machVtype; }
 };
 
 } // namespace RiscvISA

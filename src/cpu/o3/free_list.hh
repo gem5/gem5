@@ -129,7 +129,7 @@ class UnifiedFreeList
      *  explicitly because Scoreboard is not a SimObject. */
     const std::string _name;
 
-    std::array<SimpleFreeList, CCRegClass + 1> freeLists;
+    std::array<SimpleFreeList, RMiscRegClass + 1> freeLists;
 
     /**
      * The register file object is used only to distinguish integer

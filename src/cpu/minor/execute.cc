@@ -260,13 +260,7 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
 
             reason = BranchData::BadlyPredictedBranch;
         } else if (inst->predictedTarget->fullEquals(*target)) {
-            /* Address *and* ISA extras (RVV vl/vtype, ...) match. Using
-             * fullEquals rather than == / equals(): RISC-V equals()
-             * ignores vl when new_vconf is false (#1709). A predicted
-             * taken loop branch clones the branch PCState, so the
-             * address can be right while vl is stale; treating that as
-             * CorrectlyPredictedBranch skips the stream change and
-             * leaves Minor's decoder on the old vl (#2742). */
+            /* Address and any ISA extras still stored in the PC match. */
             DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x correctly"
                 " inst: %s\n",
                 inst->pc->instAddr(), inst->predictedTarget->instAddr(),
@@ -1478,6 +1472,12 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
 
             if (fault == NoFault) {
                 doInstCommitAccounting(inst);
+                // Architectural side effects deferred from execute (e.g.
+                // RISC-V vl/vtype CSR updates from vset).
+                if (inst->isInst()) {
+                    inst->staticInst->commitHook(cpu.getContext(thread_id),
+                                                 inst->id.fetchSeqNum);
+                }
             }
         }
     }

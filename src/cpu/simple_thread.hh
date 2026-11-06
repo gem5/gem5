@@ -96,7 +96,7 @@ class SimpleThread : public ThreadState, public ThreadContext
     typedef ThreadContext::Status Status;
 
   protected:
-    std::array<RegFile, CCRegClass + 1> regFiles;
+    std::array<RegFile, RMiscRegClass + 1> regFiles;
 
     BaseISA *const isa;    // one "instance" of the current ISA.
 
@@ -248,6 +248,14 @@ class SimpleThread : public ThreadState, public ThreadContext
         for (auto &rf: regFiles)
             rf.clear();
         isa->clear();
+        for (auto &rf : regFiles) {
+            for (const auto &id : rf.regClass) {
+                const RegVal init = isa->getInitialRegVal(id);
+                if (init) {
+                    rf.reg(id.index()) = init;
+                }
+            }
+        }
     }
 
     //

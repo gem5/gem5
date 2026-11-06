@@ -581,6 +581,7 @@ class ISAParser(Grammar):
                 "IntRegOp": IntRegOperandDesc,
                 "FloatRegOp": FloatRegOperandDesc,
                 "CCRegOp": CCRegOperandDesc,
+                "RMiscRegOp": RMiscRegOperandDesc,
                 "VecElemOp": VecElemOperandDesc,
                 "VecRegOp": VecRegOperandDesc,
                 "VecPredRegOp": VecPredRegOperandDesc,

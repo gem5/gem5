@@ -342,6 +342,8 @@ Fetch2::evaluate()
                 set(fetch_info.pc, line_in->pc);
                 fetch_info.havePC = true;
                 decoder->reset();
+                // Decoded ops on the old stream have not executed.
+                decoder->discardSpec(thread);
             }
 
             /* The generated instruction.  Leave as NULL if no instruction
@@ -378,6 +380,16 @@ Fetch2::evaluate()
                 DPRINTF(Fetch, "Fault being passed output_index: "
                     "%d: %s\n", output_index, dyn_inst->fault->name());
             } else {
+                // A prior instruction (e.g. RISC-V register vset) asked the
+                // decoder to stall. Do not moreBytes/decode further in this
+                // cycle: feeding the next word while stalled corrupts the
+                // decoder mid-state, and spinning on stall livelocks the
+                // cycle. O3 exits its fetch loop on stall instead.
+                if (decoder->stall()) {
+                    DPRINTF(Fetch, "Decoder stall; defer fetch2\n");
+                    break;
+                }
+
                 uint8_t *line = line_in->line;
 
                 /* The instruction is wholly in the line, can just copy. */
@@ -407,6 +419,7 @@ Fetch2::evaluate()
 
                     /* Fetch and prediction sequence numbers originate here */
                     dyn_inst->id.fetchSeqNum = fetch_info.fetchSeqNum;
+                    decoder->noteDecodedSeq(dyn_inst->id.fetchSeqNum);
                     dyn_inst->id.predictionSeqNum = fetch_info.predictionSeqNum;
                     /* To complete the set, test that exec sequence number
                      *  has not been set */

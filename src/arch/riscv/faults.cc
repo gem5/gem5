@@ -31,11 +31,13 @@
 
 #include "arch/riscv/faults.hh"
 
+#include "arch/riscv/decoder.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pmp.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/renameable_misc.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -271,11 +273,12 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     std::unique_ptr<PCState> new_pc(dynamic_cast<PCState *>(
         tc->getIsaPtr()->newPCState(workload->getEntry())));
     panic_if(!new_pc, "Failed create new PCState from ISA pointer");
-    VTYPE vtype = 0;
-    vtype.vill = 1;
-    new_pc->vtype(vtype);
-    new_pc->vl(0);
     tc->pcState(*new_pc);
+    tc->setMiscReg(MISCREG_VTYPE, VtypeReset);
+    tc->setMiscReg(MISCREG_VL, 0);
+    tc->setReg(VecRenamedVTYPEReg, static_cast<RegVal>(VtypeReset));
+    tc->setReg(VecRenamedVLReg, static_cast<RegVal>(0));
+    tc->getDecoderPtr()->as<Decoder>().setVtype(VtypeReset);
 
     auto* mmu = tc->getMMUPtr();
     if (mmu != nullptr) {

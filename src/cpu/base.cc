@@ -715,6 +715,7 @@ BaseCPU::setReset(bool state)
             tc->getIsaPtr()->resetThread();
             // reset the decoder in case it had partially decoded something,
             tc->getDecoderPtr()->reset();
+            tc->getDecoderPtr()->discardSpec(tc);
             // reset MMU,
             tc->getMMUPtr()->reset();
             // Clear any interrupts,
@@ -936,59 +937,65 @@ FetchCPUStats::FetchCPUStats(statistics::Group *parent, int thread_id)
 }
 
 // means it is incremented in a vector indexing and not directly
-BaseCPU::
-ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
+BaseCPU::ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent,
+                                          int thread_id)
     : statistics::Group(parent, csprintf("executeStats%i", thread_id).c_str()),
-    ADD_STAT(numInsts, statistics::units::Count::get(),
-             "Number of executed instructions"),
-    ADD_STAT(numNop, statistics::units::Count::get(),
-             "Number of nop insts executed"),
-    ADD_STAT(numBranches, statistics::units::Count::get(),
-             "Number of branches executed"),
-    ADD_STAT(numLoadInsts, statistics::units::Count::get(),
-             "Number of load instructions executed"),
-    ADD_STAT(numStoreInsts, statistics::units::Count::get(),
-             "Number of stores executed"),
-    ADD_STAT(instRate, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
-             "Inst execution rate"),
-    ADD_STAT(dcacheStallCycles, statistics::units::Cycle::get(),
-             "DCache total stall cycles"),
-    ADD_STAT(numCCRegReads, statistics::units::Count::get(),
-             "Number of times the CC registers were read"),
-    ADD_STAT(numCCRegWrites, statistics::units::Count::get(),
-             "Number of times the CC registers were written"),
-    ADD_STAT(numFpAluAccesses, statistics::units::Count::get(),
-             "Number of float alu accesses"),
-    ADD_STAT(numFpRegReads, statistics::units::Count::get(),
-             "Number of times the floating registers were read"),
-    ADD_STAT(numFpRegWrites, statistics::units::Count::get(),
-             "Number of times the floating registers were written"),
-    ADD_STAT(numIntAluAccesses, statistics::units::Count::get(),
-             "Number of integer alu accesses"),
-    ADD_STAT(numIntRegReads, statistics::units::Count::get(),
-             "Number of times the integer registers were read"),
-    ADD_STAT(numIntRegWrites, statistics::units::Count::get(),
-             "Number of times the integer registers were written"),
-    ADD_STAT(numMemRefs, statistics::units::Count::get(),
-             "Number of memory refs"),
-    ADD_STAT(numMiscRegReads, statistics::units::Count::get(),
-             "Number of times the Misc registers were read"),
-    ADD_STAT(numMiscRegWrites, statistics::units::Count::get(),
-             "Number of times the Misc registers were written"),
-    ADD_STAT(numVecAluAccesses, statistics::units::Count::get(),
-             "Number of vector alu accesses"),
-    ADD_STAT(numVecPredRegReads, statistics::units::Count::get(),
-             "Number of times the predicate registers were read"),
-    ADD_STAT(numVecPredRegWrites, statistics::units::Count::get(),
-             "Number of times the predicate registers were written"),
-    ADD_STAT(numVecRegReads, statistics::units::Count::get(),
-             "Number of times the vector registers were read"),
-    ADD_STAT(numVecRegWrites, statistics::units::Count::get(),
-             "Number of times the vector registers were written"),
-    ADD_STAT(numDiscardedOps, statistics::units::Count::get(),
-             "Number of ops (including micro ops) which were discarded before "
-             "commit")
+      ADD_STAT(numInsts, statistics::units::Count::get(),
+               "Number of executed instructions"),
+      ADD_STAT(numNop, statistics::units::Count::get(),
+               "Number of nop insts executed"),
+      ADD_STAT(numBranches, statistics::units::Count::get(),
+               "Number of branches executed"),
+      ADD_STAT(numLoadInsts, statistics::units::Count::get(),
+               "Number of load instructions executed"),
+      ADD_STAT(numStoreInsts, statistics::units::Count::get(),
+               "Number of stores executed"),
+      ADD_STAT(instRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
+               "Inst execution rate"),
+      ADD_STAT(dcacheStallCycles, statistics::units::Cycle::get(),
+               "DCache total stall cycles"),
+      ADD_STAT(numCCRegReads, statistics::units::Count::get(),
+               "Number of times the CC registers were read"),
+      ADD_STAT(numCCRegWrites, statistics::units::Count::get(),
+               "Number of times the CC registers were written"),
+      ADD_STAT(numRMiscRegReads, statistics::units::Count::get(),
+               "Number of times renamed misc registers were read"),
+      ADD_STAT(numRMiscRegWrites, statistics::units::Count::get(),
+               "Number of times renamed misc registers were written"),
+      ADD_STAT(numFpAluAccesses, statistics::units::Count::get(),
+               "Number of float alu accesses"),
+      ADD_STAT(numFpRegReads, statistics::units::Count::get(),
+               "Number of times the floating registers were read"),
+      ADD_STAT(numFpRegWrites, statistics::units::Count::get(),
+               "Number of times the floating registers were written"),
+      ADD_STAT(numIntAluAccesses, statistics::units::Count::get(),
+               "Number of integer alu accesses"),
+      ADD_STAT(numIntRegReads, statistics::units::Count::get(),
+               "Number of times the integer registers were read"),
+      ADD_STAT(numIntRegWrites, statistics::units::Count::get(),
+               "Number of times the integer registers were written"),
+      ADD_STAT(numMemRefs, statistics::units::Count::get(),
+               "Number of memory refs"),
+      ADD_STAT(numMiscRegReads, statistics::units::Count::get(),
+               "Number of times the Misc registers were read"),
+      ADD_STAT(numMiscRegWrites, statistics::units::Count::get(),
+               "Number of times the Misc registers were written"),
+      ADD_STAT(numVecAluAccesses, statistics::units::Count::get(),
+               "Number of vector alu accesses"),
+      ADD_STAT(numVecPredRegReads, statistics::units::Count::get(),
+               "Number of times the predicate registers were read"),
+      ADD_STAT(numVecPredRegWrites, statistics::units::Count::get(),
+               "Number of times the predicate registers were written"),
+      ADD_STAT(numVecRegReads, statistics::units::Count::get(),
+               "Number of times the vector registers were read"),
+      ADD_STAT(numVecRegWrites, statistics::units::Count::get(),
+               "Number of times the vector registers were written"),
+      ADD_STAT(
+          numDiscardedOps, statistics::units::Count::get(),
+          "Number of ops (including micro ops) which were discarded before "
+          "commit")
 {
     numStoreInsts = numMemRefs - numLoadInsts;
 
@@ -1000,6 +1007,8 @@ ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
     numCCRegWrites
         .prereq(numCCRegWrites)
         .flags(statistics::nozero);
+    numRMiscRegReads.prereq(numRMiscRegReads).flags(statistics::nozero);
+    numRMiscRegWrites.prereq(numRMiscRegWrites).flags(statistics::nozero);
     numFpAluAccesses
         .prereq(numFpAluAccesses);
     numFpRegReads
