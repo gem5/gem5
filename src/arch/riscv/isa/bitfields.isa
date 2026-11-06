@@ -168,3 +168,7 @@ def bitfield SIMM3      simm3;
 
 // Zvbb
 def bitfield BIT26      <26>;
+
+// Zihintntl
+def bitfield NTLHINT    <24:7>;
+def bitfield CNTLHINT   <11:2>;
