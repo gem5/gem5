@@ -44,6 +44,10 @@ variable "TAG" {
   default = "latest"
 }
 
+variable "PACKAGE_REFRESH" {
+  default = "local"
+}
+
 # Common attributes across all targets. Note: these can be overwritten.
 target "common" {
   # Here we are enabling multi-platform builds. We are compiling to ARM64 and
@@ -72,8 +76,7 @@ group "default" {
     "ubuntu-releases",
     "gpu-fs",
     "sst",
-    "systemc",
-    "devcontainer"
+    "systemc"
   ]
 }
 
@@ -385,8 +388,14 @@ target "systemc" {
 
 target "devcontainer" {
   inherits = ["common"]
-  annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's ./devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
-  dependencies = ["devcontainer"]
+  annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's .devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
+  contexts = {
+    base = "target:ubuntu-24-04_all-dependencies"
+  }
+  args = {
+    BASE_IMAGE = "base"
+    PACKAGE_REFRESH = PACKAGE_REFRESH
+  }
   context = "devcontainer"
   cache-from = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]

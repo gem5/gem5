@@ -26,16 +26,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# This script is run when the Docker container specified in devcontainer.json
-# is created.
+# Prepare tools and caches during creation and Codespaces prebuild updates.
 
-set -e
+set -euo pipefail
 
-# Making the downloaded repository safe as the owner might differ for .devcontainer env.
-git config --global --add safe.directory /workspaces/gem5
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# Refresh the git index.
-git update-index
+# Trust only this checkout, and only if Git rejects its current ownership.
+# Confirm it is a repository before adding an entry to the user's config.
+if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+    git -c safe.directory="$PWD" rev-parse --show-toplevel >/dev/null
+    git config --global --add safe.directory "$PWD"
+fi
 
-# Install the pre-commit checks.
-./util/pre-commit-install.sh
+# Keep caches with the persistent workspace, including for local containers.
+mkdir -p "${PRE_COMMIT_HOME}" "${CCACHE_DIR}" "${GEM5_RESOURCE_DIR}"
+
+# Reuse distro modules such as SCons and pydot while installing the exact
+# development-tool versions requested by this checkout into a writable venv.
+python3 -m venv --system-site-packages .venv
+.venv/bin/python -m pip install -r requirements.txt
+export PATH="${PWD}/.venv/bin:${PATH}"
+
+# Prepare hook environments now instead of downloading them on first commit.
+pre-commit install --install-hooks -t pre-commit -t commit-msg
