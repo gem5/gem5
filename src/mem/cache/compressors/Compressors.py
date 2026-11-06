@@ -47,6 +47,8 @@ class BaseCacheCompressor(SimObject):
         "achieve to be stored in compressed format",
     )
 
+    # Compression is usually done off the critical path, so the caller may
+    # not account for the compression latency these parameters produce.
     comp_chunks_per_cycle = Param.Unsigned(
         1, "Number of chunks that can be compressed in parallel per cycle."
     )
