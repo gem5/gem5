@@ -83,15 +83,46 @@ class MemBus(SystemXBar):
     default = Self.badaddr_responder.pio
 
 
-def attach_9p(parent):
+def attach_9p(parent, root=None, tag=None):
+    """Attach a VirtIO 9P device to parent.
+
+    Without a root directory, export a scratch directory under the
+    output directory through the diod server. This is the backend used
+    by --vio-9p and is always available.
+
+    With a root directory, export that host directory through the
+    npfs/ufs backend, which is only present when gem5 was built with
+    NPFS_PATH set. Unlike diod, it serializes its state into
+    checkpoints, so a 9P-mounted root filesystem survives a restore.
+
+    A tag of None leaves the device's default mount tag in place.
+    """
     viopci = PciVirtIO()
-    viopci.vio = VirtIO9PDiod()
-    viodir = os.path.realpath(os.path.join(m5.options.outdir, "9p"))
-    viopci.vio.root = os.path.join(viodir, "share")
-    viopci.vio.socketPath = os.path.join(viodir, "socket")
-    os.makedirs(viopci.vio.root, exist_ok=True)
-    if os.path.exists(viopci.vio.socketPath):
-        os.remove(viopci.vio.socketPath)
+
+    if root is None:
+        viodir = os.path.realpath(os.path.join(m5.options.outdir, "9p"))
+        viopci.vio = VirtIO9PDiod()
+        viopci.vio.root = os.path.join(viodir, "share")
+        viopci.vio.socketPath = os.path.join(viodir, "socket")
+        os.makedirs(viopci.vio.root, exist_ok=True)
+        if os.path.exists(viopci.vio.socketPath):
+            os.remove(viopci.vio.socketPath)
+    else:
+        # VirtIO9PUfs is only registered as a SimObject in npfs-enabled
+        # builds, so this check has to precede the first reference to it.
+        if not m5.defines.buildEnv.get("BUILD_9PUFS", False):
+            fatal(
+                "Exporting a host directory through VirtIO 9P requires the "
+                "npfs-backed device, which is not available in this gem5 "
+                "binary. Rebuild gem5 with NPFS_PATH set to the npfs source "
+                "directory."
+            )
+        viopci.vio = VirtIO9PUfs()
+        viopci.vio.root = os.path.realpath(root)
+
+    if tag is not None:
+        viopci.vio.tag = tag
+
     parent.viopci = viopci
     parent.attachPciDevice(viopci)
 
