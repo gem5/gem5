@@ -139,12 +139,47 @@
             0x41: decode MODRM_MOD {
                 default: Inst::PHMINPOSUW(Vdq, Wdq);
             }
+            // STTILECFG: VEX.128.66.0F38.W0 49 !(11):000:bbb
+            0x49: decode VEX_PRESENT {
+                0x1: decode VEX_L {
+                    0x0: decode MODRM_MOD {
+                        0x3: Inst::UD2();
+                        default: decode MODRM_REG {
+                            0x0: AmxStTileCfgInst::sttilecfg(
+                                IsStore, IsNonSpeculative);
+                            default: Inst::UD2();
+                        }
+                    }
+                    default: Inst::UD2();
+                }
+                default: Inst::UD2();
+            }
             default: Inst::UD2();
         }
         default: decode LEGACY_REPNE {
             1: decode OPCODE_OP {
                 0xF0: crc32_Gd_Eb();
                 0xF1: crc32_Gd_Ev();
+                // TILEZERO: VEX.128.F2.0F38.W0 49 11:rrr:000
+                0x49: decode VEX_PRESENT {
+                    0x1: decode VEX_L {
+                        0x0: decode MODRM_MOD {
+                            0x3: decode MODRM_RM {
+                                0x0: AmxInst::tilezero({{
+                                    fault = amxRequireEnabled(xc->tcBase());
+                                    if (fault == NoFault) {
+                                        fault = amxTileZero(
+                                            xc->tcBase(), machInst);
+                                    }
+                                }}, IsNonSpeculative, IsSerializeAfter);
+                                default: Inst::UD2();
+                            }
+                            default: Inst::UD2();
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
                 default: Inst::UD2();
             }
             default: decode OPCODE_OP {
@@ -163,6 +198,40 @@
                 0x1C: pabsb_Pq_Qq();
                 0x1D: pabsw_Pq_Qq();
                 0x1E: pabsd_Pq_Qq();
+                // LDTILECFG / TILERELEASE: VEX.128.NP.0F38.W0 49 ...
+                0x49: decode VEX_PRESENT {
+                    0x1: decode VEX_L {
+                        0x0: decode MODRM_MOD {
+                            0x3: decode MODRM_REG {
+                                0x0: decode MODRM_RM {
+                                    0x0: AmxInst::tilerelease({{
+                                        fault = amxRequireEnabled(
+                                            xc->tcBase());
+                                        if (fault == NoFault) {
+                                            fault = amxCheckEncoding(
+                                                machInst, true);
+                                        }
+                                        if (fault == NoFault) {
+                                            amxTileRelease(
+                                                xc->tcBase());
+                                        }
+                                    }}, IsNonSpeculative,
+                                        IsSerializeAfter);
+                                    default: Inst::UD2();
+                                }
+                                default: Inst::UD2();
+                            }
+                            default: decode MODRM_REG {
+                                0x0: AmxLdTileCfgInst::ldtilecfg(
+                                    IsLoad, IsNonSpeculative,
+                                    IsSerializeAfter);
+                                default: Inst::UD2();
+                            }
+                        }
+                        default: Inst::UD2();
+                    }
+                    default: Inst::UD2();
+                }
                 default: Inst::UD2();
             }
         }
