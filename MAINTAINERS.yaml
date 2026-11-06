@@ -158,6 +158,13 @@ gpu-compute:
         - Matt Poremba <matthew.poremba@amd.com>
         - Matt Sinclair <sinclair@cs.wisc.edu>
 
+salam:
+    desc: >-
+        Code and configs for accelerator components and interfaces
+    status: maintained
+    maintainers:
+        - Matt Sinclair <sinclair@cs.wisc.edu>
+
 learning-gem5:
     desc: >-
         The code and configs for the Learning gem5 book
