@@ -1,0 +1,48 @@
+---
+name: Restore coverage build
+description: Restore this campaign's verified binaries for selected TestLib suites
+inputs:
+    test-dir:
+        required: true
+        description: TestLib directory to execute
+    length:
+        required: true
+        description: TestLib duration tag
+    revision:
+        required: true
+        description: Tested source commit
+    image:
+        required: true
+        description: Immutable build and execution container image
+runs:
+    using: composite
+    steps:
+        - name: Select coverage binaries
+          id: select
+          shell: bash
+          env:
+              TEST_DIR: ${{ inputs.test-dir }}
+              TEST_LENGTH: ${{ inputs.length }}
+          run: |
+              pattern=$(python3 util/coverage/build.py plan \
+                --test-dir "$TEST_DIR" --length "$TEST_LENGTH" --pattern)
+              echo "pattern=$pattern" >> "$GITHUB_OUTPUT"
+
+        - name: Download this campaign's binaries
+          if: steps.select.outputs.pattern != ''
+          uses: actions/download-artifact@v8
+          with:
+              pattern: ${{ steps.select.outputs.pattern }}
+              path: ${{ runner.temp }}/coverage-binaries
+              merge-multiple: true
+
+        - name: Verify and install coverage binaries
+          if: steps.select.outputs.pattern != ''
+          shell: bash
+          env:
+              SOURCE_REVISION: ${{ inputs.revision }}
+              COVERAGE_IMAGE: ${{ inputs.image }}
+          run: |
+              python3 util/coverage/build.py unpack \
+                "$RUNNER_TEMP/coverage-binaries" \
+                --revision "$SOURCE_REVISION" --image "$COVERAGE_IMAGE"

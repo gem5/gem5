@@ -232,6 +232,8 @@ def define_defaults(defaults):
         os.path.join(defaults.base_dir, "tests", "gem5", "resources")
     )
     defaults.gcov = ""
+    defaults.gcov_tool = "gcov"
+    defaults.python_coverage = False
 
 
 def define_constants(constants):
@@ -390,12 +392,22 @@ def define_post_processors(config):
             return isa
 
     def default_variant(variant):
-        if not variant[0]:
-            # Default variant is only opt. No need to run tests with multiple
-            # different compilation targets
-            return [[constants.opt_tag]]
-        else:
-            return variant
+        selected = variant[0] or [constants.opt_tag]
+        if (
+            config._lookup_val("python_coverage")[0]
+            and config._lookup_val("gcov")[0] != "per-test"
+        ):
+            raise ValueError("--python-coverage requires --gcov=per-test")
+        if (
+            config._lookup_val("gcov")[0] == "per-test"
+            and len(set(selected)) > 1
+        ):
+            raise ValueError(
+                "--gcov=per-test requires one variant per run: GCC reuses "
+                "coverage notes across opt/debug/fast objects. Run each "
+                "variant separately with a clean, distinct --build-dir."
+            )
+        return [selected]
 
     def default_length(length):
         if not length[0]:
@@ -656,14 +668,33 @@ def define_common_args(config):
         Argument(
             "--gcov",
             action="store",
-            choices=["test-only", "ind-test-and-gcov", "all-test-and-gcov"],
+            choices=[
+                "test-only",
+                "ind-test-and-gcov",
+                "all-test-and-gcov",
+                "per-test",
+            ],
             default=config._defaults.gcov,
             help="Build gem5 for running with gcov. If test-only is passed, "
             "TestLib will only run the tests. If ind-test-and-gcov is passed, "
             "TestLib will run gcovr, a tool for running gcov, after each "
             "individual test. If all-test-and-gcov is passed, TestLib will "
             "run all of the specified tests, then run gcovr after all of them "
-            "finish.",
+            "finish. If per-test is passed, collect isolated coverage for each "
+            "gem5 invocation while permitting parallel tests.",
+        ),
+        Argument(
+            "--python-coverage",
+            action="store_true",
+            default=config._defaults.python_coverage,
+            help="Collect separate Python config coverage with invocation "
+            "contexts (requires --gcov=per-test and coverage.py).",
+        ),
+        Argument(
+            "--gcov-tool",
+            action="store",
+            default=config._defaults.gcov_tool,
+            help="GCC gcov executable for --gcov=per-test (GCC 9 or newer).",
         ),
     ]
 
@@ -734,6 +765,8 @@ class RunParser(ArgParser):
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
         common_args.gcov.add_to(parser)
+        common_args.gcov_tool.add_to(parser)
+        common_args.python_coverage.add_to(parser)
 
 
 class ListParser(ArgParser):
@@ -800,6 +833,8 @@ class ListParser(ArgParser):
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
         common_args.gcov.add_to(parser)
+        common_args.gcov_tool.add_to(parser)
+        common_args.python_coverage.add_to(parser)
 
 
 class RerunParser(ArgParser):
@@ -819,6 +854,8 @@ class RerunParser(ArgParser):
         common_args.length.add_to(parser)
         common_args.host.add_to(parser)
         common_args.gcov.add_to(parser)
+        common_args.gcov_tool.add_to(parser)
+        common_args.python_coverage.add_to(parser)
 
 
 config = _Config()
