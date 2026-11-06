@@ -522,6 +522,9 @@ MemCtrl::processRespondEvent(MemInterface* mem_intr,
 
     queue.pop_front();
 
+    // Update stats
+    stats.avgRdQLen = totalReadQueueSize + respQueue.size();
+
     if (!queue.empty()) {
         assert(queue.front()->readyTime >= curTick());
         assert(!resp_event.scheduled());
@@ -1109,6 +1112,9 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
                     mem_pkt->readyTime - mem_pkt->entryTime);
 
         mem_intr->writeQueueSize--;
+
+        // Update stats
+        stats.avgWrQLen = totalWriteQueueSize;
 
         // remove the request from the queue - the iterator is no longer valid
         writeQueue[mem_pkt->qosValue()].erase(to_write);
