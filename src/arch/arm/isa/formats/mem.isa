@@ -230,7 +230,7 @@ def format ArmSyncMem() {{
 
         switch (dec_fields) {
           case 0x00:
-            return new %(stl)s(machInst, rt, rn, true, 0);
+            return new %(stl)s(machInst, rt2, rn, true, 0);
           case 0x02:
             return new %(stlex)s(machInst, rt, rt2, rn, true, 0);
           case 0x03:
@@ -250,7 +250,7 @@ def format ArmSyncMem() {{
           case 0x0f:
             return new %(ldrexd)s(machInst, rt, rt + 1, rn, true, 0);
           case 0x10:
-            return new %(stlb)s(machInst, rt, rn, true, 0);
+            return new %(stlb)s(machInst, rt2, rn, true, 0);
           case 0x12:
             return new %(stlexb)s(machInst, rt, rt2, rn, true, 0);
           case 0x13:
@@ -262,7 +262,7 @@ def format ArmSyncMem() {{
           case 0x17:
             return new %(ldrexb)s(machInst, rt, rn, true, 0);
           case 0x18:
-            return new %(stlh)s(machInst, rt, rn, true, 0);
+            return new %(stlh)s(machInst, rt2, rn, true, 0);
           case 0x1a:
             return new %(stlexh)s(machInst, rt, rt2, rn, true, 0);
           case 0x1b:
