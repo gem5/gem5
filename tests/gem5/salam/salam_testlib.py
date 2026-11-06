@@ -98,7 +98,7 @@ def _output(argv, env=None, cwd=None):
         env=env,
         cwd=cwd,
         check=True,
-        capture_output=True,
+        stdout=subprocess.PIPE,
         text=True,
     ).stdout
 

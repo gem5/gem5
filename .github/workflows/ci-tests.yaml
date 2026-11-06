@@ -300,6 +300,10 @@ jobs:
             CXX: /usr/bin/g++
         steps:
             - uses: actions/checkout@v7
+            - name: Trust the SALAM checkout
+              run: |
+                  git config --global --add safe.directory "$GITHUB_WORKSPACE"
+                  git -C "$GITHUB_WORKSPACE" ls-files > /dev/null
             - name: Install SALAM dependencies
               run: |
                   apt-get update
@@ -331,18 +335,18 @@ jobs:
               id: run-salam-tests
               working-directory: ${{ github.workspace }}/tests
               run: |
-                  mkdir -p "${RUNNER_TEMP}/salam-results"
+                  mkdir -p salam-results
                   ./main.py list -q --suites gem5/salam --include-tags salam \
-                      > "${RUNNER_TEMP}/salam-results/default-suites.txt"
+                      > salam-results/default-suites.txt
                   status=0
                   ./main.py run gem5/salam --include-tags salam -j $(nproc) \
                       || status=$?
                   python3 gem5/salam/check_salam_results.py \
-                      "${RUNNER_TEMP}/salam-results/default-suites.txt" \
+                      salam-results/default-suites.txt \
                       testing-results/results.xml gem5/salam \
                       || status=1
                   if [ -d testing-results ]; then
-                      mv testing-results "${RUNNER_TEMP}/salam-results/default"
+                      mv testing-results salam-results/default
                   fi
                   exit ${status}
             - name: Run custom hardware profiles
@@ -352,14 +356,14 @@ jobs:
                   for group in fu-remap profile-singleton profile-reordered; do
                       ./main.py list -q --suites gem5/salam \
                           --include-tags "$group" \
-                          > "${RUNNER_TEMP}/salam-results/${group}-suites.txt"
+                          > "salam-results/${group}-suites.txt"
                       ./main.py run gem5/salam --include-tags "$group" \
                           -j $(nproc) || status=$?
                       python3 gem5/salam/check_salam_results.py \
-                          "${RUNNER_TEMP}/salam-results/${group}-suites.txt" \
+                          "salam-results/${group}-suites.txt" \
                           testing-results/results.xml || status=1
                       if [ -d testing-results ]; then
-                          mv testing-results "${RUNNER_TEMP}/salam-results/${group}"
+                          mv testing-results "salam-results/${group}"
                       fi
                   done
                   exit ${status}
@@ -370,7 +374,7 @@ jobs:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ job.status }}-output
                   path: |
                       tests/testing-results
-                      ${{ runner.temp }}/salam-results
+                      tests/salam-results
                   retention-days: 30
 
     ci-tests:
