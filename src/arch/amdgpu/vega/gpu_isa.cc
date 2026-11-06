@@ -39,6 +39,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 GPUISA::GPUISA(Wavefront &wf) : wavefront(wf), m0(0)
@@ -95,4 +98,5 @@ const std::array<const ScalarRegU32, NumPosConstRegs> GPUISA::posConstRegs = {
 const std::array<const ScalarRegI32, NumNegConstRegs> GPUISA::negConstRegs = {
     {-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16}};
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

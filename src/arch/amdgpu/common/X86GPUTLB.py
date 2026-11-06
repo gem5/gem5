@@ -37,7 +37,7 @@ from m5.SimObject import SimObject
 class X86GPUTLB(ClockedObject):
     type = "X86GPUTLB"
     cxx_class = "gem5::X86ISA::GpuTLB"
-    cxx_header = "arch/amdgpu/common/tlb.hh"
+    cxx_header = "arch/amdgpu/common/x86_gpu_tlb.hh"
     size = Param.Int(64, "TLB size (number of entries)")
     assoc = Param.Int(64, "TLB associativity")
 
@@ -65,7 +65,7 @@ class X86GPUTLB(ClockedObject):
 class TLBCoalescer(ClockedObject):
     type = "TLBCoalescer"
     cxx_class = "gem5::TLBCoalescer"
-    cxx_header = "arch/amdgpu/common/tlb_coalescer.hh"
+    cxx_header = "arch/amdgpu/common/x86_gpu_tlb_coalescer.hh"
 
     probesPerCycle = Param.Int(2, "Number of TLB probes per cycle")
     coalescingWindow = Param.Int(1, "Permit coalescing across that many ticks")

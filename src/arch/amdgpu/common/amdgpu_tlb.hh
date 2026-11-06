@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,51 +29,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __GPU_TLB_HH__
-#define __GPU_TLB_HH__
+#ifndef __ARCH_AMDGPU_COMMON_AMDGPU_TLB_HH__
+#define __ARCH_AMDGPU_COMMON_AMDGPU_TLB_HH__
 
-#include <fstream>
 #include <list>
 #include <queue>
 #include <string>
 #include <vector>
 
-#include "arch/generic/tlb.hh"
-#include "arch/x86/pagetable.hh"
-#include "arch/x86/pagetable_walker.hh"
-#include "arch/x86/regs/segment.hh"
-#include "base/callback.hh"
-#include "base/logging.hh"
+#include "arch/amdgpu/common/pagetable.hh"
+#include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
-#include "base/stats/group.hh"
-#include "gpu-compute/compute_unit.hh"
+#include "base/trace.hh"
+#include "mem/packet.hh"
 #include "mem/port.hh"
-#include "mem/request.hh"
-#include "params/X86GPUTLB.hh"
+#include "params/VegaGPUTLB.hh"
 #include "sim/clocked_object.hh"
-#include "sim/sim_object.hh"
 
 namespace gem5
 {
 
-class BaseTLB;
+class BaseMMU;
 class Packet;
+class AMDGPUDevice;
 class ThreadContext;
 
-namespace X86ISA
+namespace AMDGPU
 {
+
+class Walker;
+
 class GpuTLB : public ClockedObject
 {
-  protected:
-    friend class Walker;
-
-    typedef std::list<TlbEntry *> EntryList;
-
-    uint32_t configAddress;
-
   public:
-    typedef X86GPUTLBParams Params;
-    GpuTLB(const Params &p);
+    GpuTLB(const VegaGPUTLBParams &p);
     ~GpuTLB();
 
     typedef enum BaseMMU::Mode Mode;
@@ -94,25 +83,42 @@ class GpuTLB : public ClockedObject
          * may be responsible for cleaning itslef up which will happen in
          * this function. Once it's called the object is no longer valid.
          */
-        virtual void finish(Fault fault, const RequestPtr &req,
-                            ThreadContext *tc, Mode mode) = 0;
+        virtual void finish(Fault fault, const RequestPtr &req, Mode mode) = 0;
+
+        /** This function is used by the page table walker to determine if
+         * it should translate the a pending request or if the underlying
+         * request has been squashed.
+         * @ return Is the instruction that requested this translation
+         * squashed?
+         */
+        virtual bool
+        squashed() const
+        {
+            return false;
+        }
     };
 
+    Addr pageAlign(Addr vaddr);
     void dumpAll();
-    TlbEntry *lookup(Addr va, bool update_lru = true);
-    void setConfigAddress(uint32_t addr);
+    VegaTlbEntry *lookup(Addr va, bool update_lru = true);
 
-  protected:
-    EntryList::iterator lookupIt(Addr va, bool update_lru = true);
-    Walker *walker;
-
-  public:
     Walker *getWalker();
     void invalidateAll();
-    void invalidateNonGlobal();
     void demapPage(Addr va, uint64_t asn);
 
   protected:
+    typedef std::list<VegaTlbEntry *> EntryList;
+    EntryList::iterator lookupIt(Addr va, unsigned int ps,
+                                 bool update_lru = true);
+    Walker *walker;
+    AMDGPUDevice *gpuDevice;
+
+    int getSet(Addr va, unsigned int page_shift);
+
+    // List of possible page size, 4k and 2m for now
+    const std::array<unsigned int, 2> logPageShiftList = {AMDGPU::PageShift,
+                                                          21};
+
     int size;
     int assoc;
     int numSets;
@@ -134,13 +140,7 @@ class GpuTLB : public ClockedObject
      */
     bool hasMemSidePort;
 
-    /**
-     * Print out accessDistance stats. One stat file
-     * per TLB.
-     */
-    bool accessDistance;
-
-    std::vector<TlbEntry> tlb;
+    std::vector<VegaTlbEntry> tlb;
 
     /*
      * It's a per-set list. As long as we have not reached
@@ -158,31 +158,44 @@ class GpuTLB : public ClockedObject
      */
     std::vector<EntryList> entryList;
 
-    Fault translateInt(bool read, const RequestPtr &req, ThreadContext *tc);
-
-    Fault translate(const RequestPtr &req, ThreadContext *tc,
-                    Translation *translation, Mode mode, bool &delayedResponse,
-                    bool timing, int &latency);
-
   public:
     // latencies for a TLB hit, miss and page fault
     int hitLatency;
     int missLatency1;
     int missLatency2;
 
-    void updatePageFootprint(Addr virt_page_addr);
-    void printAccessPattern();
+    struct VegaTLBStats : public statistics::Group
+    {
+        VegaTLBStats(statistics::Group *parent);
 
-    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
-                          int &latency);
+        statistics::Scalar maxDownstreamReached;
+        statistics::Scalar outstandingReqsMax;
 
-    void translateTiming(const RequestPtr &req, ThreadContext *tc,
-                         Translation *translation, Mode mode, int &latency);
+        // local_stats are as seen from the TLB
+        // without taking into account coalescing
+        statistics::Scalar localNumTLBAccesses;
+        statistics::Scalar localNumTLBHits;
+        statistics::Scalar localNumTLBMisses;
+        statistics::Formula localTLBMissRate;
 
-    Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
-    Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
+        // global_stats are as seen from the
+        // CU's perspective taking into account
+        // all coalesced requests.
+        statistics::Scalar globalNumTLBAccesses;
+        statistics::Scalar globalNumTLBHits;
+        statistics::Scalar globalNumTLBMisses;
+        statistics::Formula globalTLBMissRate;
 
-    TlbEntry *insert(Addr vpn, TlbEntry &entry);
+        // from the CU perspective (global)
+        statistics::Scalar accessCycles;
+        statistics::Scalar pageTableCycles;
+
+        // from the perspective of this TLB
+        statistics::Scalar localCycles;
+        statistics::Formula localLatency;
+    } stats;
+
+    VegaTlbEntry *insert(Addr vpn, VegaTlbEntry &entry);
 
     // Checkpointing
     virtual void serialize(CheckpointOut &cp) const override;
@@ -195,17 +208,17 @@ class GpuTLB : public ClockedObject
         PAGE_WALK,
         MISS_RETURN
     };
-    bool tlbLookup(const RequestPtr &req, ThreadContext *tc,
-                   bool update_stats);
+    VegaTlbEntry *tlbLookup(const RequestPtr &req, bool update_stats);
 
+    void walkerResponse(VegaTlbEntry &entry, PacketPtr pkt);
     void handleTranslationReturn(Addr addr, tlbOutcome outcome, PacketPtr pkt);
 
     void handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome outcome);
 
-    void pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
-                                TlbEntry *tlb_entry, Mode mode);
+    void pagingProtectionChecks(PacketPtr pkt, VegaTlbEntry *tlb_entry,
+                                Mode mode);
 
-    void updatePhysAddresses(Addr virt_page_addr, TlbEntry *tlb_entry,
+    void updatePhysAddresses(Addr virt_page_addr, VegaTlbEntry *tlb_entry,
                              Addr phys_page_addr);
 
     void issueTLBLookup(PacketPtr pkt);
@@ -284,6 +297,8 @@ class GpuTLB : public ClockedObject
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;
 
+    Fault createPagefault(Addr vaddr, Mode mode);
+
     // maximum number of permitted coalesced requests per cycle
     int maxCoalescedReqs;
 
@@ -334,76 +349,10 @@ class GpuTLB : public ClockedObject
     void cleanup();
 
     EventFunctionWrapper cleanupEvent;
-
-    /**
-     * This hash map will use the virtual page address as a key
-     * and will keep track of total number of accesses per page
-     */
-
-    struct AccessInfo
-    {
-        unsigned int lastTimeAccessed; // last access to this page
-        unsigned int accessesPerPage;
-        // need to divide it by accessesPerPage at the end
-        unsigned int totalReuseDistance;
-
-        /**
-         * The field below will help us compute the access distance,
-         * that is the number of (coalesced) TLB accesses that
-         * happened in between each access to this page
-         *
-         * localTLBAccesses[x] is the value of localTLBNumAccesses
-         * when the page <Addr> was accessed for the <x>th time
-         */
-        std::vector<unsigned int> localTLBAccesses;
-        unsigned int sumDistance;
-        unsigned int meanDistance;
-    };
-
-    typedef std::unordered_map<Addr, AccessInfo> AccessPatternTable;
-    AccessPatternTable TLBFootprint;
-
-    // Called at the end of simulation to dump page access stats.
-    void exitCallback();
-
-    EventFunctionWrapper exitEvent;
-
-  protected:
-    struct GpuTLBStats : public statistics::Group
-    {
-        GpuTLBStats(statistics::Group *parent);
-
-        // local_stats are as seen from the TLB
-        // without taking into account coalescing
-        statistics::Scalar localNumTLBAccesses;
-        statistics::Scalar localNumTLBHits;
-        statistics::Scalar localNumTLBMisses;
-        statistics::Formula localTLBMissRate;
-
-        // global_stats are as seen from the
-        // CU's perspective taking into account
-        // all coalesced requests.
-        statistics::Scalar globalNumTLBAccesses;
-        statistics::Scalar globalNumTLBHits;
-        statistics::Scalar globalNumTLBMisses;
-        statistics::Formula globalTLBMissRate;
-
-        // from the CU perspective (global)
-        statistics::Scalar accessCycles;
-        // from the CU perspective (global)
-        statistics::Scalar pageTableCycles;
-        statistics::Scalar numUniquePages;
-        // from the perspective of this TLB
-        statistics::Scalar localCycles;
-        // from the perspective of this TLB
-        statistics::Formula localLatency;
-        // I take the avg. per page and then
-        // the avg. over all pages.
-        statistics::Scalar avgReuseDistance;
-    } stats;
 };
-} // namespace X86ISA
+
+} // namespace AMDGPU
 
 } // namespace gem5
 
-#endif // __GPU_TLB_HH__
+#endif // __ARCH_AMDGPU_COMMON_AMDGPU_TLB_HH__

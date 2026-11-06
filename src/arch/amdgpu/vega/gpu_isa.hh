@@ -35,8 +35,8 @@
 #include <array>
 #include <type_traits>
 
+#include "arch/amdgpu/common/amdgpu_tlb.hh"
 #include "arch/amdgpu/vega/gpu_registers.hh"
-#include "arch/amdgpu/vega/tlb.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/misc.hh"
@@ -45,6 +45,9 @@ namespace gem5
 {
 
 class Wavefront;
+
+namespace AMDGPU
+{
 
 namespace VegaISA
 {
@@ -110,6 +113,7 @@ class GPUISA
     ScalarRegU32 m0;
 };
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_GPU_ISA_HH__

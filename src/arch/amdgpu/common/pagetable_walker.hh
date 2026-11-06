@@ -34,9 +34,9 @@
 
 #include <vector>
 
-#include "arch/amdgpu/vega/page_walk_cache.hh"
-#include "arch/amdgpu/vega/pagetable.hh"
-#include "arch/amdgpu/vega/tlb.hh"
+#include "arch/amdgpu/common/amdgpu_tlb.hh"
+#include "arch/amdgpu/common/page_walk_cache.hh"
+#include "arch/amdgpu/common/pagetable.hh"
 #include "base/types.hh"
 #include "debug/GPUPTWalker.hh"
 #include "mem/packet.hh"
@@ -49,7 +49,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace VegaISA
+namespace AMDGPU
 {
 
 class Walker : public ClockedObject
@@ -248,7 +248,7 @@ class Walker : public ClockedObject
     }
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __DEV_AMDGPU_PAGETABLE_WALKER_HH__

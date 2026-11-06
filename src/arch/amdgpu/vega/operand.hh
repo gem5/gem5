@@ -51,6 +51,9 @@ namespace gem5
  * and allow them to be manipulated in ways that are unique to VEGA insts.
  */
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 /**
@@ -967,6 +970,7 @@ template <int BITS, int ELEM_SIZE> class PackedReg
 
 } // namespace VegaISA
 
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_OPERAND_HH__

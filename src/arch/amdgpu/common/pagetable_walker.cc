@@ -29,17 +29,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 
 #include <memory>
 
-#include "arch/amdgpu/vega/faults.hh"
+#include "arch/amdgpu/common/faults.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 /*
@@ -532,5 +532,5 @@ Walker::getPort(const std::string &if_name, PortID idx)
     }
 }
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

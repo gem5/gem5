@@ -33,7 +33,7 @@
 
 #include <cassert>
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
 #include "debug/GPUDisp.hh"

@@ -45,6 +45,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 class Inst_SOP2__S_ADD_U32 : public Inst_SOP2
@@ -58166,6 +58169,7 @@ class Inst_VOP3__V_SUB_I32 : public Inst_VOP3A
     void execute(GPUDynInstPtr) override;
 }; // Inst_VOP3__V_SUB_I32
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_INSTRUCTIONS_HH__

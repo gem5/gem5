@@ -29,12 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/tlb_coalescer.hh"
+#include "arch/amdgpu/common/amdgpu_tlb_coalescer.hh"
 
 #include <cstring>
 
 #include "arch/amdgpu/common/gpu_translation_state.hh"
-#include "arch/amdgpu/vega/pagetable.hh"
+#include "arch/amdgpu/common/pagetable.hh"
 #include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "debug/GPUTLB.hh"
@@ -101,7 +101,7 @@ VegaTLBCoalescer::getPort(const std::string &if_name, PortID idx)
  */
 bool
 VegaTLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt,
-                              Addr pagebytes = VegaISA::PageBytes)
+                              Addr pagebytes = AMDGPU::PageBytes)
 {
     if (disableCoalescing) {
         return false;
@@ -157,8 +157,8 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 
     // Make a copy. This gets deleted after the first is sent back on the port
     assert(sender_state->tlbEntry);
-    VegaISA::VegaTlbEntry tlb_entry =
-        *safe_cast<VegaISA::VegaTlbEntry *>(sender_state->tlbEntry);
+    AMDGPU::VegaTlbEntry tlb_entry =
+        *safe_cast<AMDGPU::VegaTlbEntry *>(sender_state->tlbEntry);
     Addr first_entry_vaddr = tlb_entry.vaddr;
     Addr first_entry_paddr = tlb_entry.paddr;
     int page_size = tlb_entry.size();
@@ -235,7 +235,7 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             // auto p = sender_state->tc->getProcessPtr();
             if (sender_state->tlbEntry == NULL) {
                 // not set by lower(l2) coalescer
-                sender_state->tlbEntry = new VegaISA::VegaTlbEntry(
+                sender_state->tlbEntry = new AMDGPU::VegaTlbEntry(
                     1 /* VMID TODO */, first_entry_vaddr, first_entry_paddr,
                     tlb_entry.logBytes, tlb_entry.pte);
             }
@@ -303,11 +303,11 @@ VegaTLBCoalescer::reissue_pkt_helper(PacketPtr pkt)
     // coalesced request with the same tick_index
     for (int i = 0; i < coalescedReq_cnt; ++i) {
         first_packet = coalescerFIFO[tick_index][i].first[0];
-        if (coalescerFIFO[tick_index][i].second != VegaISA::PageBytes) {
+        if (coalescerFIFO[tick_index][i].second != AMDGPU::PageBytes) {
             continue;
         }
 
-        if (canCoalesce(pkt, first_packet, VegaISA::PageBytes)) {
+        if (canCoalesce(pkt, first_packet, AMDGPU::PageBytes)) {
             coalescerFIFO[tick_index][i].first.push_back(pkt);
 
             DPRINTF(GPUTLB, "Coalesced re-issued req %i \
@@ -326,7 +326,7 @@ VegaTLBCoalescer::reissue_pkt_helper(PacketPtr pkt)
         std::vector<PacketPtr> new_array;
         new_array.push_back(pkt);
         coalescerFIFO[tick_index].push_back(
-            std::make_pair(new_array, VegaISA::PageBytes));
+            std::make_pair(new_array, AMDGPU::PageBytes));
 
         DPRINTF(GPUTLB,
                 "coalescerFIFO[%d] now has %d coalesced reqs after "
@@ -468,7 +468,7 @@ VegaTLBCoalescer::CpuSidePort::recvFunctional(PacketPtr pkt)
         coalescer->uncoalescedAccesses++;
     }
 
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), AMDGPU::PageBytes);
     int map_count = coalescer->issuedTranslationsTable.count(virt_page_addr);
 
     if (map_count) {

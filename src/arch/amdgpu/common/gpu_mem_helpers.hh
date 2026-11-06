@@ -29,15 +29,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_VEGA_GPU_MEM_HELPERS_HH__
-#define __ARCH_VEGA_GPU_MEM_HELPERS_HH__
+#ifndef __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__
+#define __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__
 
-#include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
-#include "arch/amdgpu/vega/insts/op_encodings.hh"
+#include "arch/amdgpu/register_types.hh"
 #include "debug/GPUMem.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
+#include "gpu-compute/gpu_static_inst.hh"
 
 namespace gem5
+{
+
+namespace AMDGPU
 {
 
 /**
@@ -60,7 +63,7 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
     PacketPtr pkt = nullptr, pkt1 = nullptr, pkt2 = nullptr;
 
     gpuDynInst->resetEntireStatusVector();
-    for (int lane = 0; lane < VegaISA::NumVecElemPerVecReg; ++lane) {
+    for (int lane = 0; lane < TheGpuISA::NumVecElemPerVecReg; ++lane) {
         if (gpuDynInst->exec_mask[lane]) {
             vaddr = gpuDynInst->addr[lane];
 
@@ -139,17 +142,17 @@ initScratchReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
     // This function should be used for 1+ DWORD scratch accesses. 1+ DWORD
     // scratch accesses are special in that they send multiple single DWORD
     // requests in a swizzled manner to memory.
-    int req_size = sizeof(VegaISA::VecElemU32);
+    int req_size = sizeof(AMDGPU::VecElemU32);
     int block_size = gpuDynInst->computeUnit()->cacheLineSize();
 
     gpuDynInst->resetEntireStatusVector();
-    for (int lane = 0; lane < VegaISA::NumVecElemPerVecReg; ++lane) {
+    for (int lane = 0; lane < TheGpuISA::NumVecElemPerVecReg; ++lane) {
         if (gpuDynInst->exec_mask[lane]) {
             Addr vaddr[N];
 
             for (int dword = 0; dword < N; ++dword) {
-                int stride =
-                    VegaISA::NumVecElemPerVecReg * sizeof(VegaISA::VecElemU32);
+                int stride = TheGpuISA::NumVecElemPerVecReg *
+                             sizeof(AMDGPU::VecElemU32);
                 vaddr[dword] = gpuDynInst->addr[lane] + dword * stride;
 
                 // Do not allow misaligned for simplicity for now.
@@ -172,9 +175,9 @@ initScratchReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
                 gpuDynInst->setRequestFlags(req[dword]);
                 pkt[dword] = new Packet(req[dword], mem_req_type);
 
-                int data_elem = lane + dword * VegaISA::NumVecElemPerVecReg;
+                int data_elem = lane + dword * TheGpuISA::NumVecElemPerVecReg;
                 pkt[dword]->dataStatic(
-                    &(reinterpret_cast<VegaISA::VecElemU32 *>(
+                    &(reinterpret_cast<AMDGPU::VecElemU32 *>(
                         gpuDynInst->d_data))[data_elem]);
 
                 gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
@@ -249,6 +252,7 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
     }
 }
 
+} // namespace AMDGPU
 } // namespace gem5
 
-#endif // __ARCH_VEGA_GPU_MEM_HELPERS_HH__
+#endif // __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__

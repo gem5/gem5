@@ -1736,21 +1736,21 @@ Wavefront::printProgress()
 void
 Wavefront::setMfmaAScale(int idx, uint8_t value)
 {
-    assert(idx < VegaISA::NumVecElemPerVecReg);
+    assert(idx < TheGpuISA::NumVecElemPerVecReg);
     mfmaAScale[idx] = value;
 }
 
 void
 Wavefront::setMfmaBScale(int idx, uint8_t value)
 {
-    assert(idx < VegaISA::NumVecElemPerVecReg);
+    assert(idx < TheGpuISA::NumVecElemPerVecReg);
     mfmaBScale[idx] = value;
 }
 
 uint8_t
 Wavefront::getMfmaAScale(int idx)
 {
-    assert(idx < VegaISA::NumVecElemPerVecReg);
+    assert(idx < TheGpuISA::NumVecElemPerVecReg);
     uint8_t rv = mfmaAScale[idx];
     mfmaAScale[idx] = 0;
 
@@ -1760,7 +1760,7 @@ Wavefront::getMfmaAScale(int idx)
 uint8_t
 Wavefront::getMfmaBScale(int idx)
 {
-    assert(idx < VegaISA::NumVecElemPerVecReg);
+    assert(idx < TheGpuISA::NumVecElemPerVecReg);
     uint8_t rv = mfmaBScale[idx];
     mfmaBScale[idx] = 0;
 
