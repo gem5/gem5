@@ -578,6 +578,13 @@ class RetentionManager
     /** tail_log_frame: this frame's row of tail_frame.csv. */
     void tailFrameRow();
 
+    /** window_mode=tail: K of the current histograms (the epoch rule);
+     *  total = sum of ended[] > 0. */
+    uint32_t tailKOf(uint64_t total) const;
+
+    /** tail_fastup: at a frame end that is not an epoch, W = K if K > W. */
+    void tailFastUpCheck();
+
     /** window_mode=tail: the histogram bin of an age (its bit width,
      *  capped at 10), also the rung of a W value (inf: 10). */
     static unsigned tailBin(uint64_t age);
@@ -919,6 +926,14 @@ class RetentionManager
     OutputStream *tailFrameLog = nullptr;
     uint64_t tailFrMatch = 0;
     uint64_t tailFrRepl = 0;
+    /** Ablation params (tail_kmin / tail_fastup / tail_halve /
+     *  tail_victim) and the per-row tick of the last use (tail_victim=lru;
+     *  kept on expired tags) */
+    unsigned tailKmin = 0;
+    bool tailFastUp = false;
+    bool tailHalve = true;
+    bool tailVictimLru = false;
+    std::vector<Tick> tailLastUse;
 
     /** Window mode: banks done with the current sweep, drops in the
      *  current frame. */

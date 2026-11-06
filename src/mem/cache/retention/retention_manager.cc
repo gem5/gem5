@@ -314,6 +314,14 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailDamp = p.tail_damp;
             tailLogHistOn = p.tail_log_hist;
             tailLogFrameOn = p.tail_log_frame;
+            tailKmin = p.tail_kmin;
+            tailFastUp = p.tail_fastup;
+            tailHalve = p.tail_halve;
+            fatal_if(tailKmin > 9, "%s: tail_kmin must be <= 9",
+                     cache.name());
+            fatal_if(p.tail_victim != "expired" && p.tail_victim != "lru",
+                     "%s: tail_victim must be expired or lru", cache.name());
+            tailVictimLru = p.tail_victim == "lru";
             fatal_if(tailEpochFrames < 1, "%s: tail_epoch must be >= 1",
                      cache.name());
             fatal_if(tailEpsShift > 32, "%s: tail_eps_shift must be <= 32",
@@ -337,6 +345,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                     tailW = uint32_t(f);
                 }
             }
+            // tail_kmin: w0 clamped like every W update
+            if (!tailFixed)
+                tailW = std::max(tailW, (1u << tailKmin) - 1);
             // Every fill and writeback allocation is a use (as wb)
             fatal_if(!winFillUAlways, "%s: window_mode=tail needs "
                      "window_fill_u_always", cache.name());
@@ -374,6 +385,7 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         }
         if (tailMode) {
             tailAge.assign(rows, 0);
+            tailLastUse.assign(rows, 0);
             tailEnded.assign(tailBins, 0);
             tailReuses.assign(tailBins, 0);
             tailStats = std::make_unique<TailStats>(*this, &stats);
@@ -537,6 +549,11 @@ RetentionManager::startup()
                        "set by the controller", tailEpochFrames, p_cyc,
                        tailEpsShift, tailDamp,
                        tailW == tailInf ? "inf" : std::to_string(tailW));
+                if (tailKmin || tailFastUp || !tailHalve || tailVictimLru)
+                    inform("%s: tail ablation: kmin %u (W >= %u), fastup "
+                           "%d, halve %d, victim %s", cache.name(),
+                           tailKmin, (1u << tailKmin) - 1, tailFastUp,
+                           tailHalve, tailVictimLru ? "lru" : "expired");
             }
             if (wbMode) {
                 inform("%s: window mode wb (Refrint WB(n,m)): n %d, m %d "
@@ -2235,6 +2252,7 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
     // an interval of the new line
     if (tailMode) {
         tailAge[row] = 0;
+        tailLastUse[row] = curTick();
         tailFresh = int64_t(row);
         tailRepl = false;
         tailStats->uses++;
@@ -2306,7 +2324,24 @@ RetentionManager::windowVictim(Addr addr, bool is_secure,
         }
     }
     bool expired = same;
-    if (row < 0 && tailMode) {
+    if (row < 0 && tailMode && tailVictimLru) {
+        // tail_victim=lru: no empty way; the way (valid line or expired
+        // tag) whose last use is oldest (ties: the lowest way)
+        for (unsigned w = 0; w < assoc; w++) {
+            const unsigned r = set * assoc + w;
+            if (row < 0 || tailLastUse[r] < tailLastUse[unsigned(row)])
+                row = int(r);
+        }
+        CacheBlk *v = static_cast<CacheBlk *>(
+            cache.tags->findBlockBySetAndWay(set, unsigned(row) % assoc));
+        if (v->isValid()) {
+            // A valid line: evicted by the cache (handleEvictions), counted
+            // in endsReplValid through onEvict
+            evict_blks.push_back(v);
+            return v;
+        }
+        expired = true;
+    } else if (row < 0 && tailMode) {
         // tail: the expired tag with the oldest last use (largest age;
         // ties: the lowest way)
         for (unsigned w = 0; w < assoc; w++) {
@@ -2796,6 +2831,7 @@ RetentionManager::tailUse(unsigned row, bool demand)
 {
     TailStats &st = *tailStats;
     st.uses++;
+    tailLastUse[row] = curTick();
     if (int64_t(row) == tailFresh) {
         // The writeback that allocated this line: the allocation was the
         // use, there is no earlier interval
@@ -2861,16 +2897,7 @@ RetentionManager::tailEpoch()
     const uint32_t w_before = tailW;
     int64_t k_log = -1;
     if (total > 0) {
-        // K: the smallest rung whose reuse tail is at most total * 2^-eps
-        uint32_t k = 0;
-        uint64_t tail = 0;
-        for (unsigned b = tailBins - 1; b >= 1; b--) {
-            tail += tailReuses[b];
-            if ((tail << tailEpsShift) > total) {
-                k = b == tailBins - 1 ? tailInf : (1u << b) - 1;
-                break;
-            }
-        }
+        const uint32_t k = tailKOf(total);
         k_log = k == tailInf ? -2 : int64_t(k);
         if (!tailFixed) {
             uint32_t w;
@@ -2880,6 +2907,8 @@ RetentionManager::tailEpoch()
                 // Shrink one rung at most
                 w = std::max(k, tailW == tailInf ? 511u : (tailW - 1) / 2);
             }
+            // tail_kmin: the floor
+            w = std::max(w, (1u << tailKmin) - 1);
             if (w != tailW) {
                 tailAccountW();
                 tailW = w;
@@ -2906,9 +2935,47 @@ RetentionManager::tailEpoch()
         ccprintf(hs, "\n");
         hs.flush();
     }
-    for (unsigned b = 0; b < tailBins; b++) {
-        tailEnded[b] >>= 1;
-        tailReuses[b] >>= 1;
+    if (tailHalve) {
+        for (unsigned b = 0; b < tailBins; b++) {
+            tailEnded[b] >>= 1;
+            tailReuses[b] >>= 1;
+        }
+    }
+}
+
+uint32_t
+RetentionManager::tailKOf(uint64_t total) const
+{
+    // K: the smallest rung whose reuse tail is at most total * 2^-eps
+    uint32_t k = 0;
+    uint64_t tail = 0;
+    for (unsigned b = tailBins - 1; b >= 1; b--) {
+        tail += tailReuses[b];
+        if ((tail << tailEpsShift) > total) {
+            k = b == tailBins - 1 ? tailInf : (1u << b) - 1;
+            break;
+        }
+    }
+    return k;
+}
+
+void
+RetentionManager::tailFastUpCheck()
+{
+    uint64_t total = 0;
+    for (unsigned b = 0; b < tailBins; b++)
+        total += tailEnded[b];
+    if (total == 0)
+        return;
+    const uint32_t k = tailKOf(total);
+    if (k > tailW) {
+        // Up at once (no halving here); logged as a "fastup" row
+        const uint32_t w_before = tailW;
+        tailAccountW();
+        tailW = k;
+        tailTimeW = k;
+        tailStats->wChanges++;
+        tailLog("fastup", w_before, k == tailInf ? -2 : int64_t(k));
     }
 }
 
@@ -3105,6 +3172,8 @@ RetentionManager::windowFrameEnd()
         if (++tailFrames == tailEpochFrames) {
             tailFrames = 0;
             tailEpoch();
+        } else if (tailFastUp && !tailFixed) {
+            tailFastUpCheck();
         }
     }
     winFrR = winFrRp = winFrA = winFrDc = winFrDd = winFrCwb = 0;

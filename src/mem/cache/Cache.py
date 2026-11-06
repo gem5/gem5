@@ -392,6 +392,36 @@ class BaseCache(ClockedObject):
         "the histograms are still kept)",
     )
 
+    tail_kmin = Param.Unsigned(
+        0,
+        "window_mode=tail (ablation): W never goes below 2^tail_kmin - 1: "
+        "after every W update W = max(W, 2^tail_kmin - 1), w0 clamped the "
+        "same way (0 = no floor; ignored with tail_fixed)",
+    )
+
+    tail_fastup = Param.Bool(
+        False,
+        "window_mode=tail (ablation): at every frame end that is not an "
+        "epoch, K from the current ended[] / reuses[] with the epoch rule; "
+        "W = K if K > W (no halving there; epochs unchanged)",
+    )
+
+    tail_halve = Param.Bool(
+        True,
+        "window_mode=tail (ablation): False = ended[] and reuses[] are "
+        "never halved (cumulative from the start of the run)",
+    )
+
+    tail_victim = Param.String(
+        "expired",
+        "window_mode=tail victim in a set holding expired tags: expired = "
+        "an expired tag of the address, an empty way, the expired tag with "
+        "the oldest last use, (else the tags' LRU); lru = an expired tag of "
+        "the address, an empty way, else the way (valid line or expired "
+        "tag) whose last use (fill, demand hit, writeback, CleanEvict) is "
+        "oldest",
+    )
+
     tail_log_hist = Param.Bool(
         False,
         "window_mode=tail (stats only): <cache>.tail_hist.csv, one row per "
