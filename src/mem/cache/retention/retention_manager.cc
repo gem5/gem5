@@ -2201,6 +2201,20 @@ RetentionManager::onAllocate(CacheBlk *blk, bool fill)
 {
     if (!window || blk == cache.tempBlock)
         return;
+    if (fill && !winRmReq.empty()) {
+        // Stats only: the fill of a retention miss; its request missed
+        // here (+1) and, deeper, in every cache below that missed too
+        auto it = winRmReq.find(cache.regenerateBlkAddr(blk));
+        if (it != winRmReq.end()) {
+            const int extra = it->second.first->getAccessDepth() -
+                it->second.second;
+            if (extra <= 1)
+                winStats->retentionMissNextLevel++;
+            else
+                winStats->retentionMissDeeper++;
+            winRmReq.erase(it);
+        }
+    }
     const unsigned set = blk->getSet();
     const unsigned row = set * assoc + blk->getWay();
     // windowVictim clears an expired victim's tag; these are backstops
@@ -2281,6 +2295,12 @@ RetentionManager::windowExpiredMatch(unsigned set, Addr blk_addr,
         }
     }
     return -1;
+}
+
+bool
+RetentionManager::dropNeedsWb(bool dirty) const
+{
+    return dirty || cache.writebackClean;
 }
 
 void
@@ -2470,6 +2490,7 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
     } else if (demand) {
         // A retention miss, counted once: the tag goes now
         winStats->retentionMisses++;
+        winRmReq[blk_addr] = {pkt->req, pkt->req->getAccessDepth()};
         winStats->expiredMissed++;
         winFrR++;
         if (wbStats)
@@ -2557,7 +2578,7 @@ RetentionManager::windowRow(unsigned bank)
         const bool dirty = blk->isSet(CacheBlk::DirtyBit);
         const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
                                        blk->isSecure());
-        const bool wb_full = dirty && cache.writeBuffer.isFull();
+        const bool wb_full = dropNeedsWb(dirty) && cache.writeBuffer.isFull();
         if (!inflight && !wb_full) {
             windowDrop(blk, row, dirty, true);
             return;
@@ -2579,7 +2600,7 @@ RetentionManager::windowRow(unsigned bank)
         const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
                                        blk->isSecure());
         // A clean drop needs no write-buffer entry; a dirty one does
-        const bool wb_full = dirty && cache.writeBuffer.isFull();
+        const bool wb_full = dropNeedsWb(dirty) && cache.writeBuffer.isFull();
         if (!inflight && !wb_full) {
             windowDrop(blk, row, dirty);
             return;
@@ -2589,7 +2610,9 @@ RetentionManager::windowRow(unsigned bank)
             winPend[row] = 1;
             winPendLive++;
             winPendPeak = std::max(winPendPeak, winPendLive);
-            if (!dirty) {
+            if (!dirty && !inflight) {
+                ws.deferredCleanWbFull++;
+            } else if (!dirty) {
                 ws.deferredCleanInflight++;
             } else {
                 ws.dirtyDropsDeferred++;
@@ -2636,7 +2659,7 @@ RetentionManager::wbRow(CacheBlk *blk, unsigned row)
     const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
                                    blk->isSecure());
     const bool blocked = inflight ||
-        (dirty && cache.writeBuffer.isFull());
+        (dropNeedsWb(dirty) && cache.writeBuffer.isFull());
     if (blocked) {
         // Refreshed only (the only copy); count stays 0, retried at the
         // next slot
@@ -2774,7 +2797,7 @@ RetentionManager::changRow(CacheBlk *blk, unsigned row)
     const bool dirty = blk->isSet(CacheBlk::DirtyBit);
     const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
                                    blk->isSecure());
-    if (inflight || (dirty && cache.writeBuffer.isFull())) {
+    if (inflight || (dropNeedsWb(dirty) && cache.writeBuffer.isFull())) {
         if (!winPend[row]) {
             winPend[row] = 1;
             winPendLive++;
@@ -2864,7 +2887,7 @@ RetentionManager::tailRow(CacheBlk *blk, unsigned row)
     const bool dirty = blk->isSet(CacheBlk::DirtyBit);
     const bool inflight = inFlight(cache.regenerateBlkAddr(blk),
                                    blk->isSecure());
-    if (inflight || (dirty && cache.writeBuffer.isFull())) {
+    if (inflight || (dropNeedsWb(dirty) && cache.writeBuffer.isFull())) {
         if (!winPend[row]) {
             winPend[row] = 1;
             winPendLive++;
@@ -3068,9 +3091,13 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
         cache.reuse->setReason(ReuseTracker::Reason::Drop);
     winDropping = true;
     winProbDropping = probation;
-    if (dirty) {
+    if (dropNeedsWb(dirty)) {
         // The existing deadline-writeback path (as applyDrop); the line
-        // read is part of the refresh-all operation already booked
+        // read is part of the refresh-all operation already booked.
+        // writeback_clean: a clean line too leaves exactly like an
+        // eviction (WritebackClean with its data, to the level below)
+        if (!dirty)
+            ws.cleanDropWritebacks++;
         PacketList writebacks;
         cache.evictBlock(blk, writebacks);
         if (cache.system->isTimingMode()) {
@@ -3117,9 +3144,9 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
     winExpAddr[row] = blk_addr;
     winExpSecure[row] = secure;
     winExpTaskId[row] = task_id;
-    // A dirty drop's WritebackDirty already took the line off the level
-    // below's list
-    winExpInFilter[row] = !dirty;
+    // A dirty drop's WritebackDirty (writeback_clean: any drop's
+    // writeback) already took the line off the level below's list
+    winExpInFilter[row] = !dropNeedsWb(dirty);
     winExpProb[row] = probation;
     winSetExpired[set]++;
     winExpLive++;
@@ -3598,6 +3625,9 @@ RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
                "dirty lines that got D because a request was in flight"),
       ADD_STAT(deferredCleanInflight, statistics::units::Count::get(),
                "clean lines that got D because a request was in flight"),
+      ADD_STAT(deferredCleanWbFull, statistics::units::Count::get(),
+               "writeback_clean: clean lines that got D because the "
+               "write buffer was full"),
       ADD_STAT(deferredFrames, statistics::units::Count::get(),
                "frames spent deferred: slot visits that found D = 1 (the "
                "visit that drops the line included)"),
@@ -3659,6 +3689,15 @@ RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
       ADD_STAT(expiredCleanEvicts, statistics::units::Count::get(),
                "CleanEvicts sent when a clean-dropped expired tag was "
                "replaced"),
+      ADD_STAT(cleanDropWritebacks, statistics::units::Count::get(),
+               "writeback_clean: clean drops sent below as a "
+               "WritebackClean at the drop (as an eviction)"),
+      ADD_STAT(retentionMissNextLevel, statistics::units::Count::get(),
+               "retention misses filled by the next level below (with an "
+               "L3: L3 hits; without: memory)"),
+      ADD_STAT(retentionMissDeeper, statistics::units::Count::get(),
+               "retention misses whose request also missed a cache below "
+               "(with an L3: L3 misses)"),
       ADD_STAT(expiredFilterCleared, statistics::units::Count::get(),
                "clean-dropped expired tags whose line a CleanEvict from "
                "above removed from the level below"),

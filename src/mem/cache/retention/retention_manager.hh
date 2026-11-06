@@ -474,6 +474,12 @@ class RetentionManager
     /** A request for the block is in the MSHRs or the write buffer. */
     bool inFlight(Addr blk_addr, bool is_secure) const;
 
+    /** A window drop needs a write-buffer entry: a dirty line, or any
+     *  line when the cache writes clean lines back (writeback_clean, a
+     *  level below filled by evictions): the drop leaves exactly like an
+     *  eviction. */
+    bool dropNeedsWb(bool dirty) const;
+
     /**
      * Close blk's refresh chain (stats only): hit says whether a hit
      * closes it (else the block is invalidated).
@@ -837,6 +843,11 @@ class RetentionManager
     std::vector<uint8_t> winExpSecure;
     std::vector<uint32_t> winExpTaskId;
     std::vector<uint8_t> winExpInFilter;
+    /** Window mode, stats only: the request of each open retention miss
+     *  and its access depth then; at the fill the depth says whether the
+     *  next level below served it (one more miss: the L2's) or a deeper
+     *  one (a cache below missed too). */
+    std::unordered_map<Addr, std::pair<RequestPtr, int>> winRmReq;
 
     /** Window mode, per set: expired tags. */
     std::vector<uint16_t> winSetExpired;
@@ -996,6 +1007,7 @@ class RetentionManager
         statistics::Scalar deferredWbFull;
         statistics::Scalar deferredInflight;
         statistics::Scalar deferredCleanInflight;
+        statistics::Scalar deferredCleanWbFull;
         statistics::Scalar deferredFrames;
         statistics::Value deferredPeak;
         statistics::Value deferredLive;
@@ -1025,6 +1037,9 @@ class RetentionManager
         statistics::Scalar expiredInvalidated;
         statistics::Scalar expiredWbCleared;
         statistics::Scalar expiredCleanEvicts;
+        statistics::Scalar cleanDropWritebacks;
+        statistics::Scalar retentionMissNextLevel;
+        statistics::Scalar retentionMissDeeper;
         statistics::Scalar expiredFilterCleared;
         statistics::Value expiredLive;
         statistics::Scalar expiredLiveAtReset;
