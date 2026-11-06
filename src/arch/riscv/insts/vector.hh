@@ -402,6 +402,10 @@ class VleMicroInst : public VectorMicroInst
     mutable bool trimVl;
     mutable uint32_t faultIdx;
 
+    // Fault-only-first loads (vle*ff) suppress a fault on any element but
+    // the first and trim vl instead; see handleMemFault() in vector.cc.
+    Fault handleMemFault(const Fault &fault, Addr vaddr) const override;
+
   protected:
     Request::Flags memAccessFlags;
 
@@ -741,20 +745,30 @@ class VlSegMacroInst : public VectorMemMacroInst
 
 class VlSegMicroInst : public VectorMicroInst
 {
+  public:
+    // faultIdx counts raw EEW slots; the trim microop converts to segments.
+    mutable bool trimVl;
+    mutable uint32_t faultIdx;
+    Fault handleMemFault(const Fault &fault, Addr vaddr) const override;
+
   protected:
     Request::Flags memAccessFlags;
     uint8_t regIdx;
-    mutable bool trimVl;
-    mutable uint32_t faultIdx;
+    const uint32_t elemOffset;
+    const uint32_t numFields;
 
-    VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
-                   OpClass __opClass, uint32_t _microVl,
-                   uint32_t _microIdx, uint32_t _numMicroops,
-                   uint32_t _field, uint32_t _numFields,
+    VlSegMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                   uint32_t _microVl, uint32_t _microIdx,
+                   uint32_t _numMicroops, uint32_t _field, uint32_t _numFields,
                    uint32_t _elen, uint32_t _vlen)
-        : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
-                          _microIdx, _elen, _vlen)
-        , trimVl(false), faultIdx(_microVl)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
+                          _elen, _vlen),
+          trimVl(false),
+          faultIdx(_microVl),
+          elemOffset(_microIdx * (_vlen / width_EEW(_machInst.width)) *
+                         _numFields +
+                     _field * _microVl),
+          numFields(_numFields)
     {
       this->flags[IsLoad] = true;
     }

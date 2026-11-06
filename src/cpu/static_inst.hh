@@ -307,6 +307,37 @@ class StaticInst : public RefCounted, public StaticInstFlags
         panic("completeAcc not defined!");
     }
 
+    /**
+     * Give the instruction a chance to react to a fault raised by one of
+     * its data memory accesses before that fault is delivered to the fault
+     * handler.
+     *
+     * Most instructions have nothing to do here and simply return the fault
+     * unchanged.  Some, however, need to inspect or even suppress it.  The
+     * RISC-V fault-only-first vector loads (vle*ff/vlseg*ff), for instance,
+     * only take a trap when the *first* element faults; a fault on any later
+     * element is suppressed and the vector length is trimmed instead.
+     *
+     * CPU models that deliver data access faults synchronously (e.g. the
+     * atomic simple CPU, where readMem() returns the fault straight back to
+     * initiateAcc()/execute()) already let the instruction apply this logic
+     * inline.  Models that deliver the fault asynchronously -- notably the
+     * timing simple CPU, where a translation fault surfaces in
+     * finishTranslation() long after initiateAcc() has returned -- must route
+     * the fault through this hook so the instruction gets the same chance to
+     * handle it.
+     *
+     * @param fault The fault raised while translating/accessing the data.
+     * @param vaddr The virtual address the access was initiated at.
+     * @return The fault that should actually be raised, or NoFault if the
+     *         instruction suppressed it.
+     */
+    virtual Fault
+    handleMemFault(const Fault &fault, Addr vaddr) const
+    {
+        return fault;
+    }
+
     virtual void advancePC(PCStateBase &pc_state) const = 0;
     virtual void advancePC(ThreadContext *tc) const;
 
