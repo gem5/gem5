@@ -50,3 +50,12 @@ if env['CONF']['BUILD_ISA']:
         )
         Source('elastic_trace.cc', tags=['protobuf'])
         DebugFlag('ElasticTrace', tags=['protobuf'])
+
+        if env['CONF'].get('USE_RISCV_ISA', False):
+            SimObject(
+                'ETrace.py',
+                sim_objects=['ETrace'],
+                tags=['protobuf', 'riscv isa']
+            )
+            Source('etrace.cc', tags=['protobuf', 'riscv isa'])
+            DebugFlag('ETrace', tags=['protobuf', 'riscv isa'])
