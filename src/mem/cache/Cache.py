@@ -399,6 +399,14 @@ class BaseCache(ClockedObject):
         "same way (0 = no floor; ignored with tail_fixed)",
     )
 
+    tail_kmax = Param.Unsigned(
+        10,
+        "window_mode=tail (ablation): a K whose bin is above tail_kmax is "
+        "infinity, so W takes only the values 2^k - 1 for k <= tail_kmax, "
+        "or inf (damping from inf goes to the largest of those, at most "
+        "511); 10 = no cap (ignored with tail_fixed)",
+    )
+
     tail_fastup = Param.Bool(
         False,
         "window_mode=tail (ablation): at every frame end that is not an "

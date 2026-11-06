@@ -941,6 +941,10 @@ class RetentionManager
      *  tail_victim) and the per-row tick of the last use (tail_victim=lru;
      *  kept on expired tags) */
     unsigned tailKmin = 0;
+    /** tail_kmax: a K above bin kmax is inf (10 = no cap). */
+    unsigned tailKmax = 10;
+    /** The largest finite W allowed: 2^min(kmax, 9) - 1. */
+    uint32_t tailTopW = 511;
     bool tailFastUp = false;
     bool tailHalve = true;
     bool tailVictimLru = false;

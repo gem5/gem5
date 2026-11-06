@@ -315,6 +315,12 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailLogHistOn = p.tail_log_hist;
             tailLogFrameOn = p.tail_log_frame;
             tailKmin = p.tail_kmin;
+            tailKmax = p.tail_kmax;
+            fatal_if(tailKmax > 10 || tailKmax < tailKmin,
+                     "%s: tail_kmax must be tail_kmin..10", cache.name());
+            tailTopW = (1u << std::min(tailKmax, 9u)) - 1;
+            fatal_if(p.tail_w0 > tailTopW && p.tail_fixed == "-1",
+                     "%s: tail_w0 above 2^tail_kmax - 1", cache.name());
             tailFastUp = p.tail_fastup;
             tailHalve = p.tail_halve;
             fatal_if(tailKmin > 9, "%s: tail_kmin must be <= 9",
@@ -554,6 +560,10 @@ RetentionManager::startup()
                            "%d, halve %d, victim %s", cache.name(),
                            tailKmin, (1u << tailKmin) - 1, tailFastUp,
                            tailHalve, tailVictimLru ? "lru" : "expired");
+                if (tailKmax < 10)
+                    inform("%s: tail ablation: kmax %u (W in 2^k - 1, k <= "
+                           "%u, or inf; from inf down to %u)", cache.name(),
+                           tailKmax, tailKmax, tailTopW);
             }
             if (wbMode) {
                 inform("%s: window mode wb (Refrint WB(n,m)): n %d, m %d "
@@ -2928,7 +2938,8 @@ RetentionManager::tailEpoch()
                 w = k;
             } else {
                 // Shrink one rung at most
-                w = std::max(k, tailW == tailInf ? 511u : (tailW - 1) / 2);
+                w = std::max(k, tailW == tailInf ? tailTopW :
+                                 (tailW - 1) / 2);
             }
             // tail_kmin: the floor
             w = std::max(w, (1u << tailKmin) - 1);
@@ -2975,7 +2986,9 @@ RetentionManager::tailKOf(uint64_t total) const
     for (unsigned b = tailBins - 1; b >= 1; b--) {
         tail += tailReuses[b];
         if ((tail << tailEpsShift) > total) {
-            k = b == tailBins - 1 ? tailInf : (1u << b) - 1;
+            // tail_kmax: a bin above kmax is inf
+            k = b == tailBins - 1 || b > tailKmax ? tailInf :
+                (1u << b) - 1;
             break;
         }
     }
