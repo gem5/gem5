@@ -51,13 +51,11 @@ jobs:
                   gh workflow run daily-tests.yaml --ref develop >/dev/null
                   echo "Daily test scheduled to run on develop branch."
 
-            - name: Weekly Tests and CI-Daily Tests for Codecov
+            - name: Weekly Tests
               if: github.event.schedule == '30 19 * * 5'
               run: |
                   gh workflow run weekly-tests.yaml --ref develop >/dev/null
-                  gh workflow run ci-daily-codecov.yaml --ref develop >/dev/null
-                  echo "Weekly test and runs of CI and Daily tests for code" \
-                  "coverage scheduled to run on develop branch."
+                  echo "Weekly tests scheduled to run on develop branch."
 
             - name: Compiler Tests
               if: github.event.schedule == '30 21 * * 2'
