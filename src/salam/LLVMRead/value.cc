@@ -249,8 +249,8 @@ SALAM::Value::addRegister(llvm::Type *irtype, bool istracked)
     std::string type_text;
     llvm::raw_string_ostream ts(type_text);
     ts << *irtype;
-    fatal("SALAM does not support LLVM value type '%s': %s",
-          ts.str().c_str(), ir_string.c_str());
+    fatal("SALAM does not support LLVM value type '%s': %s", ts.str().c_str(),
+          ir_string.c_str());
 }
 
 void
