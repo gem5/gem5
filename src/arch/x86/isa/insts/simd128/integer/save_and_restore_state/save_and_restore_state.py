@@ -158,6 +158,59 @@ fxrstor64Template = """
     wrval ctrlRegIdx("misc_reg::Foseg"), t2
 """ + fxrstorCommonTemplate
 
+
+xrstor32Template = fxrstor32Template + """
+        ld t1, seg, %(mode)s, "DISPLACEMENT + 512", dataSize=8
+        ld t1, seg, %(mode)s, "DISPLACEMENT + 512 + 64", dataSize=4
+        wrval ctrlRegIdx("misc_reg::Pkru"), t1
+    """
+
+
+xrstor64Template = fxrstor64Template + """
+        ld t1, seg, %(mode)s, "DISPLACEMENT + 512 + 64", dataSize=4
+        wrval ctrlRegIdx("misc_reg::Pkru"), t1
+    """
+
+
+xsave64Template = (
+    # Legacy region
+    fxsave64Template
+    +
+    # Xsave header
+    """
+        #XSTATE_BV
+        rdval t1, ctrlRegIdx("misc_reg::Xcr0")
+        st t1, seg, %(mode)s, "DISPLACEMENT + 512", dataSize=8
+        #XCOMP_BV not supported, so 0
+        limm t2, 0, dataSize=8
+        st t2, seg, %(mode)s, "DISPLACEMENT + 512 + 8", dataSize=8
+        # PKRU, TODO use CPUID for this
+        rdval t1, ctrlRegIdx("misc_reg::Pkru")
+        st t1, seg, %(mode)s, "DISPLACEMENT + 512 + 64", dataSize=8
+
+    """
+)
+
+xsave32Template = (
+    fxsave32Template
+    +
+    # Xsave header
+    """
+        #XSTATE_BV
+        #XSTATE_BV
+        rdval t1, ctrlRegIdx("misc_reg::Xcr0")
+        st t1, seg, %(mode)s, "DISPLACEMENT + 512", dataSize=8
+        #XCOMP_BV not supported, so 0
+        limm t2, 0, dataSize=8
+        st t2, seg, %(mode)s, "DISPLACEMENT + 512 + 8", dataSize=8
+        # PKRU, TODO use CPUID for this
+        rdval t1, ctrlRegIdx("misc_reg::Pkru")
+        st t1, seg, %(mode)s, "DISPLACEMENT + 512 + 64", dataSize=8
+
+    """
+)
+
+
 microcode = (
     """
 def macroop FXSAVE_M {
@@ -211,5 +264,61 @@ def macroop FXRSTOR64_P {
     + fxrstor64Template % {"mode": "riprel"}
     + """
 };
+
+
+def macroop XSAVE_M {
+
+"""
+    + xsave32Template % {"mode": "sib"}
+    + """
+};
+
+
+def macroop XSAVE_P {
+    rdip t7
+"""
+    + xsave32Template % {"mode": "riprel"}
+    + """
+};
+
+def macroop XSAVE64_M {
+"""
+    + xsave64Template % {"mode": "sib"}
+    + """
+};
+
+def macroop XSAVE64_P {
+    rdip t7
+"""
+    + xsave64Template % {"mode": "riprel"}
+    + """
+};
+
+def macroop XRSTOR_M {
+"""
+    + xrstor32Template % {"mode": "sib"}
+    + """
+};
+
+def macroop XRSTOR_P {
+    rdip t7
+"""
+    + xrstor32Template % {"mode": "riprel"}
+    + """
+};
+
+def macroop XRSTOR64_M {
+"""
+    + xrstor64Template % {"mode": "sib"}
+    + """
+};
+
+def macroop XRSTOR64_P {
+    rdip t7
+"""
+    + xrstor64Template % {"mode": "riprel"}
+    + """
+};
+
 """
 )
