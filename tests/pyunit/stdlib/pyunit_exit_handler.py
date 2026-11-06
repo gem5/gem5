@@ -24,7 +24,65 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import json
+import socket
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import Mock
+
+
+class TestOrchestratorResponses(unittest.TestCase):
+    def request(self, function, arguments=None):
+        from gem5.simulate.exit_handler import OrchestratorExitHandler
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "response")
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as listener:
+                listener.settimeout(2)
+                listener.bind(path)
+                listener.listen(1)
+                payload = {"response_socket": path, "function": function}
+                if arguments is not None:
+                    payload["arguments"] = arguments
+
+                simulator = Mock()
+                simulator.get_stats.return_value = {"simTicks": 123}
+                self.assertFalse(
+                    OrchestratorExitHandler(payload).handle(simulator)
+                )
+                connection, _ = listener.accept()
+                with connection:
+                    connection.settimeout(2)
+                    response = connection.recv(4096)
+                return json.loads(response)
+
+    def test_missing_debug_arguments_returns_error(self):
+        self.assertEqual(
+            self.request("update_debug_flags"),
+            {"error": "Missing arguments for update_debug_flags"},
+        )
+
+    def test_empty_debug_arguments_returns_error(self):
+        self.assertEqual(
+            self.request("update_debug_flags", ""),
+            {"error": "Missing arguments for update_debug_flags"},
+        )
+
+    def test_debug_arguments_still_return_response(self):
+        flag = "__gem5_regression_unknown_flag__"
+        response = self.request("update_debug_flags", flag)
+        self.assertEqual(response["invalid_flags"], str([flag]))
+        self.assertEqual(response["flags_enabled"], "[]")
+        self.assertEqual(response["flags_disabled"], "[]")
+
+    def test_stats_response(self):
+        self.assertEqual(self.request("get_stats"), {"simTicks": 123})
+
+    def test_unknown_function_returns_error(self):
+        self.assertEqual(
+            self.request("unknown"), {"error": "Unknown function: unknown"}
+        )
 
 
 class TestExitHandlerCompatibility(unittest.TestCase):
