@@ -61,7 +61,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
       checkpoint_before_mmios(p.checkpoint_before_mmios),
       init_interrupt_count(0),
       _lastVMID(0),
-      deviceMem(name() + ".deviceMem", p.memories, false, "", false),
+      deviceMem(name() + ".deviceMem", p.memories, false, "",
+                p.is_sparse_restore),
       system(p.system),
       gpuId(p.gpu_id)
 {
