@@ -143,6 +143,24 @@ class ExecContext
     }
 
     /**
+     * Initiate a timing memory read of several fragments with holes in
+     * between. Fragment i covers [addrs[i], addrs[i] + sizes[i]); fragments
+     * need not be sorted and may overlap. The data is packed: the bytes of
+     * the fragments are laid out back to back in fragment order, so
+     * byte_enable holds as many elements as the sum of sizes. Must be
+     * overridden for exec contexts that support such accesses.
+     */
+    virtual Fault
+    initiateMemReadNonContiguous(const std::vector<Addr> &addrs,
+                                 const std::vector<unsigned int> &sizes,
+                                 Request::Flags flags,
+                                 const std::vector<bool> &byte_enable)
+    {
+        panic("ExecContext::initiateMemReadNonContiguous() should be "
+              "overridden\n");
+    }
+
+    /**
      * Initiate a memory management command with no valid address.
      * Currently, these instructions need to bypass squashing in the O3 model
      * Examples include HTM commands and TLBI commands.
@@ -158,6 +176,21 @@ class ExecContext
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
                            Request::Flags flags, uint64_t *res,
                            const std::vector<bool>& byte_enable) = 0;
+
+    /**
+     * Initiate a timing memory write of several fragments with holes in
+     * between. Fragments and data are as for initiateMemReadNonContiguous().
+     * Where fragments overlap, the bytes of the last one are written last.
+     * Must be overridden for exec contexts that support such accesses.
+     */
+    virtual Fault
+    writeMemNonContiguous(uint8_t *data, const std::vector<Addr> &addrs,
+                          const std::vector<unsigned int> &sizes,
+                          Request::Flags flags, uint64_t *res,
+                          const std::vector<bool> &byte_enable)
+    {
+        panic("ExecContext::writeMemNonContiguous() should be overridden\n");
+    }
 
     /**
      * For atomic-mode contexts, perform an atomic AMO (a.k.a., Atomic
