@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024 Arm Limited
+# Copyright (c) 2024,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -63,6 +63,11 @@ class SetAssociative(BaseIndexingPolicy):
 
     # Get the entry size from the parent (tags)
     entry_size = Param.Int(Parent.entry_size, "entry size in bytes")
+
+    index_start_bit = Param.Int(
+        -1,
+        "first address bit used for set indexing; negative uses entry size",
+    )
 
 
 class SkewedAssociative(BaseIndexingPolicy):
