@@ -46,6 +46,7 @@ from m5.objects.BranchPredictor import *
 from m5.objects.FUPool import *
 from m5.objects.IndexingPolicies import *
 from m5.objects.IQUnit import *
+from m5.objects.LSQOccupancy import *
 from m5.objects.ReplacementPolicies import *
 from m5.objects.SMT import *
 from m5.params import *
@@ -144,6 +145,16 @@ class BaseO3CPU(BaseCPU):
     vecMemPackWidth = OptionalParam.Unsigned(
         "Unit-stride vector LSU split grain in bytes. "
         "If unspecified, use the cache-line size.",
+    )
+    lsqOpDescs = VectorParam.LSQOpDesc(
+        [],
+        "LSQ entries occupied per op class; op classes not listed occupy "
+        "one entry",
+    )
+    lsqOverflowMode = Param.LSQOverflowMode(
+        "Overcommit",
+        "Handling of accesses that need more LSQ entries than they reserved "
+        "at dispatch",
     )
     LSQDepCheckShift = Param.Unsigned(
         4, "Number of places to shift addr before check"

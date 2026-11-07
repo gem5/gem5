@@ -351,6 +351,12 @@ class InstructionQueue
     void replayMemInst(const DynInstPtr &replay_inst);
 
     /**
+     * Replays a rescheduled memory instruction without replaying the other
+     * rescheduled ones.
+     */
+    void replaySingleMemInst(const DynInstPtr &replay_inst);
+
+    /**
      * Defers a memory instruction when its DTB translation incurs a hw
      * page table walk.
      */

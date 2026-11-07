@@ -55,6 +55,7 @@
 #include "cpu/timebuf.hh"
 #include "debug/HtmCpu.hh"
 #include "debug/LSQUnit.hh"
+#include "enums/LSQOverflowMode.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
@@ -82,6 +83,13 @@ class LSQEntry
     LSQRequest *_request = nullptr;
     /** The size of the operation. */
     uint32_t _size = 0;
+    /** Number of LSQ entries occupied by the operation. */
+    unsigned _occupiedEntries = 0;
+    /**
+     * Number of LSQ entries the operation waits for to be replayed, or 0
+     * if it does not wait.
+     */
+    unsigned _waitingEntries = 0;
     /** Valid entry. */
     bool _valid = false;
 
@@ -112,6 +120,26 @@ class LSQEntry
     const uint32_t &
     size() const
     { return _size; }
+    unsigned &
+    occupiedEntries()
+    {
+        return _occupiedEntries;
+    }
+    const unsigned &
+    occupiedEntries() const
+    {
+        return _occupiedEntries;
+    }
+    unsigned &
+    waitingEntries()
+    {
+        return _waitingEntries;
+    }
+    const unsigned &
+    waitingEntries() const
+    {
+        return _waitingEntries;
+    }
     const DynInstPtr &
     instruction() const
     { return _inst; }
@@ -341,10 +369,39 @@ class LSQUnit
     bool isEmpty() const { return lqEmpty() && sqEmpty(); }
 
     /** Returns if the LQ is full. */
-    bool lqFull() { return loadQueue.full(); }
+    bool
+    lqFull()
+    {
+        return lqOccupied >= loadQueue.capacity();
+    }
 
     /** Returns if the SQ is full. */
-    bool sqFull() { return storeQueue.full(); }
+    bool
+    sqFull()
+    {
+        return sqOccupied >= storeQueue.capacity();
+    }
+
+    /** Returns if the given number of LQ entries are free. */
+    bool
+    canInsertLoad(unsigned entries) const
+    {
+        return lqOccupied + entries <= loadQueue.capacity();
+    }
+
+    /** Returns if the given number of SQ entries are free. */
+    bool
+    canInsertStore(unsigned entries) const
+    {
+        return sqOccupied + entries <= storeQueue.capacity();
+    }
+
+    /**
+     * Changes the number of entries occupied by a memory instruction in
+     * the LSQ, as allowed by the overflow mode. Returns false if the
+     * access must be replayed once more entries are free.
+     */
+    bool resizeEntries(const DynInstPtr &inst, unsigned entries);
 
     /** Returns if the LQ is empty. */
     bool lqEmpty() const { return loadQueue.size() == 0; }
@@ -381,6 +438,25 @@ class LSQUnit
   private:
     /** Reset the LSQ state */
     void resetState();
+
+    /** Releases the LQ entries occupied by a load. */
+    void releaseLoadEntries(const LQEntry &entry);
+
+    /** Releases the SQ entries occupied by a store. */
+    void releaseStoreEntries(const SQEntry &entry);
+
+    /** Updates the LQ occupancy stats. */
+    void updateLQOccupancyStats();
+
+    /** Updates the SQ occupancy stats. */
+    void updateSQOccupancyStats();
+
+    /**
+     * Replays the accesses waiting for free SQ entries, if uses_sq, or LQ
+     * entries that now fit in the queue. The oldest access of the queue
+     * is always replayed.
+     */
+    void wakeEntryWaiters(bool uses_sq);
 
     /** Writes back the instruction, sending it to IEW. */
     void writeback(const DynInstPtr &inst, PacketPtr pkt);
@@ -468,6 +544,24 @@ class LSQUnit
     LoadQueue loadQueue;
 
   private:
+    /** Number of LQ entries occupied by the loads in the LQ. */
+    unsigned lqOccupied = 0;
+
+    /** Number of SQ entries occupied by the stores in the SQ. */
+    unsigned sqOccupied = 0;
+
+    /**
+     * How to handle accesses that need more entries than they reserved at
+     * dispatch.
+     */
+    LSQOverflowMode overflowMode;
+
+    /** Whether a load may wait to be replayed until entries are freed. */
+    bool lqWaiters = false;
+
+    /** Whether a store may wait to be replayed until entries are freed. */
+    bool sqWaiters = false;
+
     /** The number of places to shift addresses in the LSQ before checking
      * for dependency violations
      */
@@ -562,6 +656,24 @@ class LSQUnit
         statistics::Average lqAvgOccupancy;
         /** SQ Occupancy */
         statistics::Average sqAvgOccupancy;
+        /** LQ instruction occupancy */
+        statistics::Average lqAvgInstOccupancy;
+        /** SQ instruction occupancy */
+        statistics::Average sqAvgInstOccupancy;
+
+        /** Number of times an access increased its occupied entries. */
+        statistics::Scalar entriesGrown;
+        /** Number of times an access decreased its occupied entries. */
+        statistics::Scalar entriesShrunk;
+        /** Number of accesses clamped to the entries they reserved. */
+        statistics::Scalar entryClamps;
+        /** Number of times a queue occupied more entries than it has. */
+        statistics::Scalar entryOvercommits;
+        /**
+         * Number of times an access was refused because not enough
+         * entries were free, and so waits to be replayed.
+         */
+        statistics::Scalar entryReplays;
 
         /** Unit-stride vector accesses with vecMemPackWidth specified. */
         statistics::Scalar vecMemPackAccesses;

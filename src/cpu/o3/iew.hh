@@ -183,6 +183,12 @@ class IEW
     /** Re-executes all rescheduled memory instructions. */
     void replayMemInst(const DynInstPtr &inst);
 
+    /**
+     * Re-executes a rescheduled memory instruction, but not the other
+     * rescheduled ones.
+     */
+    void replaySingleMemInst(const DynInstPtr &inst);
+
     /** Moves memory instruction onto the list of cache blocked instructions */
     void blockMemInst(const DynInstPtr &inst);
 
@@ -267,6 +273,12 @@ class IEW
 
     /** Dispatches instructions to IQ and LSQ. */
     void dispatchInsts(ThreadID tid);
+
+    /**
+     * Tells rename that an instruction it sent has been processed, so that
+     * the LSQ entries it reserved are no longer counted as in progress.
+     */
+    void reportLSQDispatched(ThreadID tid, const DynInstPtr &inst);
 
     /** Executes instructions. In the case of memory operations, it informs the
      * LSQ to execute the instructions. Also handles any redirects that occur
