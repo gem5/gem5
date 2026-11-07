@@ -702,7 +702,7 @@ let {{
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
         sIop = ArmInstObjParams(name + ".f32", Name + "S", base,
-                { "code": singleSimpleCode % { "op": singleOp },
+                { "code": singleCode % { "op": singleOp },
                   "predicate_test": predicateTest,
                   "op_class": opClass }, [])
         dIop = ArmInstObjParams(name + ".f64", Name + "D", base,
