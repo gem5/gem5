@@ -282,6 +282,11 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         winTimeN = window->nValue();
         winFillUAlways = p.window_fill_u_always;
         winCleanEvictUse = p.window_cleanevict_sets_u;
+        winDropNotify = p.window_drop_notify;
+        if (winDropNotify)
+            inform("%s: window_drop_notify: a clean drop sends its "
+                   "CleanEvict at the drop (no notice owed by its expired "
+                   "tag)", cache.name());
         // Probation: a 2-bit counter per line (0..M-1 in probation, 3 out)
         winProbM = p.window_probation_frames;
         fatal_if(winProbM > 3, "%s: window_probation_frames must be 0..3 "
@@ -2310,7 +2315,9 @@ RetentionManager::windowExpiredMatch(unsigned set, Addr blk_addr,
 bool
 RetentionManager::dropNeedsWb(bool dirty) const
 {
-    return dirty || cache.writebackClean;
+    // window_drop_notify: a clean drop also leaves through the write
+    // buffer (its CleanEvict), so its expired tag owes no notice
+    return dirty || cache.writebackClean || winDropNotify;
 }
 
 void
@@ -3109,8 +3116,12 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
         // read is part of the refresh-all operation already booked.
         // writeback_clean: a clean line too leaves exactly like an
         // eviction (WritebackClean with its data, to the level below)
-        if (!dirty)
-            ws.cleanDropWritebacks++;
+        if (!dirty) {
+            if (cache.writebackClean)
+                ws.cleanDropWritebacks++;
+            else
+                ws.cleanDropNotices++;
+        }
         PacketList writebacks;
         cache.evictBlock(blk, writebacks);
         if (cache.system->isTimingMode()) {
@@ -3705,6 +3716,9 @@ RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
       ADD_STAT(cleanDropWritebacks, statistics::units::Count::get(),
                "writeback_clean: clean drops sent below as a "
                "WritebackClean at the drop (as an eviction)"),
+      ADD_STAT(cleanDropNotices, statistics::units::Count::get(),
+               "window_drop_notify: clean drops whose CleanEvict was sent "
+               "at the drop (none owed by the expired tag)"),
       ADD_STAT(retentionMissNextLevel, statistics::units::Count::get(),
                "retention misses filled by the next level below (with an "
                "L3: L3 hits; without: memory)"),

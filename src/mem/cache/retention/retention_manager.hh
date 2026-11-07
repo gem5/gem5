@@ -875,6 +875,9 @@ class RetentionManager
      *  valid line. */
     bool winFillUAlways = false;
     bool winCleanEvictUse = false;
+    /** window_drop_notify: a clean drop notifies the level below at the
+     *  drop (no notice owed by its expired tag) */
+    bool winDropNotify = false;
 
     /** window_mode=wb (Refrint WB(n,m)): on, n and m (-1 = infinity),
      *  and per row the countdown (-1 = infinity) and the frames since
@@ -1042,6 +1045,7 @@ class RetentionManager
         statistics::Scalar expiredWbCleared;
         statistics::Scalar expiredCleanEvicts;
         statistics::Scalar cleanDropWritebacks;
+        statistics::Scalar cleanDropNotices;
         statistics::Scalar retentionMissNextLevel;
         statistics::Scalar retentionMissDeeper;
         statistics::Scalar expiredFilterCleared;

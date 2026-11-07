@@ -320,6 +320,15 @@ class BaseCache(ClockedObject):
         "uses it (U = 1, D = 0)",
     )
 
+    window_drop_notify = Param.Bool(
+        False,
+        "Window modes: a clean drop sends its CleanEvict at the drop "
+        "(write buffer, cached-above check, as an SRAM eviction) instead "
+        "of when its expired tag is replaced. Needed when a cache below "
+        "can evict the line on its own (an L3): a late notice reaches an "
+        "L3 that has already evicted the line",
+    )
+
     window_probation_frames = Param.Unsigned(
         0,
         "Window mode: a line filled by a demand miss is on probation, "
