@@ -1091,8 +1091,13 @@ FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
     const bool single = (sizeof(fpType) == sizeof(float));
     fpType junk = 0.0;
 
-    if (flush && (flushToZero(op1, op2) || flushToZero(op3)))
-        fpscr.idc = 1;
+    if (flush) {
+        // Flush every input, even if a preceding input was subnormal.
+        bool flush12 = flushToZero(op1, op2);
+        bool flush3 = flushToZero(op3);
+        if (flush12 || flush3)
+            fpscr.idc = 1;
+    }
     VfpSavedState state = prepFpState(rMode);
     __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (op3), "=m" (state)
                              :  "m" (op1),  "m" (op2),  "m" (op3),  "m" (state));
