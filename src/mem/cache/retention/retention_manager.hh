@@ -878,6 +878,12 @@ class RetentionManager
     /** window_drop_notify: a clean drop notifies the level below at the
      *  drop (no notice owed by its expired tag) */
     bool winDropNotify = false;
+    /** tail_drop_wb_cached / tail_keep_cached (2026-11-07) */
+    bool dropWbCached = false;
+    bool tailKeepCached = false;
+    /** The line at blk_addr is cached above (an express snoop, as
+     *  Cache::isCachedAbove does for an eviction) */
+    bool cachedAbove(Addr blk_addr, bool secure, uint32_t task_id);
 
     /** window_mode=wb (Refrint WB(n,m)): on, n and m (-1 = infinity),
      *  and per row the countdown (-1 = infinity) and the frames since
@@ -1046,6 +1052,7 @@ class RetentionManager
         statistics::Scalar expiredCleanEvicts;
         statistics::Scalar cleanDropWritebacks;
         statistics::Scalar cleanDropNotices;
+        statistics::Scalar dropWbCachedSent;
         statistics::Scalar retentionMissNextLevel;
         statistics::Scalar retentionMissDeeper;
         statistics::Scalar expiredFilterCleared;
@@ -1146,6 +1153,7 @@ class RetentionManager
         statistics::Scalar dropsDirty;
         statistics::Scalar wbDeferred;
         statistics::Scalar cleanDeferred;
+        statistics::Scalar keptCached;
         statistics::Value deferredPeak;
         statistics::Scalar retentionMisses;
         statistics::Vector ended;

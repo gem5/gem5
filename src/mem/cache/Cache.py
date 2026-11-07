@@ -320,6 +320,21 @@ class BaseCache(ClockedObject):
         "uses it (U = 1, D = 0)",
     )
 
+    tail_drop_wb_cached = Param.Bool(
+        False,
+        "Retention drops (window modes) with writeback_clean: a clean drop "
+        "whose line is still cached above still sends its WritebackClean "
+        "with data, BLOCK_CACHED set (the level below stores it and keeps "
+        "this cache listed); replacement evictions unchanged",
+    )
+
+    tail_keep_cached = Param.Bool(
+        False,
+        "window_mode=tail: at its slot a due line still cached above is "
+        "refreshed instead of dropped (retried at its next slot; its age "
+        "keeps counting)",
+    )
+
     window_drop_notify = Param.Bool(
         False,
         "Window modes: a clean drop sends its CleanEvict at the drop "

@@ -13,6 +13,7 @@
 #include "base/trace.hh"
 #include "debug/Cache.hh"
 #include "mem/cache/base.hh"
+#include "mem/cache/cache.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/retention/bank_ports.hh"
 #include "mem/cache/retention/reuse_tracker.hh"
@@ -283,6 +284,15 @@ RetentionManager::RetentionManager(BaseCache &_cache,
         winFillUAlways = p.window_fill_u_always;
         winCleanEvictUse = p.window_cleanevict_sets_u;
         winDropNotify = p.window_drop_notify;
+        dropWbCached = p.tail_drop_wb_cached;
+        tailKeepCached = p.tail_keep_cached;
+        if (dropWbCached)
+            inform("%s: tail_drop_wb_cached: a clean drop still cached "
+                   "above sends its WritebackClean anyway (BLOCK_CACHED)",
+                   cache.name());
+        if (tailKeepCached)
+            inform("%s: tail_keep_cached: a due line still cached above "
+                   "is refreshed instead of dropped", cache.name());
         if (winDropNotify)
             inform("%s: window_drop_notify: a clean drop sends its "
                    "CleanEvict at the drop (no notice owed by its expired "
@@ -2898,6 +2908,19 @@ RetentionManager::tailRow(CacheBlk *blk, unsigned row)
         st.linesRefreshed++;
         return;
     }
+    // tail_keep_cached: a due line still cached above is refreshed
+    // instead of dropped (retried at its next slot; its age keeps counting)
+    if (tailKeepCached && cachedAbove(cache.regenerateBlkAddr(blk),
+                                      blk->isSecure(), blk->getTaskId())) {
+        if (winPend[row]) {
+            winPend[row] = 0;
+            winPendLive--;
+        }
+        st.keptCached++;
+        ws.linesRefreshed++;
+        st.linesRefreshed++;
+        return;
+    }
     // Dropped through the window drop path, unless the line is the only
     // copy and cannot leave now (a request to it in flight, or dirty
     // with the write buffer full): refreshed, retried at the next slot
@@ -2924,6 +2947,21 @@ RetentionManager::tailRow(CacheBlk *blk, unsigned row)
         st.dropsClean++;
     st.ageAtDrop.sample(tailAge[row]);
     windowDrop(blk, row, dirty);
+}
+
+bool
+RetentionManager::cachedAbove(Addr blk_addr, bool secure, uint32_t task_id)
+{
+    Cache *c = dynamic_cast<Cache *>(&cache);
+    if (!c)
+        return false;
+    RequestPtr req = std::make_shared<Request>(blk_addr, cache.blkSize, 0,
+                                               Request::wbRequestorId);
+    if (secure)
+        req->setFlags(Request::SECURE);
+    req->taskId(task_id);
+    Packet pkt(req, MemCmd::CleanEvict);
+    return c->isCachedAbove(&pkt, cache.system->isTimingMode());
 }
 
 void
@@ -3124,7 +3162,25 @@ RetentionManager::windowDrop(CacheBlk *blk, unsigned row, bool dirty,
         }
         PacketList writebacks;
         cache.evictBlock(blk, writebacks);
-        if (cache.system->isTimingMode()) {
+        if (dropWbCached && !dirty && cache.writebackClean &&
+            cache.system->isTimingMode()) {
+            // tail_drop_wb_cached: the WritebackClean goes below even when
+            // the line is still cached above, with BLOCK_CACHED set (as
+            // doWritebacks does for a WritebackDirty): the level below
+            // stores the data and keeps this cache listed. One snoop, as
+            // doWritebacks; not cached above: sent as doWritebacks sends it
+            const Tick t = cache.clockEdge(cache.forwardLatency);
+            for (PacketPtr wb : writebacks) {
+                panic_if(wb->cmd != MemCmd::WritebackClean, "%s: clean "
+                         "drop sent %s", cache.name(), wb->cmdString());
+                if (cachedAbove(wb->getBlockAddr(cache.blkSize),
+                                wb->isSecure(), wb->req->taskId())) {
+                    wb->setBlockCached();
+                    ws.dropWbCachedSent++;
+                }
+                cache.allocateWriteBuffer(wb, t);
+            }
+        } else if (cache.system->isTimingMode()) {
             cache.doWritebacks(writebacks,
                                cache.clockEdge(cache.forwardLatency));
         } else {
@@ -3719,6 +3775,9 @@ RetentionManager::WindowStats::WindowStats(RetentionManager &_mgr,
       ADD_STAT(cleanDropNotices, statistics::units::Count::get(),
                "window_drop_notify: clean drops whose CleanEvict was sent "
                "at the drop (none owed by the expired tag)"),
+      ADD_STAT(dropWbCachedSent, statistics::units::Count::get(),
+               "tail_drop_wb_cached: clean drops still cached above whose "
+               "WritebackClean was sent anyway (BLOCK_CACHED set)"),
       ADD_STAT(retentionMissNextLevel, statistics::units::Count::get(),
                "retention misses filled by the next level below (with an "
                "L3: L3 hits; without: memory)"),
@@ -3999,6 +4058,9 @@ RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
       ADD_STAT(cleanDeferred, statistics::units::Count::get(),
                "slots where a due clean line was only refreshed (a request "
                "to it in flight)"),
+      ADD_STAT(keptCached, statistics::units::Count::get(),
+               "tail_keep_cached: slots where a due line still cached above "
+               "was refreshed instead of dropped"),
       ADD_STAT(deferredPeak, statistics::units::Count::get(),
                "most lines deferred at once (window.deferredPeak)"),
       ADD_STAT(retentionMisses, statistics::units::Count::get(),

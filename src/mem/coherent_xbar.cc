@@ -198,6 +198,12 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 
     const bool snoop_caches = !system->bypassCaches() &&
         pkt->cmd != MemCmd::WriteClean;
+    // A WritebackClean whose sender set BLOCK_CACHED itself (a GC cache's
+    // retention drop of a line still cached above, tail_drop_wb_cached)
+    // carries data for the level below and keeps the sender listed: it is
+    // forwarded unless a peer holds the line. Stock gem5 never sends one
+    // (doWritebacks deletes a clean writeback that is cached above).
+    bool keep_wbc = false;
     if (snoop_caches) {
         assert(pkt->snoopDelay == 0);
 
@@ -236,6 +242,8 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
                 // all we do is determine if the block is cached or
                 // not, instead just set it here based on the snoop
                 // filter result
+                keep_wbc = pkt->cmd == MemCmd::WritebackClean &&
+                    pkt->isBlockCached() && sf_res.first.empty();
                 if (!sf_res.first.empty())
                     pkt->setBlockCached();
             } else {
@@ -259,7 +267,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     const bool expect_snoop_resp = !cache_responding && pkt->cacheResponding();
     bool expect_response = pkt->needsResponse() && !pkt->cacheResponding();
 
-    const bool sink_packet = sinkPacket(pkt);
+    const bool sink_packet = sinkPacket(pkt) && !keep_wbc;
 
     // in certain cases the crossbar is responsible for responding
     bool respond_directly = false;

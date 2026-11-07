@@ -60,12 +60,16 @@ namespace gem5
 class CacheBlk;
 struct CacheParams;
 class MSHR;
+class RetentionManager;
 
 /**
  * A coherent cache that can be arranged in flexible topologies.
  */
 class Cache : public BaseCache
 {
+    // tail_drop_wb_cached / tail_keep_cached: the cached-above check
+    friend class RetentionManager;
+
   protected:
     /**
      * This cache should allocate a block on a line-sized write miss.
