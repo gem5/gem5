@@ -49,7 +49,8 @@ class TesterDma : public DmaDevice
   public:
     typedef TesterDmaParams Params;
     TesterDma(const Params &p)
-        : DmaDevice(p), pioAddr(p.pio_addr), pioSize(p.pio_size) { }
+        : DmaDevice(p), pioAddr(p.pio_addr), pioSize(p.pio_size)
+    {}
     virtual ~TesterDma() { }
 
     // The tester does not use a huge memory range. The range itself is
