@@ -1017,13 +1017,11 @@ else:
 
 ########################## Start simulation ########################
 
-redirect_paths = [
-    RedirectPath(
-        app_path="/proc", host_paths=[f"{m5.options.outdir}/fs/proc"]
-    ),
-    RedirectPath(app_path="/sys", host_paths=[f"{m5.options.outdir}/fs/sys"]),
-    RedirectPath(app_path="/tmp", host_paths=[f"{m5.options.outdir}/fs/tmp"]),
-]
+# Ruby.create_system() already ran FileSystemConfig.config_filesystem(), which
+# set --interp-dir and system.redirect_paths (/proc, /sys, /tmp plus --redirects
+# and --chroot). Overwriting it here with only /proc, /sys and /tmp silently
+# dropped --redirects, so keep the full list.
+redirect_paths = FileSystemConfig._redirect_paths(args)
 
 system.redirect_paths = redirect_paths
 
