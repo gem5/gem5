@@ -92,20 +92,22 @@ struct AmxTileState
 AmxTileConfig decodeAmxTileConfig(const AmxRawTileConfig &raw);
 bool validateAmxTileConfig(const AmxTileConfig &config, std::string &reason);
 RegVal amxSeXcr0(RegVal xcr0, bool enable_amx);
+bool amxControlsEnabled(RegVal cr4, RegVal xcr0);
+bool amxConfigAddressValid(Addr address);
 Addr amxAddressOffset(const ExtMachInst &machInst, Addr next_rip, RegVal base,
                       RegVal index, unsigned scale);
 
 AmxTileState &getAmxState(ThreadContext *tc);
 Fault amxRequireEnabled(ThreadContext *tc);
-bool amxEncodingValid(const ExtMachInst &machInst, bool tile_rm);
-Fault amxCheckEncoding(const ExtMachInst &machInst, bool tile_rm);
+bool amxEncodingValid(const ExtMachInst &machInst, bool tile_dest);
+Fault amxCheckEncoding(const ExtMachInst &machInst, bool tile_dest);
 Fault amxApplyTileConfig(ThreadContext *tc, const uint8_t *buf);
 void amxStoreTileConfig(ThreadContext *tc, uint8_t *buf);
 void amxTileRelease(ThreadContext *tc);
 void amxTileZeroState(AmxTileState &state, unsigned tmm_idx);
 Fault amxTileZero(ThreadContext *tc, const ExtMachInst &machInst);
-Addr amxComputeEA(ExecContext *xc, const StaticInst *si,
-                  const ExtMachInst &machInst);
+Fault amxComputeEA(ExecContext *xc, const StaticInst *si,
+                   const ExtMachInst &machInst, Addr &ea);
 
 } // namespace X86ISA
 } // namespace gem5

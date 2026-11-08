@@ -57,18 +57,18 @@ Fault
 amxRequireEnabled(ThreadContext *tc)
 {
     const RegVal xcr0 = tc->readMiscRegNoEffect(misc_reg::Xcr0);
-    constexpr RegVal tile_xcr0 = (1ULL << 17) | (1ULL << 18);
+    const RegVal cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
     if (FullSystem || !getAmxState(tc).seEnabled ||
-        (xcr0 & tile_xcr0) != tile_xcr0) {
+        !amxControlsEnabled(cr4, xcr0)) {
         return std::make_shared<InvalidOpcode>();
     }
     return NoFault;
 }
 
 Fault
-amxCheckEncoding(const ExtMachInst &machInst, bool tile_rm)
+amxCheckEncoding(const ExtMachInst &machInst, bool tile_dest)
 {
-    if (!amxEncodingValid(machInst, tile_rm)) {
+    if (!amxEncodingValid(machInst, tile_dest)) {
         return std::make_shared<InvalidOpcode>();
     }
     return NoFault;
@@ -141,13 +141,12 @@ amxTileZero(ThreadContext *tc, const ExtMachInst &machInst)
     return NoFault;
 }
 
-Addr
+Fault
 amxComputeEA(ExecContext *xc, const StaticInst *si,
-             const ExtMachInst &machInst)
+             const ExtMachInst &machInst, Addr &ea)
 {
     EmulEnv env(0, 0, machInst.opSize, machInst.addrSize, machInst.stackSize);
     env.doModRM(machInst);
-    env.setSeg(machInst);
 
     unsigned operand = 0;
     const RegVal base =
@@ -158,9 +157,15 @@ amxComputeEA(ExecContext *xc, const StaticInst *si,
         machInst, xc->pcState().as<PCState>().npc(), base, index, env.scale);
     const Addr seg_base =
         xc->tcBase()->readMiscReg(misc_reg::segBase(env.seg));
-    const Addr ea = seg_base + offset;
+    ea = seg_base + offset;
+    if (!amxConfigAddressValid(ea)) {
+        if (env.seg == segment_idx::Ss) {
+            return std::make_shared<StackFault>(0);
+        }
+        return std::make_shared<GeneralProtection>(0);
+    }
     DPRINTF(AMX, "AMX EA=%#x (seg=%#x offset=%#x)\n", ea, seg_base, offset);
-    return ea;
+    return NoFault;
 }
 
 } // namespace X86ISA

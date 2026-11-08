@@ -128,7 +128,10 @@ def template AmxLdExecute {{
         if (fault != NoFault)
             return fault;
 
-        Addr ea = amxComputeEA(xc, this, machInst);
+        Addr ea;
+        fault = amxComputeEA(xc, this, machInst, ea);
+        if (fault != NoFault)
+            return fault;
         uint8_t buf[AmxTileConfigBytes];
         const std::vector<bool> byte_enable(AmxTileConfigBytes, true);
         fault = xc->readMem(ea, buf, AmxTileConfigBytes, 0, byte_enable);
@@ -150,7 +153,10 @@ def template AmxLdInitiateAcc {{
         if (fault != NoFault)
             return fault;
 
-        Addr ea = amxComputeEA(xc, this, machInst);
+        Addr ea;
+        fault = amxComputeEA(xc, this, machInst, ea);
+        if (fault != NoFault)
+            return fault;
         return initiateMemRead(xc, traceData, ea, AmxTileConfigBytes, 0);
     }
 }};
@@ -187,7 +193,10 @@ def template AmxStExecute {{
         if (fault != NoFault)
             return fault;
 
-        Addr ea = amxComputeEA(xc, this, machInst);
+        Addr ea;
+        fault = amxComputeEA(xc, this, machInst, ea);
+        if (fault != NoFault)
+            return fault;
         uint8_t buf[AmxTileConfigBytes] = {};
         amxStoreTileConfig(xc->tcBase(), buf);
         const std::vector<bool> byte_enable(AmxTileConfigBytes, true);
@@ -208,7 +217,10 @@ def template AmxStInitiateAcc {{
         if (fault != NoFault)
             return fault;
 
-        Addr ea = amxComputeEA(xc, this, machInst);
+        Addr ea;
+        fault = amxComputeEA(xc, this, machInst, ea);
+        if (fault != NoFault)
+            return fault;
         uint8_t buf[AmxTileConfigBytes] = {};
         amxStoreTileConfig(xc->tcBase(), buf);
         const std::vector<bool> byte_enable(AmxTileConfigBytes, true);

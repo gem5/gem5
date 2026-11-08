@@ -209,7 +209,7 @@
                                             xc->tcBase());
                                         if (fault == NoFault) {
                                             fault = amxCheckEncoding(
-                                                machInst, true);
+                                                machInst, false);
                                         }
                                         if (fault == NoFault) {
                                             amxTileRelease(

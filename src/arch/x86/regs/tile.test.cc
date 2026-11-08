@@ -177,34 +177,76 @@ TEST(AmxTile, RejectsMismatchedRowsAndColumns)
 
 TEST(AmxTile, RejectsReservedEncodingFields)
 {
-    ExtMachInst machInst{};
-    machInst.mode.submode = SixtyFourBitMode;
+    ExtMachInst inst{};
+    inst.mode.submode = SixtyFourBitMode;
+    EXPECT_TRUE(amxEncodingValid(inst, false));
+    EXPECT_TRUE(amxEncodingValid(inst, true));
+    inst.rex.w = 1;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+    inst.rex.w = 0;
+    inst.vex.v = 1;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+    inst.vex.v = 0;
+    inst.vex.l = 1;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+    inst.vex.l = 0;
+    inst.mode.submode = CompatabilityMode;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+}
 
-    EXPECT_TRUE(amxEncodingValid(machInst, false));
+TEST(AmxTile, EncodingExtensionsFollowOperandRoles)
+{
+    ExtMachInst inst{};
+    inst.mode.submode = SixtyFourBitMode;
+    inst.rex.r = 1;
+    EXPECT_TRUE(amxEncodingValid(inst, false));
+    EXPECT_FALSE(amxEncodingValid(inst, true));
+    inst.rex.r = 0;
+    inst.rex.b = 1;
+    inst.rex.x = 1;
+    EXPECT_TRUE(amxEncodingValid(inst, false));
+    EXPECT_TRUE(amxEncodingValid(inst, true));
+}
 
-    machInst.rex.w = 1;
-    EXPECT_FALSE(amxEncodingValid(machInst, false));
-    machInst.rex.w = 0;
+TEST(AmxTile, RejectsLegacyPrefixesAndF3OpcodeSelection)
+{
+    ExtMachInst inst{};
+    inst.mode.submode = SixtyFourBitMode;
+    inst.vex.invalidLegacyPrefix = 1;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+    EXPECT_FALSE(amxEncodingValid(inst, true));
+    inst.vex.invalidLegacyPrefix = 0;
+    inst.legacy.rep = 1;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+    inst.legacy.rep = 0;
+    inst.legacy.lock = 1;
+    EXPECT_FALSE(amxEncodingValid(inst, false));
+}
 
-    machInst.rex.r = 1;
-    EXPECT_FALSE(amxEncodingValid(machInst, false));
-    machInst.rex.r = 0;
+TEST(AmxTile, ControlsRequireOsxsaveAndBothTileComponents)
+{
+    constexpr RegVal osxsave = 1ULL << 18;
+    EXPECT_TRUE(amxControlsEnabled(osxsave, AmxTileXcr0Mask));
+    EXPECT_FALSE(amxControlsEnabled(0, AmxTileXcr0Mask));
+    EXPECT_FALSE(amxControlsEnabled(osxsave, 0));
+    EXPECT_FALSE(amxControlsEnabled(osxsave, 1ULL << 17));
+    EXPECT_FALSE(amxControlsEnabled(osxsave, 1ULL << 18));
+}
 
-    machInst.vex.v = 1;
-    EXPECT_FALSE(amxEncodingValid(machInst, false));
-    machInst.vex.v = 0;
-
-    machInst.rex.b = 1;
-    EXPECT_TRUE(amxEncodingValid(machInst, false));
-    EXPECT_FALSE(amxEncodingValid(machInst, true));
-    machInst.rex.b = 0;
-
-    machInst.rex.x = 1;
-    EXPECT_FALSE(amxEncodingValid(machInst, true));
-    machInst.rex.x = 0;
-
-    machInst.mode.submode = CompatabilityMode;
-    EXPECT_FALSE(amxEncodingValid(machInst, false));
+TEST(AmxTile, ConfigAccessChecksTheEntireCanonicalRange)
+{
+    constexpr Addr low_max = (1ULL << 47) - 1;
+    constexpr Addr high_min = ~low_max;
+    EXPECT_TRUE(amxConfigAddressValid(0));
+    EXPECT_TRUE(amxConfigAddressValid(low_max - 63));
+    EXPECT_FALSE(amxConfigAddressValid(low_max - 62));
+    EXPECT_FALSE(amxConfigAddressValid(low_max));
+    EXPECT_FALSE(amxConfigAddressValid(low_max + 1));
+    EXPECT_FALSE(amxConfigAddressValid(high_min - 1));
+    EXPECT_TRUE(amxConfigAddressValid(high_min));
+    EXPECT_TRUE(amxConfigAddressValid(~Addr(0) - 63));
+    EXPECT_TRUE(amxConfigAddressValid(~Addr(0) - 62));
+    EXPECT_TRUE(amxConfigAddressValid(~Addr(0)));
 }
 
 class AmxCheckpointFixture : public SerializationFixture

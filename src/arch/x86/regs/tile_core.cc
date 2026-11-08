@@ -106,12 +106,34 @@ amxSeXcr0(RegVal xcr0, bool enable_amx)
 }
 
 bool
-amxEncodingValid(const ExtMachInst &machInst, bool tile_rm)
+amxControlsEnabled(RegVal cr4, RegVal xcr0)
 {
+    constexpr RegVal osxsave = 1ULL << 18;
+    return (cr4 & osxsave) && (xcr0 & AmxTileXcr0Mask) == AmxTileXcr0Mask;
+}
+
+bool
+amxConfigAddressValid(Addr address)
+{
+    // The x86 SE model uses a four-level, 48-bit linear address space.
+    // Check all 64 bytes. Wrapping from the upper canonical region to zero
+    // does not enter the canonical hole.
+    constexpr Addr low_max = (1ULL << 47) - 1;
+    constexpr Addr high_min = ~low_max;
+    constexpr Addr last_offset = AmxTileConfigBytes - 1;
+    return address <= low_max - last_offset || address >= high_min;
+}
+
+bool
+amxEncodingValid(const ExtMachInst &machInst, bool tile_dest)
+{
+    // Only TILEZERO uses ModRM.reg as a tile destination. R extends that
+    // destination; X/B do not name operands in the register-only forms.
+    // F3 is not a valid VEX.pp value for these four instructions.
     return machInst.mode.submode == SixtyFourBitMode && !machInst.rex.w &&
-           !machInst.rex.r &&
-           (!tile_rm || (!machInst.rex.b && !machInst.rex.x)) &&
-           machInst.vex.v == 0;
+           (!tile_dest || !machInst.rex.r) && !machInst.vex.l &&
+           !machInst.vex.invalidLegacyPrefix && !machInst.legacy.lock &&
+           !machInst.legacy.rep && machInst.vex.v == 0;
 }
 
 AmxTileConfig
