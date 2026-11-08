@@ -1017,14 +1017,6 @@ else:
 
 ########################## Start simulation ########################
 
-# Ruby.create_system() already ran FileSystemConfig.config_filesystem(), which
-# set --interp-dir and system.redirect_paths (/proc, /sys, /tmp plus --redirects
-# and --chroot). Overwriting it here with only /proc, /sys and /tmp silently
-# dropped --redirects, so keep the full list.
-redirect_paths = FileSystemConfig._redirect_paths(args)
-
-system.redirect_paths = redirect_paths
-
 root = Root(system=system, full_system=False)
 
 # Create the /sys/devices filesystem for the simulator so that the HSA Runtime
