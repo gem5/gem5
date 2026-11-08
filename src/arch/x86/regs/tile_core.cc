@@ -143,12 +143,13 @@ validateAmxTileConfig(const AmxTileConfig &config, std::string &reason)
         return false;
     };
 
-    if (config.paletteId != 0 && config.paletteId != 1) {
+    // Palette zero releases the tiles; bytes 1-63 are ignored.
+    if (config.paletteId == 0) {
+        return true;
+    }
+    if (config.paletteId != 1) {
         return reject("unsupported palette " +
                       std::to_string(config.paletteId));
-    }
-    if (config.startRow != 0) {
-        return reject("nonzero start_row is not supported");
     }
     if (!allZero(config.reserved0, sizeof(config.reserved0))) {
         return reject("reserved bytes 2-15 must be zero");
@@ -176,11 +177,37 @@ validateAmxTileConfig(const AmxTileConfig &config, std::string &reason)
             return reject("tile " + std::to_string(tile) +
                           " has mismatched row and column dimensions");
         }
-        if (config.paletteId == 0 && (rows != 0 || columns != 0)) {
-            return reject("palette zero requires an empty tile layout");
-        }
     }
     return true;
+}
+
+bool
+AmxTileState::loadConfig(const AmxRawTileConfig &raw, std::string &reason)
+{
+    const auto decoded = decodeAmxTileConfig(raw);
+    if (!validateAmxTileConfig(decoded, reason)) {
+        return false;
+    }
+    config = decoded.paletteId == 0 ? AmxTileConfig{} : decoded;
+    tmm = {};
+    configured = (decoded.paletteId != 0);
+    return true;
+}
+
+Addr
+amxAddressOffset(const ExtMachInst &machInst, Addr next_rip, RegVal base,
+                 RegVal index, unsigned scale)
+{
+    const bool rip_relative = machInst.modRM.mod == 0 &&
+                              machInst.modRM.rm == 5 &&
+                              machInst.mode.submode == SixtyFourBitMode;
+    Addr offset = (rip_relative ? next_rip : 0) + base + index * scale +
+                  machInst.displacement;
+    // The address-size override truncates after adding RIP (SDM 2.2.1.6).
+    if (machInst.addrSize == 4) {
+        offset &= 0xffffffffULL;
+    }
+    return offset;
 }
 
 void

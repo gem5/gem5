@@ -79,21 +79,15 @@ amxApplyTileConfig(ThreadContext *tc, const uint8_t *buf)
 {
     AmxRawTileConfig raw{};
     std::memcpy(raw.data(), buf, AmxTileConfigBytes);
-    AmxTileConfig decoded = decodeAmxTileConfig(raw);
-
+    AmxTileState &state = getAmxState(tc);
     std::string reason;
-    if (!validateAmxTileConfig(decoded, reason)) {
+    if (!state.loadConfig(raw, reason)) {
         DPRINTF(AMX, "LDTILECFG rejected: %s\n", reason.c_str());
         return std::make_shared<GeneralProtection>(0);
     }
 
-    AmxTileState &state = getAmxState(tc);
-    state.tmm = {};
-    state.config = decoded;
-    state.configured = (decoded.paletteId != 0);
-
-    DPRINTF(AMX, "LDTILECFG palette=%u configured=%d\n", decoded.paletteId,
-            state.configured);
+    DPRINTF(AMX, "LDTILECFG palette=%u configured=%d\n",
+            state.config.paletteId, state.configured);
     return NoFault;
 }
 
@@ -160,23 +154,12 @@ amxComputeEA(ExecContext *xc, const StaticInst *si,
         env.base == int_reg::T0 ? 0 : xc->getRegOperand(si, operand++);
     const RegVal index =
         env.index == int_reg::T0 ? 0 : xc->getRegOperand(si, operand++);
-    const Addr disp = machInst.displacement;
-    const bool rip_relative =
-        machInst.modRM.mod == 0 && machInst.modRM.rm == 5 &&
-        machInst.addrSize == 8 && machInst.mode.submode == SixtyFourBitMode;
-    const Addr rip = rip_relative ? xc->pcState().as<PCState>().npc() : 0;
+    const Addr offset = amxAddressOffset(
+        machInst, xc->pcState().as<PCState>().npc(), base, index, env.scale);
     const Addr seg_base =
         xc->tcBase()->readMiscReg(misc_reg::segBase(env.seg));
-
-    Addr offset = rip + base + index * env.scale + disp;
-    if (machInst.addrSize == 4) {
-        offset &= mask(32);
-    }
     const Addr ea = seg_base + offset;
-    DPRINTF(AMX,
-            "AMX EA=%#x (seg=%#x rip=%#x base=%#x "
-            "index=%#x*%u disp=%#x)\n",
-            ea, seg_base, rip, base, index, env.scale, disp);
+    DPRINTF(AMX, "AMX EA=%#x (seg=%#x offset=%#x)\n", ea, seg_base, offset);
     return ea;
 }
 

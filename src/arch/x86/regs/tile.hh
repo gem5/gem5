@@ -83,6 +83,7 @@ struct AmxTileState
     std::array<AmxTileRegister, AmxNumTiles> tmm = {};
 
     void reset();
+    bool loadConfig(const AmxRawTileConfig &raw, std::string &reason);
     void copyArchStateFrom(const AmxTileState &other);
     void serialize(CheckpointOut &cp) const;
     void unserialize(CheckpointIn &cp);
@@ -91,6 +92,8 @@ struct AmxTileState
 AmxTileConfig decodeAmxTileConfig(const AmxRawTileConfig &raw);
 bool validateAmxTileConfig(const AmxTileConfig &config, std::string &reason);
 RegVal amxSeXcr0(RegVal xcr0, bool enable_amx);
+Addr amxAddressOffset(const ExtMachInst &machInst, Addr next_rip, RegVal base,
+                      RegVal index, unsigned scale);
 
 AmxTileState &getAmxState(ThreadContext *tc);
 Fault amxRequireEnabled(ThreadContext *tc);

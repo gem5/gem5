@@ -422,3 +422,90 @@ TEST(AmxTile, SeXcr0EnablesOnlyRequiredLegacyAndTileState)
 
     EXPECT_EQ(amxSeXcr0(unrelated, false), unrelated);
 }
+
+TEST(AmxTile, PaletteZeroIgnoresPayloadAndResetsState)
+{
+    AmxTileState state{};
+    state.seEnabled = true;
+    std::string reason;
+    ASSERT_TRUE(state.loadConfig(makePalette1Raw(), reason));
+    for (auto &tile : state.tmm) {
+        fillTilePattern(tile, 0xa5);
+    }
+    // Invalid dimensions, reserved bytes and start_row are all ignored.
+    AmxRawTileConfig raw{};
+    raw.fill(0xff);
+    raw[0] = 0;
+    ASSERT_TRUE(state.loadConfig(raw, reason)) << reason;
+    EXPECT_FALSE(state.configured);
+    EXPECT_TRUE(state.seEnabled);
+    const AmxTileConfig zero{};
+    EXPECT_EQ(std::memcmp(&state.config, &zero, sizeof(zero)), 0);
+    for (const auto &tile : state.tmm) {
+        EXPECT_TRUE(tileAllZero(tile));
+    }
+}
+
+TEST(AmxTile, PaletteOnePreservesStartRow)
+{
+    AmxTileState state{};
+    auto raw = makePalette1Raw();
+    raw[1] = 3;
+    std::string reason;
+    ASSERT_TRUE(state.loadConfig(raw, reason)) << reason;
+    EXPECT_TRUE(state.configured);
+    EXPECT_EQ(state.config.startRow, 3);
+    EXPECT_EQ(state.config.rows[0], 8);
+    EXPECT_EQ(state.config.columnBytes[0], 64);
+}
+
+TEST(AmxTile, InvalidConfigPreservesState)
+{
+    AmxTileState state{};
+    auto raw = makePalette1Raw();
+    raw[1] = 3;
+    std::string reason;
+    ASSERT_TRUE(state.loadConfig(raw, reason));
+    fillTilePattern(state.tmm[0], 0xa5);
+    const auto before = state.config;
+    raw[2] = 1;
+    EXPECT_FALSE(state.loadConfig(raw, reason));
+    EXPECT_EQ(std::memcmp(&state.config, &before, sizeof(before)), 0);
+    EXPECT_TRUE(state.configured);
+    EXPECT_TRUE(tileAllEqual(state.tmm[0], 0xa5));
+}
+
+TEST(AmxTile, RipRelativeAddressSizeOverride)
+{
+    ExtMachInst inst{};
+    inst.mode.submode = SixtyFourBitMode;
+    inst.modRM.mod = 0;
+    inst.modRM.rm = 5;
+    inst.displacement = 0x100;
+    inst.addrSize = 8;
+    EXPECT_EQ(amxAddressOffset(inst, 0x401009, 0, 0, 0), 0x401109);
+    inst.addrSize = 4;
+    EXPECT_EQ(amxAddressOffset(inst, 0x401009, 0, 0, 0), 0x401109);
+    // Truncate and zero-extend the result, including overflow past 4 GiB.
+    EXPECT_EQ(amxAddressOffset(inst, 0xfffffff0, 0, 0, 0), 0xf0);
+    EXPECT_EQ(amxAddressOffset(inst, 0x100401009ULL, 0, 0, 0), 0x401109);
+    inst.displacement = static_cast<Addr>(-0x100);
+    EXPECT_EQ(amxAddressOffset(inst, 0x80, 0, 0, 0), 0xffffff80ULL);
+}
+
+TEST(AmxTile, NonRipRelativeAddressForms)
+{
+    ExtMachInst inst{};
+    inst.mode.submode = SixtyFourBitMode;
+    inst.addrSize = 4;
+    inst.modRM.mod = 0;
+    inst.modRM.rm = 4; // SIB absolute addressing does not add RIP.
+    inst.displacement = 0x100;
+    EXPECT_EQ(amxAddressOffset(inst, 0x401009, 0, 0, 1), 0x100);
+    inst.modRM.mod = 1;
+    inst.modRM.rm = 5;
+    EXPECT_EQ(amxAddressOffset(inst, 0x401009, 0x1000, 0x20, 4), 0x1180);
+    inst.mode.submode = CompatabilityMode;
+    inst.modRM.mod = 0;
+    EXPECT_EQ(amxAddressOffset(inst, 0x401009, 0, 0, 0), 0x100);
+}
