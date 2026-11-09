@@ -10,11 +10,12 @@ TaskMonitor *TaskMonitor::_instance = nullptr;
 TaskMonitor::TaskMonitor(const Params &p)
     : SimObject(p),
       ctxs(p.cpus.size()),
-    stats(this, p.cpus.size())
-    {
-      fatal_if(_instance, "Apenas um TaskMonitor é permitido no sistema");
-      _instance = this;
-    }
+      listeners(p.cpus.size()),
+      stats(this, p.cpus.size())
+      {
+        fatal_if(_instance, "Apenas um TaskMonitor é permitido no sistema");
+        _instance = this;
+      }
 
 TaskMonitor::~TaskMonitor() {
     if (_instance == this) _instance = nullptr;
@@ -78,11 +79,20 @@ void
 TaskMonitor::startup() { return; }
 
 void
-TaskMonitor::regProbeListeners() {
-  return;
+TaskMonitor::instCtxCounter(unsigned ctx, uint64_t n) {
+  if (ctxs[ctx].inTask) { stats.instsInTask[ctx] += n; }
+  else { stats.instsOutside[ctx] += n; } 
 }
 
-
+void
+TaskMonitor::regProbeListeners() {
+  BaseCPU *cpu;
+  for (int i = 0; i < params().cpus.size(); i++) {
+    cpu = params().cpus[i];
+    listeners[i] = cpu->getProbeManager()->connect<InstListener>(
+      "RetiredInsts", this, i);
+  }
+}
 
 
 
