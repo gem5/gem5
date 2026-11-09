@@ -93,6 +93,15 @@ void StateFixture::run() {
                  fake->deferred()!=SubmissionResult::Transport, "Live deferred transport failed");
         panic_if(cache->accounting->value("dropQueueDuplicate",1)!=1,
                  "Duplicate queued prediction was not counted");
+        // A translated VA candidate keeps VA metadata but has a physical packet.
+        // Demand observation is PA. This must cancel through the production
+        // controller/queue path rather than compare the unrelated numeric VA.
+        auto *route=controller->routes[0];
+        panic_if(route->pfq.size()!=1, "Expected one queued fixture candidate");
+        auto &queued=route->pfq.front();
+        Base::PrefetchInfo virtualInfo(queued.pfInfo,0xdead000);
+        virtualInfo.accountingRecord=queued.pfInfo.accountingRecord;
+        queued.pfInfo=virtualInfo;
         event.address=0x600000;
         controller->cacheAccess(event);
         panic_if(cache->accounting->value("dropDemandCancel",1)!=1,

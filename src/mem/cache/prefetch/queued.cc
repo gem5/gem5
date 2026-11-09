@@ -171,14 +171,16 @@ Queued::getMaxPermittedPrefetches(size_t total) const
 }
 
 void
-Queued::cancelDemand(Addr blk_addr, bool is_secure)
+Queued::cancelDemand(Addr blk_addr, bool is_secure, bool physical)
 {
     // Squash queued prefetches if demand miss to same line
     if (queueSquash) {
         auto itr = pfq.begin();
         while (itr != pfq.end()) {
-            if (itr->pfInfo.getAddr() == blk_addr &&
-                itr->pfInfo.isSecure() == is_secure) {
+            bool matches = physical ?
+                (itr->pkt && itr->pkt->getBlockAddr(blkSize) == blk_addr) :
+                itr->pfInfo.getAddr() == blk_addr;
+            if (matches && itr->pfInfo.isSecure() == is_secure) {
                 DPRINTF(HWPrefetch, "Removing pf candidate addr: %#x "
                         "(cl: %#x), demand request going to the same addr\n",
                         itr->pfInfo.getAddr(),

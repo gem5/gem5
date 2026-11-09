@@ -72,6 +72,16 @@ BPredUnit::BPredUnit(const Params &params)
         r.init(params.RASSize);
 }
 
+bool
+BPredUnit::rasTopSnapshot(ThreadID tid, Addr &address)
+{
+    address = 0;
+    if (tid >= RAS.size() || RAS[tid].empty() || !RAS[tid].top())
+        return false;
+    address = RAS[tid].top()->instAddr();
+    return true;
+}
+
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
     : statistics::Group(parent),
       ADD_STAT(lookups, statistics::units::Count::get(),

@@ -5,6 +5,7 @@
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/prefetch/framework_events.hh"
+#include "mem/cache/prefetch/tpc_cpu_events.hh"
 namespace gem5 {
 class BaseCache;
 struct TPCComponentParams;
@@ -25,6 +26,8 @@ class SubmissionContext {
     RequestPtr request;
     const TPCComponent *owner = nullptr;
     explicit SubmissionContext(const AccessEvent &event, const TPCComponent *o)
+        : request(std::make_shared<Request>(*event.request)), owner(o) {}
+    explicit SubmissionContext(const CPULoadEvent &event, const TPCComponent *o)
         : request(std::make_shared<Request>(*event.request)), owner(o) {}
   public:
     SubmissionContext(const SubmissionContext &) = default;
@@ -58,6 +61,11 @@ class TPCComponent : public Base {
     virtual bool canHandle(const AccessEvent &) const = 0;
     virtual void onPredict(const AccessEvent &, const SubmissionContext &) = 0;
     virtual void onFill(const FillEvent &) {}
+    virtual void onCPULoad(const CPULoadEvent &, const SubmissionContext &) {}
+    virtual void onCPUBranch(const CPUBranchEvent &) {}
+    virtual void onCPUComplete(const CPUCompleteEvent &) {}
+    virtual void onCPURetire(const CPUIdentity &) {}
+    virtual void onCPUSquash(InstSeqNum) {}
     virtual void onInstructionInvalidated(const InstructionSource &) {}
     int instructionState(const InstructionSource &) const;
     bool updateInstructionState(const InstructionSource &, int expected, int state);
@@ -65,6 +73,7 @@ class TPCComponent : public Base {
     std::vector<SubmissionResult> submitCandidates(
         const SubmissionContext &, const std::vector<Candidate> &);
     CacheView cacheView(int level) const;
+    size_t queuedCandidates(int level) const;
   public:
     explicit TPCComponent(const TPCComponentParams &);
     int source() const { return accountingSource; }
@@ -74,8 +83,10 @@ class TPCComponent : public Base {
     bool recognizes(const AccessEvent &);
     void predict(const AccessEvent &);
     void fill(const FillEvent &);
+    void cpuLoad(const CPULoadEvent &);
 };
 class FrameworkQueue : public Queued {
+    friend class StateFixture;
     void calculatePrefetch(const PrefetchInfo &, std::vector<AddrPriority> &) final {}
     void notify(const PacketPtr &, const PrefetchInfo &) final {}
     void regProbeListeners() final {}
@@ -83,10 +94,12 @@ class FrameworkQueue : public Queued {
   public:
     explicit FrameworkQueue(const FrameworkQueueParams &);
     void enqueue(const RequestPtr &, const Candidate &, const AccountingPtr &);
-    void demand(Addr address, bool secure) { cancelDemand(blockAddress(address), secure); }
+    void demand(Addr address, bool secure) { cancelDemand(blockAddress(address), secure, true); }
     size_t permitted(size_t n) const { return getMaxPermittedPrefetches(n); }
+    size_t occupancy() const { return pfq.size()+pfqMissingTranslation.size(); }
 };
 class TPCController : public Base, public CacheObserver, public InstructionStateObserver {
+    friend class StateFixture;
     friend class TPCComponent;
     std::array<BaseCache *, 4> caches{};
     std::vector<FrameworkQueue *> routes;
@@ -119,6 +132,13 @@ class TPCController : public Base, public CacheObserver, public InstructionState
     }
     void cacheAccess(const AccessEvent &) final;
     void cacheFill(const FillEvent &) final;
+    // The CPU adapter owns extraction; the controller validates delivery.
+    void cpuLoad(const CPULoadEvent &);
+    void cpuBranch(const CPUBranchEvent &);
+    void cpuComplete(const CPUCompleteEvent &);
+    void cpuRetire(const CPUIdentity &);
+    void cpuSquash(InstSeqNum);
+    size_t queuedCandidates(int level) const;
     CacheView cacheView(int level) const;
 };
 }

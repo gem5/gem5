@@ -1,7 +1,7 @@
 """Common TPC algorithm, controller and transport interfaces."""
 from m5.objects.Prefetcher import BasePrefetcher, QueuedPrefetcher
 from m5.params import *
-from m5.SimObject import PyBindMethod
+from m5.SimObject import PyBindMethod, SimObject
 
 
 class TPCComponent(BasePrefetcher):
@@ -63,3 +63,33 @@ class DivisionOfLaborController(TPCController):
     cxx_class = "gem5::prefetch::DivisionOfLaborController"
     cxx_header = "mem/cache/prefetch/c1.hh"
     mode = Param.String("TPC", "Enabled combination: C, T, TP, TPC")
+
+
+class T2Prefetcher(TPCComponent):
+    type = "T2Prefetcher"
+    cxx_class = "gem5::prefetch::T2Prefetcher"
+    cxx_header = "mem/cache/prefetch/t2.hh"
+    accounting_source = 1
+    sit_entries = Param.Unsigned(32, "Finite stride identifier table")
+    nlpct_entries = Param.Unsigned(16, "Table II capacity; prose instead says 20")
+    min_segment_size = Param.Unsigned(16, "Unspecified Figure 3 filter threshold")
+    confirm_deltas = Param.Unsigned(16, "Consecutive equal delta samples")
+    reject_changes = Param.Unsigned(4, "Consecutive changing delta samples")
+    provisional_deltas = Param.Unsigned(4, "Early observation prefetch threshold")
+    timing_window = Param.Unsigned(16, "Arithmetic mean window in samples")
+    margin_cycles = Param.Unsigned(0, "AMAT margin in component cycles")
+    max_distance = Param.Unsigned(64, "Maximum base lookahead iterations")
+    max_pending = Param.Unsigned(8192, "Bounded dynamic-load join capacity")
+    provisional_per_cycle = Param.Unsigned(1, "Provisional scheduling budget")
+    provisional_queue_limit = Param.Unsigned(8, "Suppress early traffic at this L1 route occupancy")
+    trace = Param.Bool(False, "Log recognition and candidate events")
+
+
+class TPCCPUAdapter(SimObject):
+    type = "TPCCPUAdapter"
+    cxx_class = "gem5::prefetch::TPCCPUAdapter"
+    cxx_header = "mem/cache/prefetch/tpc_cpu_adapter.hh"
+    cpu = Param.BaseCPU("O3 CPU providing typed probes")
+    controller = Param.TPCController("Shared TPC event/request owner")
+    branch_predictor = Param.BranchPredictor("Fetch-stage RAS context")
+    max_inflight = Param.Unsigned(8192, "Fail instead of dropping live fetch context")

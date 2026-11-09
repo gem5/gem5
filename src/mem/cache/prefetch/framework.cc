@@ -58,6 +58,13 @@ void TPCComponent::predict(const AccessEvent &e) {
     accounting->count("predictionCalls", source());
     onPredict(e, SubmissionContext(e, this)); stage = Stage::Idle;
 }
+void TPCComponent::cpuLoad(const CPULoadEvent &e) {
+    fatal_if(stage != Stage::Idle || !controller, "Invalid CPU load dispatch");
+    // Real CPU request, validated by the controller; no fabricated cache event.
+    stage = Stage::Predict;
+    onCPULoad(e, SubmissionContext(e, this));
+    stage = Stage::Idle;
+}
 void TPCComponent::fill(const FillEvent &e) {
     fatal_if(stage != Stage::Idle, "Reentrant fill callback");
     // Fill callbacks may use a previously issued SubmissionContext capability.
@@ -222,5 +229,36 @@ std::vector<SubmissionResult> TPCController::submit(TPCComponent *component,
         result.push_back(SubmissionResult::Transport);
     }
     return result;
+}
+}
+
+namespace gem5::prefetch {
+void TPCController::cpuLoad(const CPULoadEvent &e) {
+    if (!e.request || !e.request->hasPC() || !e.request->hasContextId() ||
+        !validSource(instructionSource(e.request))) return;
+    for (auto *c : components) if (c->source() == 1) c->cpuLoad(e);
+}
+void TPCController::cpuBranch(const CPUBranchEvent &e) {
+    for (auto *c : components) c->onCPUBranch(e);
+}
+void TPCController::cpuComplete(const CPUCompleteEvent &e) {
+    for (auto *c : components) c->onCPUComplete(e);
+}
+void TPCController::cpuRetire(const CPUIdentity &e) {
+    for (auto *c : components) c->onCPURetire(e);
+}
+void TPCController::cpuSquash(InstSeqNum boundary) {
+    for (auto *c : components) c->onCPUSquash(boundary);
+}
+}
+
+namespace gem5::prefetch {
+size_t TPCComponent::queuedCandidates(int level) const {
+    fatal_if(!controller, "Component has no controller");
+    return controller->queuedCandidates(level);
+}
+size_t TPCController::queuedCandidates(int level) const {
+    fatal_if(level<1 || level>3, "Invalid candidate queue layer");
+    return routes.at(level-1)->occupancy();
 }
 }

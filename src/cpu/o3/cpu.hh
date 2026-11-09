@@ -170,6 +170,9 @@ class CPU : public BaseCPU
     /** Constructs a CPU with the given parameters. */
     CPU(const BaseO3CPUParams &params);
 
+    // Translated load attempts and accepted ROB squash boundaries.
+    ProbePointArg<DynInstPtr> *ppLoadAddressReady;
+    ProbePointArg<std::pair<ThreadID, InstSeqNum>> *ppSquashRange;
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
     ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
 

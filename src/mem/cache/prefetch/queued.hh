@@ -210,7 +210,8 @@ class Queued : public Base
   protected:
     // Reusable transport hooks; legacy predictors retain their default path.
     virtual void queueReady() {}
-    void cancelDemand(Addr block, bool secure);
+    // Framework observers supply PA even when a queued candidate began as VA.
+    void cancelDemand(Addr address, bool secure, bool physical = false);
 
     /**
      * Adds a DeferredPacket to the specified queue

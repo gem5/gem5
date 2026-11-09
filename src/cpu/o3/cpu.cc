@@ -312,6 +312,10 @@ CPU::regProbePoints()
         std::pair<DynInstPtr, PacketPtr>>(
                 getProbeManager(), "DataAccessComplete");
 
+    ppLoadAddressReady = new ProbePointArg<DynInstPtr>(
+        getProbeManager(), "LoadAddressReady");
+    ppSquashRange = new ProbePointArg<std::pair<ThreadID, InstSeqNum>>(
+        getProbeManager(), "SquashRange");
     fetch.regProbePoints();
     rename.regProbePoints();
     iew.regProbePoints();

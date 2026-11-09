@@ -75,6 +75,8 @@ class BPredUnit : public SimObject
     BPredUnit(const Params &p);
 
     void regProbePoints() override;
+    /** Copy the stored RAS top; never expose a pointer into predictor storage. */
+    bool rasTopSnapshot(ThreadID tid, Addr &address);
 
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;

@@ -58,7 +58,8 @@ Source('stride.cc')
 Source('tagged.cc')
 
 SimObject('Framework.py', sim_objects=['TPCComponent', 'FrameworkQueue',
-    'TPCController', 'C1Prefetcher', 'DivisionOfLaborController'])
+    'TPCController', 'C1Prefetcher', 'DivisionOfLaborController',
+    'T2Prefetcher', 'TPCCPUAdapter'])
 Source('framework.cc')
 
 Source('c1.cc')
@@ -68,3 +69,6 @@ import os
 if os.environ.get('TPC_TESTS') == '1':
     SimObject('StateFixture.py', sim_objects=['TPCStateFixture', 'TPCFixtureComponent'])
     Source('state_fixture.cc')
+
+Source('t2.cc')
+Source('tpc_cpu_adapter.cc')

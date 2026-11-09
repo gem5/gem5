@@ -838,6 +838,9 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
             inst->effAddr = request->getVaddr();
             inst->effSize = size;
             inst->effAddrValid(true);
+            // read() can synchronously call into L1D. Publish this attempt first.
+            if (isLoad)
+                cpu->ppLoadAddressReady->notify(inst);
 
             if (cpu->checker) {
                 inst->reqToVerify = std::make_shared<Request>(*request->req());
