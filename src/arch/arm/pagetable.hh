@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2021, 2023-2024 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2021, 2023-2024,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -220,13 +220,6 @@ class TLBSetAssociative : public TLBIndexingPolicy
     {
         Addr set_number = (key.va >> key.pageSize) & setMask;
         return sets[set_number];
-    }
-
-    Addr
-    regenerateAddr(const KeyType &key,
-                   const ReplaceableEntry *entry) const override
-    {
-        panic("Unimplemented\n");
     }
 };
 

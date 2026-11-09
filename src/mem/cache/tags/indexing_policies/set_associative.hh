@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014,2017,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -115,18 +115,8 @@ class SetAssociative : public BaseIndexingPolicy
      * @param addr The addr to a find possible entries for.
      * @return The possible entries.
      */
-    std::vector<ReplaceableEntry*> getPossibleEntries(const Addr &addr) const
-                                                                     override;
-
-    /**
-     * Regenerate an entry's address from its tag and assigned set and way.
-     *
-     * @param tag The tag bits.
-     * @param entry The entry.
-     * @return the entry's original addr value.
-     */
-    Addr regenerateAddr(const Addr &tag,
-                        const ReplaceableEntry* entry) const override;
+    std::vector<ReplaceableEntry *>
+    getPossibleEntries(const Addr &addr) const override;
 };
 
 } // namespace gem5

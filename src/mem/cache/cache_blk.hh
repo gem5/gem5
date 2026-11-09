@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018, 2023-2024 ARM Limited
+ * Copyright (c) 2012-2018, 2023-2024,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -183,6 +183,7 @@ class CacheBlk : public TaggedEntry
         if (other.wasPrefetched()) {
             setPrefetched();
         }
+        setOriginalAddr(other.getOriginalAddr());
         setCoherenceBits(other.coherence);
         setTaskId(other.getTaskId());
         setPartitionId(other.getPartitionId());
@@ -211,6 +212,7 @@ class CacheBlk : public TaggedEntry
         setPartitionId(std::numeric_limits<uint64_t>::max());
         setWhenReady(MaxTick);
         setRefCount(0);
+        setOriginalAddr(MaxAddr);
         setSrcRequestorId(Request::invldRequestorId);
         lockList.clear();
     }
@@ -319,7 +321,6 @@ class CacheBlk : public TaggedEntry
      * current tick. Marks the block valid.
      *
      * @param tag Block address tag.
-     * @param is_secure Whether the block is in secure space or not.
      * @param src_requestor_ID The source requestor ID.
      * @param task_ID The new task ID.
      * @param partition_id The source partition ID.
@@ -327,7 +328,29 @@ class CacheBlk : public TaggedEntry
     void insert(const KeyType &tag,
         const int src_requestor_ID, const uint32_t task_ID,
         const uint64_t partition_id);
-    using TaggedEntry::insert;
+
+    /**
+     * Insert the tag in the cache and store the original address.
+     *
+     * @param tag Block address tag.
+     */
+    void
+    insert(const KeyType &tag) override
+    {
+        TaggedEntry::insert(tag);
+        setOriginalAddr(tag.address);
+    }
+
+    /**
+     * Get the block's original address.
+     *
+     * @return The original address.
+     */
+    Addr
+    getOriginalAddr() const
+    {
+        return originalAddr;
+    }
 
     /**
      * Track the fact that a local locked was issued to the
@@ -485,7 +508,17 @@ class CacheBlk : public TaggedEntry
     /** Set the current tick as this block's insertion tick. */
     void setTickInserted() { _tickInserted = curTick(); }
 
+    /** Set the original address. */
+    void
+    setOriginalAddr(const Addr addr)
+    {
+        originalAddr = addr;
+    }
+
   private:
+    /** The block's original address. */
+    Addr originalAddr = MaxAddr;
+
     /** Task Id associated with this block */
     uint32_t _taskId = 0;
 
@@ -516,12 +549,6 @@ class CacheBlk : public TaggedEntry
  */
 class TempCacheBlk final : public CacheBlk
 {
-  private:
-    /**
-     * Copy of the block's address, used to regenerate tempBlock's address.
-     */
-    Addr _addr;
-
   public:
     /**
      * Creates a temporary cache block, with its own storage.
@@ -535,33 +562,7 @@ class TempCacheBlk final : public CacheBlk
     TempCacheBlk(const TempCacheBlk&) = delete;
     using CacheBlk::operator=;
     TempCacheBlk& operator=(const TempCacheBlk&) = delete;
-    ~TempCacheBlk() { delete [] data; };
-
-    /**
-     * Invalidate the block and clear all state.
-     */
-    void invalidate() override {
-        CacheBlk::invalidate();
-
-        _addr = MaxAddr;
-    }
-
-    void
-    insert(const KeyType &tag) override
-    {
-        CacheBlk::insert(tag);
-        _addr = tag.address;
-    }
-
-    /**
-     * Get block's address.
-     *
-     * @return addr Address value.
-     */
-    Addr getAddr() const
-    {
-        return _addr;
-    }
+    ~TempCacheBlk() { delete[] data; };
 };
 
 /**
