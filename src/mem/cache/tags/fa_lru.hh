@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2023-2024 ARM Limited
- * Copyright (c) 2012-2013,2016,2018 ARM Limited
+ * Copyright (c) 2023-2024,2026 Arm Limited
+ * Copyright (c) 2012-2013,2016,2018 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -254,7 +254,7 @@ class FALRU : public BaseTags
      */
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return blk->getTag();
+        return blkAlign(blk->getOriginalAddr());
     }
 
     bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {

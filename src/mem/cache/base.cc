@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2018-2019, 2023-2025 Arm Limited
+ * Copyright (c) 2012-2013, 2018-2019, 2023-2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -188,11 +188,7 @@ BaseCache::CacheResponsePort::processSendRetry()
 Addr
 BaseCache::regenerateBlkAddr(CacheBlk* blk)
 {
-    if (blk != tempBlock) {
-        return tags->regenerateBlkAddr(blk);
-    } else {
-        return tempBlock->getAddr();
-    }
+    return tags->blkAlign(blk->getOriginalAddr());
 }
 
 void
