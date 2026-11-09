@@ -32,9 +32,9 @@ from os.path import (
     isdir,
     isfile,
     islink,
+    normpath,
 )
 from os.path import join as joinpath
-from os.path import normpath
 
 spec_dist = os.environ.get("M5_CPU2000", "/dist/m5/cpu2000")
 
