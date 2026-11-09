@@ -43,7 +43,7 @@ FROM ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest AS builder
 WORKDIR /gem5
 ARG GEM5_VERSION=26.0.0.0
 RUN wget -nv -O /tmp/gem5.tar.gz \
-    "https://github.com/gem5/gem5/archive/v${GEM5_VERSION}.tar.gz" && \
+    "https://github.com/gem5/gem5/archive/refs/tags/v${GEM5_VERSION}.tar.gz" && \
     tar -xzf /tmp/gem5.tar.gz --strip-components=1 && \
     rm /tmp/gem5.tar.gz
 RUN scons build/ALL/gem5.opt -j"$(nproc)"
