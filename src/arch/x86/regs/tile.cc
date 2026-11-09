@@ -156,7 +156,7 @@ amxComputeEA(ExecContext *xc, const StaticInst *si,
     const Addr offset = amxAddressOffset(
         machInst, xc->pcState().as<PCState>().npc(), base, index, env.scale);
     const Addr seg_base =
-        xc->tcBase()->readMiscReg(misc_reg::segBase(env.seg));
+        xc->tcBase()->readMiscReg(misc_reg::segEffBase(env.seg));
     ea = seg_base + offset;
     if (!amxConfigAddressValid(ea)) {
         if (env.seg == segment_idx::Ss) {

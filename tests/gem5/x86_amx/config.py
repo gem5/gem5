@@ -55,7 +55,7 @@ board = SimpleBoard(
         num_cores=1,
         clk_freq="3GHz",
     ),
-    memory=SingleChannelDDR3_1600(),
+    memory=SingleChannelDDR3_1600(size="128MiB"),
     cache_hierarchy=NoCache(),
 )
 for core in board.get_processor().get_cores():

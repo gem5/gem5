@@ -37,9 +37,9 @@ from pathlib import Path
 MARKER = b"AMX_CASE_OK\n"
 
 
-def make_elf(path, instruction, address=0x402000):
-    # One load segment: ELF headers, code at +0x1000, tilecfg at +0x2000.
-    image = bytearray(0x2100)
+def make_elf(path, instruction, address=0x402000, operation="load"):
+    # One load segment: ELF headers, code at +0x1000, test data at +0x2000.
+    image = bytearray(0x2400)
     ident = b"\x7fELF\x02\x01\x01" + bytes(9)
     image[:64] = struct.pack(
         "<16sHHIQQQIHHHHHH",
@@ -69,22 +69,58 @@ def make_elf(path, instruction, address=0x402000):
         len(image),
         0x1000,
     )
-    image[0x2000] = 1
+    initial = bytearray(64)
+    initial[0] = 1
+    initial[1] = 3  # TILEZERO must reset this nonzero restart field.
     for tile in range(8):
-        image[0x2010 + 2 * tile] = 64
-        image[0x2030 + tile] = 8
-    # Load a valid configuration before exercising the target encoding.
-    code = b"\x48\xbf" + struct.pack("<Q", 0x402000)
-    code += bytes.fromhex("c4e2784907")
-    code += b"\x48\xbf" + struct.pack("<Q", address)
-    code += bytes.fromhex(instruction)
-    # Write a marker only after the instruction completes; then exit(0).
+        initial[16 + 2 * tile] = 64
+        initial[48 + tile] = 8
+    target = initial.copy()
+    target[1] = 5
+    target[16] = 32
+    target[48] = 4  # A no-op LDTILECFG must not pass a round trip.
+    expected = initial.copy()
+    if operation == "load":
+        expected = target
+    elif operation == "palette-zero":
+        target[0] = 0  # Other bytes are intentionally not zero.
+        expected = bytes(64)
+    elif operation == "zero":
+        expected[1] = 0
+    elif operation == "release":
+        expected = bytes(64)
+    image[0x2000:0x2040] = target
+    image[0x2040:0x2080] = initial
+    # The store destination and its guards are distinct from both configs.
+    image[0x2100:0x2150] = bytes([0xA5]) * 80
+    image[0x2200:0x2250] = bytes([0xA5]) * 8 + expected + bytes([0xA5]) * 8
+    image[0x2300 : 0x2300 + len(MARKER)] = MARKER
+
+    def mov_rdi(value):
+        return b"\x48\xbf" + struct.pack("<Q", value)
+
+    code = mov_rdi(0x402040) + bytes.fromhex("c4e2784907")
+    if operation == "store" and address == 0x402000:
+        address = 0x402108
+    code += mov_rdi(address) + bytes.fromhex(instruction)
+    if operation != "store":
+        code += mov_rdi(0x402108) + bytes.fromhex("c4e2794907")
+    # Compare all 64 output bytes and both guards, not merely execution.
+    code += mov_rdi(0x402100)
+    code += b"\x48\xbe" + struct.pack("<Q", 0x402200)
+    code += bytes.fromhex("b950000000fcf3a6")  # ecx=80; cld; repe cmpsb
+    code += bytes.fromhex("0f85")
+    branch = len(code)
+    code += bytes(4)
     code += bytes.fromhex("b801000000bf0100000048be")
-    code += struct.pack("<Q", 0x402080)
+    code += struct.pack("<Q", 0x402300)
     code += b"\xba" + struct.pack("<I", len(MARKER))
     code += bytes.fromhex("0f05b83c00000031ff0f05")
+    failure = len(code)
+    code += bytes.fromhex("b83c000000bf010000000f05")  # exit(1), no marker
+    code = bytearray(code)
+    code[branch : branch + 4] = struct.pack("<i", failure - branch - 4)
     image[0x1000 : 0x1000 + len(code)] = code
-    image[0x2080 : 0x2080 + len(MARKER)] = MARKER
     path.write_bytes(image)
     path.chmod(0o755)
 
@@ -118,6 +154,11 @@ def cases():
             raw = bytearray.fromhex(encoding)
             raw[1] ^= mask
             yield f"{name}-{field}", raw.hex(), "ok", 0x402000
+    yield "load-stack", "4889fdc4e278494500", "ok", 0x402000
+    yield "store-stack", "4889fdc4e279494500", "ok", 0x402000
+    yield "load-palette-zero", forms["load"], "ok", 0x402000
+    for tile in range(1, 8):
+        yield f"zero-tmm{tile}", f"c4e27b49{0xc0 + 8 * tile:02x}", "ok", 0x402000
     for name, encoding in (
         ("load-F3", "c4e27a4907"),
         ("release-F3", "c4e27a49c0"),
@@ -157,7 +198,10 @@ def main():
             directory = args.outdir / cpu / name
             directory.mkdir(parents=True, exist_ok=True)
             binary = directory / "probe.elf"
-            make_elf(binary, encoding, address)
+            operation = name.split("-", 1)[0]
+            if name == "load-palette-zero":
+                operation = "palette-zero"
+            make_elf(binary, encoding, address, operation)
             command = [
                 str(args.gem5.resolve()),
                 "-d",
