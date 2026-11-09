@@ -78,7 +78,7 @@ def make_elf(path, instruction, address=0x402000, operation="load"):
     target = initial.copy()
     target[1] = 5
     target[16] = 32
-    target[48] = 4  # A no-op LDTILECFG must not pass a round trip.
+    target[48] = 4
     expected = initial.copy()
     if operation == "load":
         expected = target
@@ -105,7 +105,6 @@ def make_elf(path, instruction, address=0x402000, operation="load"):
     code += mov_rdi(address) + bytes.fromhex(instruction)
     if operation != "store":
         code += mov_rdi(0x402108) + bytes.fromhex("c4e2794907")
-    # Compare all 64 output bytes and both guards, not merely execution.
     code += mov_rdi(0x402100)
     code += b"\x48\xbe" + struct.pack("<Q", 0x402200)
     code += bytes.fromhex("b950000000fcf3a6")  # ecx=80; cld; repe cmpsb
