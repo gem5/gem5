@@ -399,7 +399,6 @@ X86_64Process::initState()
 
             if (enable_amx) {
                 // Internal XCR0 mirror: bit17=XTILECFG, bit18=XTILEDATA.
-                // Not a substitute for XGETBV/XSAVE correctness.
                 RegVal xcr0 = amxSeXcr0(
                     tc->readMiscRegNoEffect(misc_reg::Xcr0), enable_amx);
                 tc->setMiscRegNoEffect(misc_reg::Xcr0, xcr0);

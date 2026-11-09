@@ -57,7 +57,6 @@ class X86ISA(BaseISA):
         "Fake gem5 x86_64 CPU", "Processor name for CPUID instruction"
     )
 
-    # Enable the initial AMX tile configuration support in SE mode.
     enable_amx = Param.Bool(
         False, "Enable AMX tile configuration instructions in SE"
     )
