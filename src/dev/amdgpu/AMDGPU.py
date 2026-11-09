@@ -88,7 +88,7 @@ class AMDGPUDevice(PciEndpoint):
         False, "Take a checkpoint before the device begins sending MMIOs"
     )
     is_sparse_restore = Param.Bool(
-        Parent.any,
+        Parent.is_sparse_restore,
         "Optimizes host RAM footprint by skipping zero-filled pages "
         "during restore, preventing physical memory allocation for "
         "unused guest regions. Uses System class value by default.",
