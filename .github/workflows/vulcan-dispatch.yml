@@ -108,16 +108,16 @@ jobs:
         needs: dispatch
         if: |-
             ${{ needs.dispatch.outputs.command == 'review' }}
-        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@0f1ca599206aa67fdd65f78a00a73c1a696d5a63 # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.4
+        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@4e5389840fe4a13664b730bc1437b89fed4efcdf # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.5
         permissions:
             contents: read
             pull-requests: write
         with:
             additional_context: ${{ needs.dispatch.outputs.additional_context }}
-            requested_pr_review: ${{ needs.dispatch.outputs.requested_pr_review }}
-            requested_commit_review: ${{ needs.dispatch.outputs.requested_commit_review }}
+            requested_pr_review: ${{ needs.dispatch.outputs.requested_pr_review == 'true' }}
+            requested_commit_review: ${{ needs.dispatch.outputs.requested_commit_review == 'true' }}
         secrets:
-            gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+            gemini_api_key: ${{ secrets.VULCAN_GEMINI_API_KEY }}
     fallthrough:
         needs:
             - dispatch
