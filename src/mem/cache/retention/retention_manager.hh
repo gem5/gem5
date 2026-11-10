@@ -1343,6 +1343,10 @@ class RetentionManager
         statistics::Scalar raSweeps;
         /** Refresh-all: rows refreshed, valid or not. */
         statistics::Scalar raRowRefreshes;
+        /** Refresh-all, even spacing: operations by the number of their
+         *  lanes (one row per subarray) refreshed, i.e. holding a valid
+         *  line after the window decision (stats only). */
+        statistics::Vector raOpLanes;
         /** Refresh-all: rows refreshed while holding a valid line. */
         statistics::Scalar raValidRefreshes;
         /** Refresh-all: refreshes issued in an idle bank cycle. */

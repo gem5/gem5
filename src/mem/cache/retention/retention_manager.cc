@@ -2104,12 +2104,15 @@ RetentionManager::processRaEven(unsigned bank)
     // the waiting accesses
     // One operation: a row of each subarray
     const Tick start = raBlock(bank, cache.clockEdge(Cycles(1)), true);
+    const Counter valid0 = stats.raValidRefreshes.value();
     for (unsigned g = 0; g < subarrays; g++) {
         stats.raForcedRefreshes++;
         if (window)
             windowRow(bank);
         raRefreshRow(bank, start);
     }
+    // stats only: the lanes this operation refreshed
+    stats.raOpLanes[stats.raValidRefreshes.value() - valid0]++;
 
     if (raRow[bank] == raRows) {
         stats.raSweeps++;
@@ -3531,6 +3534,10 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "refresh-all: bank sweeps completed (banks per period)"),
       ADD_STAT(raRowRefreshes, statistics::units::Count::get(),
                "refresh-all: rows refreshed, valid or not"),
+      ADD_STAT(raOpLanes, statistics::units::Count::get(),
+               "refresh-all (even spacing): operations by the number of "
+               "lanes they refreshed (rows holding a valid line); every "
+               "operation occupies its bank for the full op time"),
       ADD_STAT(raValidRefreshes, statistics::units::Count::get(),
                "refresh-all: rows refreshed while holding a valid line"),
       ADD_STAT(raOppRefreshes, statistics::units::Count::get(),
@@ -3593,6 +3600,7 @@ RetentionManager::RetentionStats::regStats()
     bankStalledHits.init(mgr.banks);
     bankStallCycles.init(mgr.banks);
     bankBusyCycles.init(mgr.banks);
+    raOpLanes.init(mgr.subarrays + 1);
     maxRefreshStallCycles.functor([this] {
         return double(mgr.maxStall);
     });
