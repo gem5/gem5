@@ -411,6 +411,14 @@ class BaseCache(ClockedObject):
         "2^tail_eps_shift (c / eps; tail_epoch unused); tail_fastup "
         "unchanged (every other frame end)",
     )
+    tail_fastup_events = Param.Unsigned(
+        0,
+        "window_mode=tail (ablation, user 2026-11-10): 1 = an event-"
+        "triggered fast-up: count the reuses at ages > W since W last "
+        "changed; the moment count x 2^tail_eps_shift > the live "
+        "interval-end count, recompute K from the live counters and raise "
+        "W to K if larger (no halving); frame-end fast-up unchanged",
+    )
     tail_budget_stop = Param.Unsigned(
         0,
         "window_mode=tail (ablation, user 2026-11-10): 1 = count the "

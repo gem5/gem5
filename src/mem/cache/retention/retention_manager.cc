@@ -407,6 +407,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             fatal_if(p.tail_budget_stop > 1, "%s: tail_budget_stop must "
                      "be 0 or 1", cache.name());
             tailBudgetStop = p.tail_budget_stop == 1;
+            fatal_if(p.tail_fastup_events > 1, "%s: tail_fastup_events "
+                     "must be 0 or 1", cache.name());
+            tailFastUpEvents = p.tail_fastup_events == 1;
             fatal_if(tailBudgetStop && tailFixed, "%s: tail_budget_stop "
                      "needs the controller (tail_fixed -1)", cache.name());
             fatal_if(tailBucket && tailFixed, "%s: tail_budget=bucket "
@@ -630,6 +633,11 @@ RetentionManager::startup()
                            "reuse refunds one; starts with %lu",
                            cache.name(), tailEpsShift, tailBucketMax,
                            tailTokens0);
+                if (tailFastUpEvents)
+                    inform("%s: tail event fast-up: W up to K the moment "
+                           "the reuses at ages > W since W last changed x "
+                           "2^%u exceed the live interval-end count",
+                           cache.name(), tailEpsShift);
                 if (tailBudgetStop)
                     inform("%s: tail budget stop: W = inf once the "
                            "retention misses since the last epoch end x "
@@ -3015,6 +3023,29 @@ RetentionManager::tailEnd(unsigned row, bool demand)
         tailReuses[b]++;
         st.reuses[b]++;
     }
+    // tail_fastup_events: a reuse at an age > W; once the reuses above W
+    // since W last changed x 2^eps exceed the live interval-end count, W
+    // goes up to K at once (no halving; logged as an "evup" row)
+    if (tailFastUpEvents && demand && !tailFixed && tailW != tailInf &&
+        tailAge[row] > tailW) {
+        tailReuseAboveW++;
+        uint64_t total = 0;
+        for (unsigned j = 0; j < tailBins; j++)
+            total += tailEnded[j];
+        if ((tailReuseAboveW << tailEpsShift) > total) {
+            const uint32_t k = tailKOf(total);
+            if (k > tailW) {
+                const uint32_t w_before = tailW;
+                tailAccountW();
+                tailW = k;
+                tailTimeW = k;
+                tailReuseAboveW = 0;
+                st.wChanges++;
+                st.fastupEvents++;
+                tailLog("evup", w_before, k == tailInf ? -2 : int64_t(k));
+            }
+        }
+    }
 }
 
 void
@@ -3151,6 +3182,7 @@ RetentionManager::tailEpoch()
                 tailAccountW();
                 tailW = w;
                 tailTimeW = w;
+                tailReuseAboveW = 0;
                 st.wChanges++;
             }
         }
@@ -3228,6 +3260,7 @@ RetentionManager::tailFastUpCheck()
         tailAccountW();
         tailW = k;
         tailTimeW = k;
+        tailReuseAboveW = 0;
         tailStats->wChanges++;
         tailLog("fastup", w_before, k == tailInf ? -2 : int64_t(k));
     }
@@ -3267,6 +3300,7 @@ RetentionManager::tailStopCheck()
         tailAccountW();
         tailW = tailInf;
         tailTimeW = tailInf;
+        tailReuseAboveW = 0;
         tailStats->wChanges++;
     }
     tailLog("stop", w_before, -1);
@@ -4331,6 +4365,9 @@ RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
                "tail_budget_stop: epochs in which the retention misses "
                "since the epoch start reached 2^-eps x the live "
                "interval-end count (W = inf until the epoch end)"),
+      ADD_STAT(fastupEvents, statistics::units::Count::get(),
+               "tail_fastup_events: W raised by the event trigger (reuses "
+               "above W x 2^eps > the live interval-end count)"),
       ADD_STAT(bucketMinted, statistics::units::Count::get(),
                "tail_budget=bucket: tokens added (one per 2^eps interval "
                "ends, below the cap)"),

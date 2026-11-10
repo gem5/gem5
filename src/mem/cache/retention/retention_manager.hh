@@ -955,6 +955,10 @@ class RetentionManager
     bool tailBudgetStop = false;
     bool tailStopped = false;
     uint64_t tailRmSinceEpoch = 0;
+    /** tail_fastup_events (ablation): on; reuses at ages > W since W
+     *  last changed */
+    bool tailFastUpEvents = false;
+    uint64_t tailReuseAboveW = 0;
     /** tail_budget=bucket (ablation): a token per 2^eps interval ends
      *  (tailPrescale counts them), capped at tailBucketMax; a drop
      *  spends one, an expired tag that ends without a reuse refunds
@@ -1219,6 +1223,7 @@ class RetentionManager
         statistics::Scalar epochs;
         statistics::Scalar wChanges;
         statistics::Scalar budgetStops;
+        statistics::Scalar fastupEvents;
         statistics::Scalar bucketMinted;
         statistics::Scalar bucketSpent;
         statistics::Scalar bucketRefunds;
