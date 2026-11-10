@@ -501,6 +501,139 @@ def format StoreCond(memacc_code, postacc_code={{ }},
         + StoreCondCompleteAcc.subst(iop)
 }};
 
+def template AtomicStoreReleaseExecute {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        %(memacc_code)s;
+
+        {
+            Fault fault =
+                writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
+                        nullptr);
+            if (fault != NoFault)
+                return fault;
+        }
+
+        %(postacc_code)s;
+        %(op_wb)s;
+
+        return NoFault;
+    }
+}};
+
+def template AtomicStoreReleaseInitiateAcc {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::initiateAcc(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        %(memacc_code)s;
+
+        {
+            Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
+                memAccessFlags, nullptr);
+            if (fault != NoFault)
+                return fault;
+        }
+
+        %(op_wb)s;
+
+        return NoFault;
+    }
+}};
+
+def template AtomicStoreReleaseCompleteAcc {{
+    Fault
+    %(class_name)s::%(class_name)sMicro::completeAcc(PacketPtr pkt,
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def format AtomicLoadAcquire(memacc_code, postacc_code={{ }},
+        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
+    macro_ea_code = ''
+    macro_inst_flags = []
+    macro_iop = InstObjParams(name, Name, 'AtomicLoadAcquire', macro_ea_code,
+                              macro_inst_flags)
+    header_output = LRSCDeclare.subst(macro_iop)
+    decoder_output = LRSCMacroConstructor.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    exec_output = ''
+
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags)
+    iop = InstObjParams(name, Name, 'AtomicLoadAcquireMicro',
+        {'ea_code': ea_code, 'memacc_code': memacc_code,
+        'postacc_code': postacc_code}, inst_flags)
+    mem_flags = [
+        'static_cast<Request::FlagsType>(Request::%s)' % flag
+        for flag in mem_flags
+    ]
+    align_flag = getAlignFlag(iop)
+    if align_flag:
+        mem_flags.append('static_cast<Request::FlagsType>(%s)' % align_flag)
+    iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
+        '|'.join(mem_flags) + ';'
+
+    header_output += LRSCMicroDeclare.subst(iop)
+    decoder_output += LRSCMicroConstructor.subst(iop)
+    # The micro-op is a plain load: the LR templates carry no LR-specific
+    # behaviour (that comes from the LLSC mem flag), so we reuse them.
+    exec_output += LoadReservedExecute.subst(iop) \
+        + LoadReservedInitiateAcc.subst(iop) \
+        + LoadReservedCompleteAcc.subst(iop)
+}};
+
+def format AtomicStoreRelease(memacc_code, postacc_code={{ }},
+        ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
+    macro_ea_code = ''
+    macro_inst_flags = []
+    macro_iop = InstObjParams(name, Name, 'AtomicStoreRelease', macro_ea_code,
+                              macro_inst_flags)
+    header_output = LRSCDeclare.subst(macro_iop)
+    decoder_output = LRSCMacroConstructor.subst(macro_iop)
+    decode_block = BasicDecode.subst(macro_iop)
+
+    exec_output = ''
+
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags)
+    iop = InstObjParams(name, Name, 'AtomicStoreReleaseMicro',
+        {'ea_code': ea_code, 'memacc_code': memacc_code,
+        'postacc_code': postacc_code}, inst_flags)
+    mem_flags = [
+        'static_cast<Request::FlagsType>(Request::%s)' % flag
+        for flag in mem_flags
+    ]
+    align_flag = getAlignFlag(iop)
+    if align_flag:
+        mem_flags.append('static_cast<Request::FlagsType>(%s)' % align_flag)
+    iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
+        '|'.join(mem_flags) + ';'
+
+    header_output += LRSCMicroDeclare.subst(iop)
+    decoder_output += LRSCMicroConstructor.subst(iop)
+    exec_output += AtomicStoreReleaseExecute.subst(iop) \
+        + AtomicStoreReleaseInitiateAcc.subst(iop) \
+        + AtomicStoreReleaseCompleteAcc.subst(iop)
+}};
+
 def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
         ea_code={{EA = rvSext(Rs1);}}, mem_flags=[], inst_flags=[]) {{
     macro_ea_code = ''

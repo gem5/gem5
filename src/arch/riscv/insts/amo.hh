@@ -97,6 +97,45 @@ class StoreCondMicro : public RiscvMicroInst
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+class AtomicLoadAcquire : public RiscvMacroInst
+{
+  protected:
+    using RiscvMacroInst::RiscvMacroInst;
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class AtomicLoadAcquireMicro : public RiscvMicroInst
+{
+  protected:
+    Request::Flags memAccessFlags;
+    using RiscvMicroInst::RiscvMicroInst;
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+// Zalasr store-release
+class AtomicStoreRelease : public RiscvMacroInst
+{
+  protected:
+    using RiscvMacroInst::RiscvMacroInst;
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class AtomicStoreReleaseMicro : public RiscvMicroInst
+{
+  protected:
+    Request::Flags memAccessFlags;
+    using RiscvMicroInst::RiscvMicroInst;
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
 // AMOs
 class AtomicMemOp : public RiscvMacroInst
 {
