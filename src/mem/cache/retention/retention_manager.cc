@@ -356,6 +356,12 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailBucketMax = p.tail_bucket_max;
             fatal_if(tailBucket && tailBucketMax == 0, "%s: "
                      "tail_bucket_max must be >= 1", cache.name());
+            fatal_if(p.tail_bucket_start != "empty" &&
+                     p.tail_bucket_start != "full", "%s: tail_bucket_start "
+                     "must be empty or full", cache.name());
+            tailTokens0 = tailBucket && p.tail_bucket_start == "full" ?
+                tailBucketMax : 0;
+            tailTokens = tailTokens0;
             tailBudgetRel = p.tail_budget == "lru_rel";
             fatal_if(tailBudgetRel && !(p.tail_budget_delta > 0.0 &&
                                         p.tail_budget_delta <= 1.0),
@@ -621,8 +627,9 @@ RetentionManager::startup()
                            "interval ends, at most %lu; a drop needs and "
                            "spends one (else the line is refreshed and "
                            "kept); an expired tag that ends without a "
-                           "reuse refunds one; starts empty", cache.name(),
-                           tailEpsShift, tailBucketMax);
+                           "reuse refunds one; starts with %lu",
+                           cache.name(), tailEpsShift, tailBucketMax,
+                           tailTokens0);
                 if (tailBudgetStop)
                     inform("%s: tail budget stop: W = inf once the "
                            "retention misses since the last epoch end x "
@@ -2643,12 +2650,15 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             // Since the start: retention misses <= floor(ends / 2^eps)?
             // (tail_budget=bucket guarantees it; counted in every run)
             tailCumRm++;
-            if (tailCumRm > (tailCumEnds >> tailEpsShift)) {
+            if (tailCumRm > (tailCumEnds >> tailEpsShift))
                 tailCumViol++;
+            // The bucket's own bound: + the tokens it started with
+            if (tailCumRm > (tailCumEnds >> tailEpsShift) + tailTokens0) {
+                tailCumBucketViol++;
                 panic_if(tailBucket && strict, "%s: tail bucket: %d "
-                         "retention misses > %d interval ends / 2^%u",
+                         "retention misses > %d interval ends / 2^%u + %d",
                          cache.name(), tailCumRm, tailCumEnds,
-                         tailEpsShift);
+                         tailEpsShift, tailTokens0);
             }
             tailMaxCumRatio = std::max(tailMaxCumRatio,
                 double(tailCumRm << tailEpsShift) / double(tailCumEnds));
@@ -4343,6 +4353,10 @@ RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
       ADD_STAT(cumBudgetViolations, statistics::units::Count::get(),
                "retention misses since the start at which the misses so "
                "far exceeded floor(interval ends so far / 2^eps)"),
+      ADD_STAT(bucketBoundViolations, statistics::units::Count::get(),
+               "retention misses since the start at which the misses so "
+               "far exceeded floor(ends so far / 2^eps) + the tokens at the "
+               "start (tail_bucket_start; = cumBudgetViolations when empty)"),
       ADD_STAT(maxCumRatio, statistics::units::Ratio::get(),
                "running max since the start of retention misses so far x "
                "2^eps / interval ends so far (at every retention miss)"),
@@ -4401,6 +4415,8 @@ RetentionManager::TailStats::regStats()
     cumRetentionMisses.functor([this] { return double(mgr.tailCumRm); });
     cumBudgetViolations.functor([this] {
         return double(mgr.tailCumViol); });
+    bucketBoundViolations.functor([this] {
+        return double(mgr.tailCumBucketViol); });
     maxCumRatio.functor([this] { return mgr.tailMaxCumRatio; });
     firstDropFrame.functor([this] {
         return double(mgr.tailFirstDropFrame); });

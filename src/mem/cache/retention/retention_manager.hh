@@ -963,6 +963,11 @@ class RetentionManager
     uint64_t tailBucketMax = 0;
     uint64_t tailTokens = 0;
     uint64_t tailPrescale = 0;
+    /** tail_bucket_start: tokens at the start (0 or TOK_MAX) */
+    uint64_t tailTokens0 = 0;
+    /** retention misses since the start with rm > (ends >> eps) +
+     *  tailTokens0: the bucket's own bound (0 in every bucket run) */
+    uint64_t tailCumBucketViol = 0;
     /** Since the simulation start (every tail run; not reset with the
      *  stats): interval ends, demand retention misses, retention
      *  misses with rm > ends >> eps, the running max of
@@ -1223,6 +1228,7 @@ class RetentionManager
         statistics::Value cumEnds;
         statistics::Value cumRetentionMisses;
         statistics::Value cumBudgetViolations;
+        statistics::Value bucketBoundViolations;
         statistics::Value maxCumRatio;
         statistics::Value firstDropFrame;
         statistics::Vector wCycles;

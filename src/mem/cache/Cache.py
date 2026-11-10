@@ -479,6 +479,13 @@ class BaseCache(ClockedObject):
         "refunds nothing. Starts empty, never reset",
     )
 
+    tail_bucket_start = Param.String(
+        "empty",
+        "window_mode=tail, tail_budget=bucket: the token count at the "
+        "start (the checkpoint restore): empty = 0 (default); full = "
+        "tail_bucket_max (user, 2026-11-10: a warmup-free check)",
+    )
+
     tail_budget_delta = Param.Float(
         0.01,
         "window_mode=tail, tail_budget=lru_rel: delta (fraction, kept in "
