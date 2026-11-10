@@ -108,16 +108,18 @@ jobs:
         needs: dispatch
         if: |-
             ${{ needs.dispatch.outputs.command == 'review' }}
-        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@0f1ca599206aa67fdd65f78a00a73c1a696d5a63 # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.4
+        uses: VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@9868744c9e2ecb11c9c0ea759e36526bcf99cc5f # ratchet:VulcanToolkit/shared-workflows/.github/workflows/vulcan-review.yml@v0.2.5
         permissions:
             contents: read
             pull-requests: write
         with:
             additional_context: ${{ needs.dispatch.outputs.additional_context }}
+            google_cloud_location: ${{ vars.VULCAN_GOOGLE_CLOUD_LOCATION }}
+            google_cloud_project: ${{ vars.VULCAN_GOOGLE_CLOUD_PROJECT }}
             requested_pr_review: ${{ needs.dispatch.outputs.requested_pr_review }}
             requested_commit_review: ${{ needs.dispatch.outputs.requested_commit_review }}
         secrets:
-            gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+            google-api-key: ${{ secrets.VULCAN_GOOGLE_API_KEY }}
     fallthrough:
         needs:
             - dispatch
