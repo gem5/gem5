@@ -46,10 +46,12 @@
 #ifndef __DRAM_INTERFACE_HH__
 #define __DRAM_INTERFACE_HH__
 
+#include "mem/dram_command.hh"
 #include "mem/drampower.hh"
 #include "mem/mem_ctrl.hh"
 #include "mem/mem_interface.hh"
 #include "params/DRAMInterface.hh"
+#include "sim/probe/probe.hh"
 
 namespace gem5
 {
@@ -66,6 +68,13 @@ namespace memory
 class DRAMInterface : public MemInterface
 {
   private:
+    std::unique_ptr<ProbePointArg<DramCommandInfo>> commandScheduled;
+
+    void observeCommand(DramCommandInfo::Type command, Tick command_at,
+                        uint8_t rank, std::optional<uint8_t> bank = {},
+                        std::optional<uint32_t> row = {},
+                        bool implicit = false);
+
     /**
      * Simple structure to hold the values needed to keep track of
      * commands for DRAMPower
@@ -664,6 +673,8 @@ class DRAMInterface : public MemInterface
     }
 
   public:
+    void regProbePoints() override;
+
     /**
      * Initialize the DRAM interface and verify parameters
      */

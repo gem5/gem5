@@ -40,6 +40,9 @@ Import('*')
 SimObject('BaseMemProbe.py', sim_objects=['BaseMemProbe'])
 Source('base.cc')
 
+SimObject('DramCommandTrace.py', sim_objects=['DramCommandTrace'])
+Source('dram_command_trace.cc')
+
 SimObject('StackDistProbe.py', sim_objects=['StackDistProbe'])
 Source('stack_dist.cc')
 
