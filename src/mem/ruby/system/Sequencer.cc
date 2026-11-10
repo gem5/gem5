@@ -1005,6 +1005,15 @@ Sequencer::makeRequest(PacketPtr pkt)
         return RequestStatus_BufferFull;
     }
 
+    // Only one cache invalidation (MemSyncReq) can be in flight: its cache
+    // walk completes through m_cache_inv_pkt. A second one (for example from
+    // a second GPU kernel launched on another stream while the first
+    // kernel's SQC/scalar invalidate is still walking) must be retried
+    // later, as VIPERCoalescer::makeRequest does for the TCP.
+    if (pkt->cmd == MemCmd::MemSyncReq && m_cache_inv_pkt) {
+        return RequestStatus_Aliased;
+    }
+
     RubyRequestType primary_type = RubyRequestType_NULL;
     RubyRequestType secondary_type = RubyRequestType_NULL;
 
