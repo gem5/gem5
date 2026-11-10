@@ -393,6 +393,11 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             // tail_kmin: w0 clamped like every W update
             if (!tailFixed)
                 tailW = std::max(tailW, (1u << tailKmin) - 1);
+            fatal_if(p.tail_budget_stop > 1, "%s: tail_budget_stop must "
+                     "be 0 or 1", cache.name());
+            tailBudgetStop = p.tail_budget_stop == 1;
+            fatal_if(tailBudgetStop && tailFixed, "%s: tail_budget_stop "
+                     "needs the controller (tail_fixed -1)", cache.name());
             // Every fill and writeback allocation is a use (as wb)
             fatal_if(!winFillUAlways, "%s: window_mode=tail needs "
                      "window_fill_u_always", cache.name());
@@ -565,7 +570,7 @@ RetentionManager::startup()
                     ccprintf(os, ",e%u", b);
                 for (unsigned b = 0; b < tailBins; b++)
                     ccprintf(os, ",r%u", b);
-                ccprintf(os, "\n");
+                ccprintf(os, ",rmEp,endsEp\n");
                 tailLog("init", tailW, -1);
                 if (tailLogHistOn) {
                     tailHistLog = simout.create(
@@ -604,6 +609,12 @@ RetentionManager::startup()
                            "<= %lu ppm x (interval ends - reuses), "
                            "instead of 2^-%u x interval ends",
                            cache.name(), tailBudgetPpm, tailEpsShift);
+                if (tailBudgetStop)
+                    inform("%s: tail budget stop: W = inf once the "
+                           "retention misses since the last epoch end x "
+                           "2^%u reach the live interval-end count, until "
+                           "the next epoch end", cache.name(),
+                           tailEpsShift);
                 if (tailEpochEndsThr)
                     inform("%s: tail epoch by events: an epoch at the "
                            "first frame end with >= %lu interval ends "
@@ -2608,6 +2619,9 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             tailStats->retentionMisses++;
             tailEnd(unsigned(row), true);
             tailStats->endsExpired++;
+            tailRmSinceEpoch++;
+            if (!tailStopped && !tailFixed)
+                tailStopCheck();
         }
         window->retentionMiss();
         windowClearExpired(unsigned(row));
@@ -3151,6 +3165,34 @@ RetentionManager::tailFastUpCheck()
 }
 
 void
+RetentionManager::tailStopCheck()
+{
+    // The live interval-end count: the controller histogram now (halved
+    // at each epoch end, grown by every end since)
+    uint64_t total = 0;
+    for (unsigned b = 0; b < tailBins; b++)
+        total += tailEnded[b];
+    if ((tailRmSinceEpoch << tailEpsShift) < total)
+        return;
+    tailStopped = true;
+    if (!tailBudgetStop) {
+        // Option off: logged only (the first retention miss of the epoch
+        // at which the stop would trigger); W unchanged
+        tailLog("stopx", tailW, -1);
+        return;
+    }
+    tailStats->budgetStops++;
+    const uint32_t w_before = tailW;
+    if (tailW != tailInf) {
+        tailAccountW();
+        tailW = tailInf;
+        tailTimeW = tailInf;
+        tailStats->wChanges++;
+    }
+    tailLog("stop", w_before, -1);
+}
+
+void
 RetentionManager::tailAccountW()
 {
     const double cycles = double(curTick() - tailTimeSince) /
@@ -3184,7 +3226,8 @@ RetentionManager::tailLog(const char *event, uint32_t w_before, int64_t k)
         ccprintf(os, ",%d", tailEnded[b]);
     for (unsigned b = 0; b < tailBins; b++)
         ccprintf(os, ",%d", tailReuses[b]);
-    ccprintf(os, "\n");
+    // Since the last epoch end: demand retention misses, interval ends
+    ccprintf(os, ",%d,%d\n", tailRmSinceEpoch, tailEndsSinceEpoch);
     os.flush();
 }
 
@@ -3372,8 +3415,11 @@ RetentionManager::windowFrameEnd()
             ++tailFrames == tailEpochFrames;
         if (epoch) {
             tailFrames = 0;
-            tailEndsSinceEpoch = 0;
+            // The epoch row logs the counts since the last epoch end
             tailEpoch();
+            tailEndsSinceEpoch = 0;
+            tailRmSinceEpoch = 0;
+            tailStopped = false;
         } else if (tailFastUp && !tailFixed) {
             tailFastUpCheck();
         }
@@ -4198,6 +4244,10 @@ RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
                "controller epochs (every tail_epoch frames)"),
       ADD_STAT(wChanges, statistics::units::Count::get(),
                "epochs that changed W"),
+      ADD_STAT(budgetStops, statistics::units::Count::get(),
+               "tail_budget_stop: epochs in which the retention misses "
+               "since the epoch start reached 2^-eps x the live "
+               "interval-end count (W = inf until the epoch end)"),
       ADD_STAT(wCycles, statistics::units::Cycle::get(),
                "cycles at each W rung (0, 1, 3, ..., 511, inf)"),
       ADD_STAT(wCyclesTotal, statistics::units::Cycle::get(),

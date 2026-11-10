@@ -411,6 +411,14 @@ class BaseCache(ClockedObject):
         "2^tail_eps_shift (c / eps; tail_epoch unused); tail_fastup "
         "unchanged (every other frame end)",
     )
+    tail_budget_stop = Param.Unsigned(
+        0,
+        "window_mode=tail (ablation, user 2026-11-10): 1 = count the "
+        "retention misses since the last epoch end; once count x "
+        "2^tail_eps_shift >= the live interval-end count (the controller "
+        "histogram total), W = inf until the next epoch end, where the "
+        "normal epoch update resumes; 0 = off",
+    )
 
     tail_w0 = Param.Unsigned(
         7,

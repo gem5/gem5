@@ -590,6 +590,9 @@ class RetentionManager
 
     /** tail_fastup: at a frame end that is not an epoch, W = K if K > W. */
     void tailFastUpCheck();
+    /** tail_budget_stop: W = inf once the retention misses since the
+     *  last epoch reach 2^-eps x the live interval-end count */
+    void tailStopCheck();
 
     /** window_mode=tail: the histogram bin of an age (its bit width,
      *  capped at 10), also the rung of a W value (inf: 10). */
@@ -942,6 +945,12 @@ class RetentionManager
      *  frames); the ends counted since the last epoch. */
     uint64_t tailEpochEndsThr = 0;
     uint64_t tailEndsSinceEpoch = 0;
+    /** tail_budget_stop (ablation): on; the condition reached in this
+     *  epoch (on: W = inf until the next epoch end; off: a "stopx" log
+     *  row only); demand retention misses since the last epoch end */
+    bool tailBudgetStop = false;
+    bool tailStopped = false;
+    uint64_t tailRmSinceEpoch = 0;
     std::vector<uint32_t> tailAge;
     std::vector<uint64_t> tailEnded;
     std::vector<uint64_t> tailReuses;
@@ -1183,6 +1192,7 @@ class RetentionManager
         statistics::Scalar uses;
         statistics::Scalar epochs;
         statistics::Scalar wChanges;
+        statistics::Scalar budgetStops;
         statistics::Vector wCycles;
         statistics::Scalar wCyclesTotal;
         statistics::Scalar wCyclesTimesW;
