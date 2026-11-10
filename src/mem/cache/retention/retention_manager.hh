@@ -937,6 +937,11 @@ class RetentionManager
     unsigned tailEpochFrames = 64;
     unsigned tailDamp = 1;
     unsigned tailFrames = 0;
+    /** tail_epoch_events: an epoch once the interval ends since the last
+     *  one reach tailEpochEndsThr (c << eps; 0 = every tail_epoch
+     *  frames); the ends counted since the last epoch. */
+    uint64_t tailEpochEndsThr = 0;
+    uint64_t tailEndsSinceEpoch = 0;
     std::vector<uint32_t> tailAge;
     std::vector<uint64_t> tailEnded;
     std::vector<uint64_t> tailReuses;

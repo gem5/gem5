@@ -403,6 +403,15 @@ class BaseCache(ClockedObject):
         "counter is halved",
     )
 
+    tail_epoch_events = Param.Unsigned(
+        0,
+        "window_mode=tail (ablation, user 2026-11-10): 0 = an epoch every "
+        "tail_epoch frames; c > 0 = an epoch at the first frame end where "
+        "the interval ends counted since the last epoch reach c x "
+        "2^tail_eps_shift (c / eps; tail_epoch unused); tail_fastup "
+        "unchanged (every other frame end)",
+    )
+
     tail_w0 = Param.Unsigned(
         7,
         "window_mode=tail: initial W (2^k - 1 <= 511). At its slot a valid "

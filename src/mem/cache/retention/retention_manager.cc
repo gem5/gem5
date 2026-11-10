@@ -368,6 +368,9 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                      cache.name());
             fatal_if(tailEpsShift > 32, "%s: tail_eps_shift must be <= 32",
                      cache.name());
+            fatal_if(p.tail_epoch_events > (1u << 20), "%s: "
+                     "tail_epoch_events must be <= 2^20", cache.name());
+            tailEpochEndsThr = uint64_t(p.tail_epoch_events) << tailEpsShift;
             fatal_if(tailDamp > 1, "%s: tail_damp must be 0 or 1",
                      cache.name());
             fatal_if(p.tail_w0 > 511 || ((p.tail_w0 + 1) & p.tail_w0) != 0,
@@ -601,6 +604,12 @@ RetentionManager::startup()
                            "<= %lu ppm x (interval ends - reuses), "
                            "instead of 2^-%u x interval ends",
                            cache.name(), tailBudgetPpm, tailEpsShift);
+                if (tailEpochEndsThr)
+                    inform("%s: tail epoch by events: an epoch at the "
+                           "first frame end with >= %lu interval ends "
+                           "(%u x 2^%u) since the last epoch; tail_epoch "
+                           "unused", cache.name(), tailEpochEndsThr,
+                           tailEpochEndsThr >> tailEpsShift, tailEpsShift);
                 if (tailKmax < 10)
                     inform("%s: tail ablation: kmax %u (W in 2^k - 1, k <= "
                            "%u, or inf; from inf down to %u)", cache.name(),
@@ -2935,6 +2944,7 @@ RetentionManager::tailEnd(unsigned row, bool demand)
     TailStats &st = *tailStats;
     const unsigned b = tailBin(tailAge[row]);
     tailEnded[b]++;
+    tailEndsSinceEpoch++;
     st.ended[b]++;
     if (demand) {
         tailReuses[b]++;
@@ -3356,8 +3366,13 @@ RetentionManager::windowFrameEnd()
         if (tailFrameLog)
             tailFrameRow();
         tailFrMatch = tailFrRepl = 0;
-        if (++tailFrames == tailEpochFrames) {
+        // tail_epoch_events: by interval ends instead of frames
+        const bool epoch = tailEpochEndsThr ?
+            tailEndsSinceEpoch >= tailEpochEndsThr :
+            ++tailFrames == tailEpochFrames;
+        if (epoch) {
             tailFrames = 0;
+            tailEndsSinceEpoch = 0;
             tailEpoch();
         } else if (tailFastUp && !tailFixed) {
             tailFastUpCheck();
