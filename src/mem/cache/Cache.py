@@ -113,6 +113,15 @@ class BaseCache(ClockedObject):
         "only)",
     )
 
+    refresh_subbank_block = Param.Bool(
+        False,
+        "Refresh-all even spacing with subarrays: an operation blocks only "
+        "the subarrays (sub-banks) whose row it refreshes (holds a valid "
+        "line after the window decision), for refresh_line_cycles; a hit "
+        "waits only for its own sub-bank. Off: the whole bank for every "
+        "operation",
+    )
+
     reuse_stats = Param.Bool(
         False,
         "Stats only: time since each line's last access at a demand hit, "

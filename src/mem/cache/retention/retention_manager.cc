@@ -194,6 +194,19 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                  subarrays, num_sets, banks, assoc);
     }
 
+    subBlock = p.refresh_subbank_block;
+    if (subBlock) {
+        fatal_if(subarrays < 2 || refreshMode != RefreshMode::AllStrict ||
+                 !raEven || cache.bankPorts || raFree,
+                 "%s: refresh_subbank_block needs refresh-all strict with "
+                 "refresh_all_even, refresh_subarrays > 1, bank ports off "
+                 "and refresh_all_free off", cache.name());
+        subBusyUntil.assign(banks * subarrays, 0);
+        inform("%s: sub-bank refresh blocking: an operation blocks only "
+               "the sub-banks (of %u) whose row it refreshes, for %u "
+               "cycles", cache.name(), subarrays, (unsigned)lineCycles);
+    }
+
     if (lineScan) {
         const unsigned num_sets = cache.tags->getNumSets();
         // The RTL's per-line rules: dirty, used, Shared; no MRU ranking
@@ -926,9 +939,22 @@ RetentionManager::hitDelay(PacketPtr pkt, CacheBlk *blk)
     const unsigned bank = bankOf(blk->getSet());
 
     // A refresh occupies the block's bank: wait for it (with bank ports,
-    // the hit already waited for its slot)
-    if (!cache.bankPorts && bankBusyUntil[bank] > curTick()) {
-        delay = cache.ticksToCycles(bankBusyUntil[bank] - curTick());
+    // the hit already waited for its slot). Sub-bank blocking: only the
+    // block's own sub-bank (and anything that booked the whole bank)
+    Tick busy = bankBusyUntil[bank];
+    if (subBlock) {
+        const Tick sub = subBusyUntil[bank * subarrays + laneOf(blk)];
+        bool other = false;
+        for (unsigned g = 0; g < subarrays; g++)
+            other |= subBusyUntil[bank * subarrays + g] > curTick();
+        if (sub > curTick())
+            stats.subBankStalledHits++;
+        else if (other)
+            stats.subBankFreeHits++;
+        busy = std::max(busy, sub);
+    }
+    if (!cache.bankPorts && busy > curTick()) {
+        delay = cache.ticksToCycles(busy - curTick());
         stats.refreshStalledHits++;
         stats.refreshStallCycles += delay;
         stats.bankStalledHits[bank]++;
@@ -2088,6 +2114,12 @@ RetentionManager::raRefreshRow(unsigned bank, Tick start)
     raRow[bank]++;
 }
 
+unsigned
+RetentionManager::laneOf(const CacheBlk *blk) const
+{
+    return ((blk->getSet() / banks) * assoc + blk->getWay()) % subarrays;
+}
+
 Tick
 RetentionManager::raEvenSlot(unsigned bank) const
 {
@@ -2103,13 +2135,31 @@ RetentionManager::processRaEven(unsigned bank)
     // The row's slot: the refresh starts on the next cycle, ahead of
     // the waiting accesses
     // One operation: a row of each subarray
-    const Tick start = raBlock(bank, cache.clockEdge(Cycles(1)), true);
+    Tick start;
+    if (subBlock) {
+        // The slot, unless something still holds the bank or one of its
+        // sub-banks (never with the spacing check: P / ops >= op time)
+        start = std::max(cache.clockEdge(Cycles(1)), bankBusyUntil[bank]);
+        for (unsigned g = 0; g < subarrays; g++)
+            start = std::max(start, subBusyUntil[bank * subarrays + g]);
+        stats.bankRefreshes[bank]++;
+    } else {
+        start = raBlock(bank, cache.clockEdge(Cycles(1)), true);
+    }
     const Counter valid0 = stats.raValidRefreshes.value();
     for (unsigned g = 0; g < subarrays; g++) {
         stats.raForcedRefreshes++;
         if (window)
             windowRow(bank);
+        const unsigned lane = raRow[bank] % subarrays;
+        const Counter v = stats.raValidRefreshes.value();
         raRefreshRow(bank, start);
+        // Sub-bank blocking: only a lane this operation refreshed
+        if (subBlock && stats.raValidRefreshes.value() > v) {
+            subBusyUntil[bank * subarrays + lane] =
+                start + cache.cyclesToTicks(lineCycles);
+            stats.subBankBusyCycles += lineCycles;
+        }
     }
     // stats only: the lanes this operation refreshed
     stats.raOpLanes[stats.raValidRefreshes.value() - valid0]++;
@@ -3538,6 +3588,14 @@ RetentionManager::RetentionStats::RetentionStats(RetentionManager &_mgr,
                "refresh-all (even spacing): operations by the number of "
                "lanes they refreshed (rows holding a valid line); every "
                "operation occupies its bank for the full op time"),
+      ADD_STAT(subBankBusyCycles, statistics::units::Cycle::get(),
+               "sub-bank blocking: sub-bank cycles blocked by refreshes "
+               "(lanes refreshed x refresh_line_cycles)"),
+      ADD_STAT(subBankStalledHits, statistics::units::Count::get(),
+               "sub-bank blocking: hits that waited for their sub-bank"),
+      ADD_STAT(subBankFreeHits, statistics::units::Count::get(),
+               "sub-bank blocking: hits that proceeded while another "
+               "sub-bank of their bank was blocked"),
       ADD_STAT(raValidRefreshes, statistics::units::Count::get(),
                "refresh-all: rows refreshed while holding a valid line"),
       ADD_STAT(raOppRefreshes, statistics::units::Count::get(),

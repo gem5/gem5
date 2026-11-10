@@ -718,6 +718,15 @@ class RetentionManager
     /** Tick of the last demand access to each bank. */
     std::vector<Tick> bankLastAccess;
 
+    /** Sub-bank refresh blocking (refresh_subbank_block): an operation
+     *  blocks only the sub-banks (subarrays) whose row it refreshes, each
+     *  until this tick (index bank * subarrays + lane). */
+    bool subBlock = false;
+    std::vector<Tick> subBusyUntil;
+    /** The lane (subarray) of a block's row: row = (set / banks) * assoc
+     *  + way within its bank, lane = row mod subarrays. */
+    unsigned laneOf(const CacheBlk *blk) const;
+
     /** Tick the current daemon sweep started at set 0. */
     Tick sweepStart;
 
@@ -1347,6 +1356,14 @@ class RetentionManager
          *  lanes (one row per subarray) refreshed, i.e. holding a valid
          *  line after the window decision (stats only). */
         statistics::Vector raOpLanes;
+        /** Sub-bank blocking: sub-bank cycles blocked by refreshes
+         *  (lanes refreshed x refresh_line_cycles). */
+        statistics::Scalar subBankBusyCycles;
+        /** Sub-bank blocking: hits that waited for their sub-bank, and
+         *  hits to a bank with a refresh in progress that did not wait
+         *  (their sub-bank was free). */
+        statistics::Scalar subBankStalledHits;
+        statistics::Scalar subBankFreeHits;
         /** Refresh-all: rows refreshed while holding a valid line. */
         statistics::Scalar raValidRefreshes;
         /** Refresh-all: refreshes issued in an idle bank cycle. */
