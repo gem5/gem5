@@ -32,7 +32,7 @@ class T2Prefetcher : public TPCComponent {
     };
     const unsigned confirm, reject, provisional, maxDistance, maxPending;
     const unsigned provisionalPerCycle, provisionalQueueLimit;
-    const bool trace;
+    const bool trace, serviceLatency;
     const Tick margin;
     T2Loop loop;
     T2Mean latency;
@@ -47,7 +47,7 @@ class T2Prefetcher : public TPCComponent {
         statistics::Scalar cpuLoads, primaryActivations, samples, confirmed, rejected,
             provisionalRequests, candidates, transported, invalidated, evicted,
             replayAttempts, pendingFull, latencySamples, branches, loopSwitches,
-            arithmeticDrops, unboundLoads;
+            arithmeticDrops, unboundLoads, serviceSamples;
         explicit Stats(statistics::Group *);
     } t2Stats;
     Entry *find(const Pending &);
@@ -63,6 +63,7 @@ class T2Prefetcher : public TPCComponent {
     void publish(const char *, const Entry &);
   protected:
     void onObserve(const AccessEvent &) override;
+    void onFill(const FillEvent &) override;
     void onTrain(const AccessEvent &) override;
     bool canHandle(const AccessEvent &) const override;
     void onPredict(const AccessEvent &, const SubmissionContext &) override {}

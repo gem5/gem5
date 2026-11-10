@@ -21,6 +21,10 @@ struct FillEvent {
     Addr address;
     std::vector<uint8_t> data;
     AccountingPtr origin; // same request identity; owning provenance reference
+    // Cache timing facts, independent of public prefetch accounting. Available
+    // only for successful timing read fills; readiness includes modeled fill time.
+    Tick serviceStart = 0, readyTick = 0;
+    bool readService = false;
 };
 class CacheObserver {
   public:

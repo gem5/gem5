@@ -15,21 +15,24 @@ T2Prefetcher::Stats::Stats(statistics::Group *p) : statistics::Group(p, "t2"),
     ADD_STAT(evicted, statistics::units::Count::get(), "SIT replacements"),
     ADD_STAT(replayAttempts, statistics::units::Count::get(), "Suppressed repeat attempts"),
     ADD_STAT(pendingFull, statistics::units::Count::get(), "Pending identity capacity skips"),
-    ADD_STAT(latencySamples, statistics::units::Count::get(), "Final demand latency samples"),
+    ADD_STAT(latencySamples, statistics::units::Count::get(), "Selected timing-estimator samples"),
     ADD_STAT(branches, statistics::units::Count::get(), "Committed branch observations"),
     ADD_STAT(loopSwitches, statistics::units::Count::get(), "Loop register switches"),
     ADD_STAT(arithmeticDrops, statistics::units::Count::get(), "Overflow/address rejections"),
-    ADD_STAT(unboundLoads, statistics::units::Count::get(), "Loads before loop recognition") {}
+    ADD_STAT(unboundLoads, statistics::units::Count::get(), "Loads before loop recognition"),
+    ADD_STAT(serviceSamples, statistics::units::Count::get(), "Full L1 read-miss service samples") {}
 T2Prefetcher::T2Prefetcher(const T2PrefetcherParams &p)
     : TPCComponent(p), confirm(p.confirm_deltas), reject(p.reject_changes),
       provisional(p.provisional_deltas), maxDistance(p.max_distance),
       maxPending(p.max_pending), provisionalPerCycle(p.provisional_per_cycle),
       provisionalQueueLimit(p.provisional_queue_limit),
-      trace(p.trace), margin(clockPeriod()*p.margin_cycles),
+      trace(p.trace), serviceLatency(p.latency_mode=="service"),
+      margin(clockPeriod()*p.margin_cycles),
       loop(p.nlpct_entries, p.min_segment_size, p.timing_window),
       latency(p.timing_window), sit(p.sit_entries),
       catchup([this] { emitOne(); }, name()+".catchup"), t2Stats(this)
 {
+    fatal_if(p.latency_mode!="service" && p.latency_mode!="demand", "Invalid T2 latency_mode");
     fatal_if(source()!=1 || !p.sit_entries || !p.nlpct_entries ||
         !p.timing_window || !maxPending || !confirm || !reject ||
         !provisional || provisional>confirm || !maxDistance || maxDistance>1024 ||
@@ -162,6 +165,8 @@ void T2Prefetcher::updateTarget(Entry &e, const CPULoadEvent &event,
                                const SubmissionContext &context) {
     e.baseDistance=t2Distance(latency.value(),loop.loopPeriod(),margin,maxDistance);
     unsigned effective=e.baseDistance*(e.pointer?2:1);
+    if (trace) inform("T2_TARGET tick=%llu pc=%#x va=%#x latency=%llu period=%llu margin=%llu distance=%u",
+        curTick(),e.key.pc,event.address,latency.value(),loop.loopPeriod(),margin,effective);
     e.current=event.address;
     if (!t2Target(e.current,e.run.delta,effective,e.desired)) {
         t2Stats.arithmeticDrops++; e.context.reset(); return;
@@ -217,7 +222,16 @@ void T2Prefetcher::onCPUBranch(const CPUBranchEvent &e) {
         if (catchup.scheduled()) deschedule(catchup);
     }
 }
+void T2Prefetcher::onFill(const FillEvent &e) {
+    // Global cache-service estimate: one sample per completed read MSHR, not
+    // one per merged demand. No accounting counters or stream state are read.
+    if (serviceLatency && e.level==1 && e.readService && e.readyTick>e.serviceStart)
+        if (latency.add(e.readyTick-e.serviceStart)) {
+            t2Stats.serviceSamples++; t2Stats.latencySamples++;
+        }
+}
 void T2Prefetcher::onCPUComplete(const CPUCompleteEvent &e) {
+    if (serviceLatency) return;
     auto it=pending.find({e.context,e.sequence});
     if (it!=pending.end() && e.success && it->second.cacheSeen && e.tick>it->second.cacheTick)
         if (latency.add(e.tick-it->second.cacheTick)) t2Stats.latencySamples++;

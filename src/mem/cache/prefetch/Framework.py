@@ -78,6 +78,7 @@ class T2Prefetcher(TPCComponent):
     provisional_deltas = Param.Unsigned(4, "Early observation prefetch threshold")
     timing_window = Param.Unsigned(16, "Arithmetic mean window in samples")
     margin_cycles = Param.Unsigned(0, "AMAT margin in component cycles")
+    latency_mode = Param.String("service", "service: full L1 read-miss service; demand: legacy residual CPU wait")
     max_distance = Param.Unsigned(64, "Maximum base lookahead iterations")
     max_pending = Param.Unsigned(8192, "Bounded dynamic-load join capacity")
     provisional_per_cycle = Param.Unsigned(1, "Provisional scheduling budget")
