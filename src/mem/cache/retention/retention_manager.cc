@@ -349,8 +349,13 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailTopW = (1u << std::min(tailKmax, 9u)) - 1;
             fatal_if(p.tail_w0 > tailTopW && p.tail_fixed == "-1",
                      "%s: tail_w0 above 2^tail_kmax - 1", cache.name());
-            fatal_if(p.tail_budget != "eps" && p.tail_budget != "lru_rel",
-                     "%s: tail_budget must be eps or lru_rel", cache.name());
+            fatal_if(p.tail_budget != "eps" && p.tail_budget != "lru_rel" &&
+                     p.tail_budget != "bucket", "%s: tail_budget must be "
+                     "eps, lru_rel or bucket", cache.name());
+            tailBucket = p.tail_budget == "bucket";
+            tailBucketMax = p.tail_bucket_max;
+            fatal_if(tailBucket && tailBucketMax == 0, "%s: "
+                     "tail_bucket_max must be >= 1", cache.name());
             tailBudgetRel = p.tail_budget == "lru_rel";
             fatal_if(tailBudgetRel && !(p.tail_budget_delta > 0.0 &&
                                         p.tail_budget_delta <= 1.0),
@@ -397,6 +402,8 @@ RetentionManager::RetentionManager(BaseCache &_cache,
                      "be 0 or 1", cache.name());
             tailBudgetStop = p.tail_budget_stop == 1;
             fatal_if(tailBudgetStop && tailFixed, "%s: tail_budget_stop "
+                     "needs the controller (tail_fixed -1)", cache.name());
+            fatal_if(tailBucket && tailFixed, "%s: tail_budget=bucket "
                      "needs the controller (tail_fixed -1)", cache.name());
             // Every fill and writeback allocation is a use (as wb)
             fatal_if(!winFillUAlways, "%s: window_mode=tail needs "
@@ -570,7 +577,7 @@ RetentionManager::startup()
                     ccprintf(os, ",e%u", b);
                 for (unsigned b = 0; b < tailBins; b++)
                     ccprintf(os, ",r%u", b);
-                ccprintf(os, ",rmEp,endsEp\n");
+                ccprintf(os, ",rmEp,endsEp,tokens,rmCum,endsCum\n");
                 tailLog("init", tailW, -1);
                 if (tailLogHistOn) {
                     tailHistLog = simout.create(
@@ -609,6 +616,13 @@ RetentionManager::startup()
                            "<= %lu ppm x (interval ends - reuses), "
                            "instead of 2^-%u x interval ends",
                            cache.name(), tailBudgetPpm, tailEpsShift);
+                if (tailBucket)
+                    inform("%s: tail budget bucket: a token per 2^%u "
+                           "interval ends, at most %lu; a drop needs and "
+                           "spends one (else the line is refreshed and "
+                           "kept); an expired tag that ends without a "
+                           "reuse refunds one; starts empty", cache.name(),
+                           tailEpsShift, tailBucketMax);
                 if (tailBudgetStop)
                     inform("%s: tail budget stop: W = inf once the "
                            "retention misses since the last epoch end x "
@@ -2417,10 +2431,14 @@ RetentionManager::dropNeedsWb(bool dirty) const
 }
 
 void
-RetentionManager::windowClearExpired(unsigned row)
+RetentionManager::windowClearExpired(unsigned row, bool reused)
 {
     panic_if(winExpAddr[row] == MaxAddr, "%s: row %u has no expired tag",
              cache.name(), row);
+    // tail_budget=bucket: an expired tag that ends without a reuse gives
+    // its drop's token back
+    if (tailBucket && !reused)
+        tailRefund();
     winExpAddr[row] = MaxAddr;
     winExpInFilter[row] = 0;
     winExpProb[row] = 0;
@@ -2622,9 +2640,21 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             tailRmSinceEpoch++;
             if (!tailStopped && !tailFixed)
                 tailStopCheck();
+            // Since the start: retention misses <= floor(ends / 2^eps)?
+            // (tail_budget=bucket guarantees it; counted in every run)
+            tailCumRm++;
+            if (tailCumRm > (tailCumEnds >> tailEpsShift)) {
+                tailCumViol++;
+                panic_if(tailBucket && strict, "%s: tail bucket: %d "
+                         "retention misses > %d interval ends / 2^%u",
+                         cache.name(), tailCumRm, tailCumEnds,
+                         tailEpsShift);
+            }
+            tailMaxCumRatio = std::max(tailMaxCumRatio,
+                double(tailCumRm << tailEpsShift) / double(tailCumEnds));
         }
         window->retentionMiss();
-        windowClearExpired(unsigned(row));
+        windowClearExpired(unsigned(row), true);
     } else if (inval) {
         // An SRAM cache would invalidate the line too
         winStats->expiredInvalidated++;
@@ -2959,6 +2989,17 @@ RetentionManager::tailEnd(unsigned row, bool demand)
     const unsigned b = tailBin(tailAge[row]);
     tailEnded[b]++;
     tailEndsSinceEpoch++;
+    tailCumEnds++;
+    // tail_budget=bucket: a token per 2^eps ends (saturating)
+    if (tailBucket && ++tailPrescale == (uint64_t(1) << tailEpsShift)) {
+        tailPrescale = 0;
+        if (tailTokens < tailBucketMax) {
+            tailTokens++;
+            st.bucketMinted++;
+        } else {
+            st.bucketLost++;
+        }
+    }
     st.ended[b]++;
     if (demand) {
         tailReuses[b]++;
@@ -3031,6 +3072,24 @@ RetentionManager::tailRow(CacheBlk *blk, unsigned row)
         st.linesRefreshed++;
         return;
     }
+    // tail_budget=bucket: a drop needs a token; without one the line is
+    // refreshed and kept (as RA), retried at its next slot
+    if (tailBucket) {
+        if (tailTokens == 0) {
+            if (winPend[row]) {
+                winPend[row] = 0;
+                winPendLive--;
+            }
+            st.bucketRefused++;
+            ws.linesRefreshed++;
+            st.linesRefreshed++;
+            return;
+        }
+        tailTokens--;
+        st.bucketSpent++;
+    }
+    if (tailFirstDropFrame < 0)
+        tailFirstDropFrame = int64_t(winFrameNo);
     if (dirty)
         st.dropsDirty++;
     else
@@ -3165,6 +3224,17 @@ RetentionManager::tailFastUpCheck()
 }
 
 void
+RetentionManager::tailRefund()
+{
+    if (tailTokens < tailBucketMax) {
+        tailTokens++;
+        tailStats->bucketRefunds++;
+    } else {
+        tailStats->bucketLost++;
+    }
+}
+
+void
 RetentionManager::tailStopCheck()
 {
     // The live interval-end count: the controller histogram now (halved
@@ -3227,7 +3297,10 @@ RetentionManager::tailLog(const char *event, uint32_t w_before, int64_t k)
     for (unsigned b = 0; b < tailBins; b++)
         ccprintf(os, ",%d", tailReuses[b]);
     // Since the last epoch end: demand retention misses, interval ends
-    ccprintf(os, ",%d,%d\n", tailRmSinceEpoch, tailEndsSinceEpoch);
+    ccprintf(os, ",%d,%d", tailRmSinceEpoch, tailEndsSinceEpoch);
+    // tail_budget=bucket tokens; since the simulation start: retention
+    // misses, interval ends
+    ccprintf(os, ",%d,%d,%d\n", tailTokens, tailCumRm, tailCumEnds);
     os.flush();
 }
 
@@ -4248,6 +4321,34 @@ RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
                "tail_budget_stop: epochs in which the retention misses "
                "since the epoch start reached 2^-eps x the live "
                "interval-end count (W = inf until the epoch end)"),
+      ADD_STAT(bucketMinted, statistics::units::Count::get(),
+               "tail_budget=bucket: tokens added (one per 2^eps interval "
+               "ends, below the cap)"),
+      ADD_STAT(bucketSpent, statistics::units::Count::get(),
+               "tail_budget=bucket: tokens spent (= drops)"),
+      ADD_STAT(bucketRefunds, statistics::units::Count::get(),
+               "tail_budget=bucket: tokens refunded (expired tags that "
+               "ended without a reuse, below the cap)"),
+      ADD_STAT(bucketLost, statistics::units::Count::get(),
+               "tail_budget=bucket: mints and refunds lost to the cap"),
+      ADD_STAT(bucketRefused, statistics::units::Count::get(),
+               "tail_budget=bucket: drops refused for lack of a token "
+               "(slots: the line refreshed and kept)"),
+      ADD_STAT(bucketTokens, statistics::units::Count::get(),
+               "tail_budget=bucket: tokens at the dump"),
+      ADD_STAT(cumEnds, statistics::units::Count::get(),
+               "interval ends since the simulation start (not reset)"),
+      ADD_STAT(cumRetentionMisses, statistics::units::Count::get(),
+               "retention misses since the simulation start (not reset)"),
+      ADD_STAT(cumBudgetViolations, statistics::units::Count::get(),
+               "retention misses since the start at which the misses so "
+               "far exceeded floor(interval ends so far / 2^eps)"),
+      ADD_STAT(maxCumRatio, statistics::units::Ratio::get(),
+               "running max since the start of retention misses so far x "
+               "2^eps / interval ends so far (at every retention miss)"),
+      ADD_STAT(firstDropFrame, statistics::units::Count::get(),
+               "frame (from the simulation start) of the first drop; -1: "
+               "none yet"),
       ADD_STAT(wCycles, statistics::units::Cycle::get(),
                "cycles at each W rung (0, 1, 3, ..., 511, inf)"),
       ADD_STAT(wCyclesTotal, statistics::units::Cycle::get(),
@@ -4295,6 +4396,14 @@ RetentionManager::TailStats::regStats()
         ddropsPerFrame.subname(i, dd[i]);
     deferredPeak.functor([this] { return double(mgr.winPendPeak); });
     finalW.functor([this] { return tailWValue(mgr.tailW); });
+    bucketTokens.functor([this] { return double(mgr.tailTokens); });
+    cumEnds.functor([this] { return double(mgr.tailCumEnds); });
+    cumRetentionMisses.functor([this] { return double(mgr.tailCumRm); });
+    cumBudgetViolations.functor([this] {
+        return double(mgr.tailCumViol); });
+    maxCumRatio.functor([this] { return mgr.tailMaxCumRatio; });
+    firstDropFrame.functor([this] {
+        return double(mgr.tailFirstDropFrame); });
     maxDdropsPerFrame.functor([this] { return double(mgr.tailDdMax); });
     meanW = wCyclesTimesW / wCyclesTotal;
     ageAtDrop.init(0, 1023, 1);

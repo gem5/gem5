@@ -510,7 +510,9 @@ class RetentionManager
                     bool probation = false);
 
     /** Window mode: clear the expired tag of row. */
-    void windowClearExpired(unsigned row);
+    /** reused: the tag ends in a retention miss (tail_budget=bucket:
+     *  every other end refunds a token) */
+    void windowClearExpired(unsigned row, bool reused = false);
 
     /** Window mode: the expired row of set matching addr, or -1. */
     int windowExpiredMatch(unsigned set, Addr blk_addr,
@@ -593,6 +595,8 @@ class RetentionManager
     /** tail_budget_stop: W = inf once the retention misses since the
      *  last epoch reach 2^-eps x the live interval-end count */
     void tailStopCheck();
+    /** tail_budget=bucket: one token back (saturating) */
+    void tailRefund();
 
     /** window_mode=tail: the histogram bin of an age (its bit width,
      *  capped at 10), also the rung of a W value (inf: 10). */
@@ -951,6 +955,23 @@ class RetentionManager
     bool tailBudgetStop = false;
     bool tailStopped = false;
     uint64_t tailRmSinceEpoch = 0;
+    /** tail_budget=bucket (ablation): a token per 2^eps interval ends
+     *  (tailPrescale counts them), capped at tailBucketMax; a drop
+     *  spends one, an expired tag that ends without a reuse refunds
+     *  one. Starts empty, never reset */
+    bool tailBucket = false;
+    uint64_t tailBucketMax = 0;
+    uint64_t tailTokens = 0;
+    uint64_t tailPrescale = 0;
+    /** Since the simulation start (every tail run; not reset with the
+     *  stats): interval ends, demand retention misses, retention
+     *  misses with rm > ends >> eps, the running max of
+     *  rm x 2^eps / ends, the frame of the first drop (-1: none) */
+    uint64_t tailCumEnds = 0;
+    uint64_t tailCumRm = 0;
+    uint64_t tailCumViol = 0;
+    double tailMaxCumRatio = 0;
+    int64_t tailFirstDropFrame = -1;
     std::vector<uint32_t> tailAge;
     std::vector<uint64_t> tailEnded;
     std::vector<uint64_t> tailReuses;
@@ -1193,6 +1214,17 @@ class RetentionManager
         statistics::Scalar epochs;
         statistics::Scalar wChanges;
         statistics::Scalar budgetStops;
+        statistics::Scalar bucketMinted;
+        statistics::Scalar bucketSpent;
+        statistics::Scalar bucketRefunds;
+        statistics::Scalar bucketLost;
+        statistics::Scalar bucketRefused;
+        statistics::Value bucketTokens;
+        statistics::Value cumEnds;
+        statistics::Value cumRetentionMisses;
+        statistics::Value cumBudgetViolations;
+        statistics::Value maxCumRatio;
+        statistics::Value firstDropFrame;
         statistics::Vector wCycles;
         statistics::Scalar wCyclesTotal;
         statistics::Scalar wCyclesTimesW;

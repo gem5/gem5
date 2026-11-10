@@ -463,7 +463,20 @@ class BaseCache(ClockedObject):
         "rule. eps = the reuse tail above K at most 2^-tail_eps_shift x "
         "all interval ends (sum of ended[]); lru_rel = at most "
         "tail_budget_delta x the interval ends that were not reuses "
-        "(sum of ended[] - reuses[]); used at epochs and fast-up checks",
+        "(sum of ended[] - reuses[]); used at epochs and fast-up checks; "
+        "bucket (user, 2026-11-10) = the eps K rule plus a token bucket on "
+        "the drops (tail_bucket_max)",
+    )
+
+    tail_bucket_max = Param.Unsigned(
+        4096,
+        "window_mode=tail, tail_budget=bucket: TOK_MAX. A token per "
+        "2^tail_eps_shift interval ends (the ended[] events; prescaler), "
+        "saturating at tail_bucket_max; a drop at the sweep needs a token "
+        "and spends it, else the line is refreshed and kept; an expired tag "
+        "that ends without a reuse (replaced, refilled by a writeback, "
+        "invalidated, cleared) refunds one (saturating); a retention miss "
+        "refunds nothing. Starts empty, never reset",
     )
 
     tail_budget_delta = Param.Float(
