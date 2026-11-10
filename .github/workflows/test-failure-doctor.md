@@ -3,16 +3,21 @@ description: Investigates failed test workflows to identify root causes and patt
 on:
   workflow_dispatch:
     inputs:
-      failed_workflow_id:
-        description: 'Workflow ID for the workflow that originally triggered the test failure doctor'
+      failed_workflow_ids:
+        description: 'Comma-separated workflow run IDs to investigate'
         required: true
+        type: string
+      failed_workflow_attempts:
+        description: 'Comma-separated attempt numbers corresponding to failed_workflow_ids'
+        required: false
         type: string
 
   bots: ["github-actions[bot]"]
   roles: all
 
 concurrency:
-  group: "test-failure-doctor-${{ github.event.inputs.failed_workflow_id }}"
+  group: "test-failure-doctor-${{ github.run_id }}"
+  job-discriminator: "test-failure-doctor-${{ github.run_id }}"
 
 permissions: read-all
 
@@ -21,26 +26,45 @@ network: defaults
 safe-outputs:
   create-issue:
     title-prefix: "misc: [Test Failure Doctor] "
+    labels: [misc, agentic-workflows]
   add-comment:
+  create-pull-request-review-comment:
+    max: 10
+    target: "*"
   update-issue:
   noop:
+    report-as-issue: false
+  report-failure-as-issue: false
   jobs:
     rerun-failed-jobs:
       permissions:
         actions: write    # this permission is needed to rerun failed jobs
-      description: "Rerun failed jobs for a given workflow run ID."
+      description: "Rerun failed jobs for a list of workflow run IDs. This tool can only be called once, so pass every run to rerun in a single call."
+      inputs:
+        run_ids:
+          description: "Comma-separated IDs of the workflow runs whose failed jobs should be rerun."
+          required: true
+          type: string
       steps:
         - name: Rerun failed jobs
           uses: actions/github-script@v9
           env:
-            RUN_ID: ${{ github.event.inputs.failed_workflow_id }}
+            GH_AW_AGENT_OUTPUT: ${{ runner.temp }}/gh-aw/safe-jobs/agent_output.json
           with:
              script: |
-                await github.rest.actions.reRunWorkflowFailedJobs({
-                   owner: context.repo.owner,
-                   repo: context.repo.repo,
-                   run_id: parseInt(process.env.RUN_ID, 10)
-                });
+                const output = JSON.parse(
+                    require('fs').readFileSync(
+                        process.env.GH_AW_AGENT_OUTPUT, 'utf8'));
+                const item = output.items.find(
+                    (i) => i.type === 'rerun_failed_jobs');
+                const runIds = item.run_ids.split(',').map((id) => id.trim());
+                for (const runId of runIds) {
+                    await github.rest.actions.reRunWorkflowFailedJobs({
+                       owner: context.repo.owner,
+                       repo: context.repo.repo,
+                       run_id: parseInt(runId, 10)
+                    });
+                }
 
 tools:
   github:
@@ -60,6 +84,23 @@ engine:
     COPILOT_MODEL: gpt-5.6-terra
     COPILOT_PROVIDER_API_KEY: ${{ secrets.COPILOT_PROVIDER_API_KEY }}
 
+pre-agent-steps:
+  - name: Download failed-test artifacts
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RUN_IDS: ${{ github.event.inputs.failed_workflow_ids }}
+      RUN_ATTEMPTS: ${{ github.event.inputs.failed_workflow_attempts }}
+    run: |
+      RUN_IDS=(${RUN_IDS//,/ })
+      RUN_ATTEMPTS=(${RUN_ATTEMPTS//,/ })
+      for i in "${!RUN_IDS[@]}"; do
+        gh run download "${RUN_IDS[i]}" --repo "${{ github.repository }}" \
+          --pattern "*-attempt-${RUN_ATTEMPTS[i]}-*-status-failure-output" \
+          --dir "/tmp/gh-aw/failure-artifacts/${RUN_IDS[i]}-attempt-${RUN_ATTEMPTS[i]}" \
+          || echo "No failure artifacts for run ${RUN_IDS[i]}, attempt ${RUN_ATTEMPTS[i]}"
+        # echo $i
+      done
+
 ---
 # Test Failure Doctor
 
@@ -67,27 +108,40 @@ You are the Test Failure Doctor, an expert investigative agent that analyzes fai
 
 ## Investigation Protocol
 
-Look at the workflow run id passed through "${{ github.event.inputs.failed_workflow_id }}", and run the following procedure to diagnose the issues that occurred in the workflow run that **corresponds to "${{ github.event.inputs.failed_workflow_id }}" **.
-Take the specified actions where necessary. If no actions are needed, call
-the `noop` tool.
+`failed_workflow_ids` is a comma-separated list of workflow run IDs:
+"${{ github.event.inputs.failed_workflow_ids }}". `failed_workflow_attempts` is
+a comma-separated list of the workflow run IDs' corresponding attempt numbers.
+
+Split `failed_workflow_ids` into individual run IDs, exclude any run that has
+already been analyzed by the Test Failure Doctor (for example, runs referenced
+by an existing Test Failure Doctor issue or PR comment), and investigate each
+remaining run independently through Phases 1-5.
+Use the selected run's details and ID wherever the report templates below refer
+to the failed workflow; do not rely on `github.event.workflow_run`. If no runs
+remain, call the `noop` tool.
 
 ### Phase 1: Initial Triage
 
-0. Print the value of "${{ github.event.inputs.failed_workflow_id }}" to the Agentic Conversation. If this is empty, **call noop immediately** and exit.
+0. Print the selected workflow run ID to the Agentic Conversation.
 
-1. **Get Workflow Details**: Use `get_workflow_run` to get full details of the failed run. Use "${{ github.event.inputs.failed_workflow_id }}" as the `resource_id` in this call.
-2. **List Jobs**: Use `list_workflow_jobs` to identify which specific jobs failed. Use "${{ github.event.inputs.failed_workflow_id }}" for the `resource_id` in this call.
+1. **Get Workflow Details**: Use `get_workflow_run` to get full details of
+   the selected run. Use its ID as the `resource_id` in this call.
+2. **List Jobs**: Use `list_workflow_jobs` to identify which specific jobs
+   failed. Use the selected run's ID as the `resource_id` in this call.
 3. **Quick Assessment**: Determine if this is a new type of failure or a recurring pattern
 
 ### Phase 2: Deep Log Analysis
 
 1. **Retrieve Logs**: Use `get_job_logs` with `failed_only=true` to get logs
 from all failed jobs. Additionally, if the workflow is a CI, Daily, or Weekly
-test, look in the `Upload results` step of the failed job(s) and download the
-artifact. This artifact contains logs for the simulations that the tests run. In
-particular, look for the files named `simerr.txt` and `simout.txt`, which will
-be located under a filepath with the following pattern:
-`(ci|daily|weekly)-tests-run-*/SuiteUID-*/TestUID-*/`.
+test, inspect the relevant pre-downloaded artifact(s) for that run under
+`/tmp/gh-aw/failure-artifacts/<run id>-attempt-<attempt number>/`. These artifacts contain logs for the simulations
+that the tests run. In particular, look for the files named `simerr.txt` and
+`simout.txt`, which will be located under a filepath with the following pattern:
+`/tmp/gh-aw/failure-artifacts/<run id>-attempt-<attempt number>/(ci|daily|weekly)-tests-run-*-attempt-<attempt number>-*-status-failure-output/SuiteUID-*/TestUID-*/`.
+Use the contents of the `simerr.txt` and `simout.txt` files to help diagnose the
+problem. If no artifacts are present, proceed with the investigation normally,
+using the other information available to you.
 
 2. **Pattern Recognition**: Analyze logs for:
    - Error messages and stack traces
@@ -134,9 +188,21 @@ be located under a filepath with the following pattern:
 
 ### Phase 4: Rerun workflow if necessary
 
-1. If the failure type from the previous step was **Flaky Tests**, rerun the failed tests in the **workflow run that triggered this Test Failure Doctor run** using the rerun-failed-jobs tool.
+1. If the failure type from the previous step was **Flaky Tests** or
+   **Infrastructure**, the unsuccessful jobs in the selected workflow run
+   should be rerun.
+   - **Exception**: - If the latest run of the failing workflow was a rerun
+   triggered by a maintainer or by the Test Failure Doctor, *do not* rerun the
+   failing workflow, even if the failure category was **Flaky Tests**.
 
-- **Exception**: - If the latest run of the failing workflow was a rerun triggered by a maintainer or by the Test Failure Doctor, *do not* rerun the failing workflow, even if the failure category was **Flaky Tests**.
+   The rerun-failed-jobs tool can only be called **once** per Test Failure
+   Doctor run. Do not call it while investigating individual runs. Instead,
+   keep a list of the IDs of every selected run that meets the rerun criteria
+   (including the exception below). After all runs have been investigated,
+   call the rerun-failed-jobs tool a single time, passing the list as a
+   comma-separated string in `run_ids` (for example `123,456`). If the list is
+   empty, do not call the tool.
+
 
 ### Phase 5: Reporting and Recommendations
 
@@ -163,8 +229,18 @@ be located under a filepath with the following pattern:
      - If the failure category was **Flaky Tests**, *do not* open an issue.
      - If the failure category was **Infrastructure**, do not expose the runner
        name or runner filepaths in the issue.
-   - If the failing test was a `CI` Test, leave a comment on the related PR with analysis.
-      - If one of the failure types was **Clang format failure**, leave the following comment
+   - If the failing test was a `CI` Test, leave review comment(s) on the related PR with analysis.
+      - If there are multiple failing tests, split up the review comments/ failure analysis **by test**
+      and anchor them to the relevant lines or file that caused the failure.
+      - If there aren't any particular line(s) changed or file(s) that a test
+      failure is related to, or if you can't identify which line(s) or files(s)
+      a failure is caused by, anchor the review comment to the first file shown
+      in the `Files changed` tab on GitHub, and leave the following message at
+      the top of the review comment, below the title:
+      `Note: This comment is meant for the entire PR and is not related to only this file.`
+        - If there are multiple test failures not related to/ not identifiably
+        related to a line or file, consolidate the analysis into one review comment.
+      - If one of the failure types was **Clang format failure**, leave the following comment:
 
 ## Output Requirements
 
@@ -220,15 +296,15 @@ depending on which workflow triggered this Test Failure Doctor run, then a brief
 When creating an investigation issue, use this structure:
 
 ```markdown
-# Test Failure Investigation - Run #${{ github.event.workflow_run.run_number }}
+# Test Failure Investigation - Run #[selected run number]
 
 ## Summary
 [Brief description of the failure]
 
 ## Failure Details
-- **Run**: [${{ github.event.workflow_run.id }}](${{ github.event.workflow_run.html_url }})
-- **Commit**: ${{ github.event.workflow_run.head_sha }}
-- **Trigger**: ${{ github.event.workflow_run.event }}
+- **Run**: [selected run ID](selected run URL)
+- **Commit**: selected run head SHA
+- **Trigger**: selected run event
 
 ## Failed Jobs and Errors
 [List of failed jobs with key error messages]
