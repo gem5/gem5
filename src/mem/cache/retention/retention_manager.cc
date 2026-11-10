@@ -349,6 +349,14 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailTopW = (1u << std::min(tailKmax, 9u)) - 1;
             fatal_if(p.tail_w0 > tailTopW && p.tail_fixed == "-1",
                      "%s: tail_w0 above 2^tail_kmax - 1", cache.name());
+            fatal_if(p.tail_budget != "eps" && p.tail_budget != "lru_rel",
+                     "%s: tail_budget must be eps or lru_rel", cache.name());
+            tailBudgetRel = p.tail_budget == "lru_rel";
+            fatal_if(tailBudgetRel && !(p.tail_budget_delta > 0.0 &&
+                                        p.tail_budget_delta <= 1.0),
+                     "%s: tail_budget_delta must be in (0, 1]",
+                     cache.name());
+            tailBudgetPpm = std::llround(p.tail_budget_delta * 1e6);
             tailFastUp = p.tail_fastup;
             tailHalve = p.tail_halve;
             fatal_if(tailKmin > 9, "%s: tail_kmin must be <= 9",
@@ -588,6 +596,11 @@ RetentionManager::startup()
                            "%d, halve %d, victim %s", cache.name(),
                            tailKmin, (1u << tailKmin) - 1, tailFastUp,
                            tailHalve, tailVictimLru ? "lru" : "expired");
+                if (tailBudgetRel)
+                    inform("%s: tail budget lru_rel: reuse tail above K "
+                           "<= %lu ppm x (interval ends - reuses), "
+                           "instead of 2^-%u x interval ends",
+                           cache.name(), tailBudgetPpm, tailEpsShift);
                 if (tailKmax < 10)
                     inform("%s: tail ablation: kmax %u (W in 2^k - 1, k <= "
                            "%u, or inf; from inf down to %u)", cache.name(),
@@ -3079,11 +3092,25 @@ uint32_t
 RetentionManager::tailKOf(uint64_t total) const
 {
     // K: the smallest rung whose reuse tail is at most total * 2^-eps
+    // (tail_budget=lru_rel: delta x the interval ends that were not
+    // reuses; every reuse is also an end of its bin, so base >= 0)
+    uint64_t base = 0;
+    if (tailBudgetRel) {
+        uint64_t reuses = 0;
+        for (unsigned b = 0; b < tailBins; b++)
+            reuses += tailReuses[b];
+        panic_if(reuses > total, "%s: tail reuses %d > ends %d",
+                 cache.name(), reuses, total);
+        base = total - reuses;
+    }
     uint32_t k = 0;
     uint64_t tail = 0;
     for (unsigned b = tailBins - 1; b >= 1; b--) {
         tail += tailReuses[b];
-        if ((tail << tailEpsShift) > total) {
+        const bool over = tailBudgetRel ?
+            tail * 1000000 > tailBudgetPpm * base :
+            (tail << tailEpsShift) > total;
+        if (over) {
             // tail_kmax: a bin above kmax is inf
             k = b == tailBins - 1 || b > tailKmax ? tailInf :
                 (1u << b) - 1;

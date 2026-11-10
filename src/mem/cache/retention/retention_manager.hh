@@ -961,6 +961,10 @@ class RetentionManager
     unsigned tailKmin = 0;
     /** tail_kmax: a K above bin kmax is inf (10 = no cap). */
     unsigned tailKmax = 10;
+    /** tail_budget: lru_rel = delta x (ends - reuses) instead of
+     *  2^-eps x ends; delta in parts per million. */
+    bool tailBudgetRel = false;
+    uint64_t tailBudgetPpm = 10000;
     /** The largest finite W allowed: 2^min(kmax, 9) - 1. */
     uint32_t tailTopW = 511;
     bool tailFastUp = false;

@@ -440,6 +440,21 @@ class BaseCache(ClockedObject):
         "511); 10 = no cap (ignored with tail_fixed)",
     )
 
+    tail_budget = Param.String(
+        "eps",
+        "window_mode=tail (user, 2026-11-10): the right-hand side of the K "
+        "rule. eps = the reuse tail above K at most 2^-tail_eps_shift x "
+        "all interval ends (sum of ended[]); lru_rel = at most "
+        "tail_budget_delta x the interval ends that were not reuses "
+        "(sum of ended[] - reuses[]); used at epochs and fast-up checks",
+    )
+
+    tail_budget_delta = Param.Float(
+        0.01,
+        "window_mode=tail, tail_budget=lru_rel: delta (fraction, kept in "
+        "parts per million)",
+    )
+
     tail_fastup = Param.Bool(
         False,
         "window_mode=tail (ablation): at every frame end that is not an "
