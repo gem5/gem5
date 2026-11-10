@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // One source operand
@@ -485,6 +488,7 @@ class Inst_VOP3P__V_MAD_MIX_F32 : public Inst_VOP3P__3OP_X16
     void execute(GPUDynInstPtr gpuDynInst) override;
 };
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_VOP3P_HH__

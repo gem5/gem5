@@ -42,6 +42,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 class VEGAGPUStaticInst : public GPUStaticInst
@@ -109,6 +112,7 @@ class VEGAGPUStaticInst : public GPUStaticInst
 }; // class VEGAGPUStaticInst
 
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif //__ARCH_VEGA_INSTS_GPU_STATIC_INST_HH__

@@ -326,7 +326,7 @@ class HSAPacketProcessor : public DmaVirtDevice
     GPUCommandProcessor *gpu_device;
     HWScheduler *hwSchdlr;
     AMDGPUDevice *gpuDevice;
-    VegaISA::Walker *walker;
+    AMDGPU::Walker *walker;
 
     // Structure to store the read values of dependency signals
     // from shared memory. Also used for tracking the status of

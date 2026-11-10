@@ -36,11 +36,15 @@
 #include <cstdint>
 #include <string>
 
+#include "arch/amdgpu/register_types.hh"
 #include "arch/generic/vec_reg.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
 
 namespace gem5
+{
+
+namespace AMDGPU
 {
 
 namespace VegaISA
@@ -133,39 +137,41 @@ enum OpSelector : int
 };
 
 constexpr size_t MaxOperandDwords(16);
-const int NumVecElemPerVecReg(64);
+constexpr int NumVecElemPerVecReg(64);
 // op selector values 129 - 192 correspond to const values 1 - 64
-const int NumPosConstRegs = REG_INT_CONST_POS_MAX - REG_INT_CONST_POS_MIN + 1;
+constexpr int NumPosConstRegs =
+    (int)REG_INT_CONST_POS_MAX - (int)REG_INT_CONST_POS_MIN + 1;
 // op selector values 193 - 208 correspond to const values -1 - 16
-const int NumNegConstRegs = REG_INT_CONST_NEG_MAX - REG_INT_CONST_NEG_MIN + 1;
-const int BITS_PER_BYTE = 8;
-const int BITS_PER_WORD = 16;
+constexpr int NumNegConstRegs =
+    (int)REG_INT_CONST_NEG_MAX - (int)REG_INT_CONST_NEG_MIN + 1;
+constexpr int BITS_PER_BYTE = 8;
+constexpr int BITS_PER_WORD = 16;
 const int MSB_PER_BYTE = (BITS_PER_BYTE - 1);
 const int MSB_PER_WORD = (BITS_PER_WORD - 1);
 
-// typedefs for the various sizes/types of scalar regs
-typedef uint8_t ScalarRegU8;
-typedef int8_t ScalarRegI8;
-typedef uint16_t ScalarRegU16;
-typedef int16_t ScalarRegI16;
-typedef uint32_t ScalarRegU32;
-typedef int32_t ScalarRegI32;
-typedef float ScalarRegF32;
-typedef uint64_t ScalarRegU64;
-typedef int64_t ScalarRegI64;
-typedef double ScalarRegF64;
+// Pull scalar reg types from common AMDGPU namespace
+using AMDGPU::ScalarRegF32;
+using AMDGPU::ScalarRegF64;
+using AMDGPU::ScalarRegI16;
+using AMDGPU::ScalarRegI32;
+using AMDGPU::ScalarRegI64;
+using AMDGPU::ScalarRegI8;
+using AMDGPU::ScalarRegU16;
+using AMDGPU::ScalarRegU32;
+using AMDGPU::ScalarRegU64;
+using AMDGPU::ScalarRegU8;
 
-// typedefs for the various sizes/types of vector reg elements
-typedef uint8_t VecElemU8;
-typedef int8_t VecElemI8;
-typedef uint16_t VecElemU16;
-typedef int16_t VecElemI16;
-typedef uint32_t VecElemU32;
-typedef int32_t VecElemI32;
-typedef float VecElemF32;
-typedef uint64_t VecElemU64;
-typedef int64_t VecElemI64;
-typedef double VecElemF64;
+// Pull vector reg element types from common AMDGPU namespace
+using AMDGPU::VecElemF32;
+using AMDGPU::VecElemF64;
+using AMDGPU::VecElemI16;
+using AMDGPU::VecElemI32;
+using AMDGPU::VecElemI64;
+using AMDGPU::VecElemI8;
+using AMDGPU::VecElemU16;
+using AMDGPU::VecElemU32;
+using AMDGPU::VecElemU64;
+using AMDGPU::VecElemU8;
 
 const int DWordSize = sizeof(VecElemU32);
 /**
@@ -247,6 +253,7 @@ bool isFlatScratchReg(int opIdx);
 bool isExecMask(int opIdx);
 bool isVccReg(int opIdx);
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_REGISTERS_HH__

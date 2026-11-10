@@ -607,7 +607,8 @@ def makeTheGPUISA(source, target, env):
     gpu_isa = env['CONF']['TARGET_GPU_ISA']
 
     if gpu_isa:
-        namespace = gpu_isa[0].upper() + gpu_isa[1:].lower() + 'ISA'
+        namespace = ('AMDGPU::' + gpu_isa[0].upper()
+                     + gpu_isa[1:].lower() + 'ISA')
     else:
         namespace = 'None'
 

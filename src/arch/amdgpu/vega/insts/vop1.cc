@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_VOP1__V_NOP class methods ---
@@ -2940,4 +2943,5 @@ Inst_VOP1__V_PERMLANE32_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
     vdst.write();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

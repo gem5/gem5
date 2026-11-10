@@ -83,6 +83,9 @@ enum SqDPPVals : int
 static const int ROW_SIZE = 16; /* 16 registers per row */
 static const int NUM_BANKS = 4; /* 64 registers, 16/bank */
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 template <typename T>
@@ -994,6 +997,7 @@ packMXOperands64(T &lower_operand, T &upper_operand)
 }
 
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_INST_UTIL_HH__

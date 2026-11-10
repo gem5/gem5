@@ -31,7 +31,7 @@
 
 #include "dev/amdgpu/sdma_engine.hh"
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 #include "arch/generic/mmu.hh"
 #include "debug/SDMAData.hh"
 #include "debug/SDMAEngine.hh"

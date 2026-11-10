@@ -32,7 +32,7 @@
 #include "gpu-compute/fetch_unit.hh"
 
 #include "arch/amdgpu/common/gpu_translation_state.hh"
-#include "arch/amdgpu/common/tlb.hh"
+#include "arch/amdgpu/common/x86_gpu_tlb.hh"
 #include "base/bitfield.hh"
 #include "debug/GPUFetch.hh"
 #include "debug/GPUPort.hh"

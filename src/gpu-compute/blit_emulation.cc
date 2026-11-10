@@ -31,7 +31,7 @@
 
 #include "gpu-compute/blit_emulation.hh"
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/hsa_queue_entry.hh"

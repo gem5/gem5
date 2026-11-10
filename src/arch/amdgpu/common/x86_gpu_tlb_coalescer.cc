@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/common/tlb_coalescer.hh"
+#include "arch/amdgpu/common/x86_gpu_tlb_coalescer.hh"
 
 #include <cstring>
 
