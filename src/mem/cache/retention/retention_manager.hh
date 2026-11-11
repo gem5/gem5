@@ -967,7 +967,7 @@ class RetentionManager
     uint64_t tailBucketMax = 0;
     uint64_t tailTokens = 0;
     uint64_t tailPrescale = 0;
-    /** tail_bucket_start: tokens at the start (0 or TOK_MAX) */
+    /** tail_bucket_start: tokens at the start (0, TOK_MAX or a count) */
     uint64_t tailTokens0 = 0;
     /** retention misses since the start with rm > (ends >> eps) +
      *  tailTokens0: the bucket's own bound (0 in every bucket run) */
@@ -980,6 +980,11 @@ class RetentionManager
     uint64_t tailCumRm = 0;
     uint64_t tailCumViol = 0;
     double tailMaxCumRatio = 0;
+    /** Demand accesses since the start; the running max of
+     *  (rm - tailTokens0) x 2^eps / ends and / demand accesses */
+    uint64_t tailCumDemand = 0;
+    double tailMaxCumRatioInit = 0;
+    double tailMaxCumDemandRatioInit = 0;
     int64_t tailFirstDropFrame = -1;
     std::vector<uint32_t> tailAge;
     std::vector<uint64_t> tailEnded;
@@ -1235,6 +1240,9 @@ class RetentionManager
         statistics::Value cumBudgetViolations;
         statistics::Value bucketBoundViolations;
         statistics::Value maxCumRatio;
+        statistics::Value cumDemandAccesses;
+        statistics::Value maxCumRatioInit;
+        statistics::Value maxCumDemandRatioInit;
         statistics::Value firstDropFrame;
         statistics::Vector wCycles;
         statistics::Scalar wCyclesTotal;

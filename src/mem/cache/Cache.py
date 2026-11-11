@@ -491,7 +491,9 @@ class BaseCache(ClockedObject):
         "empty",
         "window_mode=tail, tail_budget=bucket: the token count at the "
         "start (the checkpoint restore): empty = 0 (default); full = "
-        "tail_bucket_max (user, 2026-11-10: a warmup-free check)",
+        "tail_bucket_max (user, 2026-11-10: a warmup-free check); or a "
+        "token count <= tail_bucket_max (user, 2026-11-11: INIT 6144 = "
+        "the L2's lines)",
     )
 
     tail_budget_delta = Param.Float(

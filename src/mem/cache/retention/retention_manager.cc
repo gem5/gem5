@@ -356,11 +356,22 @@ RetentionManager::RetentionManager(BaseCache &_cache,
             tailBucketMax = p.tail_bucket_max;
             fatal_if(tailBucket && tailBucketMax == 0, "%s: "
                      "tail_bucket_max must be >= 1", cache.name());
-            fatal_if(p.tail_bucket_start != "empty" &&
-                     p.tail_bucket_start != "full", "%s: tail_bucket_start "
-                     "must be empty or full", cache.name());
-            tailTokens0 = tailBucket && p.tail_bucket_start == "full" ?
-                tailBucketMax : 0;
+            // empty = 0, full = TOK_MAX, or a token count <= TOK_MAX
+            uint64_t start = 0;
+            if (p.tail_bucket_start == "full") {
+                start = tailBucketMax;
+            } else if (p.tail_bucket_start != "empty") {
+                const std::string &v = p.tail_bucket_start;
+                fatal_if(v.empty() || v.size() > 18 ||
+                         v.find_first_not_of("0123456789") !=
+                         std::string::npos, "%s: tail_bucket_start must "
+                         "be empty, full or a token count", cache.name());
+                start = std::stoull(v);
+                fatal_if(tailBucket && start > tailBucketMax, "%s: "
+                         "tail_bucket_start above tail_bucket_max",
+                         cache.name());
+            }
+            tailTokens0 = tailBucket ? start : 0;
             tailTokens = tailTokens0;
             tailBudgetRel = p.tail_budget == "lru_rel";
             fatal_if(tailBudgetRel && !(p.tail_budget_delta > 0.0 &&
@@ -2605,6 +2616,8 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             blk->isSet(CacheBlk::ReadableBit));
         window->demandAccess(hit);
         winStats->demandAccesses++;
+        if (tailMode)
+            tailCumDemand++;
         winFrA++;
         if (hit)
             winStats->demandHits++;
@@ -2670,6 +2683,17 @@ RetentionManager::windowOnAccess(PacketPtr pkt)
             }
             tailMaxCumRatio = std::max(tailMaxCumRatio,
                 double(tailCumRm << tailEpsShift) / double(tailCumEnds));
+            // The same with the start tokens taken off, against the
+            // interval ends (the bucket's bound: <= 1) and against the
+            // demand accesses
+            const double over = (double(tailCumRm) - double(tailTokens0))
+                * double(uint64_t(1) << tailEpsShift);
+            tailMaxCumRatioInit = std::max(tailMaxCumRatioInit,
+                over / double(tailCumEnds));
+            if (tailCumDemand)
+                tailMaxCumDemandRatioInit = std::max(
+                    tailMaxCumDemandRatioInit,
+                    over / double(tailCumDemand));
         }
         window->retentionMiss();
         windowClearExpired(unsigned(row), true);
@@ -4397,6 +4421,15 @@ RetentionManager::TailStats::TailStats(RetentionManager &_mgr,
       ADD_STAT(maxCumRatio, statistics::units::Ratio::get(),
                "running max since the start of retention misses so far x "
                "2^eps / interval ends so far (at every retention miss)"),
+      ADD_STAT(cumDemandAccesses, statistics::units::Count::get(),
+               "demand accesses since the simulation start (not reset)"),
+      ADD_STAT(maxCumRatioInit, statistics::units::Ratio::get(),
+               "running max since the start of (retention misses so far - "
+               "the tokens at the start) x 2^eps / interval ends so far "
+               "(= maxCumRatio when the bucket starts empty)"),
+      ADD_STAT(maxCumDemandRatioInit, statistics::units::Ratio::get(),
+               "running max since the start of (retention misses so far - "
+               "the tokens at the start) x 2^eps / demand accesses so far"),
       ADD_STAT(firstDropFrame, statistics::units::Count::get(),
                "frame (from the simulation start) of the first drop; -1: "
                "none yet"),
@@ -4455,6 +4488,11 @@ RetentionManager::TailStats::regStats()
     bucketBoundViolations.functor([this] {
         return double(mgr.tailCumBucketViol); });
     maxCumRatio.functor([this] { return mgr.tailMaxCumRatio; });
+    cumDemandAccesses.functor([this] {
+        return double(mgr.tailCumDemand); });
+    maxCumRatioInit.functor([this] { return mgr.tailMaxCumRatioInit; });
+    maxCumDemandRatioInit.functor([this] {
+        return mgr.tailMaxCumDemandRatioInit; });
     firstDropFrame.functor([this] {
         return double(mgr.tailFirstDropFrame); });
     maxDdropsPerFrame.functor([this] { return double(mgr.tailDdMax); });
