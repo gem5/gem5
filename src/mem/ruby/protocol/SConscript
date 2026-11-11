@@ -41,7 +41,7 @@ if not env["CONF"]["RUBY"]:
 
 output_dir = Dir(".")
 html_dir = Dir("html")
-slicc_dir = Dir("../slicc")
+slicc_dir = Dir("../../slicc")
 
 sys.path[1:1] = [Dir("..").Dir("..").srcnode().abspath]
 from slicc.parser import SLICC
