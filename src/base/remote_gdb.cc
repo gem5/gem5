@@ -898,8 +898,8 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 #if TRACING_ON
     if (debug::GDBRead) {
         if (debug::GDBExtra) {
-            char buf[1024];
-            mem2hex(buf, data, size);
+            std::string buf(2 * size, '\0');
+            mem2hex(buf.data(), data, size);
             DPRINTFNR(": %s\n", buf);
         } else
             DPRINTFNR("\n");
@@ -916,8 +916,8 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
     if (debug::GDBWrite) {
         DPRINTFN("write: addr=%#x, size=%d", vaddr, size);
         if (debug::GDBExtra) {
-            char buf[1024];
-            mem2hex(buf, data, size);
+            std::string buf(2 * size, '\0');
+            mem2hex(buf.data(), data, size);
             DPRINTFNR(": %s\n", buf);
         } else
             DPRINTFNR("\n");
@@ -1171,8 +1171,7 @@ BaseRemoteGDB::cmdDetach(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdRegR(GdbCommand::Context &ctx)
 {
-    std::string buf;
-    buf.reserve(2 * regCachePtr->size());
+    std::string buf(2 * regCachePtr->size(), '\0');
     mem2hex(buf.data(), regCachePtr->data(), regCachePtr->size());
     send(buf.c_str());
     return true;
@@ -1265,8 +1264,7 @@ BaseRemoteGDB::cmdMemR(GdbCommand::Context &ctx)
     if (!read(addr, len, buf.get()))
         throw CmdError("E05");
 
-    std::string temp;
-    temp.reserve(2 * len);
+    std::string temp(2 * len, '\0');
     mem2hex(temp.data(), buf.get(), len);
     send(temp.c_str());
     return true;
