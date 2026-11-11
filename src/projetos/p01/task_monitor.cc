@@ -147,6 +147,29 @@ TaskMonitor::MonitorStats::MonitorStats(TaskMonitor *parent, size_t num_cpus)
 
 void
 TaskMonitor::MonitorStats::preDumpStats() {
-  return;
+  statistics::Group::preDumpStats();
+
+  double maxTicks = 0.0;
+  double somaTicks = 0.0;
+  uint64_t contextosUsados = 0;
+
+  for (int i=0; i < ticksInTask.size(); i++) {
+    double ticks = ticksInTask[i].value();
+    
+    // Se ticks == 0, contexto i não foi usado
+    if (ticks > 0) { 
+      if (ticks > maxTicks) maxTicks = ticks;
+      somaTicks += ticks;
+      contextosUsados++;
+    }
+
+    if (contextosUsados == 0) {
+      imbalance = 0.0;
+    }
+    else {
+      imbalance = maxTicks / (somaTicks / contextosUsados); 
+    }
+  }
+
 }
 } // namespace

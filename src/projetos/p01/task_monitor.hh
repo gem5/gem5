@@ -38,7 +38,7 @@ class TaskMonitor : public SimObject
       public:
         InstListener(const std::string &name, TaskMonitor *m, unsigned ctx)
           : ProbeListenerArgBase(name), monitor(m), ctx(ctx) {}
-          
+
         // n é a quantidade de instruções rodadas em um contexto ou fora dele
         void notify(const uint64_t &n) override {
           monitor->instCtxCounter(ctx, n);
