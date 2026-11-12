@@ -106,6 +106,7 @@ SimObject('X86CPU.py', sim_objects=[], tags=['x86 isa'])
 DebugFlag('LocalApic', "Local APIC debugging", tags=['x86 isa'])
 DebugFlag('X86', "Generic X86 ISA debugging", tags=['x86 isa'])
 DebugFlag('ACPI', "ACPI debugging", tags=['x86 isa'])
+DebugFlag('AMX', "Intel AMX TILECFG/TMM debugging", tags=['x86 isa'])
 
 python_files = (
     '__init__.py',
