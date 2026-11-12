@@ -645,6 +645,16 @@ class MemCtrl : public qos::MemCtrl
     }
 
     /**
+     * Number of read bursts occupying the read buffer: those still in
+     * the read queues plus those waiting in the response queue(s).
+     */
+    virtual uint64_t
+    readOccupancy() const
+    {
+        return totalReadQueueSize + respQueue.size();
+    }
+
+    /**
      * Checks if the memory interface is already busy
      *
      * @param mem_intr memory interface to check
