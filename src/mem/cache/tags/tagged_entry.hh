@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -92,13 +92,6 @@ class TaggedSetAssociative : public TaggedIndexingPolicy
     getPossibleEntries(const KeyType &key) const override
     {
         return sets[extractSet(key)];
-    }
-
-    Addr
-    regenerateAddr(const KeyType &key,
-                   const ReplaceableEntry *entry) const override
-    {
-        return (key.address << tagShift) | (entry->getSet() << setShift);
     }
 };
 

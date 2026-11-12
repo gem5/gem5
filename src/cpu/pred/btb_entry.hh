@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2026 Arm Limited
  * Copyright (c) 2024 Pranith Kumar
  * All rights reserved.
  *
@@ -125,13 +126,6 @@ class BTBSetAssociative : public BTBIndexingPolicy
     extractTag(const Addr addr) const override
     {
         return (addr >> tagShift) & tagMask;
-    }
-
-    Addr regenerateAddr(const KeyType &key,
-                        const ReplaceableEntry* entry) const override
-    {
-        panic("Not implemented!");
-        return 0;
     }
 
   private:

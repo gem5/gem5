@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 ARM Limited
+ * Copyright (c) 2024,2026 Arm Limited
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -360,12 +360,7 @@ SectorTags::extractSectorOffset(Addr addr) const
 Addr
 SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
 {
-    const SectorSubBlk* blk_cast = static_cast<const SectorSubBlk*>(blk);
-    const SectorBlk* sec_blk = blk_cast->getSectorBlock();
-    const Addr sec_addr =
-        indexingPolicy->regenerateAddr(
-            {blk->getTag(), blk->isSecure()}, sec_blk);
-    return sec_addr | ((Addr)blk_cast->getSectorOffset() << sectorShift);
+    return blkAlign(blk->getOriginalAddr());
 }
 
 SectorTags::SectorTagsStats::SectorTagsStats(BaseTagStats &base_group,
