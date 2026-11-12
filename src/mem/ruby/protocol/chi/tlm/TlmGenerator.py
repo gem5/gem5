@@ -39,6 +39,10 @@ from m5.objects.CBusy import CBusyTracker
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.SnoopHandler import PySnoopHandler
 from m5.objects.TlmController import TlmController
+from m5.objects.TlmSource import (
+    PySource,
+    TlmSource,
+)
 from m5.params import *
 from m5.SimObject import (
     PyBindMethod,
@@ -55,33 +59,9 @@ class TlmGenerator(ClockedObject):
     cxx_class = "gem5::tlm::chi::TlmGenerator"
 
     cxx_exports = [
-        PyBindMethod("scheduleTransaction"),
-        PyBindMethod("enqueueInput"),
         PyBindMethod("isActive"),
         PyBindMethod("setArrivalRate"),
     ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._transactions = []
-
-    def inject(self, payload, phase, when=None):
-        from m5.tlm_chi.utils import Transaction
-
-        transaction = Transaction(payload, phase)
-
-        if when:
-            self._transactions.append((when, transaction))
-        else:
-            self.getCCObject().enqueueInput(transaction)
-
-        return transaction
-
-    def createCCObject(self):
-        super().createCCObject()
-
-        for when, tr in self._transactions:
-            self.getCCObject().scheduleTransaction(when, tr)
 
     cpu_id = Param.Int("TlmGenerator CPU identifier")
     arrival_rate = Param.Int(
@@ -104,6 +84,7 @@ class TlmGenerator(ClockedObject):
     snp_handler = Param.SnoopHandler(
         PySnoopHandler(), "Handler for incoming snoop transactions"
     )
+    chi_source = Param.TlmSource(PySource(), "Source of CHI TLM transactions")
 
     in_port = TlmSinkPort("CHI TLM input/response port")
     out_port = TlmSourcePort("CHI TLM output/request port")
