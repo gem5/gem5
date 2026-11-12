@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet/GarnetNetwork.hh"
 
 #include <cassert>
@@ -61,8 +60,7 @@ namespace garnet
  * (see configs/network/Network.py)
  */
 
-GarnetNetwork::GarnetNetwork(const Params &p)
-    : Network(p)
+GarnetNetwork::GarnetNetwork(const Params &p) : Network(p), m_stats(this)
 {
     m_num_rows = p.num_rows;
     m_ni_flit_size = p.ni_flit_size;
@@ -73,22 +71,24 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     m_next_packet_id = 0;
 
     m_enable_fault_model = p.enable_fault_model;
-    if (m_enable_fault_model)
+    if (m_enable_fault_model) {
         fault_model = p.fault_model;
+    }
 
     m_vnet_type.resize(m_virtual_networks);
 
-    for (int i = 0 ; i < m_virtual_networks ; i++) {
-        if (m_vnet_type_names[i] == "response")
+    for (int i = 0; i < m_virtual_networks; i++) {
+        if (m_vnet_type_names[i] == "response") {
             m_vnet_type[i] = DATA_VNET_; // carries data (and ctrl) packets
-        else
+        } else {
             m_vnet_type[i] = CTRL_VNET_; // carries only ctrl packets
+        }
     }
 
     // record the routers
-    for (std::vector<BasicRouter*>::const_iterator i =  p.routers.begin();
+    for (std::vector<BasicRouter *>::const_iterator i = p.routers.begin();
          i != p.routers.end(); ++i) {
-        Router* router = safe_cast<Router*>(*i);
+        Router *router = safe_cast<Router *>(*i);
         m_routers.push_back(router);
 
         // initialize the router's network pointers
@@ -96,7 +96,7 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     }
 
     // record the network interfaces
-    for (std::vector<ClockedObject*>::const_iterator i = p.netifs.begin();
+    for (std::vector<ClockedObject *>::const_iterator i = p.netifs.begin();
          i != p.netifs.end(); ++i) {
         NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
         m_nis.push_back(ni);
@@ -112,7 +112,7 @@ GarnetNetwork::init()
 {
     Network::init();
 
-    for (int i=0; i < m_nodes; i++) {
+    for (int i = 0; i < m_nodes; i++) {
         m_nis[i]->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
     }
 
@@ -136,15 +136,13 @@ GarnetNetwork::init()
 
     // FaultModel: declare each router to the fault model
     if (isFaultModelEnabled()) {
-        for (std::vector<Router*>::const_iterator i= m_routers.begin();
+        for (std::vector<Router *>::const_iterator i = m_routers.begin();
              i != m_routers.end(); ++i) {
-            Router* router = safe_cast<Router*>(*i);
-            [[maybe_unused]] int router_id =
-                fault_model->declare_router(router->get_num_inports(),
-                                            router->get_num_outports(),
-                                            router->get_vc_per_vnet(),
-                                            getBuffersPerDataVC(),
-                                            getBuffersPerCtrlVC());
+            Router *router = safe_cast<Router *>(*i);
+            [[maybe_unused]] int router_id = fault_model->declare_router(
+                router->get_num_inports(), router->get_num_outports(),
+                router->get_vc_per_vnet(), getBuffersPerDataVC(),
+                getBuffersPerCtrlVC());
             assert(router_id == router->get_id());
             router->printAggregateFaultProbability(std::cout);
             router->printFaultVector(std::cout);
@@ -157,29 +155,29 @@ GarnetNetwork::init()
  * into the Network.
  * It creates a Network Link from the NI to a Router and a Credit Link from
  * the Router to the NI
-*/
+ */
 
 void
-GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
-                             std::vector<NetDest>& routing_table_entry)
+GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink *link,
+                             std::vector<NetDest> &routing_table_entry)
 {
     NodeID local_src = getLocalNodeID(global_src);
     assert(local_src < m_nodes);
 
-    GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
+    GarnetExtLink *garnet_link = safe_cast<GarnetExtLink *>(link);
 
     // GarnetExtLink is bi-directional
-    NetworkLink* net_link = garnet_link->m_network_links[LinkDirection_In];
+    NetworkLink *net_link = garnet_link->m_network_links[LinkDirection_In];
     net_link->setType(EXT_IN_);
-    CreditLink* credit_link = garnet_link->m_credit_links[LinkDirection_In];
+    CreditLink *credit_link = garnet_link->m_credit_links[LinkDirection_In];
 
     m_networklinks.push_back(net_link);
     m_creditlinks.push_back(credit_link);
 
     PortDirection dst_inport_dirn = "Local";
 
-    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
-                             m_routers[dest]->get_vc_per_vnet());
+    m_max_vcs_per_vnet =
+        std::max(m_max_vcs_per_vnet, m_routers[dest]->get_vc_per_vnet());
 
     /*
      * We check if a bridge was enabled at any end of the link.
@@ -196,63 +194,60 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
      */
     if (garnet_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
-            garnet_link->name());
+                garnet_link->name());
         NetworkBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_In];
-        m_nis[local_src]->
-        addOutPort(n_bridge,
-                   garnet_link->extCredBridge[LinkDirection_In],
-                   dest, m_routers[dest]->get_vc_per_vnet());
+        m_nis[local_src]->addOutPort(
+            n_bridge, garnet_link->extCredBridge[LinkDirection_In], dest,
+            m_routers[dest]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
         m_nis[local_src]->addOutPort(net_link, credit_link, dest,
-            m_routers[dest]->get_vc_per_vnet());
+                                     m_routers[dest]->get_vc_per_vnet());
     }
 
     if (garnet_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
-            garnet_link->name());
+                garnet_link->name());
         NetworkBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_In];
-        m_routers[dest]->
-            addInPort(dst_inport_dirn,
-                      n_bridge,
-                      garnet_link->intCredBridge[LinkDirection_In]);
+        m_routers[dest]->addInPort(
+            dst_inport_dirn, n_bridge,
+            garnet_link->intCredBridge[LinkDirection_In]);
         m_networkbridges.push_back(n_bridge);
     } else {
         m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
     }
-
 }
 
 /*
  * This function creates a link from the Network to a NI.
  * It creates a Network Link from a Router to the NI and
  * a Credit Link from NI to the Router
-*/
+ */
 
 void
 GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
-                              BasicLink* link,
-                              std::vector<NetDest>& routing_table_entry)
+                              BasicLink *link,
+                              std::vector<NetDest> &routing_table_entry)
 {
     NodeID local_dest = getLocalNodeID(global_dest);
     assert(local_dest < m_nodes);
     assert(src < m_routers.size());
     assert(m_routers[src] != NULL);
 
-    GarnetExtLink* garnet_link = safe_cast<GarnetExtLink*>(link);
+    GarnetExtLink *garnet_link = safe_cast<GarnetExtLink *>(link);
 
     // GarnetExtLink is bi-directional
-    NetworkLink* net_link = garnet_link->m_network_links[LinkDirection_Out];
+    NetworkLink *net_link = garnet_link->m_network_links[LinkDirection_Out];
     net_link->setType(EXT_OUT_);
-    CreditLink* credit_link = garnet_link->m_credit_links[LinkDirection_Out];
+    CreditLink *credit_link = garnet_link->m_credit_links[LinkDirection_Out];
 
     m_networklinks.push_back(net_link);
     m_creditlinks.push_back(credit_link);
 
     PortDirection src_outport_dirn = "Local";
 
-    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
-                             m_routers[src]->get_vc_per_vnet());
+    m_max_vcs_per_vnet =
+        std::max(m_max_vcs_per_vnet, m_routers[src]->get_vc_per_vnet());
 
     /*
      * We check if a bridge was enabled at any end of the link.
@@ -269,10 +264,10 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
      */
     if (garnet_link->extBridgeEn) {
         DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
-            garnet_link->name());
+                garnet_link->name());
         NetworkBridge *n_bridge = garnet_link->extNetBridge[LinkDirection_Out];
-        m_nis[local_dest]->
-            addInPort(n_bridge, garnet_link->extCredBridge[LinkDirection_Out]);
+        m_nis[local_dest]->addInPort(
+            n_bridge, garnet_link->extCredBridge[LinkDirection_Out]);
         m_networkbridges.push_back(n_bridge);
     } else {
         m_nis[local_dest]->addInPort(net_link, credit_link);
@@ -280,48 +275,44 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
 
     if (garnet_link->intBridgeEn) {
         DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
-            garnet_link->name());
+                garnet_link->name());
         NetworkBridge *n_bridge = garnet_link->intNetBridge[LinkDirection_Out];
-        m_routers[src]->
-            addOutPort(src_outport_dirn,
-                       n_bridge,
-                       routing_table_entry, link->m_weight,
-                       garnet_link->intCredBridge[LinkDirection_Out],
-                       m_routers[src]->get_vc_per_vnet());
+        m_routers[src]->addOutPort(
+            src_outport_dirn, n_bridge, routing_table_entry, link->m_weight,
+            garnet_link->intCredBridge[LinkDirection_Out],
+            m_routers[src]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
-        m_routers[src]->
-            addOutPort(src_outport_dirn, net_link,
-                       routing_table_entry,
-                       link->m_weight, credit_link,
-                       m_routers[src]->get_vc_per_vnet());
+        m_routers[src]->addOutPort(
+            src_outport_dirn, net_link, routing_table_entry, link->m_weight,
+            credit_link, m_routers[src]->get_vc_per_vnet());
     }
 }
 
 /*
  * This function creates an internal network link between two routers.
  * It adds both the network link and an opposite credit link.
-*/
+ */
 
 void
-GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                std::vector<NetDest>& routing_table_entry,
+GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
+                                std::vector<NetDest> &routing_table_entry,
                                 PortDirection src_outport_dirn,
                                 PortDirection dst_inport_dirn)
 {
-    GarnetIntLink* garnet_link = safe_cast<GarnetIntLink*>(link);
+    GarnetIntLink *garnet_link = safe_cast<GarnetIntLink *>(link);
 
     // GarnetIntLink is unidirectional
-    NetworkLink* net_link = garnet_link->m_network_link;
+    NetworkLink *net_link = garnet_link->m_network_link;
     net_link->setType(INT_);
-    CreditLink* credit_link = garnet_link->m_credit_link;
+    CreditLink *credit_link = garnet_link->m_credit_link;
 
     m_networklinks.push_back(net_link);
     m_creditlinks.push_back(credit_link);
 
     m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
-                             std::max(m_routers[dest]->get_vc_per_vnet(),
-                             m_routers[src]->get_vc_per_vnet()));
+                                  std::max(m_routers[dest]->get_vc_per_vnet(),
+                                           m_routers[src]->get_vc_per_vnet()));
 
     /*
      * We check if a bridge was enabled at any end of the link.
@@ -338,7 +329,7 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
      */
     if (garnet_link->dstBridgeEn) {
         DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
-            garnet_link->name());
+                garnet_link->name());
         NetworkBridge *n_bridge = garnet_link->dstNetBridge;
         m_routers[dest]->addInPort(dst_inport_dirn, n_bridge,
                                    garnet_link->dstCredBridge);
@@ -349,19 +340,16 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     if (garnet_link->srcBridgeEn) {
         DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
-            garnet_link->name());
+                garnet_link->name());
         NetworkBridge *n_bridge = garnet_link->srcNetBridge;
-        m_routers[src]->
-            addOutPort(src_outport_dirn, n_bridge,
-                       routing_table_entry,
-                       link->m_weight, garnet_link->srcCredBridge,
-                       m_routers[dest]->get_vc_per_vnet());
+        m_routers[src]->addOutPort(
+            src_outport_dirn, n_bridge, routing_table_entry, link->m_weight,
+            garnet_link->srcCredBridge, m_routers[dest]->get_vc_per_vnet());
         m_networkbridges.push_back(n_bridge);
     } else {
-        m_routers[src]->addOutPort(src_outport_dirn, net_link,
-                        routing_table_entry,
-                        link->m_weight, credit_link,
-                        m_routers[dest]->get_vc_per_vnet());
+        m_routers[src]->addOutPort(
+            src_outport_dirn, net_link, routing_table_entry, link->m_weight,
+            credit_link, m_routers[dest]->get_vc_per_vnet());
     }
 }
 
@@ -381,154 +369,141 @@ GarnetNetwork::get_router_id(int global_ni, int vnet)
     return m_nis[local_ni]->get_router_id(vnet);
 }
 
+GarnetNetwork::GarnetNetworkStats::GarnetNetworkStats(GarnetNetwork *parent)
+    : statistics::Group(parent),
+      parent(parent),
+      m_packets_received(this, "packets_received"),
+      m_packets_injected(this, "packets_injected"),
+      m_packet_network_latency(this, "packet_network_latency"),
+      m_packet_queueing_latency(this, "packet_queueing_latency"),
+      m_avg_packet_vnet_latency(this, "average_packet_vnet_latency"),
+      m_avg_packet_vqueue_latency(this, "average_packet_vqueue_latency"),
+      m_avg_packet_network_latency(this, "average_packet_network_latency"),
+      m_avg_packet_queueing_latency(this, "average_packet_queueing_latency"),
+      m_avg_packet_latency(this, "average_packet_latency"),
+      m_flits_received(this, "flits_received"),
+      m_flits_injected(this, "flits_injected"),
+      m_flit_network_latency(this, "flit_network_latency"),
+      m_flit_queueing_latency(this, "flit_queueing_latency"),
+      m_avg_flit_vnet_latency(this, "average_flit_vnet_latency"),
+      m_avg_flit_vqueue_latency(this, "average_flit_vqueue_latency"),
+      m_avg_flit_network_latency(this, "average_flit_network_latency"),
+      m_avg_flit_queueing_latency(this, "average_flit_queueing_latency"),
+      m_avg_flit_latency(this, "average_flit_latency"),
+      m_total_ext_in_link_utilization(this, "ext_in_link_utilization"),
+      m_total_ext_out_link_utilization(this, "ext_out_link_utilization"),
+      m_total_int_link_utilization(this, "int_link_utilization"),
+      m_average_link_utilization(this, "avg_link_utilization"),
+      m_average_vc_load(this, "avg_vc_load"),
+      m_total_hops(this, "total_hops"),
+      m_avg_hops(this, "average_hops")
+{}
+
 void
-GarnetNetwork::regStats()
+GarnetNetwork::GarnetNetworkStats::regStats()
 {
-    Network::regStats();
+    // Can't do this init() work in the constructor above -- several of
+    // these depend on m_virtual_networks/m_max_vcs_per_vnet/m_routers,
+    // which aren't set until after GarnetNetwork's own constructor runs.
 
     // Packets
-    m_packets_received
-        .init(m_virtual_networks)
-        .name(name() + ".packets_received")
+    m_packets_received.init(parent->m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_packets_injected
-        .init(m_virtual_networks)
-        .name(name() + ".packets_injected")
+    m_packets_injected.init(parent->m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_packet_network_latency
-        .init(m_virtual_networks)
-        .name(name() + ".packet_network_latency")
-        .flags(statistics::oneline)
-        ;
+    m_packet_network_latency.init(parent->m_virtual_networks)
+        .flags(statistics::oneline);
 
-    m_packet_queueing_latency
-        .init(m_virtual_networks)
-        .name(name() + ".packet_queueing_latency")
-        .flags(statistics::oneline)
-        ;
+    m_packet_queueing_latency.init(parent->m_virtual_networks)
+        .flags(statistics::oneline);
 
-    for (int i = 0; i < m_virtual_networks; i++) {
+    for (int i = 0; i < parent->m_virtual_networks; i++) {
         m_packets_received.subname(i, csprintf("vnet-%i", i));
         m_packets_injected.subname(i, csprintf("vnet-%i", i));
         m_packet_network_latency.subname(i, csprintf("vnet-%i", i));
         m_packet_queueing_latency.subname(i, csprintf("vnet-%i", i));
     }
 
-    m_avg_packet_vnet_latency
-        .name(name() + ".average_packet_vnet_latency")
-        .flags(statistics::oneline);
-    m_avg_packet_vnet_latency =
-        m_packet_network_latency / m_packets_received;
+    m_avg_packet_vnet_latency.flags(statistics::oneline);
+    m_avg_packet_vnet_latency = m_packet_network_latency / m_packets_received;
 
-    m_avg_packet_vqueue_latency
-        .name(name() + ".average_packet_vqueue_latency")
-        .flags(statistics::oneline);
+    m_avg_packet_vqueue_latency.flags(statistics::oneline);
     m_avg_packet_vqueue_latency =
         m_packet_queueing_latency / m_packets_received;
 
-    m_avg_packet_network_latency
-        .name(name() + ".average_packet_network_latency");
     m_avg_packet_network_latency =
         sum(m_packet_network_latency) / sum(m_packets_received);
 
-    m_avg_packet_queueing_latency
-        .name(name() + ".average_packet_queueing_latency");
-    m_avg_packet_queueing_latency
-        = sum(m_packet_queueing_latency) / sum(m_packets_received);
+    m_avg_packet_queueing_latency =
+        sum(m_packet_queueing_latency) / sum(m_packets_received);
 
-    m_avg_packet_latency
-        .name(name() + ".average_packet_latency");
-    m_avg_packet_latency
-        = m_avg_packet_network_latency + m_avg_packet_queueing_latency;
+    m_avg_packet_latency =
+        m_avg_packet_network_latency + m_avg_packet_queueing_latency;
 
     // Flits
-    m_flits_received
-        .init(m_virtual_networks)
-        .name(name() + ".flits_received")
+    m_flits_received.init(parent->m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_flits_injected
-        .init(m_virtual_networks)
-        .name(name() + ".flits_injected")
+    m_flits_injected.init(parent->m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_flit_network_latency
-        .init(m_virtual_networks)
-        .name(name() + ".flit_network_latency")
-        .flags(statistics::oneline)
-        ;
+    m_flit_network_latency.init(parent->m_virtual_networks)
+        .flags(statistics::oneline);
 
-    m_flit_queueing_latency
-        .init(m_virtual_networks)
-        .name(name() + ".flit_queueing_latency")
-        .flags(statistics::oneline)
-        ;
+    m_flit_queueing_latency.init(parent->m_virtual_networks)
+        .flags(statistics::oneline);
 
-    for (int i = 0; i < m_virtual_networks; i++) {
+    for (int i = 0; i < parent->m_virtual_networks; i++) {
         m_flits_received.subname(i, csprintf("vnet-%i", i));
         m_flits_injected.subname(i, csprintf("vnet-%i", i));
         m_flit_network_latency.subname(i, csprintf("vnet-%i", i));
         m_flit_queueing_latency.subname(i, csprintf("vnet-%i", i));
     }
 
-    m_avg_flit_vnet_latency
-        .name(name() + ".average_flit_vnet_latency")
-        .flags(statistics::oneline);
+    m_avg_flit_vnet_latency.flags(statistics::oneline);
     m_avg_flit_vnet_latency = m_flit_network_latency / m_flits_received;
 
-    m_avg_flit_vqueue_latency
-        .name(name() + ".average_flit_vqueue_latency")
-        .flags(statistics::oneline);
-    m_avg_flit_vqueue_latency =
-        m_flit_queueing_latency / m_flits_received;
+    m_avg_flit_vqueue_latency.flags(statistics::oneline);
+    m_avg_flit_vqueue_latency = m_flit_queueing_latency / m_flits_received;
 
-    m_avg_flit_network_latency
-        .name(name() + ".average_flit_network_latency");
     m_avg_flit_network_latency =
         sum(m_flit_network_latency) / sum(m_flits_received);
 
-    m_avg_flit_queueing_latency
-        .name(name() + ".average_flit_queueing_latency");
     m_avg_flit_queueing_latency =
         sum(m_flit_queueing_latency) / sum(m_flits_received);
 
-    m_avg_flit_latency
-        .name(name() + ".average_flit_latency");
     m_avg_flit_latency =
         m_avg_flit_network_latency + m_avg_flit_queueing_latency;
 
-
     // Hops
-    m_avg_hops.name(name() + ".average_hops");
     m_avg_hops = m_total_hops / sum(m_flits_received);
 
     // Links
-    m_total_ext_in_link_utilization
-        .name(name() + ".ext_in_link_utilization");
-    m_total_ext_out_link_utilization
-        .name(name() + ".ext_out_link_utilization");
-    m_total_int_link_utilization
-        .name(name() + ".int_link_utilization");
-    m_average_link_utilization
-        .name(name() + ".avg_link_utilization");
     m_average_vc_load
-        .init(m_virtual_networks * m_max_vcs_per_vnet)
-        .name(name() + ".avg_vc_load")
+        .init(parent->m_virtual_networks * parent->m_max_vcs_per_vnet)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    // Traffic distribution
+    statistics::Group::regStats();
+}
+
+void
+GarnetNetwork::regStats()
+{
+    // This resolves up to statistics::Group::regStats(), which walks
+    // our merged stat groups and calls GarnetNetworkStats::regStats()
+    // for us. Don't call it again below -- m_stats's Vector stats call
+    // .init() in there, and .init() fatals if it runs twice.
+    Network::regStats();
+
+    // Traffic distribution: still flat stats with a '.' in the name, so
+    // still not resolvable (same reason as above).
     for (int source = 0; source < m_routers.size(); ++source) {
         m_data_traffic_distribution.push_back(
             std::vector<statistics::Scalar *>());
@@ -540,11 +515,13 @@ GarnetNetwork::regStats()
             statistics::Scalar *ctrl_packets = new statistics::Scalar();
 
             data_packets->name(name() + ".data_traffic_distribution." + "n" +
-                    std::to_string(source) + "." + "n" + std::to_string(dest));
+                               std::to_string(source) + "." + "n" +
+                               std::to_string(dest));
             m_data_traffic_distribution[source].push_back(data_packets);
 
             ctrl_packets->name(name() + ".ctrl_traffic_distribution." + "n" +
-                    std::to_string(source) + "." + "n" + std::to_string(dest));
+                               std::to_string(source) + "." + "n" +
+                               std::to_string(dest));
             m_ctrl_traffic_distribution[source].push_back(ctrl_packets);
         }
     }
@@ -560,19 +537,19 @@ GarnetNetwork::collateStats()
         link_type type = m_networklinks[i]->getType();
         int activity = m_networklinks[i]->getLinkUtilization();
 
-        if (type == EXT_IN_)
-            m_total_ext_in_link_utilization += activity;
-        else if (type == EXT_OUT_)
-            m_total_ext_out_link_utilization += activity;
-        else if (type == INT_)
-            m_total_int_link_utilization += activity;
+        if (type == EXT_IN_) {
+            m_stats.m_total_ext_in_link_utilization += activity;
+        } else if (type == EXT_OUT_) {
+            m_stats.m_total_ext_out_link_utilization += activity;
+        } else if (type == INT_) {
+            m_stats.m_total_int_link_utilization += activity;
+        }
 
-        m_average_link_utilization +=
-            (double(activity) / time_delta);
+        m_stats.m_average_link_utilization += (double(activity) / time_delta);
 
         std::vector<unsigned int> vc_load = m_networklinks[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {
-            m_average_vc_load[j] += ((double)vc_load[j] / time_delta);
+            m_stats.m_average_vc_load[j] += ((double)vc_load[j] / time_delta);
         }
     }
 
@@ -597,7 +574,7 @@ GarnetNetwork::resetStats()
 }
 
 void
-GarnetNetwork::print(std::ostream& out) const
+GarnetNetwork::print(std::ostream &out) const
 {
     out << "[GarnetNetwork]";
 }
@@ -609,10 +586,11 @@ GarnetNetwork::update_traffic_distribution(RouteInfo route)
     int dest_node = route.dest_router;
     int vnet = route.vnet;
 
-    if (m_vnet_type[vnet] == DATA_VNET_)
+    if (m_vnet_type[vnet] == DATA_VNET_) {
         (*m_data_traffic_distribution[src_node][dest_node])++;
-    else
+    } else {
         (*m_ctrl_traffic_distribution[src_node][dest_node])++;
+    }
 }
 
 bool
@@ -620,23 +598,27 @@ GarnetNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
     for (unsigned int i = 0; i < m_routers.size(); i++) {
-        if (m_routers[i]->functionalRead(pkt, mask))
+        if (m_routers[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
 
     for (unsigned int i = 0; i < m_nis.size(); ++i) {
-        if (m_nis[i]->functionalRead(pkt, mask))
+        if (m_nis[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
 
     for (unsigned int i = 0; i < m_networklinks.size(); ++i) {
-        if (m_networklinks[i]->functionalRead(pkt, mask))
+        if (m_networklinks[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
 
     for (unsigned int i = 0; i < m_networkbridges.size(); ++i) {
-        if (m_networkbridges[i]->functionalRead(pkt, mask))
+        if (m_networkbridges[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
 
     return read;
