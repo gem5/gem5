@@ -644,6 +644,18 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
 }
 
 SyscallReturn
+dup3Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd,
+         int flags)
+{
+    if (old_tgt_fd == new_tgt_fd) {
+        return -EINVAL;
+    }
+
+    // For now we just call dup2Func and ignore flags.
+    return dup2Func(desc, tc, old_tgt_fd, new_tgt_fd);
+}
+
+SyscallReturn
 fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
           int tgt_fd, int cmd, guest_abi::VarArgs<int> varargs)
 {
