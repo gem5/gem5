@@ -70,6 +70,18 @@ struct CacheAccessor
 
     /** Determine if cache is coalescing writes */
     virtual bool coalesce() const = 0;
+
+    /**
+     * Try to read `size` bytes of block data for the given address.
+     *
+     * @param addr Address of the first byte to read
+     * @param is_secure Whether the access targets secure memory
+     * @param size Number of bytes to read
+     * @param out Destination buffer (must be at least size bytes)
+     * @return true if the block is present and data was copied
+     */
+    virtual bool tryRead(Addr addr, bool is_secure, unsigned size,
+                         uint8_t *out) const = 0;
 };
 
 /**
