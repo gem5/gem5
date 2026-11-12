@@ -156,6 +156,11 @@ class Port
     void finalize();
     void regPort();
 
+    void beforeEndOfElaboration();
+    void endOfElaboration();
+    void startOfSimulation();
+    void endOfSimulation();
+
     int size() { return _size; }
     int maxSize() { return _maxSize ? _maxSize : _size; }
 };

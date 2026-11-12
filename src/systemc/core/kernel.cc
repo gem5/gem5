@@ -73,11 +73,11 @@ Kernel::init()
 
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
     for (auto p: allPorts)
-        p->sc_port_base()->before_end_of_elaboration();
+        p->beforeEndOfElaboration();
     for (auto m: sc_gem5::allModules)
         m->beforeEndOfElaboration();
     for (auto c: sc_gem5::allChannels)
-        c->sc_chan()->before_end_of_elaboration();
+        c->beforeEndOfElaboration();
 
     ::sc_gem5::scheduler().elaborationDone(true);
 }
@@ -98,11 +98,11 @@ Kernel::regStats()
 
         status(::sc_core::SC_END_OF_ELABORATION);
         for (auto p: allPorts)
-            p->sc_port_base()->end_of_elaboration();
+            p->endOfElaboration();
         for (auto m: sc_gem5::allModules)
             m->endOfElaboration();
         for (auto c: sc_gem5::allChannels)
-            c->sc_chan()->end_of_elaboration();
+            c->endOfElaboration();
     } catch (...) {
         ::sc_gem5::scheduler().throwUp();
     }
@@ -122,11 +122,11 @@ Kernel::startup()
     try {
         status(::sc_core::SC_START_OF_SIMULATION);
         for (auto p: allPorts)
-            p->sc_port_base()->start_of_simulation();
+            p->startOfSimulation();
         for (auto m: sc_gem5::allModules)
             m->startOfSimulation();
         for (auto c: sc_gem5::allChannels)
-            c->sc_chan()->start_of_simulation();
+            c->startOfSimulation();
     } catch (...) {
         ::sc_gem5::scheduler().throwUp();
     }
@@ -154,11 +154,11 @@ Kernel::stopWork()
     status(::sc_core::SC_END_OF_SIMULATION);
     try {
         for (auto p: allPorts)
-            p->sc_port_base()->end_of_simulation();
+            p->endOfSimulation();
         for (auto m: sc_gem5::allModules)
             m->endOfSimulation();
         for (auto c: sc_gem5::allChannels)
-            c->sc_chan()->end_of_simulation();
+            c->endOfSimulation();
     } catch (...) {
         ::sc_gem5::scheduler().throwUp();
     }
