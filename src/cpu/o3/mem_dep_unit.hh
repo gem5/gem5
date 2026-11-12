@@ -143,6 +143,11 @@ class MemDepUnit
      */
     void replay();
 
+    /** Replays a rescheduled instruction by moving it to the ready list.
+     *  Does nothing if the instruction has already been replayed.
+     */
+    void replay(const DynInstPtr &inst);
+
     /** Notifies completion of an instruction. */
     void completeInst(const DynInstPtr &inst);
 
