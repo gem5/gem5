@@ -178,6 +178,14 @@ class RetentionManager
      */
     void startup();
 
+    /** Timeline (timeline_cycles, stats only): the counters the power
+     *  model uses, since the last stats reset: lines refreshed of the mode
+     *  (RA raValidRefreshes, the window modes their linesRefreshed), drops
+     *  (clean + dirty), retention misses, the tail bucket's tokens (-1: no
+     *  bucket). */
+    void timelineCounters(double &refreshed, double &drops, double &ret_miss,
+                          double &tokens) const;
+
     /**
      * Expiry check for the block addressed by a read or write request,
      * done before the tag access. An expired block is written back if

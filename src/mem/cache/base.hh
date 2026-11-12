@@ -98,6 +98,7 @@ class BankPorts;
 class RetentionManager;
 class ReuseTracker;
 class AccessTrace;
+class CacheTimeline;
 class WriteQueueEntry;
 struct BaseCacheParams;
 
@@ -374,6 +375,11 @@ class BaseCache : public ClockedObject
     /** access_trace: text trace of accesses, fills and evictions (stats
      *  only; nullptr: off). */
     std::unique_ptr<AccessTrace> accessTrace;
+
+    /** timeline_cycles: periodic counters / occupancy rows (stats only;
+     *  nullptr: off). */
+    friend class CacheTimeline;
+    std::unique_ptr<CacheTimeline> timeline;
 
     /** access_trace: one access from above (after access()). */
     void traceAccess(PacketPtr pkt, bool satisfied, bool was_present);

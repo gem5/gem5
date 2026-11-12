@@ -254,6 +254,18 @@ class BaseCache(ClockedObject):
         "are below the demand accesses >> window_down_shift",
     )
 
+    timeline_cycles = Param.Unsigned(
+        0,
+        "Timeline (stats only): every N cycles, and at every stats dump and "
+        "reset, one row of counters and occupancy to "
+        "<cache>.timeline.csv.gz; 0 = off",
+    )
+    timeline_live_cycles = Param.Unsigned(
+        30030,
+        "Timeline: a valid line touched within this many cycles counts as "
+        "live (LRU replacement data)",
+    )
+
     access_trace = Param.Bool(
         False,
         "Text trace of the accesses from above, fills and evictions, from "

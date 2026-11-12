@@ -59,12 +59,14 @@
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/cache/replacement_policies/lru_rp.hh"
 #include "mem/cache/retention/bank_ports.hh"
 #include "mem/cache/retention/retention_manager.hh"
 #include "mem/cache/retention/reuse_tracker.hh"
 #include "mem/cache/tags/compressed_tags.hh"
 #include "mem/cache/tags/partitioning_policies/partition_manager.hh"
 #include "mem/cache/tags/super_blk.hh"
+#include "mem/cache/timeline.hh"
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/cur_tick.hh"
@@ -159,6 +161,12 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
 
     if (p.access_trace)
         accessTrace = std::make_unique<AccessTrace>(name());
+
+    if (p.timeline_cycles)
+        timeline = std::make_unique<CacheTimeline>(*this,
+            Cycles(p.timeline_cycles), Cycles(p.timeline_live_cycles),
+            dynamic_cast<replacement_policy::LRU *>(p.replacement_policy) !=
+                nullptr);
 }
 
 void
@@ -197,6 +205,9 @@ BaseCache::startup()
 
     if (retention)
         retention->startup();
+
+    if (timeline)
+        timeline->start();
 }
 
 void

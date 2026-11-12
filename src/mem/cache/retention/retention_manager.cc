@@ -478,6 +478,35 @@ RetentionManager::RetentionManager(BaseCache &_cache,
 }
 
 void
+RetentionManager::timelineCounters(double &refreshed, double &drops,
+                                   double &ret_miss, double &tokens) const
+{
+    tokens = tailBucket ? double(tailTokens) : -1.0;
+    if (tailStats) {
+        refreshed = tailStats->linesRefreshed.value();
+        drops = tailStats->dropsClean.value() + tailStats->dropsDirty.value();
+        ret_miss = tailStats->retentionMisses.value();
+    } else if (changStats) {
+        refreshed = changStats->linesRefreshed.value();
+        drops = changStats->dropsClean.value() +
+            changStats->dropsDirty.value();
+        ret_miss = changStats->retentionMisses.value();
+    } else if (wbStats) {
+        refreshed = wbStats->linesRefreshed.value();
+        drops = wbStats->dropsClean.value();
+        ret_miss = wbStats->retentionMisses.value();
+    } else if (winStats) {
+        refreshed = winStats->linesRefreshed.value();
+        drops = winStats->dropsClean.value() + winStats->dropsDirty.value();
+        ret_miss = winStats->retentionMisses.value();
+    } else {
+        refreshed = stats.raValidRefreshes.value();
+        drops = 0;
+        ret_miss = stats.retentionMisses.value();
+    }
+}
+
+void
 RetentionManager::startup()
 {
     const Tick drt = cache.tags->getDRT();

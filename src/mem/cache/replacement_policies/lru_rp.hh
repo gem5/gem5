@@ -65,6 +65,14 @@ class LRU : public Base
     LRU(const Params &p);
     ~LRU() = default;
 
+    /** The entry's last touch tick (read only; the cache timeline). */
+    static Tick
+    lastTouch(const std::shared_ptr<ReplacementData> &replacement_data)
+    {
+        return std::static_pointer_cast<LRUReplData>(
+            replacement_data)->lastTouchTick;
+    }
+
     /**
      * Invalidate replacement data to set it as the next probable victim.
      * Sets its last touch tick as the starting tick.

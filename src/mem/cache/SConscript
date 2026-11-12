@@ -44,6 +44,7 @@ SimObject('Cache.py', sim_objects=[
     enums=['Clusivity'])
 
 Source('access_trace.cc')
+Source('timeline.cc')
 Source('base.cc')
 Source('cache.cc')
 Source('cache_blk.cc')
