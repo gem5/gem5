@@ -188,6 +188,7 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   COMMIT,            desc="Commit version";
   NULL,              desc="Invalid request type";
   FLUSH,             desc="Flush request type";
+  CLEAN,             desc="Clean request type (write back dirty data, keep line)";
   InvL2,             desc="Invalidate L2";
   Release,           desc="Release operation";
   Acquire,           desc="Acquire opertion";

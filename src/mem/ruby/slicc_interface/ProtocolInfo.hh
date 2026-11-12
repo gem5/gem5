@@ -48,16 +48,19 @@ class ProtocolInfo
     const bool useSecondaryLoadLinked;
     const bool useSecondaryStoreConditional;
     const bool supportsFlushes;
+    const bool supportsCleans;
 
   public:
     ProtocolInfo(std::string name, bool partial_func_reads,
                  bool use_secondary_load_linked,
-                 bool use_secondary_store_conditional, bool supports_flushes)
+                 bool use_secondary_store_conditional, bool supports_flushes,
+                 bool supports_cleans)
         : name(name),
           partialFuncReads(partial_func_reads),
           useSecondaryLoadLinked(use_secondary_load_linked),
           useSecondaryStoreConditional(use_secondary_store_conditional),
-          supportsFlushes(supports_flushes)
+          supportsFlushes(supports_flushes),
+          supportsCleans(supports_cleans)
     {
     }
 
@@ -77,6 +80,11 @@ class ProtocolInfo
     getSupportsFlushes() const
     {
         return supportsFlushes;
+    }
+    bool
+    getSupportsCleans() const
+    {
+        return supportsCleans;
     }
 };
 
