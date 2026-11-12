@@ -138,7 +138,8 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     updateLSQNextCycle = false;
 
-    skidBufferMax = (renameToIEWDelay + 1) * params.renameWidth;
+    skidBufferMax =
+        (renameToIEWDelay + params.iewToRenameDelay) * params.renameWidth;
 }
 
 std::string
