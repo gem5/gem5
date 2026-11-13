@@ -336,6 +336,34 @@ jobs:
             - name: Continue gem5 within SystemC test
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
 
+  # This runs the built-in gem5 SystemC kernel regression test suite.
+    systemc-regression-tests:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: Cache the SystemC regression build
+              uses: actions/cache@v6
+              with:
+                  path: build/NULL
+                  key: systemc-regression-build-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      systemc-regression-build
+
+            - name: Build and run SystemC regression tests
+              run: |
+                  scons defconfig build/NULL build_opts/NULL --ignore-style
+                  python3 src/systemc/tests/verify.py build/NULL -j $(nproc) \
+                      --update-json \
+                      --filter-file src/systemc/tests/working.filt \
+                      --phase compile --duplicate-sources --ignore-style \
+                      --phase execute \
+                      --phase verify
+
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
         container:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #
 # Copyright 2018 Google, Inc.
+# Copyright (c) 2026 Google LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -553,6 +554,9 @@ class VerifyPhase(TestPhaseBase):
 
         if result_path:
             self.write_result_file(result_path)
+
+        if self._failed:
+            sys.exit(1)
 
 
 parser = argparse.ArgumentParser(description="SystemC test utility")
