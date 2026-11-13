@@ -441,6 +441,8 @@ class BaseRemoteGDB
     bool queryC(QuerySetCommand::Context &ctx);
     bool querySupported(QuerySetCommand::Context &ctx);
     bool queryXfer(QuerySetCommand::Context &ctx);
+    bool queryXferRead(const std::string &object, const std::string &params);
+    bool queryXferWrite(const std::string &object, const std::string &params);
     bool querySymbol(QuerySetCommand::Context &ctx);
     bool queryRcmd(QuerySetCommand::Context &ctx);
     bool queryAttached(QuerySetCommand::Context &ctx);
@@ -455,6 +457,8 @@ class BaseRemoteGDB
 
     void encodeBinaryData(const std::string &unencoded,
             std::string &encoded) const;
+    bool decodeBinaryData(const std::string &encoded,
+                          std::string &unencoded) const;
 
     void encodeXferResponse(const std::string &unencoded,
         std::string &encoded, size_t offset, size_t unencoded_length) const;
@@ -481,6 +485,18 @@ class BaseRemoteGDB
         std::function<bool(const std::string &annex, std::string &output)>;
 
     /**
+     * Handler for qXfer:<object>:write:<annex>:<offset>:<data> queries.
+     *
+     * @param[in] annex the annex of the query
+     * @param[in] offset the offset in the object to write the data at
+     * @param[in] unencoded the decoded data to write at offset
+     * @return true if the annex is valid and its content was written
+     */
+    using XferWriteHandler =
+        std::function<bool(const std::string &annex, std::size_t offset,
+                           const std::string &unencoded)>;
+
+    /**
      * Register the read handler of a qXfer object. If the object is already
      * registered, its handler is replaced. Each registered object is
      * advertised to GDB as "qXfer:<object>:read+" by the default
@@ -492,17 +508,36 @@ class BaseRemoteGDB
     void setXferReadHandler(const std::string &object,
                             XferReadHandler handler);
 
+    /**
+     * Register the write handler of a qXfer object. If the object is already
+     * registered, its handler is replaced. Each registered object is
+     * advertised to GDB as "qXfer:<object>:write+" by the default
+     * availableFeatures().
+     *
+     * @param object the name of the qXfer object
+     * @param handler the write handler of the object
+     */
+    void setXferWriteHandler(const std::string &object,
+                             XferWriteHandler handler);
+
   private:
     /**
      * Map from qXfer object names to their read handlers. The offset and
-     * length of the query are applied by queryXfer on the content returned
+     * length of the query are applied by queryXferRead on the content returned
      * by the handler. It is only modified by setXferReadHandler, which keeps
-     * xferReadFeatures in sync with its keys.
+     * xferFeatures in sync with its keys.
      */
     std::map<std::string, XferReadHandler> queryXferReadMap;
 
-    /** The "qXfer:<object>:read+" feature of each object in the map. */
-    std::vector<std::string> xferReadFeatures;
+    /**
+     * Map from qXfer object names to their write handlers. It is only modified
+     * by setXferWriteHandler, which keeps xferFeatures in sync with its keys.
+     */
+    std::map<std::string, XferWriteHandler> queryXferWriteMap;
+
+    /** The "qXfer:<object>:read+" and "qXfer:<object>:write+" features of the
+     * objects in the queryXferReadMap and queryXferWriteMap. */
+    std::vector<std::string> xferFeatures;
 };
 
 template <class T>
