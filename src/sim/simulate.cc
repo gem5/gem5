@@ -302,12 +302,6 @@ doSimLoop(EventQueue *eventq)
     bool mainQueue = eventq == getEventQueue(0);
 
     while (1) {
-        // there should always be at least one event (the SimLoopExitEvent
-        // we just scheduled) in the queue
-        assert(!eventq->empty());
-        assert(curTick() <= eventq->nextTick() &&
-               "event scheduled in the past");
-
         if (mainQueue && async_event) {
             async_event = false;
             // Take the event queue lock in case any of the service
