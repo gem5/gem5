@@ -99,6 +99,7 @@ def _dump_configs(
     ini_config: str | None = None,
     json_config: str | None = None,
     dot_config: str | None = None,
+    citations_bib: str | None = None,
 ):
     # Use a slightly convoluted way to set these variables for backwards
     # compatibility. Now, this function is no longer dependent on main.py and
@@ -119,6 +120,10 @@ def _dump_configs(
         from m5 import options
 
         dot_config = options.dot_config
+    if citations_bib is None:
+        from m5 import options
+
+        citations_bib = options.citations_bib
 
     if ini_config:
         ini_file = open(os.path.join(outdir, ini_config), "w")
@@ -142,7 +147,8 @@ def _dump_configs(
         do_dot(root, outdir, dot_config)
         do_ruby_dot(root, outdir, dot_config)
 
-    gather_citations(root, outdir)
+    if citations_bib:
+        gather_citations(root, outdir, citations_bib)
 
 
 def _bind_all_ports(root):
