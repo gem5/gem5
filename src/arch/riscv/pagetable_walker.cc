@@ -50,6 +50,7 @@
 
 #include "arch/riscv/pagetable_walker.hh"
 
+#include <algorithm>
 #include <memory>
 
 #include "arch/riscv/faults.hh"
@@ -383,7 +384,9 @@ Walker::WalkerState::walkGStage(Addr guest_paddr, Addr& host_paddr)
         // which is discarded after.
         Addr ppn = walkType == GstageOnly ? entry.paddr : gresult.paddr;
         Addr vpn = guest_paddr >> PageShift;
-        Addr vpn_bits = vpn & mask(glevel * getLevelBits(hgatp.mode));
+        unsigned logBytes =
+            walkType == GstageOnly ? entry.logBytes : gresult.logBytes;
+        Addr vpn_bits = vpn & mask(logBytes - PageShift);
 
         // Update gresult
         gresult.paddr = (ppn | vpn_bits);
@@ -607,8 +610,9 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
 Fault
 Walker::WalkerState::guestToHostPage(Addr vaddr)
 {
-    Addr gpa = (((entry.paddr) | ((vaddr >> PageShift) &
-                                  mask(level * getLevelBits(satp.mode))))
+    const unsigned firstStageLogBytes = entry.logBytes;
+    Addr gpa = (((entry.paddr) |
+                 ((vaddr >> PageShift) & mask(firstStageLogBytes - PageShift)))
                 << PageShift) |
                (vaddr & mask(PageShift));
 
@@ -621,11 +625,11 @@ Walker::WalkerState::guestToHostPage(Addr vaddr)
 
     // gpn (vaddr) -> ppn (paddr) translation is already
     // in gresult, host_page_address is not needed here
-    // TLB stores ppn and pte
-    // entry.logBytes = PageShift + (level * getLevelBits(satp.mode));
-    entry.logBytes = PageShift;
-    entry.paddr = gresult.paddr;
-    entry.vaddr &= ~((1 << entry.logBytes) - 1);
+    // TLB stores a single entry for the largest page size shared by the
+    // first-stage and G-stage mappings.
+    entry.logBytes = std::min(firstStageLogBytes, gresult.logBytes);
+    entry.paddr = gresult.paddr & ~mask(entry.logBytes - PageShift);
+    entry.vaddr &= ~mask(entry.logBytes);
 
     // entry.pte contains guest pte
     // host pte is in gresult.pte from final GStage
@@ -803,9 +807,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     // The truncation for two-stage is done in
                     // walkTwoStage()
                     if (walkType != TwoStage) {
-                        entry.logBytes =
-                            PageShift + (level * getLevelBits(satp.mode));
-                        entry.vaddr &= ~((1 << entry.logBytes) - 1);
+                        entry.vaddr &= ~mask(entry.logBytes);
                     }
 
                     // put it non-writable into the TLB to detect
@@ -827,7 +829,11 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     walker->pagewalkerstats.num_2mb_walks++;
                 }
                 if (level == 0) {
-                    walker->pagewalkerstats.num_4kb_walks++;
+                    if (pte.n) {
+                        walker->pagewalkerstats.num_64kb_walks++;
+                    } else {
+                        walker->pagewalkerstats.num_4kb_walks++;
+                    }
                 }
                 DPRINTF(PageTableWalker,
                         "#1 leaf node at level %d, with vpn %#x\n",
@@ -969,7 +975,7 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
                             ? PageShift + NapotShift
                             : PageShift + (glevel * getLevelBits(hgatp.mode));
 
-                    entry.vaddr &= ~((1 << entry.logBytes) - 1);
+                    entry.vaddr &= ~mask(entry.logBytes);
 
                     // put it non-writable into the TLB to detect
                     // writes and redo the page table walk in order
@@ -983,9 +989,12 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
                 }
                 else {
                     gresult.logBytes =
-                        PageShift + (glevel * getLevelBits(hgatp.mode));
-                    gresult.paddr = pte.ppn;
-                    gresult.vaddr &= ~((1 << entry.logBytes) - 1);
+                        pte.n
+                            ? PageShift + NapotShift
+                            : PageShift + (glevel * getLevelBits(hgatp.mode));
+                    gresult.paddr =
+                        pte.n ? pte.ppn & ~mask(NapotShift) : pte.ppn;
+                    gresult.vaddr &= ~mask(gresult.logBytes);
                     gresult.pte = pte;
                 }
 
