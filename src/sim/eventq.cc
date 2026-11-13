@@ -221,6 +221,9 @@ Event *
 EventQueue::serviceOne()
 {
     std::lock_guard<EventQueue> lock(*this);
+    // there should always be at least one event if this method is called
+    assert(!empty());
+    assert(getCurTick() <= nextTick() && "event scheduled in the past");
     Event *event = head;
     Event *next = head->nextInBin;
     event->flags.clear(Event::Scheduled);
