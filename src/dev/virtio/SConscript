@@ -37,13 +37,24 @@
 
 Import('*')
 
+sim_9pobjs = ['VirtIO9PBase', 'VirtIO9PProxy', 'VirtIO9PDiod', 'VirtIO9PSocket']
+if env["CONF"]["BUILD_9PUFS"]:
+    npfs_dir = Dir(env["CONF"]["NPFS_PATH"])
+    env.Append(CPPPATH=npfs_dir.Dir('include'))
+    env.Append(LIBPATH=[npfs_dir.Dir('libnpfs'), npfs_dir.Dir('libufs')])
+    env.Append(LIBS=['libufs', 'libnpfs'])
+    sim_9pobjs.append('VirtIO9PUfs')
+    Source('fs9pufs.cc')
+    print("BUILD_9PUFS is set, building with 9P UFS integration\n")
+elif not GetOption("silent"):
+    print("BUILD_9PUFS is not set, building without 9P UFS integration\n")
+
 SimObject('VirtIO.py', sim_objects=[
     'VirtIODeviceBase', 'VirtIODummyDevice', 'PciVirtIO'])
 SimObject('VirtIOConsole.py', sim_objects=['VirtIOConsole'])
 SimObject('VirtIOBlock.py', sim_objects=['VirtIOBlock'])
 SimObject('VirtIORng.py', sim_objects=['VirtIORng'])
-SimObject('VirtIO9P.py', sim_objects=[
-    'VirtIO9PBase', 'VirtIO9PProxy', 'VirtIO9PDiod', 'VirtIO9PSocket'])
+SimObject('VirtIO9P.py', sim_objects=sim_9pobjs)
 
 Source('base.cc')
 Source('pci.cc')
@@ -59,3 +70,5 @@ DebugFlag('VIOConsole', 'VirtIO console device')
 DebugFlag('VIOBlock', 'VirtIO block device')
 DebugFlag('VIO9P', 'General 9p over VirtIO debugging')
 DebugFlag('VIO9PData', 'Dump data in VirtIO 9p connections')
+if env["CONF"]["BUILD_9PUFS"]:
+    DebugFlag('VIO9PUfs', 'Verbose output from the embedded npfs/ufs server')
