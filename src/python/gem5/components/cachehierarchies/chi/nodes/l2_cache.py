@@ -116,3 +116,6 @@ class L2CacheController(CacheController):
         self.number_of_DVM_TBEs = 1  # should not receive any dvm
         self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False
+
+        # Add specific tags for the ini file
+        self.add_ini_tags(["rnf-controller", "l2-controller"])

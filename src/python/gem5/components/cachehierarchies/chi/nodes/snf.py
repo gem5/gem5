@@ -57,6 +57,9 @@ class CHI_SNF_Base(CHI_Node):
         super().__init__(ruby_system, node_type)
         self.cntrl = cntrl
 
+        # Append the snf tag to the node
+        self.add_ini_tags(["snf"])
+
     def getNetworkSideControllers(self):
         """
         Returns all ruby controllers that need to be connected to the

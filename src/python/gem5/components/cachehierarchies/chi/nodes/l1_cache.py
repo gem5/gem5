@@ -99,3 +99,6 @@ class L1CacheController(CacheController):
         self.number_of_DVM_TBEs = 16
         self.number_of_DVM_snoop_TBEs = 4
         self.unify_repl_TBEs = False
+
+        # Add specific tags for the ini file
+        self.add_ini_tags(["rnf-controller", "l1-controller"])
