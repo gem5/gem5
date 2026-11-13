@@ -373,6 +373,14 @@ Walker::WalkerState::walkGStage(Addr guest_paddr, Addr& host_paddr)
             if (write) {
                 walker->port.sendAtomic(write);
             }
+
+            // Publish only the final translation after any Atomic A/D write.
+            // Functional walks and intermediate G-stage results stay uncached.
+            if (fault == NoFault && !read && !functional &&
+                walkType == GstageOnly && !memaccess.bypassTLB()) {
+                Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+                walker->tlb->insert(vpn, entry);
+            }
         } while (read);
 
         if (fault) {
@@ -488,6 +496,14 @@ Walker::WalkerState::walkOneStage(Addr vaddr)
         // not happen so this pointer is ignored after stepWalk
         if (write && !functional) {
             walker->port.sendAtomic(write);
+        }
+
+        // A successful walk with no pending read has reached a leaf.
+        // Publish it only after any synchronous A/D writeback above.
+        if (fault == NoFault && !read && !functional &&
+            !memaccess.bypassTLB()) {
+            Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+            walker->tlb->insert(vpn, entry);
         }
     } while (read);
 
@@ -883,7 +899,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         write = new_write;
 
-        if (stepWalkFlags.doTLBInsert) {
+        // Atomic walks publish in walkOneStage() after A/D writeback.
+        if (stepWalkFlags.doTLBInsert && timing) {
             if (!functional && !memaccess.bypassTLB()) {
                 Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
                 walker->tlb->insert(vpn, entry);
@@ -1057,7 +1074,8 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
         }
         write = new_write;
 
-        if (stepWalkFlags.doTLBInsert) {
+        // Atomic walks publish in walkGStage() after A/D writeback.
+        if (stepWalkFlags.doTLBInsert && timing) {
             if (!functional && !memaccess.bypassTLB()) {
                 // This TLB insertion should only be reachable
                 // for GstageOnly walks. Two stage walks insert
