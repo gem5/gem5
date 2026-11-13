@@ -1,0 +1,78 @@
+; Copyright (c) 2026 Akanksha Chaudhari
+; All rights reserved.
+;
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions are
+; met: redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer;
+; redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in the
+; documentation and/or other materials provided with the distribution;
+; neither the name of the copyright holders nor the names of its
+; contributors may be used to endorse or promote products derived from
+; this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+; Pointer casts and non-inbounds GEP wrap at their DataLayout widths.
+; Synthetic addresses are compared as integers, never dereferenced.
+
+target datalayout = "e-p:32:32:32:32-p1:64:64:64:32"
+target triple = "armv7-pc-none-eabi"
+
+define void @top() {
+  %truncatep = inttoptr i64 4294967298 to {PTR_I8}
+  %truncate = ptrtoint {PTR_I8} %truncatep to i64
+  %c0 = icmp eq i64 %truncate, 2
+  %signbitp = inttoptr i64 2147483648 to {PTR_I8}
+  %signbit = ptrtoint {PTR_I8} %signbitp to i64
+  %c1 = icmp eq i64 %signbit, 2147483648
+  %smallp = inttoptr i8 -1 to {PTR_I8}
+  %small = ptrtoint {PTR_I8} %smallp to i64
+  %c2 = icmp eq i64 %small, 255
+  %constant = ptrtoint {PTR_I8} inttoptr (i64 4294967297 to {PTR_I8}) to i64
+  %c3 = icmp eq i64 %constant, 1
+  %wrapp = getelementptr i8, {PTR_I8} inttoptr (i64 4294967292 to {PTR_I8}), i64 8
+  %wrap = ptrtoint {PTR_I8} %wrapp to i64
+  %c4 = icmp eq i64 %wrap, 4
+  %negativep = getelementptr i8, {PTR_I8} inttoptr (i64 0 to {PTR_I8}), i8 -1
+  %negative = ptrtoint {PTR_I8} %negativep to i64
+  %c5 = icmp eq i64 %negative, 4294967295
+  %negative16p = getelementptr i8, {PTR_I8} inttoptr (i64 1000 to {PTR_I8}), i16 -257
+  %negative16 = ptrtoint {PTR_I8} %negative16p to i64
+  %c6 = icmp eq i64 %negative16, 743
+  %wideindexp = getelementptr i8, {PTR_I8} inttoptr (i64 23 to {PTR_I8}), i64 4294967303
+  %wideindex = ptrtoint {PTR_I8} %wideindexp to i64
+  %c7 = icmp eq i64 %wideindex, 30
+  %stridep = getelementptr i32, {PTR_I32} inttoptr (i64 0 to {PTR_I32}), i64 -1
+  %stride = ptrtoint {PTR_I32} %stridep to i64
+  %c8 = icmp eq i64 %stride, 4294967292
+  %highbitsp = getelementptr i8, {PTR_I8} inttoptr (i64 4294967292 to {PTR_I8}), i32 8
+  %highbits = ptrtoint {PTR_I8} %highbitsp to i64
+  %c9 = icmp eq i64 %highbits, 4
+  %narrow = ptrtoint {PTR_I8} %signbitp to i8
+  %c10 = icmp eq i8 %narrow, 0
+  %ok0 = and i1 %c0, %c1
+  %ok1 = and i1 %ok0, %c2
+  %ok2 = and i1 %ok1, %c3
+  %ok3 = and i1 %ok2, %c4
+  %ok4 = and i1 %ok3, %c5
+  %ok5 = and i1 %ok4, %c6
+  %ok6 = and i1 %ok5, %c7
+  %ok7 = and i1 %ok6, %c8
+  %ok8 = and i1 %ok7, %c9
+  %ok9 = and i1 %ok8, %c10
+  %result = zext i1 %ok9 to i32
+  store volatile i32 %result, {PTR_I32} inttoptr (i32 {OUT} to {PTR_I32})
+  ret void
+}

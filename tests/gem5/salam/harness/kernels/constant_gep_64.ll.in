@@ -1,0 +1,71 @@
+; Copyright (c) 2026 Akanksha Chaudhari
+; All rights reserved.
+;
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions are
+; met: redistributions of source code must retain the above copyright
+; notice, this list of conditions and the following disclaimer;
+; redistributions in binary form must reproduce the above copyright
+; notice, this list of conditions and the following disclaimer in the
+; documentation and/or other materials provided with the distribution;
+; neither the name of the copyright holders nor the names of its
+; contributors may be used to endorse or promote products derived from
+; this software without specific prior written permission.
+;
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+; LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+; A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+; OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+; Derived from the pointer-width regression. Numeric non-inbounds constant
+; GEPs fold at equal pointer/index widths; only the harness IN is dereferenced.
+
+target datalayout = "e-p:64:64:64:64"
+
+define void @top() {
+  %index = load volatile i32, {PTR_I32} inttoptr (
+      i64 {IN} to {PTR_I32})
+  %input = getelementptr i32, {PTR_I32} getelementptr (
+      i32, {PTR_I32} inttoptr (i64 {IN} to {PTR_I32}), i8 1),
+      i32 %index
+  %payload = load volatile i32, {PTR_I32} %input
+  %negative = ptrtoint {PTR_I8} getelementptr (
+      i8, {PTR_I8} inttoptr (i64 4096 to {PTR_I8}), i8 -1) to i64
+  %c0 = icmp eq i64 %negative, 4095
+  %scaled = ptrtoint {PTR_I32} getelementptr (
+      i32, {PTR_I32} inttoptr (i64 4096 to {PTR_I32}), i8 -1) to i64
+  %c1 = icmp eq i64 %scaled, 4092
+  %nested = ptrtoint {PTR_I8} getelementptr (
+      i8, {PTR_I8} getelementptr (
+          i8, {PTR_I8} inttoptr (i64 4096 to {PTR_I8}), i8 -1),
+      i16 9) to i64
+  %c2 = icmp eq i64 %nested, 4104
+  %wrapped = ptrtoint {PTR_I32} getelementptr (
+      i32, {PTR_I32} inttoptr (i64 -4 to {PTR_I32}), i8 2) to i64
+  %c3 = icmp eq i64 %wrapped, 4
+  %high = ptrtoint {PTR_I8} getelementptr (
+      i8, {PTR_I8} inttoptr (i64 9223372036854779904 to {PTR_I8}),
+      i8 -1) to i64
+  %c4 = icmp eq i64 %high, 9223372036854779903
+  %underflow = ptrtoint {PTR_I8} getelementptr (
+      i8, {PTR_I8} null, i8 -1) to i64
+  %c5 = icmp eq i64 %underflow, 18446744073709551615
+  %ok0 = and i1 %c0, %c1
+  %ok1 = and i1 %ok0, %c2
+  %ok2 = and i1 %ok1, %c3
+  %ok3 = and i1 %ok2, %c4
+  %ok4 = and i1 %ok3, %c5
+  %result = zext i1 %ok4 to i32
+  store volatile i32 %payload, {PTR_I32} inttoptr (
+      i64 {OUT} to {PTR_I32})
+  store volatile i32 %result, {PTR_I32} inttoptr (
+      i64 {OUT1} to {PTR_I32})
+  ret void
+}

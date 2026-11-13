@@ -1,0 +1,24 @@
+---
+functional_unit:
+    parameters:
+        alias: integer_adder
+        stages: 1
+        cycles: 1
+        enum_value: 1
+        datatypes:
+            integer:
+                size: any
+                sign: any
+                APMode: true
+            floating_point:
+                size: none
+                sign: none
+                APMode: false
+            pointer:
+                size: none
+                sign: none
+                APMode: false
+        instructions: # LLVM instruction names
+            - add
+            - sub
+        limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)

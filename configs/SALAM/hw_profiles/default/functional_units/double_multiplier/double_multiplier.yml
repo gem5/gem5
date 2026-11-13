@@ -1,0 +1,22 @@
+---
+functional_unit:
+    parameters:
+        alias: double_multiplier
+        stages: 3
+        cycles: 5
+        enum_value: 9
+        datatypes:
+            integer:
+                size: none
+                sign: none
+                APMode: false
+            floating_point:
+                size: double
+                sign: any
+                APMode: true
+            pointer:
+                size: none
+                sign: none
+                APMode: false
+        instructions: []
+        limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)

@@ -44,6 +44,22 @@ jobs:
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
 
+    salam-llvm14:
+        runs-on: [self-hosted, linux, x64]
+        timeout-minutes: 90
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        steps:
+            - uses: actions/checkout@v7
+            - name: Install SALAM build dependencies
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends llvm-14-dev \
+                      python3-yaml
+            - name: Build SALAM with LLVM 14
+              env:
+                  LLVM_CONFIG: /usr/bin/llvm-config-14
+              run: scons build/ARM/gem5.opt --with-salam -j$(nproc)
+
     sanitizer-compilation-tests:
         # These tests have been disabled because our self-hosted runners lack
         # sufficient memory to run compilation tests with address sanitization
