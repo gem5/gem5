@@ -1,4 +1,5 @@
 # Copyright 2018 Google, Inc.
+# Copyright (c) 2026 Google LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -79,6 +80,9 @@ if env['CONF']['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
 
             env.Append(CPPPATH=test_dir.Dir('include'))
 
+            # Link against the shared gem5 library only so SCons does not
+            # also build the static libgem5_${ENV_LABEL}.a archive.
+            env['LIBSUFFIXES'] = ['${SHLIBSUFFIX}']
             env.Append(LIBPATH=['${BUILDDIR}'], LIBS=['gem5_${ENV_LABEL}'])
             env.AddLocalRPATH('${BUILDDIR}')
 
