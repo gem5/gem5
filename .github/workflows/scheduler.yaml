@@ -94,6 +94,8 @@ jobs:
                   if [ -z "${runs}" ]; then
                       echo "No completed test workflows since ${since}."
                       exit 0
+                  else
+                      echo ${runs}
                   fi
                   run_ids=$(printf '%s\n' "${runs}" | cut -f1 | paste -sd, -)
                   run_attempts=$(printf '%s\n' "${runs}" | cut -f2 | paste -sd, -)
