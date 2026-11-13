@@ -53,6 +53,7 @@
 #include <memory>
 
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/isa.hh"
 #include "arch/riscv/page_size.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/tlb.hh"
@@ -654,11 +655,35 @@ Fault
 Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
                                          int level)
 {
+    ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
+    assert(isa);
+
     // If valid bit is off OR
-    // the page is writable but not readable, throw pf
-    if (!pte.v || (!pte.r && pte.w)) {
+    // the page is writable but not readable OR
+    // the page reserved bit is not zero OR
+    // the page napot is set but without Svnapot,
+    // throw pf
+    if (!pte.v || (!pte.r && pte.w) || pte.reserved != 0 ||
+        (pte.n && !isa->reportsExtension("Svnapot"))) {
         stepWalkFlags.doEndWalk = true;
         return pageFault();
+    }
+
+    // If the page is a NAPOT page, but
+    // the page is not level 0 leaf page OR
+    // the page entry is not a valid NAPOT entry,
+    // throw pf
+    if (pte.n) {
+        if (level != 0 || !(pte.r || pte.x)) {
+            stepWalkFlags.doEndWalk = true;
+            return pageFault();
+        }
+
+        if ((pte.ppn0 & mask(NapotShift)) != 8) {
+            DPRINTF(PageTableWalker, "Invalid SvNAPOT PTE, raising PF\n");
+            stepWalkFlags.doEndWalk = true;
+            return pageFault();
+        }
     }
 
     // If read-bit or exec-bit, then PTE is a leaf
@@ -687,13 +712,6 @@ Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
             return pageFault();
         }
 
-        if (pte.n && (pte.ppn0 & mask(NapotShift)) != 8) {
-            DPRINTF(PageTableWalker,
-                "SVNAPOT PTE has wrong encoding, \
-                    raising PF\n");
-            fault = pageFault();
-        }
-
         // Check if we need to write
         if (!pte.a) {
             pte.a = 1;
@@ -703,6 +721,10 @@ Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
             pte.d = 1;
             stepWalkFlags.doWrite = true;
         }
+    } else if (pte.a || pte.d || pte.u) {
+        // A, D and U are reserved in non-leaf PTEs.
+        stepWalkFlags.doEndWalk = true;
+        return pageFault();
     }
 
     return NoFault;
