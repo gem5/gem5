@@ -67,6 +67,8 @@ class SimpleCore(BaseCPUCore):
 
         assert isa is not None
         requires(isa_required=isa)
+        if cpu_type == CPUTypes.APPLE_VIRT:
+            requires(apple_virt_required=True)
 
         _isa_string_map = {
             ISA.X86: "X86",
@@ -82,6 +84,7 @@ class SimpleCore(BaseCPUCore):
             CPUTypes.O3: "O3CPU",
             CPUTypes.TIMING: "TimingSimpleCPU",
             CPUTypes.KVM: "KvmCPU",
+            CPUTypes.APPLE_VIRT: "AppleVirtCPU",
             CPUTypes.MINOR: "MinorCPU",
         }
 
@@ -98,9 +101,9 @@ class SimpleCore(BaseCPUCore):
                 "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
             )
 
-        if cpu_type == CPUTypes.KVM:
-            # For some reason, the KVM CPU is under "m5.objects" not the
-            # "m5.objects.{ISA}CPU".
+        if cpu_type in (CPUTypes.KVM, CPUTypes.APPLE_VIRT):
+            # For some reason, the KVM and Apple virt CPUs are under
+            # "m5.objects" not the "m5.objects.{ISA}CPU".
             module_str = f"m5.objects"
         else:
             module_str = f"m5.objects.{_isa_string_map[isa]}CPU"
@@ -109,7 +112,13 @@ class SimpleCore(BaseCPUCore):
         # : ArmKvmCPU and ArmV8KvmCPU for 32 bit (Armv7l) and 64 bit (Armv8)
         # respectively.
 
-        if (
+        if cpu_type == CPUTypes.APPLE_VIRT:
+            if isa != ISA.ARM:
+                raise NotImplementedError(
+                    "AppleVirtCPU is currently only supported for ARM ISA"
+                )
+            cpu_class_str = "ArmAppleVirtCPU"
+        elif (
             isa.name == "ARM"
             and cpu_type == CPUTypes.KVM
             and platform.architecture()[0] == "64bit"
@@ -127,7 +136,7 @@ class SimpleCore(BaseCPUCore):
             to_return_cls = getattr(
                 importlib.import_module(module_str), cpu_class_str
             )
-        except ImportError:
+        except (AttributeError, ImportError):
             raise Exception(
                 f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "
                 "ISA. Please ensure you have compiled the correct version of "

@@ -34,6 +34,7 @@ from ..boards.mem_mode import MemMode
 class CPUTypes(Enum):
     ATOMIC = "atomic"
     KVM = "kvm"
+    APPLE_VIRT = "apple_virt"
     O3 = "o3"
     TIMING = "timing"
     MINOR = "minor"
@@ -84,6 +85,7 @@ def get_mem_mode(input: CPUTypes) -> MemMode:
         CPUTypes.O3: MemMode.TIMING,
         CPUTypes.MINOR: MemMode.TIMING,
         CPUTypes.KVM: MemMode.ATOMIC_NONCACHING,
+        CPUTypes.APPLE_VIRT: MemMode.ATOMIC_NONCACHING,
         CPUTypes.ATOMIC: MemMode.ATOMIC,
     }
 
