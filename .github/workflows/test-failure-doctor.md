@@ -112,10 +112,13 @@ You are the Test Failure Doctor, an expert investigative agent that analyzes fai
 "${{ github.event.inputs.failed_workflow_ids }}". `failed_workflow_attempts` is
 a comma-separated list of the workflow run IDs' corresponding attempt numbers.
 
-Split `failed_workflow_ids` into individual run IDs, exclude any run that has
-already been analyzed by the Test Failure Doctor (for example, runs referenced
-by an existing Test Failure Doctor issue or PR comment), and investigate each
-remaining run independently through Phases 1-5.
+Split `failed_workflow_ids` into individual run IDs. For each run, use
+`get_workflow_run` to retrieve its details and retain only runs whose
+conclusion is `failure`, `timed_out`, or `cancelled` and whose `run_attempt` is
+1 or 2. Exclude any eligible run that has already been analyzed by the Test
+Failure Doctor (for example, runs referenced by an existing Test Failure Doctor
+issue or PR comment), and investigate each remaining run independently through
+Phases 1-5.
 Use the selected run's details and ID wherever the report templates below refer
 to the failed workflow; do not rely on `github.event.workflow_run`. If no runs
 remain, call the `noop` tool.
@@ -124,8 +127,9 @@ remain, call the `noop` tool.
 
 0. Print the selected workflow run ID to the Agentic Conversation.
 
-1. **Get Workflow Details**: Use `get_workflow_run` to get full details of
-   the selected run. Use its ID as the `resource_id` in this call.
+1. **Get Workflow Details**: Use the details retrieved while selecting the
+   run. Use the selected run's ID as the `resource_id` if the details need to
+   be retrieved again.
 2. **List Jobs**: Use `list_workflow_jobs` to identify which specific jobs
    failed. Use the selected run's ID as the `resource_id` in this call.
 3. **Quick Assessment**: Determine if this is a new type of failure or a recurring pattern
