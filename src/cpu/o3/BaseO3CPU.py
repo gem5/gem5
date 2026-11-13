@@ -172,6 +172,12 @@ class BaseO3CPU(BaseCPU):
         ),
         "SSIT indexing policy",
     )
+    SSITFoldIndex = Param.Bool(
+        False,
+        "Fold the PC bits above the SSIT set index back into it. Only "
+        "correct with an SSITIndexingPolicy of entry_size 2 and size "
+        "SSITSize * 2; meant for ISAs with 2-byte instruction steps",
+    )
 
     numRobs = Param.Unsigned(1, "Number of Reorder Buffers")
 
