@@ -29,7 +29,7 @@ safe-outputs:
   allowed-github-references: []
   create-issue:
     title-prefix: "misc: "
-    labels: [misc]
+    labels: [misc, agentic-workflows]
     close-older-issues: true
   report-failure-as-issue: false
 
