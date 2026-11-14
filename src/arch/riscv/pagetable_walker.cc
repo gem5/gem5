@@ -200,6 +200,7 @@ Walker::WalkerState::initState(ThreadContext *_tc, BaseMMU::Mode _mode,
     started = false;
     tc = _tc;
     mode = _mode;
+    walkMode = _mode;
     timing = _isTiming;
     // fetch these now in case they change during the walk
     memaccess = walker->tlb->getMemAccessInfo(tc, mode, arch_flags);
@@ -319,11 +320,12 @@ Walker::startWalkWrapper()
 }
 
 Fault
-Walker::WalkerState::walkGStage(Addr guest_paddr, Addr& host_paddr)
+Walker::WalkerState::walkGStage(Addr guest_paddr, Addr &host_paddr,
+                                BaseMMU::Mode accessMode)
 {
     Fault fault = NoFault;
     curstage = XlateStage::GSTAGE;
-
+    walkMode = accessMode;
 
     // reset gresult in case we were called again
     // in a two stage translation
@@ -431,7 +433,7 @@ Walker::WalkerState::walk()
         // we do G-stage translation only
         Addr paddr;
         walkType = WalkType::GstageOnly;
-        fault = walkGStage(vaddr, paddr);
+        fault = walkGStage(vaddr, paddr, mode);
     } else if (memaccess.virt && hgatp.mode != AddrXlateMode::BARE) {
         walkType = WalkType::TwoStage;
         fault = walkTwoStage(vaddr);
@@ -566,7 +568,8 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
         Addr guest_paddr = pte_addr;
         Addr host_paddr;
 
-        fault = walkGStage(guest_paddr, host_paddr);
+        // Implicit VS PTE reads require R, even for HLVX.
+        fault = walkGStage(guest_paddr, host_paddr, BaseMMU::VsPteRead);
         if (fault != NoFault) { return fault; }
         pte_addr = host_paddr;
 
@@ -575,7 +578,7 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
 
         // G-stage done go back to first_stage logic
         curstage = FIRST_STAGE;
-
+        walkMode = mode;
 
         if (functional) {
             walker->port.sendFunctional(read);
@@ -641,7 +644,7 @@ Walker::WalkerState::guestToHostPage(Addr vaddr)
                (vaddr & mask(PageShift));
 
     Addr host_page_address;
-    Fault fault = walkGStage(gpa, host_page_address);
+    Fault fault = walkGStage(gpa, host_page_address, mode);
     if (fault != NoFault) { return fault; }
 
     // Final G-stage done, go back to first_stage logic
@@ -680,7 +683,7 @@ Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
 }
 
 Fault
-Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
+Walker::WalkerState::checkPTEPermissions(PTE &pte, WalkFlags &stepWalkFlags,
                                          int level)
 {
     ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
@@ -719,11 +722,14 @@ Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
         stepWalkFlags.pteIsLeaf = true;
         stepWalkFlags.doEndWalk = true;
 
-        Fault fault = walker->tlb->checkPermissions(tc, memaccess,
-                    entry.vaddr, mode, pte, gresult.vaddr, curstage);
+        MemAccessInfo access = memaccess;
+        access.hlvx = walkMode == mode && memaccess.hlvx;
+        Fault fault = walker->tlb->checkPermissions(
+            tc, access, entry.vaddr, walkMode, pte, gresult.vaddr, curstage);
 
         if (fault != NoFault) {
-            return fault;
+            // Implicit accesses still fault for the original instruction.
+            return pageFault();
         }
 
         // ppn fragments that correspond to unused
@@ -741,11 +747,13 @@ Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
         }
 
         // Check if we need to write
+        bool is_write =
+            walkMode == BaseMMU::Write || walkMode == BaseMMU::VsPteWrite;
         if (!pte.a) {
             pte.a = 1;
             stepWalkFlags.doWrite = true;
         }
-        if (!pte.d && mode == BaseMMU::Write) {
+        if (!pte.d && is_write) {
             pte.d = 1;
             stepWalkFlags.doWrite = true;
         }
