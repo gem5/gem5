@@ -307,19 +307,20 @@ TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
         if (!pte.x) {
             pf = true; DPRINTF(TLB, "HLVX with no exec perm, raising PF\n");
         }
-    }
-    else if (mode == BaseMMU::Read && !pte.r) {
+    } else if (mode == BaseMMU::VsPteRead && !pte.r) {
+        pf = true;
+        DPRINTF(TLB, "G-stage PTE has no read perm, raising PF\n");
+    } else if (mode == BaseMMU::Read && !pte.r) {
         if (mxr && pte.x) {
             DPRINTF(TLBVerbose, "MXR bit on, load from exec page success\n");
         }
         else {
             pf = true; DPRINTF(TLB, "PTE has no read perm, raising PF\n");
         }
-    }
-    else if (mode == BaseMMU::Write && !pte.w) {
+    } else if ((mode == BaseMMU::Write || mode == BaseMMU::VsPteWrite) &&
+               !pte.w) {
         pf = true; DPRINTF(TLB, "PTE has no write perm, raising PF\n");
-    }
-    else if (mode == BaseMMU::Execute && !pte.x) {
+    } else if (mode == BaseMMU::Execute && !pte.x) {
         pf = true; DPRINTF(TLB, "PTE has no exec perm, raising PF\n");
     }
 
@@ -342,15 +343,13 @@ TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode,
                      Addr gvaddr, bool gpf, bool virt)
 {
     ExceptionCode code;
-    if (mode == BaseMMU::Read) {
+    if (mode == BaseMMU::Read || mode == BaseMMU::VsPteRead) {
         code = gpf ? ExceptionCode::LOAD_GUEST_PAGE :
                      ExceptionCode::LOAD_PAGE;
-    }
-    else if (mode == BaseMMU::Write) {
+    } else if (mode == BaseMMU::Write || mode == BaseMMU::VsPteWrite) {
         code = gpf ? ExceptionCode::STORE_GUEST_PAGE :
                      ExceptionCode::STORE_PAGE;
-    }
-    else {
+    } else {
         code = gpf ? ExceptionCode::INST_GUEST_PAGE :
                      ExceptionCode::INST_PAGE;
     }

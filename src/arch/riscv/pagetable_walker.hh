@@ -129,6 +129,8 @@ namespace RiscvISA
             Fault timingFault;
             BaseMMU::Translation * translation;
             BaseMMU::Mode mode;
+            // The current translation may serve an implicit VS PTE access.
+            BaseMMU::Mode walkMode;
             MemAccessInfo memaccess;
             XlateStage curstage;
             SATP satp;
@@ -167,12 +169,13 @@ namespace RiscvISA
 
           private:
             // Mutates pte's access (a) and dirty (d) bits.
-            Fault checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
+            Fault checkPTEPermissions(PTE &pte, WalkFlags &stepWalkFlags,
                                       int level);
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
             Fault stepWalkGStage(PacketPtr &write);
-            Fault walkGStage(Addr guest_paddr, Addr& host_paddr);
+            Fault walkGStage(Addr guest_paddr, Addr &host_paddr,
+                             BaseMMU::Mode accessMode);
             Fault walkOneStage(Addr vaddr);
             Fault walkTwoStage(Addr vaddr);
             void sendPackets();
