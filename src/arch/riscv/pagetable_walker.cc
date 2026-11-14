@@ -777,6 +777,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
     }
 
+    if (fault != NoFault) {
+        fault = accessFault();
+    }
+
     if (fault == NoFault) {
 
         fault = checkPTEPermissions(pte, stepWalkFlags, level);
@@ -788,12 +792,17 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                 // this read will eventually become write
                 // if doWrite is True
 
-                fault = walker->pmp->pmpCheck(read->req,
-                            BaseMMU::Write, pmode, tc, entry.vaddr);
+                fault = walker->pmp->pmpCheck(read->req, BaseMMU::Write,
+                                              RiscvISA::PrivilegeMode::PRV_S,
+                                              tc, entry.vaddr);
 
                 if (fault == NoFault) {
                     fault = walker->pma->check(read->req,
                                 BaseMMU::Write, entry.vaddr);
+                }
+
+                if (fault != NoFault) {
+                    fault = accessFault();
                 }
             }
 
@@ -882,9 +891,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // value back to memory. Use a fresh packet so any responder flags set
         // during the read do not leak into the write request.
         PacketPtr new_write = nullptr;
-        if (!functional && stepWalkFlags.doWrite &&
-            !(walkType == TwoStage && curstage == FIRST_STAGE))
-        {
+        if (!functional && fault == NoFault && stepWalkFlags.doWrite &&
+            !(walkType == TwoStage && curstage == FIRST_STAGE)) {
             new_write = new Packet(oldRead, true, true);
             if (oldRead->hasSharers()) {
                 new_write->setHasSharers();
@@ -948,6 +956,10 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
         fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
     }
 
+    if (fault != NoFault) {
+        fault = accessFault();
+    }
+
     if (fault == NoFault) {
 
         fault = checkPTEPermissions(pte, stepWalkFlags, glevel);
@@ -959,12 +971,17 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
                 // this read will eventually become write
                 // if doWrite is True
 
-                fault = walker->pmp->pmpCheck(read->req,
-                            BaseMMU::Write, pmode, tc, entry.vaddr);
+                fault = walker->pmp->pmpCheck(read->req, BaseMMU::Write,
+                                              RiscvISA::PrivilegeMode::PRV_S,
+                                              tc, entry.vaddr);
 
                 if (fault == NoFault) {
                     fault = walker->pma->check(read->req,
                                 BaseMMU::Write, entry.vaddr);
+                }
+
+                if (fault != NoFault) {
+                    fault = accessFault();
                 }
             }
 
@@ -1058,8 +1075,7 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
         // value back to memory. Use a fresh packet so responder state from
         // the read does not carry into the write request.
         PacketPtr new_write = nullptr;
-        if (!functional && stepWalkFlags.doWrite)
-        {
+        if (!functional && fault == NoFault && stepWalkFlags.doWrite) {
             new_write = new Packet(oldRead, true, true);
             if (oldRead->hasSharers()) {
                 new_write->setHasSharers();
@@ -1299,6 +1315,22 @@ Walker::WalkerState::retry()
 {
     retrying = false;
     sendPackets();
+}
+
+Fault
+Walker::WalkerState::accessFault()
+{
+    // Report the original access type, not the implicit PTE read/write.
+    ExceptionCode code;
+    if (mode == BaseMMU::Read) {
+        code = ExceptionCode::LOAD_ACCESS;
+    } else if (mode == BaseMMU::Write) {
+        code = ExceptionCode::STORE_ACCESS;
+    } else {
+        code = ExceptionCode::INST_ACCESS;
+    }
+    return std::make_shared<AddressFault>(entry.vaddr, code, 0,
+                                          memaccess.virt);
 }
 
 Fault

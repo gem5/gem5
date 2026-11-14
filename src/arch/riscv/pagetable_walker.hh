@@ -177,6 +177,7 @@ namespace RiscvISA
             void sendPackets();
             void endWalk();
             Fault pageFault();
+            Fault accessFault();
             Fault guestToHostPage(Addr vaddr);
             PacketPtr createReqPacket(Addr paddr, MemCmd cmd, size_t bytes);
         };
