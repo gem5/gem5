@@ -586,6 +586,7 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
             walker->port.sendAtomic(read);
         }
 
+        const PTE old_pte = read->getLE<uint64_t>();
         PacketPtr write = NULL;
         fault = stepWalk(write);
 
@@ -600,9 +601,44 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
         state = nextState;
         nextState = Ready;
 
-        // On a functional access (page table lookup), writes should
-        // not happen so this pointer is ignored after stepWalk
-        if (write && !functional) {
+        if (write) {
+            fault = walkGStage(guest_paddr, host_paddr, BaseMMU::VsPteWrite);
+            if (fault != NoFault) {
+                delete write;
+                return fault;
+            }
+
+            curstage = FIRST_STAGE;
+            walkMode = mode;
+            write->req->setPaddr(host_paddr);
+            write->setAddr(host_paddr);
+            fault = walker->pmp->pmpCheck(write->req, BaseMMU::Write, PRV_S,
+                                          tc, entry.vaddr);
+            if (fault == NoFault) {
+                fault = walker->pma->check(write->req, BaseMMU::Write,
+                                           entry.vaddr);
+            }
+
+            if (fault != NoFault) {
+                delete write;
+                return accessFault();
+            }
+
+            // Nested G-stage updates may alias this VS PTE.
+            PacketPtr compare =
+                createReqPacket(host_paddr, MemCmd::ReadReq, sizeof(PTE));
+            walker->port.sendAtomic(compare);
+            const PTE current_pte = compare->getLE<uint64_t>();
+            delete compare;
+            if (current_pte != old_pte) {
+                delete write;
+                pte_addr = guest_paddr;
+                read = createReqPacket(pte_addr, MemCmd::ReadReq, sizeof(PTE));
+                state = Translate;
+                continue;
+            }
+
+            // No event interleaves the comparison and write in Atomic RAM.
             walker->port.sendAtomic(write);
             delete write;
         }
@@ -803,7 +839,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 
         if (fault == NoFault && stepWalkFlags.pteIsLeaf) {
 
-            if (stepWalkFlags.doWrite) {
+            if (stepWalkFlags.doWrite && walkType != TwoStage) {
 
                 // this read will eventually become write
                 // if doWrite is True
@@ -907,8 +943,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // value back to memory. Use a fresh packet so any responder flags set
         // during the read do not leak into the write request.
         PacketPtr new_write = nullptr;
-        if (!functional && fault == NoFault && stepWalkFlags.doWrite &&
-            !(walkType == TwoStage && curstage == FIRST_STAGE)) {
+        if (!functional && fault == NoFault && stepWalkFlags.doWrite) {
             new_write = new Packet(oldRead, true, true);
             if (oldRead->hasSharers()) {
                 new_write->setHasSharers();
