@@ -339,8 +339,8 @@ TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
 }
 
 Fault
-TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode,
-                     Addr gvaddr, bool gpf, bool virt)
+TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode, Addr gvaddr, bool gpf,
+                     bool virt, RegVal tinst)
 {
     ExceptionCode code;
     if (mode == BaseMMU::Read || mode == BaseMMU::VsPteRead) {
@@ -355,7 +355,7 @@ TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode,
     }
 
     if (gpf) { assert(virt); }
-    return std::make_shared<AddressFault>(vaddr, code, gvaddr, virt);
+    return std::make_shared<AddressFault>(vaddr, code, gvaddr, virt, tinst);
 }
 
 Addr
