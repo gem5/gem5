@@ -159,7 +159,8 @@ namespace RiscvISA
                   squashed(false)
             {
             }
-            void initState(ThreadContext * _tc, BaseMMU::Mode _mode,
+            void initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                           Request::ArchFlagsType arch_flags,
                            bool _isTiming = false);
 
             Fault walk();
@@ -210,8 +211,9 @@ namespace RiscvISA
         Fault start(ThreadContext * _tc, BaseMMU::Translation *translation,
                 const RequestPtr &req, BaseMMU::Mode mode,
                 TlbEntry* result_entry = nullptr);
-        Fault startFunctional(ThreadContext * _tc, Addr &addr,
-                unsigned &logBytes, BaseMMU::Mode mode);
+        Fault startFunctional(ThreadContext *_tc, Addr &addr,
+                              unsigned &logBytes, BaseMMU::Mode mode,
+                              Request::ArchFlagsType arch_flags);
         Port &getPort(const std::string &if_name,
                       PortID idx=InvalidPortID) override;
 

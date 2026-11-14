@@ -686,13 +686,16 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
             tc, mode, req->getArchFlags());
         PrivilegeMode pmode = memaccess.priv;
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
-        SATP satp = tc->readMiscReg(MISCREG_SATP);
+        SATP satp = memaccess.virt ? tc->readMiscReg(MISCREG_VSATP)
+                                   : tc->readMiscReg(MISCREG_SATP);
+        SATP hgatp = memaccess.virt ? tc->readMiscReg(MISCREG_HGATP) : 0;
         if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
-            satp.mode != AddrXlateMode::BARE) {
+            (satp.mode != AddrXlateMode::BARE ||
+             hgatp.mode != AddrXlateMode::BARE)) {
             Walker *walker = mmu->getDataWalker();
             unsigned logBytes;
-            Fault fault = walker->startFunctional(
-                    tc, paddr, logBytes, mode);
+            Fault fault = walker->startFunctional(tc, paddr, logBytes, mode,
+                                                  req->getArchFlags());
             if (fault != NoFault)
                 return fault;
 
