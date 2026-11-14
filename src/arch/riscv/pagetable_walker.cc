@@ -372,6 +372,7 @@ Walker::WalkerState::walkGStage(Addr guest_paddr, Addr& host_paddr)
             nextgState = Ready;
             if (write) {
                 walker->port.sendAtomic(write);
+                delete write;
             }
 
             // Publish only the final translation after any Atomic A/D write.
@@ -439,6 +440,12 @@ Walker::WalkerState::walk()
         fault = walkOneStage(vaddr);
     }
 
+    if (!timing) {
+        endWalk();
+        state = Ready;
+        nextState = Waiting;
+    }
+
     return fault;
 }
 
@@ -496,6 +503,7 @@ Walker::WalkerState::walkOneStage(Addr vaddr)
         // not happen so this pointer is ignored after stepWalk
         if (write && !functional) {
             walker->port.sendAtomic(write);
+            delete write;
         }
 
         // A successful walk with no pending read has reached a leaf.
@@ -507,8 +515,6 @@ Walker::WalkerState::walkOneStage(Addr vaddr)
         }
     } while (read);
 
-    state = Ready;
-    nextState = Waiting;
     return fault;
 }
 
@@ -592,6 +598,7 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
         // not happen so this pointer is ignored after stepWalk
         if (write && !functional) {
             walker->port.sendAtomic(write);
+            delete write;
         }
     } while (read);
 
@@ -617,8 +624,6 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
         walker->tlb->insert(vpn, entry);
     }
 
-    state = Ready;
-    nextState = Waiting;
     return NoFault;
 }
 

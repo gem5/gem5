@@ -145,7 +145,7 @@ namespace RiscvISA
                         const RequestPtr &_req, bool _isFunctional = false) :
                 walker(_walker), req(_req), state(Ready),
                 nextState(Ready), level(0), glevel(0), inflight(0),
-                translation(_translation),
+                read(nullptr), translation(_translation),
                 functional(_isFunctional), timing(false),
                 retrying(false), started(false), squashed(false)
             {
