@@ -79,7 +79,7 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
     // outstanding requests, see if this request can be coalesced with
     // another one (i.e. either coalesce or start walk)
     WalkerState * newState = new WalkerState(this, _translation, _req);
-    newState->initState(_tc, _mode, sys->isTimingMode());
+    newState->initState(_tc, _mode, _req->getArchFlags(), sys->isTimingMode());
     if (currStates.size()) {
         assert(newState->isTiming());
         DPRINTF(PageTableWalker, "Walks in progress: %d\n", currStates.size());
@@ -107,10 +107,10 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
 }
 
 Fault
-Walker::startFunctional(ThreadContext * _tc, Addr &addr, unsigned &logBytes,
-              BaseMMU::Mode _mode)
+Walker::startFunctional(ThreadContext *_tc, Addr &addr, unsigned &logBytes,
+                        BaseMMU::Mode _mode, Request::ArchFlagsType arch_flags)
 {
-    funcState.initState(_tc, _mode);
+    funcState.initState(_tc, _mode, arch_flags);
     return funcState.startFunctional(addr, logBytes);
 }
 
@@ -192,8 +192,9 @@ Walker::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-Walker::WalkerState::initState(ThreadContext * _tc,
-        BaseMMU::Mode _mode, bool _isTiming)
+Walker::WalkerState::initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                               Request::ArchFlagsType arch_flags,
+                               bool _isTiming)
 {
     assert(state == Ready);
     started = false;
@@ -201,9 +202,7 @@ Walker::WalkerState::initState(ThreadContext * _tc,
     mode = _mode;
     timing = _isTiming;
     // fetch these now in case they change during the walk
-    memaccess = functional ?
-        walker->tlb->getMemAccessInfo(tc, mode, (Request::ArchFlagsType)0):
-        walker->tlb->getMemAccessInfo(tc, mode, req->getArchFlags());
+    memaccess = walker->tlb->getMemAccessInfo(tc, mode, arch_flags);
     pmode = memaccess.priv;
     status = tc->readMiscReg(MISCREG_STATUS);
     MISA misa = tc->readMiscReg(MISCREG_ISA);
@@ -364,7 +363,11 @@ Walker::WalkerState::walkGStage(Addr guest_paddr, Addr& host_paddr)
     }
     else {
         do {
-            walker->port.sendAtomic(read);
+            if (functional) {
+                walker->port.sendFunctional(read);
+            } else {
+                walker->port.sendAtomic(read);
+            }
             PacketPtr write = NULL;
             fault = stepWalkGStage(write);
             assert(fault == NoFault || read == NULL);

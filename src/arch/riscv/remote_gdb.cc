@@ -228,8 +228,8 @@ RemoteGDB::acc(Addr va, size_t len)
         if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
             satp.mode != AddrXlateMode::BARE) {
             Walker *walker = mmu->getDataWalker();
-            Fault fault = walker->startFunctional(
-                context(), paddr, logBytes, BaseMMU::Read);
+            Fault fault = walker->startFunctional(context(), paddr, logBytes,
+                                                  BaseMMU::Read, 0);
             if (fault != NoFault)
                 return false;
         }
