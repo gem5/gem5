@@ -161,25 +161,26 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // H-extension extra handling for invoke
         if (misa.rvh) {
             if (prv == PRV_M) {
+                // RNMI preserves the interrupted trap's MTINST and MTVAL2.
+                if (!is_rnmi) {
+                    tc->setMiscReg(MISCREG_MTINST, trap_inst());
+                    tc->setMiscReg(MISCREG_MTVAL2,
+                                   isGuestPageFault() ? trap_value2() : 0);
+                }
                 status.mpv = pv;
                 status.gva = mustSetGva();
-                // Paragraph 8.5.2 RISCV Privileged Spec 20211203
-                if (isGuestPageFault()) {
-                    tc->setMiscReg(MISCREG_MTVAL2, trap_value() >> 2);
-                }
                 // Going to M-mode for handling, disable V if it's on
                 if (virtualizationEnabled(tc)) { resetV(tc); }
             } else if (prv == PRV_S &&
                     !virtualizationEnabled(tc)) { // essentially HS-mode
+                tc->setMiscReg(MISCREG_HTINST, trap_inst());
+                tc->setMiscReg(MISCREG_HTVAL,
+                               isGuestPageFault() ? trap_value2() : 0);
                 HSTATUS hstatus = tc->readMiscReg(MISCREG_HSTATUS);
                 hstatus.spv = pv;
+                hstatus.gva = mustSetGva();
                 if (pv) { // if V-bit was on
                     hstatus.spvp = status.spp;
-                    hstatus.gva = mustSetGva();
-                    // Paragraph 8.5.2 RISCV Privileged Spec 20211203
-                    if (isGuestPageFault()) {
-                        tc->setMiscReg(MISCREG_HTVAL, trap_value2());
-                    }
                 }
                 // Write changes to hstatus
                 tc->setMiscReg(MISCREG_HSTATUS, hstatus);

@@ -1355,8 +1355,18 @@ Walker::WalkerState::accessFault()
 Fault
 Walker::WalkerState::pageFault()
 {
-    return walker->tlb->createPagefault(entry.vaddr, mode,
-                        gresult.vaddr, curstage == GSTAGE, memaccess.virt);
+    // RV64 pseudoinstruction for an implicit VS page-table access.
+    RegVal tinst = 0;
+    if (curstage == GSTAGE) {
+        if (walkMode == BaseMMU::VsPteRead) {
+            tinst = 0x3000;
+        } else if (walkMode == BaseMMU::VsPteWrite) {
+            tinst = 0x3020;
+        }
+    }
+    return walker->tlb->createPagefault(entry.vaddr, mode, gresult.vaddr,
+                                        curstage == GSTAGE, memaccess.virt,
+                                        tinst);
 }
 
 Walker::PagewalkerStats::PagewalkerStats(statistics::Group *parent)
