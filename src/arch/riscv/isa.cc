@@ -934,9 +934,11 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 SATP new_val = val;
                 if (new_val.mode != AddrXlateMode::BARE &&
                     new_val.mode != AddrXlateMode::SV39 &&
-                    new_val.mode != AddrXlateMode::SV48 &&
-                    new_val.mode != AddrXlateMode::SV57) {
-                    new_val.mode = cur_val.mode;
+                    (new_val.mode != AddrXlateMode::SV48 ||
+                     !reportsExtension("Sv48")) &&
+                    (new_val.mode != AddrXlateMode::SV57 ||
+                     !reportsExtension("Sv57"))) {
+                    new_val = cur_val;
                 }
 
                 // TLB flush can be elided here
@@ -958,8 +960,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 SATP new_val = val;
                 if (new_val.mode != AddrXlateMode::BARE &&
                     new_val.mode != AddrXlateMode::SV39 &&
-                    new_val.mode != AddrXlateMode::SV48 &&
-                    new_val.mode != AddrXlateMode::SV57) {
+                    (new_val.mode != AddrXlateMode::SV48 ||
+                     !reportsExtension("Sv48")) &&
+                    (new_val.mode != AddrXlateMode::SV57 ||
+                     !reportsExtension("Sv57"))) {
+                    if (virtualizationEnabled()) {
+                        break;
+                    }
                     new_val.mode = cur_val.mode;
                 }
 
@@ -1013,8 +1020,10 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
                 if (new_val.mode != AddrXlateMode::BARE &&
                     new_val.mode != AddrXlateMode::SV39 &&
-                    new_val.mode != AddrXlateMode::SV48 &&
-                    new_val.mode != AddrXlateMode::SV57) {
+                    (new_val.mode != AddrXlateMode::SV48 ||
+                     !reportsExtension("Sv48")) &&
+                    (new_val.mode != AddrXlateMode::SV57 ||
+                     !reportsExtension("Sv57"))) {
                     new_val.mode = cur_val.mode;
                 }
 
