@@ -248,13 +248,16 @@ Walker::startWalkWrapper()
     TlbEntry *e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
                               true);
     Fault fault = NoFault;
+    bool needs_dirty = false;
     if (e) {
-       fault = tlb->checkPermissions(currState->tc, currState->memaccess,
-                            e->vaddr, currState->mode, e->pte);
+        fault = tlb->checkPermissions(currState->tc, currState->memaccess,
+                                      vaddr, currState->mode, e->pte);
+        needs_dirty = currState->mode == BaseMMU::Write && !e->pte.d;
     }
 
     while ((num_squashed < numSquashable) && currState &&
-           (currState->translation->squashed() || (e && fault == NoFault))) {
+           (currState->translation->squashed() ||
+            (e && (fault != NoFault || !needs_dirty)))) {
         currStates.pop_front();
         num_squashed++;
 
@@ -289,15 +292,17 @@ Walker::startWalkWrapper()
             e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
                             true);
             if (e) {
-                fault = tlb->checkPermissions(currState->tc,
-                    currState->memaccess, e->vaddr, currState->mode, e->pte);
+                fault =
+                    tlb->checkPermissions(currState->tc, currState->memaccess,
+                                          vaddr, currState->mode, e->pte);
+                needs_dirty = currState->mode == BaseMMU::Write && !e->pte.d;
             }
         } else {
             currState = NULL;
         }
     }
     if (currState && !currState->wasStarted()) {
-        if (!e || fault != NoFault) {
+        if (!e || (fault == NoFault && needs_dirty)) {
             Fault timingFault = currState->walk();
 
             // Catch all walker states that have early fault!
@@ -312,8 +317,7 @@ Walker::startWalkWrapper()
                     timingFault = currState->walk();
                 }
             }
-        }
-        else {
+        } else {
             schedule(startWalkWrapperEvent, clockEdge(Cycles(1)));
         }
     }
@@ -887,12 +891,6 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         entry.vaddr &= ~mask(entry.logBytes);
                     }
 
-                    // put it non-writable into the TLB to detect
-                    // writes and redo the page table walk in order
-                    // to update the dirty flag
-                    if (!pte.d && mode != BaseMMU::Write)
-                        entry.pte.w = 0;
-
                     // Don't do TLB insert here when ending TwoStage.
                     // An additional GStage is done in walkTwoStage()
                     // and then we insert.
@@ -1061,12 +1059,6 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
                             : PageShift + (glevel * getLevelBits(hgatp.mode));
 
                     entry.vaddr &= ~mask(entry.logBytes);
-
-                    // put it non-writable into the TLB to detect
-                    // writes and redo the page table walk in order
-                    // to update the dirty flag.
-                    if (!pte.d && mode != BaseMMU::Write)
-                        entry.pte.w = 0;
 
                     // Also don't do TLB inserts on special_access
                     if (!memaccess.bypassTLB())
