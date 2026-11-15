@@ -208,6 +208,14 @@ Walker::WalkerState::initState(ThreadContext *_tc, BaseMMU::Mode _mode,
     status = tc->readMiscReg(MISCREG_STATUS);
     MISA misa = tc->readMiscReg(MISCREG_ISA);
 
+    ISA *isa = static_cast<ISA *>(tc->getIsaPtr());
+    adUpdate = !isa->reportsExtension("Svade") ||
+               (tc->readMiscReg(MISCREG_MENVCFG) & ENVCFG_ADUE_MASK);
+    vsAdUpdate = adUpdate;
+    if (misa.rvh && memaccess.virt && isa->reportsExtension("Svade")) {
+        vsAdUpdate = tc->readMiscReg(MISCREG_HENVCFG) & ENVCFG_ADUE_MASK;
+    }
+
     // Find SATP
     // If no rvh or effective V = 0, base is SATP
     // otherwise base is VSATP (effective V=1)
@@ -789,6 +797,12 @@ Walker::WalkerState::checkPTEPermissions(PTE &pte, WalkFlags &stepWalkFlags,
         // Check if we need to write
         bool is_write =
             walkMode == BaseMMU::Write || walkMode == BaseMMU::VsPteWrite;
+        bool ad_update =
+            curstage == FIRST_STAGE && memaccess.virt ? vsAdUpdate : adUpdate;
+        if (!ad_update && (!pte.a || (!pte.d && is_write))) {
+            return pageFault();
+        }
+
         if (!pte.a) {
             pte.a = 1;
             stepWalkFlags.doWrite = true;

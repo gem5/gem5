@@ -136,6 +136,8 @@ namespace RiscvISA
             SATP satp;
             SATP hgatp;
             STATUS status;
+            bool adUpdate;
+            bool vsAdUpdate;
             PrivilegeMode pmode;
             bool functional;
             bool timing;
