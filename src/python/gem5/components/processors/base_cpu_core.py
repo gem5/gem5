@@ -120,6 +120,17 @@ class BaseCPUCore(AbstractCore):
             # can't be a KVM core.
             return False
 
+    @overrides(AbstractCore)
+    def is_apple_virt_core(self) -> bool:
+        try:
+            from m5.objects import BaseAppleVirtCPU
+
+            return isinstance(self.core, BaseAppleVirtCPU)
+        except ImportError:
+            # If BaseAppleVirtCPU is not importable, Apple virtualization was
+            # not compiled into this binary.
+            return False
+
     def get_isa(self) -> ISA:
         return self._isa
 
@@ -137,6 +148,11 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def set_workload(self, process: Process) -> None:
+        if self.is_apple_virt_core():
+            raise NotImplementedError(
+                "AppleVirtCPU only supports full-system workloads"
+            )
+
         self.core.workload = process
 
     @overrides(AbstractCore)
