@@ -29,7 +29,7 @@ This is a tool to manage the resources JSON file and the MongoDB database. This 
 
 ## Setup
 
-First, install the requirements:
+Use Python 3.11 or newer and install the requirements in a virtual environment:
 
 ```bash
 pip3 install -r requirements.txt

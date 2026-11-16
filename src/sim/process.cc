@@ -169,17 +169,21 @@ void
 Process::clone(ThreadContext *otc, ThreadContext *ntc,
                Process *np, RegVal flags)
 {
+// The guest's clone flags are Linux ABI values and are compared against
+// these constants regardless of the host. Hosts that don't define them
+// (e.g. macOS) must fall back to the Linux values, not 0, or every clone
+// would be treated like fork().
 #ifndef CLONE_VM
-#define CLONE_VM 0
+#define CLONE_VM 0x00000100
 #endif
 #ifndef CLONE_FILES
-#define CLONE_FILES 0
+#define CLONE_FILES 0x00000400
 #endif
 #ifndef CLONE_THREAD
-#define CLONE_THREAD 0
+#define CLONE_THREAD 0x00010000
 #endif
 #ifndef CLONE_VFORK
-#define CLONE_VFORK 0
+#define CLONE_VFORK 0x00004000
 #endif
     if (CLONE_VM & flags) {
         /**

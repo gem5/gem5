@@ -94,3 +94,16 @@ or start discussions. To join the mailing list please visit
 We hope you enjoy using gem5. When appropriate we advise sharing your
 contributions to the project. <https://www.gem5.org/contributing> can help you
 get started. Additional information can be found in the CONTRIBUTING.md file.
+
+## Funding
+
+gem5 acknowledges past and ongoing funding from the National Science
+Foundation (NSF) under awards
+[OAC-2311888][nsf-oac] and [TIP-2533192][nsf-tip], and from the U.S. Department
+of Energy (DOE) under awards [DE-SC0024502][doe-24502] and
+[DE-SC0024206][doe-24206].
+
+[nsf-oac]: https://www.nsf.gov/awardsearch/showAward?AWD_ID=2311888
+[nsf-tip]: https://www.nsf.gov/awardsearch/show-award/?AWD_ID=2533192
+[doe-24502]: https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?PRoleId=10&rtc=24&rv=cc328a17-8db6-42af-aa73-8e96b6ad93a2
+[doe-24206]: https://pamspublic.science.energy.gov/webpamsexternal/interface/awards/awardsearchexternal.aspx

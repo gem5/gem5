@@ -1,9 +1,6 @@
 # Version 26.0
 
-gem5 Version 26.0 is the first major release of 2026. This release consists
-of 943 commits contributed through 437 merged GitHub pull requests from 89
-unique human pull-request authors.
-<!-- Inventory: 7f06b2fdbe..8c517dbaa7, including merge commits. -->
+gem5 Version 26.0 is the first major release of 2026.
 
 ## Major Highlights
 
@@ -118,6 +115,31 @@ unique human pull-request authors.
   reducing large-system instantiation time
   ([#3290](https://github.com/gem5/gem5/pull/3290)).
 
+* **Processor clock frequency is now required.**
+  Pass `clk_freq` explicitly when constructing `SimpleProcessor`,
+  `SimpleSwitchableProcessor`, or a custom processor using
+  `BaseCPUProcessor` or `AbstractProcessor`. Existing configurations that
+  omit it raise `TypeError`. Setting the board's `clk_freq` alone no longer
+  supplies the processor clock; pass the intended CPU frequency to the
+  processor as well
+  ([#3365](https://github.com/gem5/gem5/pull/3365),
+  [#3388](https://github.com/gem5/gem5/pull/3388)).
+
+* **SimpleMemory latency variation uses explicit distributions.**
+  The `latency_var` parameter has been removed. To preserve an old nonzero
+  value, use `latency_dist="Uniform"` and set `latency_dist_param` to that
+  value. This adds a uniform delay between zero and `latency_dist_param`
+  to `latency`. For fixed latency, retain the default
+  `latency_dist="None"` and zero `latency_dist_param`
+  ([#3088](https://github.com/gem5/gem5/pull/3088)).
+
+* **C++ ports no longer retain their owning SimObject.**
+  `RequestPort` and `ResponsePort` no longer provide constructors taking a
+  `SimObject*` or a protected `owner` member. Out-of-tree models must use
+  the constructor taking a port name and optional port ID, and store any
+  required owner reference in their own derived class
+  ([#3277](https://github.com/gem5/gem5/pull/3277)).
+
 * **Address-range construction has been generalized.**
   `AddrRange` mapping policy is now explicit and can represent masked or
   modulo interleaving and sparse ranges. Existing contiguous and masked
@@ -169,10 +191,13 @@ unique human pull-request authors.
   Arm, x86, and RISC-V SE-mode handling was expanded so more contemporary
   binaries run without configuration-specific workarounds. Arm also gains
   Linux syscall 403 (`clock_gettime`), and `dup2` and `wait4` now more closely
-  follow Linux file-descriptor and wait-status behavior
+  follow Linux file-descriptor and wait-status behavior. `clock_gettime`
+  also accepts process and thread CPU-time clocks, approximating them with
+  elapsed simulated time
   ([#2998](https://github.com/gem5/gem5/pull/2998),
   [#2960](https://github.com/gem5/gem5/pull/2960),
-  [#3343](https://github.com/gem5/gem5/pull/3343)).
+  [#3343](https://github.com/gem5/gem5/pull/3343),
+  [#3576](https://github.com/gem5/gem5/pull/3576)).
 
 * **SPARC pthreads and safer SE memory deallocation.**
   SPARC SE mode gains corrected clone, TLS, thread-ID, and futex handling,
@@ -217,9 +242,9 @@ unique human pull-request authors.
   ([#2561](https://github.com/gem5/gem5/pull/2561)).
 
 * **Independent processor and cache clock domains.**
-  Standard-library processors can set their CPU frequency independently, and
-  private cache hierarchies now use the processor clock domain. The
-  `SimpleSwitchableProcessor` also accepts a `clk_freq` setting
+  Standard-library processors specify their CPU frequency through the
+  required `clk_freq` argument, and private cache hierarchies now use the
+  processor clock domain. This also applies to `SimpleSwitchableProcessor`
   ([#3365](https://github.com/gem5/gem5/pull/3365),
   [#3376](https://github.com/gem5/gem5/pull/3376),
   [#3388](https://github.com/gem5/gem5/pull/3388)).
@@ -274,10 +299,19 @@ unique human pull-request authors.
 * **O3 prefetch retirement and squash fixes.**
   Non-HTM software prefetches can retire once their memory request is sent,
   without waiting for load writeback. HTM prefetches retain response-based
-  completion to report transaction aborts. Squashing also handles
-  commit-released non-speculative instructions without the former assertion
+  completion to report transaction aborts. Split prefetches with a partial
+  translation fault complete when their memory response arrives, preventing
+  an AArch64 prefetch spanning a page boundary from stalling retirement.
+  Squashing also handles commit-released non-speculative instructions
+  without the former assertion
   ([#3148](https://github.com/gem5/gem5/pull/3148),
-  [#3487](https://github.com/gem5/gem5/pull/3487)).
+  [#3487](https://github.com/gem5/gem5/pull/3487),
+  [#3606](https://github.com/gem5/gem5/pull/3606)).
+
+* **TimeBuffer bounds checks remain active in fast builds.**
+  Access outside the configured past/future window now triggers a panic
+  even when assertions are disabled, preventing unchecked buffer accesses
+  ([#3574](https://github.com/gem5/gem5/pull/3574)).
 
 ## Arm ISA Changes and Improvements
 
@@ -329,6 +363,13 @@ unique human pull-request authors.
   ([#3544](https://github.com/gem5/gem5/pull/3544),
   [#3457](https://github.com/gem5/gem5/pull/3457)).
 
+* **Full-system defaults and SE signal restoration.**
+  `ArmDefaultRelease` retains the full-system extensions needed for Linux
+  boot, and `archSigreturn` restores condition codes from the guest signal
+  context correctly
+  ([#3591](https://github.com/gem5/gem5/pull/3591),
+  [#3575](https://github.com/gem5/gem5/pull/3575)).
+
 ## RISC-V ISA Changes and Improvements
 
 * **KVM acceleration.**
@@ -379,6 +420,18 @@ unique human pull-request authors.
   [#3001](https://github.com/gem5/gem5/pull/3001),
   [#3304](https://github.com/gem5/gem5/pull/3304),
   [#3240](https://github.com/gem5/gem5/pull/3240)).
+
+* **Additional vector and translation correctness.**
+  Zero-length vector operations check vector availability and legality
+  before completing. Signed RVV arithmetic and sticky `VXSAT` updates are
+  corrected, and finite single-precision `fminm.s`/`fmaxm.s` results are
+  NaN-boxed. Virtual accesses with paged VS-stage translation and
+  `hgatp.MODE` Bare use a single-stage walk and retain VS-stage permission
+  checks on TLB hits
+  ([#3565](https://github.com/gem5/gem5/pull/3565),
+  [#3456](https://github.com/gem5/gem5/pull/3456),
+  [#3605](https://github.com/gem5/gem5/pull/3605),
+  [#3434](https://github.com/gem5/gem5/pull/3434)).
 
 ## x86 ISA Changes and Improvements
 
@@ -542,6 +595,15 @@ unique human pull-request authors.
   ([#3546](https://github.com/gem5/gem5/pull/3546),
   [#3253](https://github.com/gem5/gem5/pull/3253)).
 
+* **Correct Ruby L1 set indexing.**
+  The standard-library MESI_Two_Level and MI_example L1 caches now start
+  their set index at `log2(cache_line_size)`, rather than using the byte
+  count as a bit position. For 64-byte lines, this selects bit 6 instead of
+  bit 64, correcting cache behavior and resulting performance statistics.
+  Non-power-of-two line sizes are rejected, and traffic-generator reference
+  statistics have been updated for the corrected indexing
+  ([#3638](https://github.com/gem5/gem5/pull/3638)).
+
 ## Build, Tooling, and Testing
 
 * **Updated compiler and host support.**
@@ -577,6 +639,27 @@ unique human pull-request authors.
   `pyproject.toml`, and local hooks and CI use a pinned clang-format version
   ([#3518](https://github.com/gem5/gem5/pull/3518),
   [#3516](https://github.com/gem5/gem5/pull/3516)).
+
+* **Python interpreter and SimObject fixes.**
+  Python 3.15 builds and embedded-interpreter shutdown are supported by
+  treating Python headers as system headers and keeping module wrappers
+  within the interpreter's lifetime. Generated parameter code imports
+  `SimObject` explicitly, and `find_all()` handles empty SimObject vectors
+  ([#3595](https://github.com/gem5/gem5/pull/3595),
+  [#3569](https://github.com/gem5/gem5/pull/3569),
+  [#3524](https://github.com/gem5/gem5/pull/3524)).
+
+* **Configuration and integration fixes.**
+  HMC memory interfaces import their DDR3 base correctly, SCMI rejects
+  overlong agent names during construction, and SystemC vector elements
+  appended with `emplace_back` retain the vector parent's hierarchy scope.
+  Orchestrator requests with missing debug-flag arguments return an error
+  response, and resource PyUnit fixtures recognize gem5 v26.0
+  ([#3561](https://github.com/gem5/gem5/pull/3561),
+  [#3562](https://github.com/gem5/gem5/pull/3562),
+  [#3564](https://github.com/gem5/gem5/pull/3564),
+  [#3259](https://github.com/gem5/gem5/pull/3259),
+  [#3637](https://github.com/gem5/gem5/pull/3637)).
 
 * **Current Ubuntu LTS dependency images.**
   The all-dependencies images cover Ubuntu 22.04, 24.04, and 26.04 and prefer

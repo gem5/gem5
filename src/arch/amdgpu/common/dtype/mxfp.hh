@@ -146,6 +146,11 @@ template <typename FMT> class mxfp
             return;
         }
 
+        // Infinity and NaN stay the same when scaled.
+        if (std::isinf(in) || std::isnan(in)) {
+            return;
+        }
+
         if (exp + scale_val > max_exp<FMT>()) {
             in.exp = max_exp<FMT>();
         } else if (exp + scale_val < min_exp<FMT>()) {
@@ -179,6 +184,11 @@ template <typename FMT> class mxfp
 
         // Our value is zero, scaling by anything remains zero.
         if (exp == 0 && in.mant == 0) {
+            return;
+        }
+
+        // Infinity and NaN stay the same when scaled.
+        if (std::isinf(in) || std::isnan(in)) {
             return;
         }
 

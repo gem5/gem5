@@ -299,7 +299,11 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(lqAvgOccupancy, statistics::units::Ratio::get(),
                "Average LQ Occupancy (UsedSlots/TotalSlots)"),
       ADD_STAT(sqAvgOccupancy, statistics::units::Ratio::get(),
-               "Average SQ Occupancy (UsedSlots/TotalSlots)")
+               "Average SQ Occupancy (UsedSlots/TotalSlots)"),
+      ADD_STAT(vecMemPackAccesses, statistics::units::Count::get(),
+               "Unit-stride vector accesses with pack width enabled"),
+      ADD_STAT(vecMemPackFlows, statistics::units::Count::get(),
+               "LSQ fragments for those accesses")
 {
     loadToUse
         .init(0, 299, 10)
@@ -308,6 +312,13 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
     lqAvgOccupancy.precision(2);
 
     sqAvgOccupancy.precision(2);
+}
+
+void
+LSQUnit::recordVecMemPack(uint64_t flows)
+{
+    stats.vecMemPackAccesses++;
+    stats.vecMemPackFlows += flows;
 }
 
 void
@@ -1390,6 +1401,12 @@ unsigned int
 LSQUnit::cacheLineSize()
 {
     return cpu->cacheLineSize();
+}
+
+unsigned
+LSQUnit::splitGrain(const DynInstPtr &inst)
+{
+    return lsq->splitGrain(inst);
 }
 
 Fault

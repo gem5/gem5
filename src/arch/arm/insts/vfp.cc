@@ -1141,7 +1141,7 @@ FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
         fesetround(FeRoundZero);
         __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (op3)
                                  :  "m" (op1),  "m" (op2),  "m" (op3));
-        fpType temp = func(op1, op2, op2);
+        fpType temp = func(op1, op2, op3);
         __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
         if (flush && flushToZero(temp)) {
             dest = temp;

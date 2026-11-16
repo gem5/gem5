@@ -254,6 +254,16 @@ class OutputDirectory
     void close(OutputStream *file);
 
     /**
+     * Push all buffered data of every file in this directory and its
+     * subdirectories to disk. Compressed (.gz) files are finished, i.e.
+     * their pending deflate data and the gzip trailer are written and the
+     * file is closed; nothing can be written to them afterwards. Meant for
+     * the abort and segfault handlers, so that a debug trace still ends at
+     * the crash instead of losing its last compressed blocks.
+     */
+    void flushAll();
+
+    /**
      * Finds stream associated with an open file or stdout/stderr.
      *
      * @param name of file

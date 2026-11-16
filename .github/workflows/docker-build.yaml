@@ -15,15 +15,15 @@ jobs:
     obtain-targets:
         runs-on: ubuntu-24.04
         outputs:
-            targets: ${{ steps.generate.outputs.targets }}
+            matrix: ${{ steps.generate.outputs.matrix }}
 
         steps:
             - name: Checkout
               uses: actions/checkout@v7
 
-            - name: List targets
+            - name: Generate build matrix
               id: generate
-              uses: docker/bake-action/subaction/list-targets@v6
+              uses: docker/bake-action/subaction/matrix@v7
               with:
                   target: default
                   workdir: util/dockerfiles
@@ -67,7 +67,7 @@ jobs:
             # Limit the number of parallel jobs to not overwhelm the runners
             max-parallel: 4
             matrix:
-                target: ${{ fromJSON(needs.obtain-targets.outputs.targets) }}
+                include: ${{ fromJSON(needs.obtain-targets.outputs.matrix) }}
 
         permissions:
             packages: write

@@ -22,11 +22,13 @@ jobs:
         runs-on: ubuntu-24.04
         steps:
             - uses: actions/checkout@v7
-            - uses: actions/setup-python@v6
+            - uses: actions/setup-python@v7
               with:
                   python-version: '3.10'
-            - uses: pre-commit/action@v3.0.1
+            - uses: tox-dev/action-pre-commit-uv@v1.1.2
               env:
+                  # Keep pre-commit's normal hook environment installation.
+                  DISABLE_PRE_COMMIT_UV_PATCH: '1'
                   SKIP: gem5-git-clang-format
 
 

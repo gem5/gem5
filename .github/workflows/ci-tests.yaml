@@ -18,11 +18,13 @@ jobs:
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v7
-            - uses: actions/setup-python@v6
+            - uses: actions/setup-python@v7
               with:
                   python-version: '3.10'
-            - uses: pre-commit/action@v3.0.1
+            - uses: tox-dev/action-pre-commit-uv@v1.1.2
               env:
+                  # Keep pre-commit's normal hook environment installation.
+                  DISABLE_PRE_COMMIT_UV_PATCH: '1'
                   # Formatting runs in the separate clang-format-check job
                   # so its failures remain advisory.
                   SKIP: gem5-git-clang-format
@@ -40,7 +42,7 @@ jobs:
                   fetch-depth: 0  # Need full history to get the merge base
 
             - name: Setup Python
-              uses: actions/setup-python@v6
+              uses: actions/setup-python@v7
               with:
                   python-version: '3.10'
 
@@ -55,10 +57,14 @@ jobs:
                   echo "base_commit=$MERGE_BASE" >> $GITHUB_OUTPUT
 
             - name: Run clang-format check
-              uses: pre-commit/action@v3.0.1
+              uses: tox-dev/action-pre-commit-uv@v1.1.2
               with:
-                  extra_args: gem5-git-clang-format --all-files
+                  extra_args: >-
+                      gem5-git-clang-format
+                      --from-ref ${{ steps.get-base-commit.outputs.base_commit }}
+                      --to-ref HEAD
               env:
+                  DISABLE_PRE_COMMIT_UV_PATCH: '1'
                   GEM5_CI_PR_BASE_COMMIT: ${{ steps.get-base-commit.outputs.base_commit }}
 
     get-date:
