@@ -202,6 +202,29 @@ jobs:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: systemc-test,overall-length-long
 
+  # Get code coverage for systemc-regression-tests (from the Daily Tests).
+    systemc-regression-tests:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 180
+
+        steps:
+            - uses: actions/checkout@v7
+            - name: Build and run SystemC regression tests
+              run: |
+                  scons defconfig build/NULL build_opts/NULL --ignore-style
+                  python3 src/systemc/tests/verify.py build/NULL -j $(nproc) \
+                      --update-json \
+                      --filter-file src/systemc/tests/working.filt \
+                      --phase compile --duplicate-sources --ignore-style --gcov \
+                      --phase execute \
+                      --phase verify
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: systemc-regression-tests,overall-length-long
+
 # Get code coverage for dramsys-tests (from the Daily Tests).
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
