@@ -231,6 +231,10 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
          *  instruction causing the prediction */
         thread.predictionSeqNum++;
         branch = new_branch;
+        // Younger ops are not decoded past this branch. An older vset
+        // may already be in Execute with its CSR write still pending.
+        thread.streamChangeSeq = inst->id.fetchSeqNum;
+        thread.squashToStreamChange = true;
 
         DPRINTF(Branch, "Branch predicted taken inst: %s target: %s"
             " new predictionSeqNum: %d\n",
@@ -261,7 +265,16 @@ Fetch2::evaluate()
         DPRINTF(Fetch, "Dumping all input as a stream changing branch"
             " has arrived\n");
         dumpAllInput(branch_inp.threadId);
-        fetchInfo[branch_inp.threadId].havePC = false;
+        Fetch2ThreadInfo &info = fetchInfo[branch_inp.threadId];
+        info.havePC = false;
+        if (!branch_inp.inst || branch_inp.inst->isBubble()) {
+            // Interrupt, halt, or another redirect with no instruction.
+            // Nothing in flight should keep a speculative vset write.
+            info.squashToStreamChange = false;
+        } else {
+            info.streamChangeSeq = branch_inp.inst->id.fetchSeqNum;
+            info.squashToStreamChange = true;
+        }
     }
 
     assert(insts_out.isBubble());
@@ -342,8 +355,15 @@ Fetch2::evaluate()
                 set(fetch_info.pc, line_in->pc);
                 fetch_info.havePC = true;
                 decoder->reset();
-                // Decoded ops on the old stream have not executed.
-                decoder->discardSpec(thread);
+                if (fetch_info.squashToStreamChange) {
+                    // Drop vsets younger than the branch. One that has
+                    // already executed stays in pendingCsrWrites until
+                    // it commits.
+                    decoder->squashSpec(fetch_info.streamChangeSeq);
+                    fetch_info.squashToStreamChange = false;
+                } else {
+                    decoder->discardSpec(thread);
+                }
             }
 
             /* The generated instruction.  Leave as NULL if no instruction

@@ -105,13 +105,15 @@ class Fetch2 : public Named
     {
         Fetch2ThreadInfo() {}
 
-        Fetch2ThreadInfo(const Fetch2ThreadInfo& other) :
-            inputIndex(other.inputIndex),
-            havePC(other.havePC),
-            lastStreamSeqNum(other.lastStreamSeqNum),
-            expectedStreamSeqNum(other.expectedStreamSeqNum),
-            predictionSeqNum(other.predictionSeqNum),
-            blocked(other.blocked)
+        Fetch2ThreadInfo(const Fetch2ThreadInfo &other)
+            : inputIndex(other.inputIndex),
+              havePC(other.havePC),
+              lastStreamSeqNum(other.lastStreamSeqNum),
+              expectedStreamSeqNum(other.expectedStreamSeqNum),
+              predictionSeqNum(other.predictionSeqNum),
+              blocked(other.blocked),
+              streamChangeSeq(other.streamChangeSeq),
+              squashToStreamChange(other.squashToStreamChange)
         {
             set(pc, other.pc);
         }
@@ -155,6 +157,15 @@ class Fetch2 : public Named
 
         /** Blocked indication for report */
         bool blocked = false;
+
+        /** fetchSeqNum of the branch that started the stream Fetch2 is
+         *  about to decode. squashSpec keeps vsets at or before this
+         *  sequence, including one that has executed but not committed. */
+        InstSeqNum streamChangeSeq = 0;
+
+        /** The next new stream was caused by a real branch, not an
+         *  interrupt or halt bubble. */
+        bool squashToStreamChange = false;
     };
 
     std::vector<Fetch2ThreadInfo> fetchInfo;
