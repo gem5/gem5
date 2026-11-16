@@ -324,6 +324,10 @@ class CPU : public BaseCPU
     void getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid);
     void *getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid);
 
+    /** Reads a physical register without counting the read in the stats. */
+    RegVal getRegNoEffect(PhysRegIdPtr phys_reg) const;
+    void getRegNoEffect(PhysRegIdPtr phys_reg, void *val) const;
+
     void setReg(PhysRegIdPtr phys_reg, RegVal val, ThreadID tid);
     void setReg(PhysRegIdPtr phys_reg, const void *val, ThreadID tid);
 

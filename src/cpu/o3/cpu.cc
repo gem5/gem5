@@ -1018,6 +1018,18 @@ CPU::getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid)
     regFile.getReg(phys_reg, val);
 }
 
+RegVal
+CPU::getRegNoEffect(PhysRegIdPtr phys_reg) const
+{
+    return regFile.getReg(phys_reg);
+}
+
+void
+CPU::getRegNoEffect(PhysRegIdPtr phys_reg, void *val) const
+{
+    regFile.getReg(phys_reg, val);
+}
+
 void *
 CPU::getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid)
 {
