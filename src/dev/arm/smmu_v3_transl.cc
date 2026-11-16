@@ -1157,9 +1157,8 @@ SMMUTranslationProcess::hazardIdHold(Yield &yield)
     DPRINTF(SMMUv3Hazard, "IdHold: p=%p oid=%d\n", this, orderId);
 
     std::list<SMMUTranslationProcess *> &depReqs =
-        request.isWrite ?
-            ifc.dependentWrites[orderId] : ifc.dependentReads[orderId];
-    std::list<SMMUTranslationProcess *>::iterator it;
+        request.isWrite ? ifc.dependentWrites[orderId]
+                        : ifc.dependentReads[orderId];
 
     bool found_hazard;
 
