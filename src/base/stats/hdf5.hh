@@ -98,9 +98,10 @@ class Hdf5 : public Output
      * @param info Stat info structure.
      * @param rank Stat dimensionality (including time).
      * @param dims Size of each of the dimensions.
+     * @param suffix Optional suffix for a derived dataset name.
      */
     H5::DataSet appendStat(const Info &info, int rank, hsize_t *dims,
-                           const double *data);
+                           const double *data, const char *suffix = "");
 
     /**
      * Helper function to add a string vector attribute to a stat.
