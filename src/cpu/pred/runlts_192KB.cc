@@ -139,7 +139,9 @@ logical_register_index(const RegId &reg, const StaticInstPtr &inst)
                        : std::nullopt;
         }
 #endif
-        fatal("RUNLTS supports Arm, X86, and RISC-V only");
+        warn_once("RUNLTS uses register values only on Arm, X86, and RISC-V. "
+                  "Register values are not available to RUNLTS on this ISA.");
+        return std::nullopt;
     }
 
 #if USE_ARM_ISA
@@ -241,7 +243,7 @@ struct FoldedHistory
     }
 
     void
-    update(const std::array<uint8_t, HISTBUFFERLENGTH> &h, int pt)
+    update(const std::array<uint8_t, HISTBUFFERLENGTH> &h, uint64_t pt)
     {
         comp = (comp << 1) ^ h[pt & (HISTBUFFERLENGTH - 1)];
         comp ^= h[(pt + o_len) & (HISTBUFFERLENGTH - 1)] << out_point;
@@ -256,7 +258,7 @@ using TageTagFolds = std::array<FoldedHistory, NHIST + 1>;
 struct History
 {
     std::array<uint8_t, HISTBUFFERLENGTH> ghist{};
-    int ptghist = 0;
+    uint64_t ptghist = 0;
 
     TageIndexFolds ch_i{};
     std::array<TageTagFolds, 2> ch_t{};
@@ -354,7 +356,7 @@ struct HistoryDelta
     // Save only the entries historyUpdate() mutates for this branch.
     bool modified = false;
     bool conditional = false;
-    int ptghist = 0;
+    uint64_t ptghist = 0;
     std::array<unsigned, NHIST + 1> ch_i{};
     std::array<std::array<unsigned, NHIST + 1>, 2> ch_t{};
     std::array<uint8_t, 3> overwritten_ghist{};
@@ -1184,7 +1186,8 @@ class Predictor
     uint64_t
     RP(InstSeqNum seq, uint8_t piece)
     {
-        return seq_no_to_correct_path_no[seq % 2048];
+        return seq_no_to_correct_path_no[seq %
+                                         seq_no_to_correct_path_no.size()];
     }
 
     PredictionHistory
@@ -1293,52 +1296,73 @@ class Predictor
             snap.pv.tage_pred,
         };
         int lsum = biasComponents.weightedValue(pc, 0, biasArgs);
+        int extraWeight = biasComponents.extraWeight(pc);
         int rbiasExtraWeight = 0;
 
         for (auto &bestReg : snap.hist.best_reg) {
             bestReg = -1;
         }
-        for (int distance = 0; distance <= MaxDistance; ++distance) {
-            if (snap.hist.register_values[distance] == -1 ||
-                WR.get(pc, distance) < 0) {
-                continue;
+        if (UseRBias) {
+            for (int distance = 0; distance <= MaxDistance; ++distance) {
+                if (snap.hist.register_values[distance] == -1 ||
+                    WR.get(pc, distance) < 0) {
+                    continue;
+                }
+                auto &bestReg = snap.hist.best_reg[distance % RBiasNBanks];
+                if (bestReg == -1 ||
+                    WR.get(pc, bestReg) < WR.get(pc, distance)) {
+                    bestReg = distance;
+                }
             }
-            auto &bestReg = snap.hist.best_reg[distance % RBiasNBanks];
-            if (bestReg == -1 || WR.get(pc, bestReg) < WR.get(pc, distance)) {
-                bestReg = distance;
+            for (const int distance : snap.hist.best_reg) {
+                if (distance == -1) {
+                    continue;
+                }
+                assert(snap.hist.register_values[distance] != -1);
+                assert(WR.get(pc, distance) >= 0);
+                lsum += RBias.get(rbias_index(
+                                      pc, snap.hist.register_values[distance]),
+                                  distance) *
+                        RBiasScale;
+                rbiasExtraWeight += RBiasScale;
             }
         }
-        for (const int distance : snap.hist.best_reg) {
-            if (distance == -1) {
-                continue;
-            }
-            assert(snap.hist.register_values[distance] != -1);
-            assert(WR.get(pc, distance) >= 0);
+
+        if (UseBackwardGEHL) {
+            lsum += globalGehl.weightedValue((pc << 1) + tagePred,
+                                             snap.hist.GHIST);
+            extraWeight += globalGehl.extraWeight(pc);
+        }
+        if (UsePathGEHL) {
+            lsum += pathGehl.weightedValue(pc, snap.hist.fphist);
+            extraWeight += pathGehl.extraWeight(pc);
+        }
+        if (UseLocalH) {
+            lsum += local1Gehl.weightedValue(pc, snap.hist.L_shist);
+            extraWeight += local1Gehl.extraWeight(pc);
+        }
+        if (UseLocalS) {
+            lsum += local2Gehl.weightedValue(pc, snap.hist.S_slhist);
+            extraWeight += local2Gehl.extraWeight(pc);
+        }
+        if (UseLocalT) {
+            lsum += local3Gehl.weightedValue(pc, snap.hist.T_slhist);
+            extraWeight += local3Gehl.extraWeight(pc);
+        }
+        if (UseCallStackHistory) {
             lsum +=
-                RBias.get(rbias_index(pc, snap.hist.register_values[distance]),
-                          distance) *
-                RBiasScale;
-            rbiasExtraWeight += RBiasScale;
+                callStackGehl.weightedValue(pc, snap.hist.call_stack_history);
+            extraWeight += callStackGehl.extraWeight(pc);
+        }
+        if (UseIMLI) {
+            lsum += imliComponents.weightedValue(pc, snap.hist.BrIMLI,
+                                                 snap.hist.TaIMLI);
+            extraWeight += imliComponents.extraWeight(pc);
         }
 
-        lsum +=
-            globalGehl.weightedValue((pc << 1) + tagePred, snap.hist.GHIST);
-        lsum += pathGehl.weightedValue(pc, snap.hist.fphist);
-        lsum += local1Gehl.weightedValue(pc, snap.hist.L_shist);
-        lsum += local2Gehl.weightedValue(pc, snap.hist.S_slhist);
-        lsum += local3Gehl.weightedValue(pc, snap.hist.T_slhist);
-        lsum += callStackGehl.weightedValue(pc, snap.hist.call_stack_history);
-        lsum += imliComponents.weightedValue(pc, snap.hist.BrIMLI,
-                                             snap.hist.TaIMLI);
-
-        snap.pv.sc_threshold =
-            (updatethreshold >> 1) + Pupdatethreshold[indUpd(pc)] +
-            12 * (biasComponents.extraWeight(pc) + globalGehl.extraWeight(pc) +
-                  pathGehl.extraWeight(pc) + local1Gehl.extraWeight(pc) +
-                  local2Gehl.extraWeight(pc) + local3Gehl.extraWeight(pc) +
-                  callStackGehl.extraWeight(pc) +
-                  imliComponents.extraWeight(pc)) +
-            6 * rbiasExtraWeight;
+        snap.pv.sc_threshold = (updatethreshold >> 1) +
+                               Pupdatethreshold[indUpd(pc)] +
+                               12 * extraWeight + 6 * rbiasExtraWeight;
 
         const bool scPred = lsum >= 0;
         bool finalPred = tagePred;
@@ -2085,7 +2109,8 @@ class Predictor
     void
     fetch(InstSeqNum seq_num)
     {
-        seq_no_to_correct_path_no[seq_num % 2048] = correct_path_no++;
+        seq_no_to_correct_path_no[seq_num % seq_no_to_correct_path_no.size()] =
+            correct_path_no++;
         lastFetchedSeqNum = seq_num;
     }
 
@@ -2099,7 +2124,15 @@ class Predictor
     void
     squashInstructionState(InstSeqNum seq_num)
     {
-        correct_path_no = seq_no_to_correct_path_no[seq_num % 2048] + 1;
+        correct_path_no =
+            seq_no_to_correct_path_no[seq_num %
+                                      seq_no_to_correct_path_no.size()] +
+            1;
+        // Avoid restoring a wrong-path position on a later squash.
+        for (InstSeqNum seq = seq_num + 1; seq <= lastFetchedSeqNum; seq++) {
+            seq_no_to_correct_path_no[seq % seq_no_to_correct_path_no.size()] =
+                correct_path_no - 1;
+        }
 
         if (UseLogical) {
             if (lastFetchedSeqNum > seq_num) {
@@ -2215,7 +2248,7 @@ class Predictor
     std::array<int, (1 << LOGSIZEUP)> Pupdatethreshold{};
     int8_t FirstH = 0, SecondH = 0;
 
-    uint64_t seq_no_to_correct_path_no[2048] = {};
+    std::array<uint64_t, 2048> seq_no_to_correct_path_no{};
     uint64_t correct_path_no = 0;
 
     RBias_ RBias;
@@ -2337,16 +2370,18 @@ class Predictor
         }
 
         // High bank
-        int Th = (PC >> 2 ^ (hist_to_use.phist & ((1ull << m[BORN]) - 1))) %
-                 NBANKHIGH;
+        const uint64_t high_mask =
+            (m[BORN] >= 64) ? ~0ull : ((1ull << m[BORN]) - 1ull);
+        int Th = (PC >> 2 ^ (hist_to_use.phist & high_mask)) % NBANKHIGH;
         for (int i = BORN; i <= NHIST; i++) {
             pv.GI[i] += (Th << LOGG_BORN);
             Th = (Th + 1) % NBANKHIGH;
         }
 
         // Low bank
-        int Tl =
-            (PC >> 2 ^ (hist_to_use.phist & ((1ull << m[1]) - 1))) % NBANKLOW;
+        const uint64_t low_mask =
+            (m[1] >= 64) ? ~0ull : ((1ull << m[1]) - 1ull);
+        int Tl = (PC >> 2 ^ (hist_to_use.phist & low_mask)) % NBANKLOW;
         for (int i = 1; i <= BORN - 1; i++) {
             pv.GI[i] += (Tl << LOGG_1);
             Tl = (Tl + 1) % NBANKLOW;
@@ -2476,6 +2511,10 @@ class Predictor
             int b = int(current * rate / 2.0 + 0.5) * 2;
             m[i] = std::max(a, b);
         }
+        fatal_if(m[NHIST] >= HISTBUFFERLENGTH,
+                 "RUNLTS longest TAGE history (%d) must be shorter than "
+                 "the history buffer (%d). Reduce minHist or histRate.",
+                 m[NHIST], HISTBUFFERLENGTH);
 
         const size_t low_entries = size_t(NBANKLOW) * (1u << LOGG_1);
         const size_t high_entries = size_t(NBANKHIGH) * (1u << LOGG_BORN);
@@ -2517,7 +2556,6 @@ struct RUNLTSHistory
 
 RUNLTS::RUNLTS(const Params &params)
     : ConditionalPredictor(params),
-      cpuProbeManager(nullptr),
       cpu(nullptr),
       decodeToFetchDelay(0),
       iewToFetchDelay(0),
@@ -2527,6 +2565,12 @@ RUNLTS::RUNLTS(const Params &params)
              "RUNLTS currently supports exactly one hardware thread");
     fatal_if(!params.speculativeHistUpdate,
              "RUNLTS requires speculative history updates");
+    fatal_if(params.numLowBanks == 0 || params.numHighBanks == 0,
+             "RUNLTS needs at least one low bank and one high bank");
+    fatal_if(params.logRatioBimodalHystEntries > params.logBimodalSize,
+             "RUNLTS logRatioBimodalHystEntries (%d) must not exceed "
+             "logBimodalSize (%d)",
+             params.logRatioBimodalHystEntries, params.logBimodalSize);
 }
 
 RUNLTS::ThreadState &
@@ -2544,26 +2588,39 @@ RUNLTS::threadState(ThreadID tid)
 void
 RUNLTS::setProbeTarget(BaseCPU *target)
 {
-    warn_if_once(!dynamic_cast<o3::CPU *>(target),
-                 "RUNLTS receives pipeline events only from O3CPU. "
-                 "Register values are not available to RUNLTS on this CPU.");
-    cpuProbeManager = target->getProbeManager();
+    cpu = dynamic_cast<o3::CPU *>(target);
+    if (!cpu) {
+        warn_once("RUNLTS receives pipeline events only from O3CPU. "
+                  "Register values are not available to RUNLTS on this CPU.");
+        return;
+    }
+    const auto &o3_params =
+        static_cast<const BaseO3CPUParams &>(cpu->params());
+    decodeToFetchDelay = o3_params.decodeToFetchDelay;
+    iewToFetchDelay = o3_params.iewToFetchDelay;
 }
 
 void
 RUNLTS::regProbeListeners()
 {
+    if (!cpu) {
+        return;
+    }
+    ProbeManager *probe_manager = cpu->getProbeManager();
     probeListeners.push_back(
-        cpuProbeManager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+        probe_manager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
             this, "Fetch", &RUNLTS::fetched));
     probeListeners.push_back(
-        cpuProbeManager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+        probe_manager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
             this, "Decode", &RUNLTS::decoded));
     probeListeners.push_back(
-        cpuProbeManager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+        probe_manager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
             this, "ToCommit", &RUNLTS::writtenBack));
     probeListeners.push_back(
-        cpuProbeManager->connect<
+        probe_manager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+            this, "Commit", &RUNLTS::committed));
+    probeListeners.push_back(
+        probe_manager->connect<
             ProbeListenerArg<RUNLTS, std::pair<ThreadID, InstSeqNum>>>(
             this, "SquashDecided", &RUNLTS::squashDecided));
 }
@@ -2571,13 +2628,6 @@ RUNLTS::regProbeListeners()
 void
 RUNLTS::fetched(const o3::DynInstPtr &inst)
 {
-    if (!cpu) {
-        cpu = inst->cpu;
-        const auto &o3_params =
-            static_cast<const BaseO3CPUParams &>(cpu->params());
-        decodeToFetchDelay = o3_params.decodeToFetchDelay;
-        iewToFetchDelay = o3_params.iewToFetchDelay;
-    }
     ThreadState &state = threadState(inst->threadNumber);
     state.fetchedSeqNum = inst->seqNum;
     state.pred.fetch(inst->seqNum);
@@ -2612,6 +2662,11 @@ RUNLTS::writtenBack(const o3::DynInstPtr &inst)
             continue;
         }
 
+        // Avoid copying destinations that writeback() does not use.
+        if (!logical_register_index(dest_reg, inst->staticInst)) {
+            continue;
+        }
+
         const PhysRegIdPtr phys_reg = inst->renamedDestIdx(i);
         if (!phys_reg || phys_reg->is(InvalidRegClass)) {
             continue;
@@ -2625,15 +2680,14 @@ RUNLTS::writtenBack(const o3::DynInstPtr &inst)
             case CCRegClass:
                 event.destRegValues.push_back(
                     {dest_reg,
-                     InstResult(reg_class,
-                                cpu->getReg(phys_reg, inst->threadNumber))});
+                     InstResult(reg_class, cpu->getRegNoEffect(phys_reg))});
                 break;
 
             case VecRegClass:
             case VecPredRegClass:
             case MatRegClass: {
                 std::vector<uint8_t> value(reg_class.regBytes());
-                cpu->getReg(phys_reg, value.data(), inst->threadNumber);
+                cpu->getRegNoEffect(phys_reg, value.data());
                 event.destRegValues.push_back(
                     {dest_reg, InstResult(reg_class, value.data())});
                 break;
@@ -2646,6 +2700,12 @@ RUNLTS::writtenBack(const o3::DynInstPtr &inst)
     }
     writtenBackEvents.push_back(std::move(event));
     scheduleFeedback(writtenBackEvents.back().when);
+}
+
+void
+RUNLTS::committed(const o3::DynInstPtr &inst)
+{
+    threadState(inst->threadNumber).pred.commit(inst->seqNum);
 }
 
 void
@@ -2770,9 +2830,7 @@ RUNLTS::update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
     }
 
     if (bp_history) {
-        auto *h = static_cast<RUNLTSHistory *>(bp_history);
-        threadStates[tid]->pred.commit(h->seqNum);
-        delete h;
+        delete static_cast<RUNLTSHistory *>(bp_history);
         bp_history = nullptr;
     }
 }

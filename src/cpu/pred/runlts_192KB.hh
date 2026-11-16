@@ -111,11 +111,11 @@ class RUNLTS : public ConditionalPredictor
     void fetched(const o3::DynInstPtr &inst);
     void decoded(const o3::DynInstPtr &inst);
     void writtenBack(const o3::DynInstPtr &inst);
+    void committed(const o3::DynInstPtr &inst);
     void squashDecided(const std::pair<ThreadID, InstSeqNum> &squash);
     void processFeedback();
     void scheduleFeedback(Tick when);
 
-    ProbeManager *cpuProbeManager;
     o3::CPU *cpu;
     Cycles decodeToFetchDelay;
     Cycles iewToFetchDelay;
