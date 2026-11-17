@@ -32,7 +32,6 @@
 #include <typeinfo>
 #include <vector>
 
-#include "base/cprintf.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_port.hh"
 
