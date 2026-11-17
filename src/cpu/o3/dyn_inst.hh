@@ -170,6 +170,7 @@ class DynInst : public ExecContext, public RefCounted
         PinnedRegsRenamed,       /// Pinned registers are renamed
         PinnedRegsWritten,       /// Pinned registers are written back
         PinnedRegsSquashDone,    /// Regs pinning status updated after squash
+        PinnedRegsResetOnSquash, /// Reset (not restore) pinning on squash
         RecoverInst,             /// Is a recover instruction
         BlockingInst,            /// Is a blocking instruction
         ThreadsyncWait,          /// Is a thread synchronization instruction
@@ -900,6 +901,28 @@ class DynInst : public ExecContext, public RefCounted
     {
         assert(!status[PinnedRegsSquashDone]);
         status.set(PinnedRegsSquashDone);
+    }
+
+    /** Returns whether pinned dest regs are reset (not restored) on squash */
+    bool
+    isPinnedRegsResetOnSquash() const
+    {
+        return status[PinnedRegsResetOnSquash];
+    }
+
+    /**
+     * Set by Commit when this instruction's fault is taken and execution
+     * does not resume at this micro-op (e.g. the macro-op is restarted
+     * from its first micro-op after a fault handled by the guest OS), so
+     * its pinned dest regs must be reset rather than restored when it is
+     * squashed.
+     */
+    void
+    setPinnedRegsResetOnSquash()
+    {
+        assert(status[PinnedRegsRenamed]);
+        assert(!status[PinnedRegsSquashDone]);
+        status.set(PinnedRegsResetOnSquash);
     }
 
     /** Read the PC state of this instruction. */

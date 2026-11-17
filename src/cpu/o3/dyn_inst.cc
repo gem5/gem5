@@ -344,21 +344,38 @@ DynInst::setSquashed()
 {
     status.set(Squashed);
 
-    if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone())
+    if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone()) {
         return;
+    }
 
-    // This inst has been renamed already so it may go through rename
-    // again (e.g. if the squash is due to memory access order violation).
-    // Reset the write counters for all pinned destination register to ensure
-    // that they are in a consistent state for a possible re-rename. This also
-    // ensures that dest regs will be pinned to the same phys register if
-    // re-rename happens.
+    // This inst has been renamed already, so its pinned destination
+    // registers must be left consistent for what follows the squash:
+    // - Usually (squash at this or an older micro-op of the same macro-op,
+    //   e.g. a memory access order violation or a ReExec replay) execution
+    //   continues there and this micro-op goes through rename again:
+    //   restore the write counters so the dest regs are pinned to the same
+    //   physical register again. (If the whole macro-op is squashed, rename
+    //   rolls back its mapping and the counters no longer matter.)
+    // - If Commit marked this micro-op because execution does not resume
+    //   at it (e.g. after a fault handled by the guest OS the macro-op is
+    //   restarted from its first micro-op, while any older micro-ops have
+    //   already committed): clear the counters so the first micro-op
+    //   renames to a fresh register. Clearing also unpins the register, so
+    //   any younger micro-op of the same macro-op that is squashed after
+    //   this one leaves it alone.
     for (int idx = 0; idx < numDestRegs(); idx++) {
         PhysRegIdPtr phys_dest_reg = renamedDestIdx(idx);
-        if (phys_dest_reg->isPinned()) {
+        if (!phys_dest_reg->isPinned()) {
+            continue;
+        }
+        if (isPinnedRegsResetOnSquash()) {
+            phys_dest_reg->setNumPinnedWrites(0);
+            phys_dest_reg->setNumPinnedWritesToComplete(0);
+        } else {
             phys_dest_reg->incrNumPinnedWrites();
-            if (isPinnedRegsWritten())
+            if (isPinnedRegsWritten()) {
                 phys_dest_reg->incrNumPinnedWritesToComplete();
+            }
         }
     }
     setPinnedRegsSquashDone();
