@@ -2,28 +2,30 @@
 
 #include "debug/TaskMonitor.hh"
 
+#include <algorithm>
+
 namespace gem5
 {
 
 TaskMonitor *TaskMonitor::_instance = nullptr;
 
 TaskMonitor::TaskMonitor(const Params &p)
-    : SimObject(p),
-      ctxs(p.cpus.size()),
-      listeners(p.cpus.size()),
-      stats(this, p.cpus.size())
-      {
-        fatal_if(_instance, "Apenas um TaskMonitor é permitido no sistema");
-        _instance = this;
-      }
+  : SimObject(p),
+    listeners(p.cpus.size()),
+    ctxs(p.cpus.size()),
+    stats(this, p.cpus.size())
+    {
+      fatal_if(_instance, "Apenas um TaskMonitor é permitido no sistema");
+      _instance = this;
+    }
 
 TaskMonitor::~TaskMonitor() {
-    if (_instance == this) _instance = nullptr;
+  if (_instance == this) _instance = nullptr;
 }
 
 void
 TaskMonitor::event(ContextID ctx, Tick when, uint64_t tipo, uint64_t arg) {
-  DPRINTF(TaskMonitor, "ctx=%d, tick=%llu, tipo=%llu, arg=%llu",
+  DPRINTF(TaskMonitor, "ctx=%d, tick=%llu, tipo=%llu, arg=%llu\n",
                         ctx, when, tipo, arg);
 
   if (ctx < 0 || ctx >= (ContextID)ctxs.size()) {
@@ -76,7 +78,19 @@ TaskMonitor::event(ContextID ctx, Tick when, uint64_t tipo, uint64_t arg) {
 }
 
 void
-TaskMonitor::startup() { return; }
+TaskMonitor::startup() { 
+  SimObject::startup();
+  for (size_t i = 0; i < params().cpus.size(); i++) {
+    BaseCPU *cpu = params().cpus[i];
+
+    fatal_if(cpu->numContexts() != 1, 
+            "TaskMonitor: a CPU %d deve ter exatamente 1 contexto", i);
+
+    fatal_if(cpu->getContext(0)->contextId() != (ContextID) i,
+            "TaskMonitor: a CPU %d tem o contexto %d", i,
+             cpu->getContext(0)->contextId());
+  }
+}
 
 void
 TaskMonitor::instCtxCounter(unsigned ctx, uint64_t n) {
@@ -87,7 +101,7 @@ TaskMonitor::instCtxCounter(unsigned ctx, uint64_t n) {
 void
 TaskMonitor::regProbeListeners() {
   BaseCPU *cpu;
-  for (int i = 0; i < params().cpus.size(); i++) {
+  for (size_t i = 0; i < params().cpus.size(); i++) {
     cpu = params().cpus[i];
     listeners[i] = cpu->getProbeManager()->connect<InstListener>(
       "RetiredInsts", this, i);
@@ -142,7 +156,7 @@ TaskMonitor::MonitorStats::MonitorStats(TaskMonitor *parent, size_t num_cpus)
   instsInTask.init(num_cpus);
   instsOutside.init(num_cpus);
   // (ticks minimo, ticks máximo, tamanho das faixas do histograma
-  taskDuration.init(0, 10000, 1000);
+  taskDuration.init(0, 100000000000ULL, 1000000000ULL);
 };
 
 void
@@ -151,25 +165,12 @@ TaskMonitor::MonitorStats::preDumpStats() {
 
   double maxTicks = 0.0;
   double somaTicks = 0.0;
-  uint64_t contextosUsados = 0;
-
-  for (int i=0; i < ticksInTask.size(); i++) {
-    double ticks = ticksInTask[i].value();
-    
-    // Se ticks == 0, contexto i não foi usado
-    if (ticks > 0) { 
-      if (ticks > maxTicks) maxTicks = ticks;
-      somaTicks += ticks;
-      contextosUsados++;
-    }
-
-    if (contextosUsados == 0) {
-      imbalance = 0.0;
-    }
-    else {
-      imbalance = maxTicks / (somaTicks / contextosUsados); 
-    }
+  const size_t n = ticksInTask.size();
+  for (size_t i = 0; i < n; i++) {
+    const double ticks = ticksInTask[i].value();
+    maxTicks = std::max(maxTicks, ticks);
+    somaTicks += ticks;
   }
-
+  imbalance = (somaTicks > 0.0) ? maxTicks / (somaTicks / n) : 0.0;
 }
 } // namespace

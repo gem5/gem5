@@ -10,6 +10,7 @@
 #include "gem5/p01_task_events.h"
 #include "sim/probe/probe.hh"
 #include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
