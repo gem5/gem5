@@ -221,6 +221,13 @@ Event *
 EventQueue::serviceOne()
 {
     std::lock_guard<EventQueue> lock(*this);
+    // there should always be at least one event if this method is called
+    gem5_assert(!empty(),
+                "%s: serviceOne() called with an empty queue at position %llu",
+                name(), getCurTick());
+    gem5_assert(getCurTick() <= nextTick(),
+                "%s: event at %llu is before queue position %llu", name(),
+                nextTick(), getCurTick());
     Event *event = head;
     Event *next = head->nextInBin;
     event->flags.clear(Event::Scheduled);
