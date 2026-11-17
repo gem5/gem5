@@ -84,6 +84,21 @@ cd tests
 The above is the *minumum* you should run before posting a pull request to
 https://github.com/gem5/gem5/pulls/
 
+## Trying the pytest pilot
+
+The opt-in pytest runner exposes the existing RISC-V m5_exit SE smoke
+test. From the repository root, install the pilot requirements in a
+Python 3.10 or newer environment and build the simulator:
+
+```sh
+python -m pip install -r tests/pytest-requirements.txt
+scons build/ALL/gem5.opt -j 4
+python -m pytest -c pytest-gem5.ini
+```
+
+The simulation uses gem5's regular resource client. Continue to use
+TestLib for the rest of the system-level suite.
+
 ## Running tests from multiple directories
 
 The command line above will walk the directory tree starting from the cwd
