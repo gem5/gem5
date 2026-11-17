@@ -64,15 +64,14 @@ using namespace RiscvISA;
 
 /**
  * PLIC Latency Model
- * MMIO changed (aside from threshold)
- * => update internal states
- * => calculate new output
- * => schedule update (3 cycles delay)
- * => update output & schedule next update
- * => update xEIP lines
+ * Interrupt source signal changed (post / clear)
+ * => schedule update (3 cycles delay from interrupt source to PLIC)
+ * => update internal states & schedule next update
+ * => calculate new output & update xEIP lines
  *
- * threshold changed
- * => update xEIP lines
+ * MMIO changed (priority, enable, threshold, claim/complete)
+ * => update internal states
+ * => calculate new output & update xEIP lines
  *
  * This ensures cycle-accurate values for
  * MMIO accesses and xEIP lines
@@ -80,8 +79,6 @@ using namespace RiscvISA;
  * NOTE:
  * check pending bit when returning maxID
  * to avoid claiming by multiple contexts.
- * Note that pending bits are not propagated
- * through the 3-cycle delay.
  *
  * TODO:
  * - Enforce access control (e.g. avoid S mode
@@ -256,8 +253,8 @@ class Plic : public PlicBase
     std::vector<uint32_t> pendingPriority;
     // per-context, per-source pendingPriority * enable
     std::vector<std::vector<uint32_t>> effPriority;
-    // per-context last-claimed id
-    std::vector<uint32_t> lastID;
+
+    std::vector<uint32_t> claimedInt;
     PlicOutput output;
 
     /**
@@ -267,37 +264,44 @@ class Plic : public PlicBase
     void initContextFromHartConfig(const std::string& hart_config);
 
     /**
-     * Trigger:
-     * - Plic::post
-     * - Plic::clear
-     * - Plic::write
-     *
-     * Task:
-     * - calculate new output
-     * - schedule next update event and/or
-     *   add new output to outputQueue
+     * Internal helpers to update PLIC states when delayed interrupt
+     * signals arrive at PLIC or when an interrupt is claimed.
      */
-    void propagateOutput();
-    std::map<Tick, PlicOutput> outputQueue;
-    EventFunctionWrapper update;
+    void postImpl(int src_id);
+    void clearImpl(int src_id);
 
     /**
      * Trigger:
      * - Plic::update event
      *
      * Task:
-     * - set current output to new output
+     * - apply queued interrupt source changes (post / clear)
      * - schedule next update event (if any)
+     * - update output and xEIP lines
+     */
+    void updateIntState();
+    std::map<Tick, std::map<int, bool>> inputQueue;
+    EventFunctionWrapper update;
+
+    /**
+     * Trigger:
+     * - Plic::updateIntState
+     * - Plic::readClaim
+     * - Plic::write
+     *
+     * Task:
+     * - calculate new output
+     * - update xEIP lines
      */
     void updateOutput();
 
     /**
      * Trigger:
-     * - Plic::update event
-     * - Plic::write
+     * - Plic::updateOutput
+     * - Plic::unserialize
      *
      * Task:
-     * - update xEIP lines based on new
+     * - update xEIP lines based on current
      *   output and threshold
      */
     void updateInt();
