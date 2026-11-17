@@ -91,6 +91,7 @@ def template VleConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -294,6 +295,7 @@ def template VseConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -468,6 +470,7 @@ def template VlmConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -495,6 +498,7 @@ def template VsmConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -522,6 +526,7 @@ def template VsWholeConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -659,6 +664,7 @@ def template VlWholeConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -826,6 +832,7 @@ def template VlStrideConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -851,6 +858,7 @@ def template VlStrideConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -892,6 +900,7 @@ def template VsStrideConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -912,6 +921,7 @@ def template VsStrideConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -980,6 +990,7 @@ template<typename ElemType>
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -1206,6 +1217,7 @@ template<typename ElemType>
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -1390,6 +1402,7 @@ def template VlSegConstructor {{
         this->microops.push_back(microop);
         this->microops.front()->setFlag(IsFirstMicroop);
         this->microops.back()->setFlag(IsLastMicroop);
+        this->setDelayedCommitExceptLast();
         this->flags[IsVector] = true;
         return;
     }
@@ -1410,6 +1423,7 @@ def template VlSegConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -1444,6 +1458,7 @@ def template VlSegConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 }};
@@ -1652,6 +1667,7 @@ def template VsSegConstructor {{
         this->microops.push_back(microop);
         this->microops.front()->setFlag(IsFirstMicroop);
         this->microops.back()->setFlag(IsLastMicroop);
+        this->setDelayedCommitExceptLast();
         this->flags[IsVector] = true;
         return;
     }
@@ -1672,6 +1688,7 @@ def template VsSegConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -1700,6 +1717,7 @@ def template VsSegConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 }};

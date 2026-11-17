@@ -131,6 +131,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -395,6 +396,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -540,6 +542,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -710,6 +713,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -981,6 +985,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -1230,6 +1235,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -1352,6 +1358,7 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -1463,6 +1470,7 @@ def template VMvWholeMacroConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -1744,6 +1752,7 @@ template<typename ElemType>
     this->microops.push_back(microop);
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -1867,6 +1876,7 @@ template<typename ElemType, typename IndexType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -2050,6 +2060,7 @@ template<typename ElemType>
     this->microops.push_back(microop);
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -2139,6 +2150,7 @@ template<typename ElemType>
     }
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
@@ -2207,6 +2219,7 @@ template<typename ElemType>
     }
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 %(declare_varith_template)s;
