@@ -1145,10 +1145,17 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
 
             req->setPaddr(paddr);
 
+            // Same as TLB::translate() does for translations that finish
+            // without a walk, e.g. so m5op MMIO accesses are handled as
+            // pseudo instructions instead of being sent to memory.
+            timingFault = walker->tlb->finalizePhysical(req, tc, mode);
+
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
-            timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
+            if (timingFault == NoFault) {
+                timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
+            }
 
             if (timingFault == NoFault) {
                 timingFault = walker->pma->check(req, mode);
