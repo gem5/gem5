@@ -10,8 +10,9 @@ on:
         type: string
       discussion_category:
         description: 'Discussion category'
-        required: true
+        required: false
         type: string
+        default: 'Q&A'
 
 concurrency:
   group: "discussion-responder-${{ github.event.inputs.discussion_number }}"
