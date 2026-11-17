@@ -266,7 +266,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt,
             mem_pkt->burstHelper = burst_helper;
 
             assert(!readQueueFull(1));
-            stats.rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
+            stats.rdQLenPdf[readOccupancy()]++;
 
             DPRINTF(MemCtrl, "Adding to read queue\n");
 
@@ -279,7 +279,7 @@ MemCtrl::addToReadQueue(PacketPtr pkt,
             mem_intr->readQueueSize++;
 
             // Update stats
-            stats.avgRdQLen = totalReadQueueSize + respQueue.size();
+            stats.avgRdQLen = readOccupancy();
         }
 
         // Starting address of next memory pkt (aligned to burst boundary)
@@ -521,6 +521,9 @@ MemCtrl::processRespondEvent(MemInterface* mem_intr,
     }
 
     queue.pop_front();
+
+    // Update stats
+    stats.avgRdQLen = readOccupancy();
 
     if (!queue.empty()) {
         assert(queue.front()->readyTime >= curTick());
@@ -1109,6 +1112,9 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
                     mem_pkt->readyTime - mem_pkt->entryTime);
 
         mem_intr->writeQueueSize--;
+
+        // Update stats
+        stats.avgWrQLen = totalWriteQueueSize;
 
         // remove the request from the queue - the iterator is no longer valid
         writeQueue[mem_pkt->qosValue()].erase(to_write);
