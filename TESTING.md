@@ -86,18 +86,56 @@ https://github.com/gem5/gem5/pulls/
 
 ## Trying the pytest pilot
 
-The opt-in pytest runner exposes the existing RISC-V m5_exit SE smoke
-test. From the repository root, install the pilot requirements in a
-Python 3.10 or newer environment and build the simulator:
+The opt-in pytest runner currently exposes the RISC-V `m5_exit` SE smoke
+test. Continue to use TestLib for the rest of the system-level suite. From
+the repository root, install the pilot requirements in a Python 3.10 or
+newer environment:
 
 ```sh
 python -m pip install -r tests/pytest-requirements.txt
-scons build/ALL/gem5.opt -j 4
-python -m pytest -c pytest-gem5.ini
 ```
 
-The simulation uses gem5's regular resource client. Continue to use
-TestLib for the rest of the system-level suite.
+Preview the case and its requirements from a clean checkout:
+
+```sh
+python -m pytest -c pytest-gem5.ini tests/gem5/m5_util \
+    --length=quick --tag=riscv --collect-only --gem5-plan-file=plan.json
+```
+
+A path narrows collection to a directory or file. Use the full pytest node
+ID to select one case. Directory and file runs select `quick` by default.
+Set `--length=long`, `--length=very-long`, or `--length=all` to change the
+scope. Repeat `--tag` to require every supplied tag. The supported tags are
+listed in `pytest-gem5.ini`. For the terminal preview without a JSON file,
+use `--gem5-plan`.
+
+The plan lists the selected cases and their declared build targets and
+inputs. Collection does not build gem5, resolve resources, or launch
+simulations. The existing simulation configuration still selects the
+resource version at run time. The selection format has its own schema
+version and describes the cases for the pilot.
+
+To execute the same selection, build the target and remove both preview
+options:
+
+```sh
+scons build/ALL/gem5.opt -j 4
+python -m pytest -c pytest-gem5.ini tests/gem5/m5_util \
+    --length=quick --tag=riscv
+```
+
+The simulation obtains `riscv-m5-exit` through gem5's regular resource
+client. The pytest fixture uses a separate output directory for each case.
+Use pytest's `--junit-xml=results.xml` to save JUnit results. To check the
+pilot's command line without a simulator, run
+`python tests/gem5_testing/selection_checks.py`.
+
+From a subdirectory, pass the path to `pytest-gem5.ini` relative to that
+directory (or use its absolute path). Positional test paths are relative to
+the working directory. The pilot collects files named `*_pytest.py` under
+`tests/gem5`; TestLib continues to collect its existing files separately.
+See [the migration baseline](tests/pytest-baseline.md) for the original
+suite ID and workflow context.
 
 ## Running tests from multiple directories
 
