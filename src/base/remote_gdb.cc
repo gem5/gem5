@@ -1412,11 +1412,19 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     split = splitAt(split.second, ":");
     auto operation = split.first;
 
-    // Only "read"ing is supported currently.
-    if (operation != "read") {
-        throw Unsupported();
+    if (operation == "read") {
+        return queryXferRead(object, split.second);
+    } else if (operation == "write") {
+        return queryXferWrite(object, split.second);
     }
 
+    throw Unsupported();
+}
+
+bool
+BaseRemoteGDB::queryXferRead(const std::string &object,
+                             const std::string &params)
+{
     // Only the objects registered in queryXferReadMap are supported.
     auto handler_it = queryXferReadMap.find(object);
     if (handler_it == queryXferReadMap.end()) {
@@ -1424,7 +1432,7 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     }
 
     // Extract the annex name.
-    split = splitAt(split.second, ":");
+    auto split = splitAt(params, ":");
     auto annex = split.first;
 
     // Read the contents of the annex.
@@ -1452,6 +1460,46 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     sendBinary(encoded.data(), encoded.size());
     return true;
 }
+
+bool
+BaseRemoteGDB::queryXferWrite(const std::string &object,
+                              const std::string &params)
+{
+    // Only the objects registered in queryXferWriteMap are supported.
+    auto handler_it = queryXferWriteMap.find(object);
+    if (handler_it == queryXferWriteMap.end()) {
+        throw Unsupported();
+    }
+
+    // Extract the annex name.
+    auto split = splitAt(params, ":");
+    auto annex = split.first;
+
+    // Extract the offset and encoded data.
+    split = splitAt(split.second, ":");
+    auto offset_str = split.first;
+    auto encoded = split.second;
+
+    const char *offset_ptr = offset_str.c_str();
+    auto offset = hex2i(&offset_ptr);
+    if (offset_ptr != offset_str.c_str() + offset_str.length()) {
+        throw CmdError("E00");
+    }
+
+    std::string unencoded;
+    unencoded.reserve(encoded.size());
+    if (!decodeBinaryData(encoded, unencoded)) {
+        throw CmdError("E00");
+    }
+
+    if (!handler_it->second(annex, offset, unencoded)) {
+        throw CmdError("E00");
+    }
+
+    send("%x", unencoded.size());
+    return true;
+}
+
 bool
 BaseRemoteGDB::querySymbol(QuerySetCommand::Context &ctx)
 {
@@ -1570,7 +1618,7 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 std::vector<std::string>
 BaseRemoteGDB::availableFeatures() const
 {
-    return xferReadFeatures;
+    return xferFeatures;
 };
 
 void
@@ -1583,7 +1631,21 @@ BaseRemoteGDB::setXferReadHandler(const std::string &object,
     // Only a newly inserted object is added, so each object is advertised
     // exactly once even if its handler is replaced.
     if (inserted) {
-        xferReadFeatures.push_back(csprintf("qXfer:%s:read+", object));
+        xferFeatures.push_back(csprintf("qXfer:%s:read+", object));
+    }
+}
+
+void
+BaseRemoteGDB::setXferWriteHandler(const std::string &object,
+                                   XferWriteHandler handler)
+{
+    panic_if(!handler, "Empty qXfer write handler for object '%s'.", object);
+    const bool inserted =
+        queryXferWriteMap.insert_or_assign(object, std::move(handler)).second;
+    // Only a newly inserted object is added, so each object is advertised
+    // exactly once even if its handler is replaced.
+    if (inserted) {
+        xferFeatures.push_back(csprintf("qXfer:%s:write+", object));
     }
 }
 
@@ -1599,6 +1661,24 @@ BaseRemoteGDB::encodeBinaryData(
             encoded += c;
         }
     }
+}
+
+bool
+BaseRemoteGDB::decodeBinaryData(const std::string &encoded,
+                                std::string &unencoded) const
+{
+    for (std::size_t i = 0; i < encoded.size(); i++) {
+        if (encoded[i] == '}') {
+            i++;
+            if (i >= encoded.size()) {
+                return false;
+            }
+            unencoded += static_cast<char>(encoded[i] ^ 0x20);
+        } else {
+            unencoded += encoded[i];
+        }
+    }
+    return true;
 }
 
 void
