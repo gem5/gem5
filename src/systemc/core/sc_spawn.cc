@@ -31,6 +31,7 @@
 #include "systemc/core/process_ops.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/core/sensitivity_ops.hh"
 #include "systemc/ext/channel/sc_in.hh"
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_out.hh"

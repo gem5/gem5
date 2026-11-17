@@ -33,6 +33,7 @@
 
 #include "sim/eventq.hh"
 #include "systemc/core/sched_event.hh"
+#include "systemc/core/sensitivity_ops.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_port.hh"
 
@@ -167,19 +168,10 @@ class SensitivityEvents : virtual public Sensitivity
     }
 };
 
-
 /*
- * Static sensitivities.
+ * Static sensitivities. The newStaticSensitivity* functions are declared
+ * in sensitivity_ops.hh.
  */
-
-void newStaticSensitivityEvent(Process *p, const sc_core::sc_event *e);
-void newStaticSensitivityInterface(Process *p, const sc_core::sc_interface *i);
-void newStaticSensitivityPort(Process *p, const sc_core::sc_port_base *pb);
-void newStaticSensitivityExport(
-        Process *p, const sc_core::sc_export_base *exp);
-void newStaticSensitivityFinder(
-        Process *p, const sc_core::sc_event_finder *f);
-
 
 class StaticSensitivityEvent :
     public StaticSensitivity, public SensitivityEvent
