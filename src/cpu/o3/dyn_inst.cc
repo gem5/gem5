@@ -86,7 +86,9 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
     status.reset();
 
     instFlags.reset();
-    instFlags[RecordResult] = true;
+    // Only the checker CPU consumes recorded destination values. Preserve
+    // recording for CPU-less DynInst objects used outside normal execution.
+    instFlags[RecordResult] = !cpu || cpu->checker;
     instFlags[Predicate] = true;
     instFlags[MemAccPredicate] = true;
 
