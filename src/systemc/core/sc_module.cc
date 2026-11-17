@@ -35,6 +35,7 @@
 #include "systemc/core/module.hh"
 #include "systemc/core/object.hh"
 #include "systemc/core/port.hh"
+#include "systemc/core/process_ops.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/sc_in.hh"

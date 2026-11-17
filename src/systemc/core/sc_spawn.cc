@@ -25,8 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "systemc/ext/core/sc_spawn.hh"
 #include "base/logging.hh"
 #include "systemc/core/process.hh"
+#include "systemc/core/process_ops.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_in.hh"
@@ -36,7 +38,6 @@
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
-#include "systemc/ext/core/sc_spawn.hh"
 
 namespace sc_gem5
 {

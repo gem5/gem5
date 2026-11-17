@@ -27,6 +27,7 @@
 
 #include <sstream>
 
+#include "systemc/core/process_ops.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_signal.hh"
@@ -187,7 +188,7 @@ ScSignalBaseBinary::negedge() const
 void
 ScSignalBaseBinary::_signalReset(sc_gem5::Reset *r)
 {
-    r->update();
+    updateReset(r);
 }
 
 void
