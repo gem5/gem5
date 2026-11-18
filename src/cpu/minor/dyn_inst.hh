@@ -217,6 +217,11 @@ class MinorDynInst : public RefCounted
      *  with the instruction (only meaningful for loads/stores) */
     bool memAccPredicate = true;
 
+    // Fault-only-first element count. Minor rebuilds ExecContext between
+    // initiateAcc and completeAcc, so the record cannot live there.
+    bool fofIsTrimmed = false;
+    uint32_t fofElemCount = 0;
+
     /** execSeqNum of the latest inst on which this inst depends.
      *  This can be used as a sanity check for dependency ordering
      *  where slightly out of order execution is required (notably

@@ -43,6 +43,7 @@
 
 #include <vector>
 
+#include "arch/generic/decoder.hh"
 #include "arch/generic/vec_pred_reg.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
@@ -222,21 +223,38 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
 void
 unserialize(ThreadContext &tc, CheckpointIn &cp)
 {
-    for (const auto *reg_class: tc.getIsaPtr()->regClasses()) {
+    for (const auto *reg_class : tc.getIsaPtr()->regClasses()) {
         // MiscRegs are serialized elsewhere.
-        if (reg_class->type() == MiscRegClass)
+        if (reg_class->type() == MiscRegClass) {
             continue;
+        }
+
+        const std::string name = std::string("regs.") + reg_class->name();
+
+        // Only RMisc is optional: older checkpoints predate renamed_misc.
+        // Missing int/fp/vec/... sections must still fail loudly.
+        // Empty RMisc (non-RISC-V) has nothing to restore; skip quietly.
+        if (reg_class->type() == RMiscRegClass) {
+            if (reg_class->numRegs() == 0) {
+                continue;
+            }
+            const std::string &section = Serializable::currentSection();
+            std::string unused;
+            if (!cp.find(section, name, unused)) {
+                warn("optional parameter %s:%s not present", section, name);
+                continue;
+            }
+        }
 
         const size_t reg_bytes = reg_class->regBytes();
         const size_t reg_count = reg_class->numRegs();
         const size_t array_bytes = reg_bytes * reg_count;
 
         auto regs = std::make_unique<uint8_t[]>(array_bytes);
-        arrayParamIn(cp, std::string("regs.") + reg_class->name(), regs.get(),
-                array_bytes);
+        arrayParamIn(cp, name, regs.get(), array_bytes);
 
         auto *reg_ptr = regs.get();
-        for (const auto &id: *reg_class) {
+        for (const auto &id : *reg_class) {
             tc.setReg(id, reg_ptr);
             reg_ptr += reg_bytes;
         }
@@ -245,6 +263,9 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     std::unique_ptr<PCStateBase> pc_state(tc.pcState().clone());
     pc_state->unserialize(cp);
     tc.pcState(*pc_state);
+
+    // machVtype lived in PCState before; re-derive it from the CSR.
+    tc.getDecoderPtr()->discardSpec(&tc);
 
     // thread_num and cpu_id are deterministic from the config
 }

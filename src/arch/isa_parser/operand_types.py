@@ -265,6 +265,11 @@ class CCRegOperandDesc(RegOperandDesc):
         super().__init__("ccRegClass", RegValOperand, *args, **kwargs)
 
 
+class RMiscRegOperandDesc(RegOperandDesc):
+    def __init__(self, *args, **kwargs):
+        super().__init__("rmiscRegClass", RegValOperand, *args, **kwargs)
+
+
 class VecElemOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
         super().__init__("vecElemClass", RegValOperand, *args, **kwargs)

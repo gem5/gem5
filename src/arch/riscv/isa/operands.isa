@@ -106,14 +106,13 @@ def operands {{
     'PC': PCStateOp('ud', 'pc', (None, None, 'IsControl'), 7),
     'NPC': PCStateOp('ud', 'npc', (None, None, 'IsControl'), 8),
 
-# VL and VTYPE
-    'Vtype': PCStateOp('ud', 'vtype', (None, None, 'IsControl'), 10),
-    'VL': PCStateOp('uw', 'vl', (None, None, 'IsControl'), 11),
+# Renamed vl and vtype.
+    'Vtype': RMiscRegOp('ud', 'VecRenamedVTYPEReg', None, 10),
+    'VL': RMiscRegOp('uw', 'VecRenamedVLReg', None, 11),
 #VLENB, actually the CSR is read only.
     'VlenbBits': PCStateOp('ud', 'vlenb', (None, None, 'IsControl'), 12),
 #Zcmt Second Fetch
     'ZcmtSecondFetch': PCStateOp(
         'bl', 'zcmtSecondFetch', (None, None, 'IsControl'), 13),
     'ZcmtPC': PCStateOp('ud', 'zcmtPc', (None, None, 'IsControl'), 13),
-    'IsVset': PCStateOp('ub', 'new_vconf', (None, None, 'IsControl'), 13),
 }};

@@ -55,6 +55,8 @@ class RiscvTimingSimpleCPU(BaseTimingSimpleCPU, RiscvCPU):
 
 class RiscvO3CPU(BaseO3CPU, RiscvCPU):
     mmu = RiscvMMU()
+    # vl, vtype, and MaxFofMicros FoF slice counts (renameable_misc.hh).
+    numPhysRMiscRegs = 64
 
 
 class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):

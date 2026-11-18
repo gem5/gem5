@@ -32,12 +32,15 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "params/InstDecoder.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
 {
+
+class ThreadContext;
 
 class InstDecoder : public SimObject
 {
@@ -105,6 +108,28 @@ class InstDecoder : public SimObject
      * decode a full instruction.
      */
     bool instReady() const { return instDone; }
+
+    /** True when decode should wait before producing another instruction. */
+    virtual bool
+    stall() const
+    {
+        return false;
+    }
+
+    /** Bind a just-decoded instruction's sequence number to decoder state. */
+    virtual void
+    noteDecodedSeq(InstSeqNum seq)
+    {}
+
+    /** Drop speculative decoder state younger than seq. */
+    virtual void
+    squashSpec(InstSeqNum seq)
+    {}
+
+    // No sequence number is available. Install architectural decoder state.
+    virtual void
+    discardSpec(ThreadContext *)
+    {}
 
     /**
      * Can the decoder accept more data?

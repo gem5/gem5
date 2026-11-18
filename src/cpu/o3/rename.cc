@@ -1085,6 +1085,7 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
             stats.matLookups++;
             break;
           case CCRegClass:
+          case RMiscRegClass:
           case MiscRegClass:
             break;
 

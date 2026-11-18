@@ -687,6 +687,7 @@ Fetch::squashFromDecode(const PCStateBase &new_pc, const DynInstPtr squashInst,
 {
     DPRINTF(Fetch, "[tid:%i] Squashing from decode.\n", tid);
 
+    decoder[tid]->squashSpec(seq_num);
     doSquash(new_pc, squashInst, tid);
 
     // Tell the CPU to remove any instructions that are in flight between
@@ -700,6 +701,7 @@ Fetch::squashFromCommit(const PCStateBase &new_pc, const InstSeqNum seq_num,
 {
     DPRINTF(Fetch, "[tid:%i] Squash from commit.\n", tid);
 
+    decoder[tid]->squashSpec(seq_num);
     doSquash(new_pc, squashInst, tid);
 
     // Tell the CPU to remove any instructions that are not in the ROB.
@@ -1193,8 +1195,8 @@ Fetch::fetch(bool &status_change)
     // Loop through instruction memory from the cache.
     // Keep issuing while fetchWidth is available and branch is not
     // predicted taken
-    while (numInst < fetchWidth && fetchQueue[tid].size() < fetchQueueSize
-           && !predictedBranch && !quiesce) {
+    while (numInst < fetchWidth && fetchQueue[tid].size() < fetchQueueSize &&
+           !predictedBranch && !quiesce && !dec_ptr->stall()) {
 
         // For the decoupled front-end also check if the FTQ
         // and the fetch target are still valid.
@@ -1275,6 +1277,8 @@ Fetch::fetch(bool &status_change)
 
             DynInstPtr instruction = buildInst(
                     tid, staticInst, curMacroop, this_pc, *next_pc, true);
+
+            dec_ptr->noteDecodedSeq(instruction->seqNum);
 
             ppFetch->notify(instruction);
             numInst++;

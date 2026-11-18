@@ -58,16 +58,17 @@ namespace gem5
 /** Enumerate the classes of registers. */
 enum RegClassType
 {
-    IntRegClass,        ///< Integer register
-    FloatRegClass,      ///< Floating-point register
+    IntRegClass,   ///< Integer register
+    FloatRegClass, ///< Floating-point register
     /** Vector Register. */
     VecRegClass,
     /** Vector Register Native Elem lane. */
     VecElemClass,
     VecPredRegClass,
-    MatRegClass,        ///< Matrix Register
-    CCRegClass,         ///< Condition-code register
-    MiscRegClass,       ///< Control (misc) register
+    MatRegClass,   ///< Matrix Register
+    CCRegClass,    ///< Condition-code register
+    RMiscRegClass, ///< Renamed misc register
+    MiscRegClass,  ///< Control (misc) register
     InvalidRegClass = -1
 };
 
@@ -79,6 +80,7 @@ inline constexpr char VecElemClassName[] = "vector_element";
 inline constexpr char VecPredRegClassName[] = "vector_predicate";
 inline constexpr char MatRegClassName[] = "matrix";
 inline constexpr char CCRegClassName[] = "condition_code";
+inline constexpr char RMiscRegClassName[] = "renamed_misc";
 inline constexpr char MiscRegClassName[] = "miscellaneous";
 
 class RegClass;

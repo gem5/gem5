@@ -231,6 +231,10 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
          *  instruction causing the prediction */
         thread.predictionSeqNum++;
         branch = new_branch;
+        // Younger ops are not decoded past this branch. An older vset
+        // may already be in Execute with its CSR write still pending.
+        thread.streamChangeSeq = inst->id.fetchSeqNum;
+        thread.squashToStreamChange = true;
 
         DPRINTF(Branch, "Branch predicted taken inst: %s target: %s"
             " new predictionSeqNum: %d\n",
@@ -261,7 +265,16 @@ Fetch2::evaluate()
         DPRINTF(Fetch, "Dumping all input as a stream changing branch"
             " has arrived\n");
         dumpAllInput(branch_inp.threadId);
-        fetchInfo[branch_inp.threadId].havePC = false;
+        Fetch2ThreadInfo &info = fetchInfo[branch_inp.threadId];
+        info.havePC = false;
+        if (!branch_inp.inst || branch_inp.inst->isBubble()) {
+            // Interrupt, halt, or another redirect with no instruction.
+            // Nothing in flight should keep a speculative vset write.
+            info.squashToStreamChange = false;
+        } else {
+            info.streamChangeSeq = branch_inp.inst->id.fetchSeqNum;
+            info.squashToStreamChange = true;
+        }
     }
 
     assert(insts_out.isBubble());
@@ -342,6 +355,15 @@ Fetch2::evaluate()
                 set(fetch_info.pc, line_in->pc);
                 fetch_info.havePC = true;
                 decoder->reset();
+                if (fetch_info.squashToStreamChange) {
+                    // Drop vsets younger than the branch. One that has
+                    // already executed stays in pendingCsrWrites until
+                    // it commits.
+                    decoder->squashSpec(fetch_info.streamChangeSeq);
+                    fetch_info.squashToStreamChange = false;
+                } else {
+                    decoder->discardSpec(thread);
+                }
             }
 
             /* The generated instruction.  Leave as NULL if no instruction
@@ -378,6 +400,16 @@ Fetch2::evaluate()
                 DPRINTF(Fetch, "Fault being passed output_index: "
                     "%d: %s\n", output_index, dyn_inst->fault->name());
             } else {
+                // A prior instruction (e.g. RISC-V register vset) asked the
+                // decoder to stall. Do not moreBytes/decode further in this
+                // cycle: feeding the next word while stalled corrupts the
+                // decoder mid-state, and spinning on stall livelocks the
+                // cycle. O3 exits its fetch loop on stall instead.
+                if (decoder->stall()) {
+                    DPRINTF(Fetch, "Decoder stall; defer fetch2\n");
+                    break;
+                }
+
                 uint8_t *line = line_in->line;
 
                 /* The instruction is wholly in the line, can just copy. */
@@ -407,6 +439,7 @@ Fetch2::evaluate()
 
                     /* Fetch and prediction sequence numbers originate here */
                     dyn_inst->id.fetchSeqNum = fetch_info.fetchSeqNum;
+                    decoder->noteDecodedSeq(dyn_inst->id.fetchSeqNum);
                     dyn_inst->id.predictionSeqNum = fetch_info.predictionSeqNum;
                     /* To complete the set, test that exec sequence number
                      *  has not been set */

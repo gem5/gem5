@@ -75,6 +75,12 @@ class BaseISA : public SimObject
     virtual PCStateBase *newPCState(Addr new_inst_addr=0) const = 0;
     virtual void clear() {}
 
+    virtual RegVal
+    getInitialRegVal(const RegId &id) const
+    {
+        return 0;
+    }
+
     virtual RegVal readMiscRegNoEffect(RegIndex idx) const = 0;
     virtual RegVal readMiscReg(RegIndex idx) = 0;
 

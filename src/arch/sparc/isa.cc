@@ -76,6 +76,7 @@ RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
         debug::IntRegs);
 RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
+RegClass rmiscRegClass(RMiscRegClass, RMiscRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
@@ -88,6 +89,7 @@ ISA::ISA(const Params &p) : BaseISA(p, "sparc")
     _regClasses.push_back(&vecPredRegClass);
     _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&rmiscRegClass);
     _regClasses.push_back(&miscRegClass);
 
     clear();
