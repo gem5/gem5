@@ -473,6 +473,8 @@ void ISA::clear()
     // triggers, starting at zero. simply set a different value here.
     miscRegFile[MISCREG_TSELECT] = 1;
     miscRegFile[MISCREG_NMIE] = reportsExtension("Smrnmi") ? 0 : 1;
+
+    fofTable.clear();
 }
 
 Fault

@@ -42,8 +42,12 @@
 #ifndef __CPU_EXEC_CONTEXT_HH__
 #define __CPU_EXEC_CONTEXT_HH__
 
+#include <limits>
+#include <vector>
+
 #include "base/types.hh"
 #include "cpu/base.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
@@ -229,6 +233,19 @@ class ExecContext
     virtual AddressMonitor *getAddrMonitor() = 0;
 
     /** @} */
+
+    /**
+     * Dynamic instruction sequence number, if the CPU model assigns one.
+     * In-order models return InvalidInstSeqNum-equivalent max value via
+     * default. O3 DynInst overrides with its seqNum.
+     *
+     * Why here: arch-side transient state (e.g. RVV FoF) may key by seqNum
+     * without putting ISA-specific APIs on ExecContext.
+     */
+    virtual InstSeqNum getSeqNum() const
+    {
+        return std::numeric_limits<InstSeqNum>::max();
+    }
 };
 
 } // namespace gem5
