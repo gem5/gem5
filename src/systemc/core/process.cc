@@ -442,4 +442,10 @@ updateReset(Reset *reset)
     reset->update();
 }
 
+sc_core::sc_object *
+getProcessObject(Process *p)
+{
+    return p;
+}
+
 } // namespace sc_gem5

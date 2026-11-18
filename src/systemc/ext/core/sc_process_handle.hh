@@ -40,6 +40,8 @@ namespace sc_gem5
 
 class Process;
 
+Process *getCurrentProcess();
+
 struct ProcessFuncWrapper
 {
     virtual void call() = 0;

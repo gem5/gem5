@@ -542,9 +542,6 @@ class Scheduler
 
 Scheduler &scheduler();
 
-// A proxy function to avoid having to expose the scheduler in header files.
-Process *getCurrentProcess();
-
 inline void
 Scheduler::TimeSlot::process()
 {

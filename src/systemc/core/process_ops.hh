@@ -29,15 +29,16 @@
 #define __SYSTEMC_CORE_PROCESS_OPS_HH__
 
 /*
- * Free-function interface to sc_gem5::Reset, used by the sources that
- * create resets (core/sc_module.cc, sc_spawn.cc) and by
- * channel/sc_signal.cc. It needs only forward declarations, so reset
+ * Free-function interface to sc_gem5::Process and sc_gem5::Reset, used by
+ * the sources that create resets (core/sc_module.cc, sc_spawn.cc)
+ * and by channel/sc_signal.cc. It needs only forward declarations, so its
  * operations do not require callers to see the kernel's process.hh.
  */
 
 namespace sc_core
 {
 
+class sc_object;
 class sc_port_base;
 template <class T> class sc_signal_in_if;
 
@@ -54,6 +55,8 @@ void newReset(const sc_core::sc_port_base *pb, Process *p, bool sync,
 void newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p, bool sync,
               bool value);
 void updateReset(Reset *reset);
+
+sc_core::sc_object *getProcessObject(Process *p);
 
 } // namespace sc_gem5
 

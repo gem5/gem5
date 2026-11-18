@@ -35,6 +35,7 @@
 #include "systemc/core/sc_main_fiber.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/core/sc_process_handle.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/utils/report.hh"
