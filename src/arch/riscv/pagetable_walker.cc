@@ -624,12 +624,8 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
             walkMode = mode;
             write->req->setPaddr(host_paddr);
             write->setAddr(host_paddr);
-            fault = walker->pmp->pmpCheck(write->req, BaseMMU::Write, PRV_S,
-                                          tc, entry.vaddr);
-            if (fault == NoFault) {
-                fault = walker->pma->check(write->req, BaseMMU::Write,
-                                           entry.vaddr);
-            }
+            fault = checkAddressPermission(write->req, BaseMMU::Write, PRV_S,
+                                           tc, entry.vaddr);
 
             if (fault != NoFault) {
                 delete write;
@@ -821,6 +817,21 @@ Walker::WalkerState::checkPTEPermissions(PTE &pte, WalkFlags &stepWalkFlags,
 }
 
 Fault
+Walker::WalkerState::checkAddressPermission(const RequestPtr &req,
+                                            BaseMMU::Mode mode,
+                                            PrivilegeMode pmode,
+                                            ThreadContext *tc, Addr vaddr)
+{
+    Fault fault = walker->pmp->pmpCheck(req, mode, pmode, tc, vaddr);
+
+    if (fault == NoFault) {
+        fault = walker->pma->check(req, mode, vaddr);
+    }
+
+    return fault;
+}
+
+Fault
 Walker::WalkerState::stepWalk(PacketPtr &write)
 {
     assert(state != Ready && state != Waiting);
@@ -840,12 +851,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
-    fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
-                    RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
-
-    if (fault == NoFault) {
-        fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
-    }
+    fault = checkAddressPermission(read->req, BaseMMU::Read,
+                                   RiscvISA::PrivilegeMode::PRV_S, tc,
+                                   entry.vaddr);
 
     if (fault != NoFault) {
         fault = accessFault();
@@ -862,14 +870,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                 // this read will eventually become write
                 // if doWrite is True
 
-                fault = walker->pmp->pmpCheck(read->req, BaseMMU::Write,
-                                              RiscvISA::PrivilegeMode::PRV_S,
-                                              tc, entry.vaddr);
-
-                if (fault == NoFault) {
-                    fault = walker->pma->check(read->req,
-                                BaseMMU::Write, entry.vaddr);
-                }
+                fault = checkAddressPermission(read->req, BaseMMU::Write,
+                                               RiscvISA::PrivilegeMode::PRV_S,
+                                               tc, entry.vaddr);
 
                 if (fault != NoFault) {
                     fault = accessFault();
@@ -1014,12 +1017,9 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
 
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
-    fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
-                    RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
-
-    if (fault == NoFault) {
-        fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
-    }
+    fault = checkAddressPermission(read->req, BaseMMU::Read,
+                                   RiscvISA::PrivilegeMode::PRV_S, tc,
+                                   entry.vaddr);
 
     if (fault != NoFault) {
         fault = accessFault();
@@ -1036,14 +1036,9 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
                 // this read will eventually become write
                 // if doWrite is True
 
-                fault = walker->pmp->pmpCheck(read->req, BaseMMU::Write,
-                                              RiscvISA::PrivilegeMode::PRV_S,
-                                              tc, entry.vaddr);
-
-                if (fault == NoFault) {
-                    fault = walker->pma->check(read->req,
-                                BaseMMU::Write, entry.vaddr);
-                }
+                fault = checkAddressPermission(read->req, BaseMMU::Write,
+                                               RiscvISA::PrivilegeMode::PRV_S,
+                                               tc, entry.vaddr);
 
                 if (fault != NoFault) {
                     fault = accessFault();
@@ -1276,11 +1271,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
             if (timingFault == NoFault) {
-                timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
-            }
-
-            if (timingFault == NoFault) {
-                timingFault = walker->pma->check(req, mode);
+                timingFault = checkAddressPermission(req, mode, pmode, tc, 0);
             }
 
             // Let the CPU continue.

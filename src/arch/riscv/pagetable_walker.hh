@@ -182,6 +182,10 @@ namespace RiscvISA
             // Mutates pte's access (a) and dirty (d) bits.
             Fault checkPTEPermissions(PTE &pte, WalkFlags &stepWalkFlags,
                                       int level);
+            Fault checkAddressPermission(const RequestPtr &req,
+                                         BaseMMU::Mode mode,
+                                         PrivilegeMode pmode,
+                                         ThreadContext *tc, Addr vaddr);
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
             Fault stepWalkGStage(PacketPtr &write);
