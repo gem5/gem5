@@ -907,13 +907,6 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     if (walkType != TwoStage) {
                         entry.vaddr &= ~mask(entry.logBytes);
                     }
-
-                    // Don't do TLB insert here when ending TwoStage.
-                    // An additional GStage is done in walkTwoStage()
-                    // and then we insert.
-                    // Also don't insert on special_access
-                    if (walkType != TwoStage && !memaccess.bypassTLB())
-                        stepWalkFlags.doTLBInsert = true;
                 }
 
                 // Update statistics for completed page walks
@@ -973,13 +966,6 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         write = new_write;
 
-        // Atomic walks publish in walkOneStage() after A/D writeback.
-        if (stepWalkFlags.doTLBInsert && timing) {
-            if (!functional && !memaccess.bypassTLB()) {
-                Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
-                walker->tlb->insert(vpn, entry);
-            }
-        }
         endWalk();
     }
     else {
@@ -1216,6 +1202,9 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
     assert(pkt->isResponse());
     assert(inflight);
     assert(state == Waiting);
+
+    PacketPtr write = NULL;
+
     inflight--;
     if (squashed) {
         // if were were squashed, return true once inflight is zero and
@@ -1231,24 +1220,32 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
 
         state = nextState;
         nextState = Ready;
-        PacketPtr write = NULL;
         read = pkt;
         timingFault = stepWalk(write);
         state = Waiting;
         assert(timingFault == NoFault || read == NULL);
-        if (write) {
-            writes.push_back(write);
-        }
-        sendPackets();
     } else {
+        if (pkt->isError()) {
+            timingFault = accessFault();
+        }
         delete pkt;
-
-        sendPackets();
     }
+
+    if (write) {
+        writes.push_back(write);
+    }
+    sendPackets();
+
     if (inflight == 0 && read == NULL && writes.size() == 0) {
         state = Ready;
         nextState = Waiting;
         if (timingFault == NoFault) {
+            // Publish only after all PTE writes have completed.
+            if (!functional && !memaccess.bypassTLB()) {
+                Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+                walker->tlb->insert(vpn, entry);
+            }
+
             /*
              * Finish the translation. Now that we know the right entry is
              * in the TLB, this should work with no memory accesses.
