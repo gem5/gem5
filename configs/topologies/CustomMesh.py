@@ -154,8 +154,9 @@ class CustomMesh(SimpleTopology):
     # --------------------------------------------------------------------------
 
     def _createRNFRouter(self, mesh_router):
-        # Create a zero-latency router bridging node controllers
-        # and the mesh router
+        # Create a router bridging node controllers and the mesh router.
+        # Its latency is node_router_latency: 0 with the simple network,
+        # 1 with Garnet (the minimum a Garnet router supports)
         node_router = self._Router(router_id=len(self._routers))
         node_router._row = mesh_router._row
         node_router._col = mesh_router._col

@@ -55,6 +55,11 @@ Router::Router(const Params &p)
     m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
     crossbarSwitch(this)
 {
+    fatal_if(m_latency < 1,
+             "%s: Garnet router latency must be at least 1 cycle (got %d). "
+             "A Garnet router always holds a flit for one cycle; use the "
+             "simple network for zero-latency routers.",
+             name(), m_latency);
     m_input_unit.clear();
     m_output_unit.clear();
 }
