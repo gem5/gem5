@@ -192,30 +192,27 @@ Router::regStats()
 {
     BasicRouter::regStats();
 
-    m_buffer_reads
-        .name(name() + ".buffer_reads")
-        .flags(statistics::nozero)
-    ;
+    namespace units = statistics::units;
 
-    m_buffer_writes
-        .name(name() + ".buffer_writes")
-        .flags(statistics::nozero)
-    ;
+    m_buffer_reads.name(name() + ".buffer_reads")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 
-    m_crossbar_activity
-        .name(name() + ".crossbar_activity")
-        .flags(statistics::nozero)
-    ;
+    m_buffer_writes.name(name() + ".buffer_writes")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 
-    m_sw_input_arbiter_activity
-        .name(name() + ".sw_input_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
+    m_crossbar_activity.name(name() + ".crossbar_activity")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 
-    m_sw_output_arbiter_activity
-        .name(name() + ".sw_output_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
+    m_sw_input_arbiter_activity.name(name() + ".sw_input_arbiter_activity")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
+
+    m_sw_output_arbiter_activity.name(name() + ".sw_output_arbiter_activity")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 }
 
 void

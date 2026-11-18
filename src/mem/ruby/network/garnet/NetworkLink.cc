@@ -66,6 +66,7 @@ NetworkLink::regStats()
     ClockedObject::regStats();
 
     m_flits_per_vnet.name(name() + ".flits_per_vnet")
+        .unit(statistics::units::Count::get())
         .desc("Number of flits transmitted per virtual network")
         .flags(statistics::nozero | statistics::total)
         .init(m_virt_nets);
