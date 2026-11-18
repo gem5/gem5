@@ -161,6 +161,8 @@ class CustomMesh(SimpleTopology):
         node_router._row = mesh_router._row
         node_router._col = mesh_router._col
         node_router._main = False
+        # Node router: Garnet's mesh-only stats skip it
+        node_router.router_type = "node"
 
         if hasattr(node_router, "int_routing_latency"):
             node_router.int_routing_latency = self.node_router_latency

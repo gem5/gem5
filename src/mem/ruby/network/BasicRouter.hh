@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 
+#include "enums/RubyRouterType.hh"
 #include "params/BasicRouter.hh"
 #include "sim/clocked_object.hh"
 
@@ -70,12 +71,19 @@ class BasicRouter : public ClockedObject
         return m_id;
     }
 
+    RubyRouterType
+    getRouterType() const
+    {
+        return m_router_type;
+    }
+
   protected:
     //
     // ID in relation to other routers in the system
     //
     uint32_t m_id;
     uint32_t m_latency;
+    RubyRouterType m_router_type;
 };
 
 inline std::ostream&
