@@ -464,6 +464,24 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     }
   }
 
+  action(qwm_queueMemoryWBRequestMergeTBE, "qwm",
+         desc="Queue off-chip writeback of L2 data merged with DMA data") {
+    peek(responseNetwork_in, ResponseMsg) {
+      assert(is_valid(tbe));
+      DataBlock DataBlk := in_msg.DataBlk;
+      DataBlk.copyPartial(tbe.DataBlk, getOffset(tbe.PhysicalAddress),
+                          tbe.Len);
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Sender;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := DataBlk;
+        out_msg.Len := 0;
+      }
+    }
+  }
+
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
     TBEs.deallocate(address);
     unset_tbe();
@@ -580,8 +598,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     j_popIncomingRequestQueue;
   }
 
+  // The line from the L2 may be dirty outside the bytes the DMA writes,
+  // so write the whole line with the DMA data merged in.
   transition(M_DWR, Data, M_DWRI) {
-    qw_queueMemoryWBRequest_partialTBE;
+    qwm_queueMemoryWBRequestMergeTBE;
     k_popIncomingResponseQueue;
   }
 
