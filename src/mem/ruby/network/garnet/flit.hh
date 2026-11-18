@@ -80,6 +80,23 @@ class flit
     void set_enqueue_time(Tick time) { m_enqueue_time = time; }
 
     void increment_hops() { m_route.hops_traversed++; }
+
+    // Mesh-only stats. Returns true when this is the first mesh router.
+    bool
+    mesh_enter(Tick now)
+    {
+        if (m_route.mesh_routers_visited++ == 0) {
+            m_route.mesh_entry_tick = now;
+            return true;
+        }
+        return false;
+    }
+    void
+    mesh_exit(Tick when)
+    {
+        m_route.mesh_exit_tick = when;
+    }
+
     virtual void print(std::ostream& out) const;
 
     bool

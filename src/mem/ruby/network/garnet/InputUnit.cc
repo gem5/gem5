@@ -86,6 +86,11 @@ InputUnit::wakeup()
         assert(t_flit->m_width == m_router->getBitWidth());
         int vc = t_flit->get_vc();
         t_flit->increment_hops(); // for stats
+        if (m_router->getRouterType() == RubyRouterType::mesh &&
+            t_flit->mesh_enter(curTick())) {
+            m_router->get_net_ptr()->increment_mesh_injected_flits(
+                t_flit->get_vnet());
+        }
 
         if ((t_flit->get_type() == HEAD_) ||
             (t_flit->get_type() == HEAD_TAIL_)) {

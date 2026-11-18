@@ -382,6 +382,22 @@ GarnetNetwork::get_router_id(int global_ni, int vnet)
 }
 
 void
+GarnetNetwork::record_mesh_stats(int vnet, const RouteInfo &route)
+{
+    if (route.mesh_routers_visited == 0) {
+        m_core_internal_flits[vnet]++;
+        return;
+    }
+    int hops = route.mesh_routers_visited - 1;
+    Tick latency = route.mesh_exit_tick - route.mesh_entry_tick;
+    m_mesh_flits_received[vnet]++;
+    m_mesh_hops += hops;
+    m_mesh_hops_hist[vnet].sample(hops);
+    m_mesh_flit_latency[vnet] += latency;
+    m_mesh_flit_latency_hist.sample(ticksToCycles(latency));
+}
+
+void
 GarnetNetwork::regStats()
 {
     Network::regStats();
@@ -508,6 +524,61 @@ GarnetNetwork::regStats()
     m_avg_hops.name(name() + ".average_hops")
         .unit(units::Rate<units::Count, units::Count>::get());
     m_avg_hops = m_total_hops / sum(m_flits_received);
+
+    // Mesh-only stats: flits that entered at least one mesh router
+    // (router_type "mesh"); core_internal_flits never did. Hops = mesh
+    // links crossed; latency = first mesh router input to last mesh
+    // router crossbar exit, in ticks (histogram in network cycles).
+    m_mesh_flits_injected.init(m_virtual_networks)
+        .name(name() + ".mesh_flits_injected")
+        .unit(units::Count::get())
+        .desc("flits entering their first mesh router")
+        .flags(statistics::total | statistics::nozero | statistics::oneline);
+    m_mesh_flits_received.init(m_virtual_networks)
+        .name(name() + ".mesh_flits_received")
+        .unit(units::Count::get())
+        .desc("received flits that crossed at least one mesh router")
+        .flags(statistics::total | statistics::nozero | statistics::oneline);
+    m_core_internal_flits.init(m_virtual_networks)
+        .name(name() + ".core_internal_flits")
+        .unit(units::Count::get())
+        .desc("received flits that never entered a mesh router")
+        .flags(statistics::total | statistics::nozero | statistics::oneline);
+    m_mesh_flit_latency.init(m_virtual_networks)
+        .name(name() + ".mesh_flit_latency")
+        .unit(units::Tick::get())
+        .desc("time inside the mesh, summed over mesh flits")
+        .flags(statistics::oneline);
+    m_mesh_hops_hist.init(m_virtual_networks, 0, 31, 1)
+        .name(name() + ".mesh_hops_hist")
+        .unit(units::Count::get())
+        .desc("mesh links crossed per mesh flit")
+        .flags(statistics::nozero);
+    for (int i = 0; i < m_virtual_networks; i++) {
+        m_mesh_flits_injected.subname(i, csprintf("vnet-%i", i));
+        m_mesh_flits_received.subname(i, csprintf("vnet-%i", i));
+        m_core_internal_flits.subname(i, csprintf("vnet-%i", i));
+        m_mesh_flit_latency.subname(i, csprintf("vnet-%i", i));
+        m_mesh_hops_hist.subname(i, csprintf("vnet-%i", i));
+    }
+    m_mesh_hops.name(name() + ".mesh_hops")
+        .unit(units::Count::get())
+        .desc("mesh links crossed, summed over mesh flits");
+    m_avg_mesh_hops.name(name() + ".average_mesh_hops")
+        .unit(units::Rate<units::Count, units::Count>::get())
+        .desc("mesh links crossed per mesh flit");
+    m_avg_mesh_hops = m_mesh_hops / sum(m_mesh_flits_received);
+    m_avg_mesh_flit_latency.name(name() + ".average_mesh_flit_latency")
+        .unit(units::Rate<units::Tick, units::Count>::get())
+        .desc("time inside the mesh per mesh flit");
+    m_avg_mesh_flit_latency =
+        sum(m_mesh_flit_latency) / sum(m_mesh_flits_received);
+    m_mesh_flit_latency_hist.init(0, 127, 2)
+        .name(name() + ".mesh_flit_latency_hist")
+        .unit(units::Cycle::get())
+        .desc(csprintf("time inside the mesh per mesh flit, in cycles of %s",
+                       params().clk_domain->name()))
+        .flags(statistics::nozero);
 
     // Links
     m_total_ext_in_link_utilization.name(name() + ".ext_in_link_utilization")
