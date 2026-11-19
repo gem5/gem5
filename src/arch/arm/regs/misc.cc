@@ -2480,6 +2480,12 @@ Fault
 faultCvacEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
              const MiscRegOp64 &inst)
 {
+    // In SE mode there is no OS to set SCTLR_EL1.UCI, which Linux sets to
+    // allow these operations at EL0
+    if (!FullSystem) {
+        return NoFault;
+    }
+
     const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
     const SCTLR sctlr2 = tc->readMiscReg(MISCREG_SCTLR_EL2);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -2602,6 +2608,12 @@ Fault
 faultPouEL0(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
+    // In SE mode there is no OS to set SCTLR_EL1.UCI, which Linux sets to
+    // allow these operations at EL0
+    if (!FullSystem) {
+        return NoFault;
+    }
+
     const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
     const SCTLR sctlr2 = tc->readMiscReg(MISCREG_SCTLR_EL2);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);

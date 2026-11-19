@@ -302,7 +302,9 @@ bool fromSequencer(CHIRequestType reqType) {
          reqType == CHIRequestType:AtomicLoad ||
          reqType == CHIRequestType:AtomicStore ||
          reqType == CHIRequestType:StashShared ||
-         reqType == CHIRequestType:StashUnique;
+         reqType == CHIRequestType:StashUnique ||
+         reqType == CHIRequestType:Clean ||
+         reqType == CHIRequestType:Flush;
 }
 
 void regProbePoints() {
@@ -420,6 +422,8 @@ void initializeTBE(TBE tbe, Addr addr, int storSlot) {
 
   tbe.doCacheFill := false;
 
+  tbe.nonTemporal := false;
+
   tbe.pendReqType := CHIRequestType:null;
 
   tbe.pendAction := Event:null;
@@ -465,6 +469,7 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   tbe.seqReq := in_msg.seqReq;
   tbe.is_local_pf := in_msg.is_local_pf;
   tbe.is_remote_pf := in_msg.is_remote_pf;
+  tbe.nonTemporal := in_msg.nonTemporal;
 
   tbe.atomic_op.clear();
   tbe.atomic_op.orMask(in_msg.atomic_op);
@@ -687,6 +692,7 @@ void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
   out_msg.seqReq := tbe.seqReq;
   out_msg.is_local_pf := false;
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+  out_msg.nonTemporal := tbe.nonTemporal;
   out_msg.txnId := tbe.txnId;
   out_msg.stashNID := tbe.stashNID;
   out_msg.stashNIDValid := tbe.stashNIDValid;
@@ -751,6 +757,7 @@ void prepareRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
   out_msg.seqReq := tbe.seqReq;
   out_msg.is_local_pf := false;
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+  out_msg.nonTemporal := tbe.nonTemporal;
   out_msg.atomic_op.clear();
   out_msg.atomic_op.orMask(tbe.atomic_op);
 }
@@ -857,10 +864,11 @@ void printResources() {
 
 bool needCacheEntry(CHIRequestType req_type,
                     CacheEntry cache_entry, DirEntry dir_entry,
-                    bool is_prefetch) {
+                    bool is_prefetch, bool non_temporal) {
   // never allocates:
   // - if entry already valid
   // - if using DMT; the request is a Read*; and dir entry is invalid
+  // - if the request is non-temporal and alloc_on_non_temporal is not set
   // oterwise follow config params
   if (is_valid(cache_entry) ||
       (enable_DMT && is_invalid(dir_entry) &&
@@ -869,7 +877,8 @@ bool needCacheEntry(CHIRequestType req_type,
         (req_type == CHIRequestType:MakeReadUnique) ||
         (req_type == CHIRequestType:ReadOnce) ||
         (req_type == CHIRequestType:StashOnceShared) ||
-        (req_type == CHIRequestType:StashOnceUnique)))) {
+        (req_type == CHIRequestType:StashOnceUnique))) ||
+      (non_temporal && (alloc_on_non_temporal == false))) {
     return false;
   } else {
     return is_prefetch ||
@@ -1282,6 +1291,17 @@ bool isWriteReqType(CHIRequestType type) {
   return false;
 }
 
+// Whether a demand request that trains the prefetcher reads the line.
+// Atomics both read and write it: those that return data train as reads, the
+// others as writes.
+bool isPrefetcherReadReqType(CHIRequestType type) {
+  if (isReadReqType(type) || (type == CHIRequestType:AtomicLoad)) {
+    return true;
+  }
+  assert(isWriteReqType(type) || (type == CHIRequestType:AtomicStore));
+  return false;
+}
+
 bool isStashReqType(CHIRequestType type) {
   if (type == CHIRequestType:StashOnceShared ||
       type == CHIRequestType:StashOnceUnique ||
@@ -1300,10 +1320,20 @@ bool isStashSnpType(CHIRequestType type) {
   return false;
 }
 
+bool isCMOReqType(CHIRequestType type) {
+  if (type == CHIRequestType:Clean ||
+      type == CHIRequestType:Flush ||
+      type == CHIRequestType:CleanShared ||
+      type == CHIRequestType:CleanInvalid) {
+    return true;
+  }
+  return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////
 // State->Event converters
 
-Event reqToEvent(CHIRequestType type, bool is_prefetch) {
+Event reqToEvent(CHIRequestType type, bool is_prefetch, bool non_temporal) {
   if (type == CHIRequestType:Load) {
     if (is_prefetch == false) {
       return Event:Load;
@@ -1363,7 +1393,9 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
       return Event:WriteUnique; // all WriteUnique handled the same when ~PoC
     }
   } else if (type == CHIRequestType:WriteUniqueFull) {
-    if (is_HN && alloc_on_writeback) {
+    bool alloc := alloc_on_writeback &&
+                  ((non_temporal == false) || alloc_on_non_temporal);
+    if (is_HN && alloc) {
       return Event:WriteUniqueFull_PoC_Alloc;
     } else if (is_HN) {
       return Event:WriteUniqueFull_PoC;
@@ -1372,6 +1404,20 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     }
   } else if (type == CHIRequestType:WriteUniqueZero) {
       return Event:WriteUniqueZero;
+  } else if ((type == CHIRequestType:Clean) ||
+             (type == CHIRequestType:CleanShared)) {
+    if (is_HN) {
+      return Event:CleanShared_PoC;
+    } else {
+      return Event:CleanShared;
+    }
+  } else if ((type == CHIRequestType:Flush) ||
+             (type == CHIRequestType:CleanInvalid)) {
+    if (is_HN) {
+      return Event:CleanInvalid_PoC;
+    } else {
+      return Event:CleanInvalid;
+    }
   } else if (type == CHIRequestType:StashOnceShared) {
       if (is_HN) {
           return Event:StashOnceShared_PoC;

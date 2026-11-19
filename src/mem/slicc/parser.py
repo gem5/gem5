@@ -80,6 +80,7 @@ class SLICC(Grammar):
             "use_secondary_load_linked": False,
             "use_secondary_store_conditional": False,
             "supports_flushes": False,
+            "supports_cleans": False,
         }
 
         if not includes:

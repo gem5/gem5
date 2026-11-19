@@ -276,14 +276,21 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
         assert(pkt->getSize() == pf->getSize());
     }
 
-    // ruby doesn't support cache maintenance operations at the
-    // moment, as a workaround, we respond right away
-    if (pkt->req->isCacheMaintenance() &&
-        !owner.m_ruby_system->getProtocolInfo().getSupportsFlushes()) {
-        warn_once("Cache maintenance operations are not supported in Ruby.\n");
-        pkt->makeResponse();
-        schedTimingResp(pkt, curTick());
-        return true;
+    // Respond right away to cache maintenance operations if the protocol
+    // doesn't support them, or if they target device (pio) memory, which
+    // Ruby never caches
+    if (pkt->req->isCacheMaintenance()) {
+        bool supported =
+            owner.m_ruby_system->getProtocolInfo().getSupportsFlushes();
+        if (!supported) {
+            warn_once("Cache maintenance operations are not supported by "
+                      "this Ruby protocol.\n");
+        }
+        if (!supported || !isPhysMemAddress(pkt)) {
+            pkt->makeResponse();
+            schedTimingResp(pkt, curTick());
+            return true;
+        }
     }
     // Check for pio requests and directly send them to the dedicated
     // pio port.
@@ -650,9 +657,11 @@ RubyPort::MemResponsePort::hitCallback(PacketPtr pkt)
         }
     }
 
-    // Flush, acquire, release requests don't access physical memory
-    if (pkt->isFlush() || pkt->cmd == MemCmd::MemSyncReq
-        || pkt->cmd == MemCmd::WriteCompleteResp || pkt->req->hasNoAddr()) {
+    // Flush, cache maintenance, acquire, release requests don't access
+    // physical memory
+    if (pkt->isFlush() || pkt->req->isCacheMaintenance() ||
+        pkt->cmd == MemCmd::MemSyncReq ||
+        pkt->cmd == MemCmd::WriteCompleteResp || pkt->req->hasNoAddr()) {
         accessPhysMem = false;
     }
 
