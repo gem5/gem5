@@ -47,7 +47,8 @@ with gem5_scons.Configure(main) as conf:
             conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
                                     call='H5::H5File("", 0);')
     if conf.env['CONF']['HAVE_HDF5']:
-        conf.env['CONF']['HAVE_HDF5'] = conf.TryCompile(
+        # Kconfig expects a bool (converted to y/n), not SCons' integer 1/0.
+        conf.env['CONF']['HAVE_HDF5'] = bool(conf.TryCompile(
             """
             #include <H5public.h>
             #if !defined(H5_VERS_MAJOR)
@@ -59,7 +60,7 @@ with gem5_scons.Configure(main) as conf:
             #endif
             """,
             extension=".cc",
-        )
+        ))
 
     if conf.env['CONF']['HAVE_HDF5']:
         conf.env.TagImplies('hdf5', 'gem5 lib')
