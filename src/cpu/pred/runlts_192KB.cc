@@ -48,11 +48,13 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <deque>
 #include <functional>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -1053,8 +1055,10 @@ class Predictor
     tageTablesSizeBits()
     {
         size_t bits = 0;
-        bits += NBANKHIGH * (1 << logg[BORN]) * (CWIDTH + UWIDTH + TB[BORN]);
-        bits += NBANKLOW * (1 << logg[1]) * (CWIDTH + UWIDTH + TB[1]);
+        bits += size_t(NBANKHIGH) * (size_t(1) << logg[BORN]) *
+                (CWIDTH + UWIDTH + TB[BORN]);
+        bits += size_t(NBANKLOW) * (size_t(1) << logg[1]) *
+                (CWIDTH + UWIDTH + TB[1]);
         bits += SIZEUSEALT * ALTWIDTH;
         bits += m[NHIST];
         bits += PHISTWIDTH;
@@ -1187,7 +1191,16 @@ class Predictor
     RP(InstSeqNum seq, uint8_t piece)
     {
         return seq_no_to_correct_path_no[seq %
-                                         seq_no_to_correct_path_no.size()];
+                                         seq_no_to_correct_path_no.size()]
+            .correctPathNo;
+    }
+
+    bool
+    isSquashedSeq(InstSeqNum seq)
+    {
+        const CorrectPathEntry &entry =
+            seq_no_to_correct_path_no[seq % seq_no_to_correct_path_no.size()];
+        return entry.seqNum != seq || !entry.valid;
     }
 
     PredictionHistory
@@ -1932,7 +1945,9 @@ class Predictor
     decode(InstSeqNum seq_num, const StaticInstPtr &inst)
     {
         if (!UseLogical) {
-            seqRegState.at(RP(seq_num, 0) % ST_NBuf).valid = false;
+            if (!isSquashedSeq(seq_num)) {
+                seqRegState.at(RP(seq_num, 0) % ST_NBuf).valid = false;
+            }
             return;
         }
         if (isSquashedDecode(seq_num)) {
@@ -2036,6 +2051,9 @@ class Predictor
     writeback(const Writeback &writeback)
     {
         const InstSeqNum seq_num = writeback.seqNum;
+        if (!UseLogical && isSquashedSeq(seq_num)) {
+            return;
+        }
         auto set_digest = [&](size_t reg, uint64_t value) {
             const uint64_t digest = make_reg_digest(reg, value);
             if (!UseLogical) {
@@ -2110,7 +2128,7 @@ class Predictor
     fetch(InstSeqNum seq_num)
     {
         seq_no_to_correct_path_no[seq_num % seq_no_to_correct_path_no.size()] =
-            correct_path_no++;
+            {seq_num, correct_path_no++, true};
         lastFetchedSeqNum = seq_num;
     }
 
@@ -2124,14 +2142,11 @@ class Predictor
     void
     squashInstructionState(InstSeqNum seq_num)
     {
-        correct_path_no =
-            seq_no_to_correct_path_no[seq_num %
-                                      seq_no_to_correct_path_no.size()] +
-            1;
+        correct_path_no = RP(seq_num, 0) + 1;
         // Avoid restoring a wrong-path position on a later squash.
         for (InstSeqNum seq = seq_num + 1; seq <= lastFetchedSeqNum; seq++) {
             seq_no_to_correct_path_no[seq % seq_no_to_correct_path_no.size()] =
-                correct_path_no - 1;
+                {seq, correct_path_no - 1, false};
         }
 
         if (UseLogical) {
@@ -2248,7 +2263,14 @@ class Predictor
     std::array<int, (1 << LOGSIZEUP)> Pupdatethreshold{};
     int8_t FirstH = 0, SecondH = 0;
 
-    std::array<uint64_t, 2048> seq_no_to_correct_path_no{};
+    struct CorrectPathEntry
+    {
+        InstSeqNum seqNum = 0;
+        uint64_t correctPathNo = 0;
+        bool valid = false;
+    };
+
+    std::array<CorrectPathEntry, 2048> seq_no_to_correct_path_no{};
     uint64_t correct_path_no = 0;
 
     RBias_ RBias;
@@ -2508,13 +2530,14 @@ class Predictor
             int before = m[i - 2];
             int current = m[i - 1];
             int a = current + (current - before + 2);
-            int b = int(current * rate / 2.0 + 0.5) * 2;
-            m[i] = std::max(a, b);
+            double b = std::floor(current * rate / 2.0 + 0.5) * 2;
+            fatal_if(std::max<double>(a, b) >= HISTBUFFERLENGTH,
+                     "RUNLTS TAGE history %d must be shorter than the "
+                     "history buffer (%d). Reduce minHist (%d) or "
+                     "histRate (%f).",
+                     i, HISTBUFFERLENGTH, MINHIST, HistRate);
+            m[i] = std::max(a, int(b));
         }
-        fatal_if(m[NHIST] >= HISTBUFFERLENGTH,
-                 "RUNLTS longest TAGE history (%d) must be shorter than "
-                 "the history buffer (%d). Reduce minHist or histRate.",
-                 m[NHIST], HISTBUFFERLENGTH);
 
         const size_t low_entries = size_t(NBANKLOW) * (1u << LOGG_1);
         const size_t high_entries = size_t(NBANKHIGH) * (1u << LOGG_BORN);
@@ -2565,8 +2588,38 @@ RUNLTS::RUNLTS(const Params &params)
              "RUNLTS currently supports exactly one hardware thread");
     fatal_if(!params.speculativeHistUpdate,
              "RUNLTS requires speculative history updates");
-    fatal_if(params.numLowBanks == 0 || params.numHighBanks == 0,
-             "RUNLTS needs at least one low bank and one high bank");
+
+    auto check_range = [](const char *name, uint64_t value, uint64_t min,
+                          uint64_t max) {
+        fatal_if(value < min || value > max,
+                 "RUNLTS %s (%d) must be between %d and %d", name, value, min,
+                 max);
+    };
+    check_range("minHist", params.minHist, 1,
+                runlts_impl::HISTBUFFERLENGTH - 1);
+    fatal_if(!std::isfinite(params.histRate) || params.histRate <= 0,
+             "RUNLTS histRate (%f) must be positive and finite",
+             params.histRate);
+    check_range("logLowBankSize", params.logLowBankSize, 1, 30);
+    check_range("logHighBankSize", params.logHighBankSize, 1, 30);
+    check_range("numLowBanks", params.numLowBanks, 1,
+                std::numeric_limits<int>::max() >> params.logLowBankSize);
+    check_range("numHighBanks", params.numHighBanks, 1,
+                std::numeric_limits<int>::max() >> params.logHighBankSize);
+    check_range("lowBankTagBits", params.lowBankTagBits, 1, 31);
+    check_range("highBankTagBits", params.highBankTagBits, 1, 31);
+    check_range("pathHistBits", params.pathHistBits, 1, 31);
+    check_range("logBimodalSize", params.logBimodalSize, 1, 30);
+    check_range("updateThresholdWidth", params.updateThresholdWidth, 1, 31);
+    check_range("pUpdateThresholdWidth", params.pUpdateThresholdWidth, 1, 31);
+    check_range("chooserConfWidth", params.chooserConfWidth, 1, 8);
+    check_range("logBwnb", params.logBwnb, 1, 30);
+    check_range("logPnbSeq", params.logPnbSeq, 1, 30);
+    check_range("logPnbLog", params.logPnbLog, 1, 30);
+    check_range("logLnb", params.logLnb, 1, 30);
+    check_range("logSnb", params.logSnb, 1, 30);
+    check_range("logTnb", params.logTnb, 1, 30);
+    check_range("logCnb", params.logCnb, 1, 30);
     fatal_if(params.logRatioBimodalHystEntries > params.logBimodalSize,
              "RUNLTS logRatioBimodalHystEntries (%d) must not exceed "
              "logBimodalSize (%d)",
@@ -2732,7 +2785,7 @@ RUNLTS::processFeedback()
     // When both are due, decode is processed first.
     // Log-RBias restores its checkpoints on SquashDecided and ignores delayed
     // decode events from squashed instructions, whereas Seq-RBias deliberately
-    // retains register values produced on the wrong path.
+    // retains register values produced on the wrong path before the squash.
     while (!decodedEvents.empty() && decodedEvents.front().when <= curTick()) {
         const DecodeEvent &event = decodedEvents.front();
         threadState(event.tid).pred.decode(event.seqNum, event.staticInst);
