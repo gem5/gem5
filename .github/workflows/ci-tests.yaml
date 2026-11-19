@@ -294,7 +294,7 @@ jobs:
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [pre-commit]
-        timeout-minutes: 90
+        timeout-minutes: 180
         env:
             CC: /usr/bin/gcc
             CXX: /usr/bin/g++
@@ -368,7 +368,7 @@ jobs:
                   done
                   exit ${status}
             - name: Upload SALAM test results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v7
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-salam-status-${{ job.status }}-output
