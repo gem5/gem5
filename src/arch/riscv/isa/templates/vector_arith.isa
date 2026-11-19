@@ -124,7 +124,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -389,7 +388,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -528,7 +526,6 @@ template<typename ElemType>
     for (uint32_t i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen, &vxsat);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -706,7 +703,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -978,7 +974,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     &cnt, _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -1225,7 +1220,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -1348,7 +1342,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl >= 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -1464,7 +1457,6 @@ def template VMvWholeMacroConstructor {{
 
     for (int i = 0; i < num_microops; ++i) {
         microop = new %(class_name)sMicro(_machInst, 0, i, _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
     }
 
@@ -1746,7 +1738,6 @@ template<typename ElemType>
     } else {
         microop = new %(class_name)sMicro<ElemType>(_machInst, this->vl, 0,
                                                     _elen, _vlen);
-        microop->setDelayedCommit();
     }
 
     this->microops.push_back(microop);
@@ -1869,7 +1860,6 @@ template<typename ElemType, typename IndexType>
     for (uint32_t i = 0; i < num_microops && micro_vl > 0; i++) {
         microop = new %(class_name)sMicro<ElemType, IndexType>(
             _machInst, micro_vl, i, _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
     }
@@ -2049,7 +2039,6 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst,
             micro_vl, i, &vxsat, _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
@@ -2213,7 +2202,6 @@ template<typename ElemType>
     for (uint32_t i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(
             _machInst, micro_vl, i, _elen, _vlen);
-        microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }

@@ -77,7 +77,6 @@ def template VleConstructor {{
     }
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vl, i, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsLoad);
         this->microops.push_back(microop);
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -287,7 +286,6 @@ def template VseConstructor {{
     }
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vl, i, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsStore);
         this->microops.push_back(microop);
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -463,7 +461,6 @@ def template VlmConstructor {{
         microop = new VectorNopMicroInst(_machInst);
     } else {
         microop = new Vle8_vMicro(_machInst, micro_vl, 0, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsLoad);
     }
     this->microops.push_back(microop);
@@ -491,7 +488,6 @@ def template VsmConstructor {{
         microop = new VectorNopMicroInst(_machInst);
     } else {
         microop = new Vse8_vMicro(_machInst, micro_vl, 0, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsStore);
     }
     this->microops.push_back(microop);
@@ -519,7 +515,6 @@ def template VsWholeConstructor {{
     for (int i = 0; i < NFIELDS; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, elen,
                                           vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsStore);
         this->microops.push_back(microop);
     }
@@ -657,7 +652,6 @@ def template VlWholeConstructor {{
     for (int i = 0; i < NFIELDS; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, elen,
                                           vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsLoad);
         this->microops.push_back(microop);
     }
@@ -839,14 +833,12 @@ def template VlStrideConstructor {{
 
                 microop = new VPinVdMicroInst(machInst, segIdx + i,
                     micro_vl, elen, vlen);
-                microop->setFlag(IsDelayedCommit);
                 this->microops.push_back(microop);
 
                 for (int j = 0; j < micro_vl; ++j) {
                     microop = new %(class_name)sMicro(machInst, i, segIdx, j,
                                                       micro_vl, offset, true,
                                                       elen, vlen);
-                    microop->setFlag(IsDelayedCommit);
                     microop->setFlag(IsLoad);
                     this->microops.push_back(microop);
                 }
@@ -909,7 +901,6 @@ def template VsStrideConstructor {{
                     microop = new %(class_name)sMicro(machInst, i, segIdx, j,
                                                       micro_vl, offset, true,
                                                       elen, _vlen);
-                    microop->setFlag(IsDelayedCommit);
                     microop->setFlag(IsStore);
                     this->microops.push_back(microop);
                 }
@@ -956,7 +947,6 @@ template<typename ElemType>
     const uint8_t num_cpyvs_microops = ceil((float) this->vl/vs2_vlmax);
     for (uint32_t i = 0; i < num_cpyvs_microops; i++) {
         microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen, vlen);
-        microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
 
@@ -966,7 +956,6 @@ template<typename ElemType>
         uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
 
         microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
-        microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
 
@@ -980,7 +969,6 @@ template<typename ElemType>
                                                         vdElemIdx, vs2RegIdx,
                                                         vs2ElemIdx, elen,
                                                         vlen);
-            microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsLoad);
             this->microops.push_back(microop);
         }
@@ -1207,7 +1195,6 @@ template<typename ElemType>
                                                         vs3ElemIdx, vs2RegIdx,
                                                         vs2ElemIdx, elen,
                                                         vlen);
-            microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsStore);
             this->microops.push_back(microop);
         }
@@ -1431,7 +1418,6 @@ def template VlSegConstructor {{
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
                                                   num_microops, f, NFIELDS,
                                                   elen, vlen);
-                microop->setDelayedCommit();
                 microop->setFlag(IsLoad);
                 this->microops.push_back(microop);
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -1707,7 +1693,6 @@ def template VsSegConstructor {{
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
                                                   num_microops, f, NFIELDS,
                                                   elen, vlen);
-                microop->setDelayedCommit();
                 microop->setFlag(IsStore);
                 this->microops.push_back(microop);
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
