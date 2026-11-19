@@ -132,6 +132,11 @@ Event::releaseImpl()
 void
 EventQueue::insert(Event *event)
 {
+    gem5_assert(
+        !inParallelMode || this == curEventQueue(),
+        "%s: cannot insert event %s from event queue %s in parallel mode",
+        name(), event->name(),
+        curEventQueue() ? curEventQueue()->name() : "<none>");
     gem5_assert(event->when() >= getCurTick(),
                 "Event must be inserted at or after the current tick.");
     // Deal with the head case
