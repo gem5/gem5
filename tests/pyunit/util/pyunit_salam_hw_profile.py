@@ -614,7 +614,7 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         )
         self.assertEqual(
             dict(data["INSTRUCTIONS"])["add"],
-            {"functional_unit": 1, "opcode_num": 13},
+            {"functional_unit": 1, "opcode_num": 13, "opcode_name": "add"},
         )
 
     def test_singleton_profile_records(self):
@@ -672,7 +672,16 @@ class FunctionalUnitFieldTest(unittest.TestCase):
         )
         self.assertEqual(
             data["INSTRUCTIONS"],
-            (("add", {"functional_unit": 17, "opcode_num": 13}),),
+            (
+                (
+                    "add",
+                    {
+                        "functional_unit": 17,
+                        "opcode_num": 13,
+                        "opcode_name": "add",
+                    },
+                ),
+            ),
         )
 
     def test_reordered_profile_records(self):
