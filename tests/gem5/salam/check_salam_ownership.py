@@ -48,6 +48,7 @@ from gem5.salam.workload_config import CYCLE_COUNT_PARAMS
 
 STRING_FIELDS = {
     "alias",
+    "opcode_name",
     "int_size",
     "int_sign",
     "fp_size",
@@ -160,7 +161,7 @@ def check_profile(expected):
             InstructionConfig,
             "inst_list",
             "instructions",
-            "opcode_num",
+            "functional_unit",
         ),
     )
     for cls, entry_cls, vector_name, key, _field in collections:

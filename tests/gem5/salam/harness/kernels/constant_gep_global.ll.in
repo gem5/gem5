@@ -28,7 +28,7 @@
 
 target datalayout = "e-p:64:64:64:64"
 
-@base = global i32 7
+@base = constant i32 7
 
 define void @top() {
   %address = ptrtoint {PTR_I32} getelementptr (

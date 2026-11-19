@@ -226,6 +226,12 @@ def dma_config_constructs_devices(params):
                     if dma_type == "NonCoherent"
                     else {"ReadInt": 0, "WriteInt": 255}
                 )
+            elif suffix != "default":
+                record.update(
+                    {"InterruptNum": 0}
+                    if dma_type == "NonCoherent"
+                    else {"ReadInt": 0, "WriteInt": 0}
+                )
             records.append(record)
     with open(os.path.join(outdir, "config.yml"), "w") as f:
         yaml.safe_dump(
@@ -384,12 +390,23 @@ def connection_config_constructs_devices(params):
         {"Clocks": {"Compute": "100MHz", "Fabric": "10ns"}},
         {
             "DMA": [
-                {"Name": name, "Type": kind, "PIOMaster": "local_bus"}
-                for name, kind in (
-                    ("ndma", "NonCoherent"),
-                    ("same", "Stream"),
-                    ("split", "Stream"),
-                )
+                {
+                    "Name": "ndma",
+                    "Type": "NonCoherent",
+                    "PIOMaster": "local_bus",
+                },
+                {
+                    "Name": "same",
+                    "Type": "Stream",
+                    "PIOMaster": "local_bus",
+                },
+                {
+                    "Name": "split",
+                    "Type": "Stream",
+                    "PIOMaster": "local_bus",
+                    "ReadInt": 212,
+                    "WriteInt": 213,
+                },
             ]
         },
     ]
