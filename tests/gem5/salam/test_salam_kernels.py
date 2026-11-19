@@ -1488,7 +1488,12 @@ kernel_suite(
         (
             "inventory",
             native_stats(
-                {"float_trig_sine.instances": 1, "double_adder.instances": 0},
+                {
+                    "float_trig_sine.instances": 1,
+                    "float_trig_sine.admissions": 1,
+                    "double_adder.instances": 0,
+                    "double_adder.admissions": 0,
+                },
                 COMM + ".hw_interface.",
             ),
         )
