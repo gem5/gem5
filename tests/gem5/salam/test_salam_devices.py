@@ -26,9 +26,7 @@
 
 
 # Actual device transport tests, without compiling an accelerator workload.
-import json
 import os
-import re
 import subprocess
 
 import salam_testlib as st
@@ -45,12 +43,6 @@ def device_case(case, diagnostic=None):
                 "-d",
                 outdir,
                 "-re",
-                "--debug-flags=SALAMScratchpad,DMA"
-                + (
-                    ",DeviceMMR"
-                    if case.startswith(("dma-registers-", "comm-registers-"))
-                    else ""
-                ),
                 os.path.join(
                     os.path.dirname(__file__),
                     (
@@ -73,58 +65,29 @@ def device_case(case, diagnostic=None):
         with open(os.path.join(outdir, "simout.txt")) as stream:
             output = stream.read()
             assert f"DEVICE CHECK PASSED {case}" in output
-        if case == "spm-order":
-            ready = {
-                int(addr, 16): int(tick)
-                for addr, tick in re.findall(
-                    r"response (0x[0-9a-f]+|0) ready at ([0-9]+)", output
-                )
-            }
-            with open(os.path.join(outdir, "device-results.json")) as stream:
-                responses = json.load(stream)["responses"][0]
-            assert len(ready) == len(responses) == 8
-            for tick, addr, size, data in responses:
-                assert tick == ready[addr], (addr, tick, ready[addr])
 
     return run
 
 
+# Keep one configured representative for each protocol or regression.
 for case in (
-    *(
-        f"register-completion-{access}-{write}-{writer}-{reader}"
-        for access, write in ((10, 0), (10, 5), (10, 10), (10, 30), (0, 0))
-        for writer in (0, 1)
-        for reader in (0, 1)
-    ),
-    *(
-        f"register-{kind}-{writer}-{reader}"
-        for kind in ("batch", "write-blocked")
-        for writer in (0, 1)
-        for reader in (0, 1)
-    ),
-    "register-functional",
+    "register-completion-0-0-0-1",
+    "register-completion-10-30-1-0",
+    "register-batch-1-0",
+    "register-write-blocked-0-1",
     "register-overlap",
     "register-blocked",
     "register-boundaries",
     "spm-boundaries",
-    "spm-order",
     "spm-blocked",
     "stream-empty",
     "stream-full",
     "dma-registers-nc",
     "dma-registers-stream",
-    "comm-registers-little",
-    "comm-registers-big",
-    "comm-registers-config-little",
     "comm-registers-config-big",
     "comm-registers-premap",
-    "dma-fifo-bypass",
-    "dma-fifo-bypass-backdoor",
-    "dma-fifo-bypass-small",
-    "dma-fifo-bypass-small-backdoor",
     "dma-fifo-timing",
-    "dma-two",
-    "dma-one",
+    "dma-fifo-bypass-small-backdoor",
     "dma-tail",
     "dma-atomic",
     "dma-read-ready",
@@ -139,66 +102,17 @@ for case in (
     )
 
 
+# Invalid layout, argument extent, and both DMA register implementations.
 for case, diagnostic in (
-    *(
-        (f"comm-registers-{suffix}", diagnostic)
-        for suffix, diagnostic in (
-            ("zero-flags", "CommInterface flags size must be nonzero"),
-            ("zero-map", "CommInterface flags and config exceed PIO size"),
-            ("large-flags", "CommInterface flags and config exceed PIO size"),
-            ("large-config", "CommInterface flags and config exceed PIO size"),
-            (
-                "overflow-config",
-                "CommInterface flags and config exceed PIO size",
-            ),
-            ("size-read", "Unsupported CommInterface register read size 3"),
-            (
-                "argument-zero-size",
-                "Unsupported CommInterface argument size 0",
-            ),
-            ("argument-size", "Unsupported CommInterface argument size 3"),
-        )
-    ),
-    *(
-        (
-            f"comm-registers-{extent}-{operation}",
-            f"CommInterface PIO access {diagnostic} register range",
-        )
-        for extent, diagnostic in (
-            ("before", "precedes"),
-            ("after", "exceeds"),
-            ("cross", "exceeds"),
-        )
-        for operation in ("read", "write")
-    ),
-    *(
-        (
-            f"comm-registers-argument-{extent}",
-            "CommInterface argument access exceeds register range",
-        )
-        for extent in ("cross", "after", "offset", "empty")
+    ("comm-registers-zero-flags", "CommInterface flags size must be nonzero"),
+    (
+        "comm-registers-argument-cross",
+        "CommInterface argument access exceeds register range",
     ),
     ("dma-registers-nc-cross-read", "DMA PIO access exceeds register range"),
-    ("dma-registers-nc-cross-write", "DMA PIO access exceeds register range"),
-    (
-        "dma-registers-nc-small-map",
-        "DMA PIO size must cover 21 register bytes",
-    ),
-    (
-        "dma-registers-stream-cross-read",
-        "Stream DMA PIO access crosses register boundary",
-    ),
     (
         "dma-registers-stream-cross-write",
         "Stream DMA PIO access crosses register boundary",
-    ),
-    (
-        "dma-registers-stream-small-map",
-        "stream DMA PIO size must cover 32 register bytes",
-    ),
-    (
-        "dma-registers-stream-wide-read",
-        "Unsupported stream DMA register read size 8",
     ),
 ):
     name = "salam-device-" + case

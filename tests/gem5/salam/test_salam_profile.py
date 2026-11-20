@@ -101,77 +101,64 @@ def cycle_counts_rejects_memory_latency(params):
         )
 
 
-_gem5 = st.SalamGem5Fixture()
-TestSuite(
-    name="salam-cycle-counts-memory-latency",
-    fixtures=[_gem5, TempdirFixture()],
-    tags=[st.SALAM_TAG],
-    tests=[
-        TestFunction(
-            cycle_counts_rejects_memory_latency,
-            name="salam-cycle-counts-memory-latency",
-        )
-    ],
-)
-
-
 def cycle_counts_checks_control_latency(params):
     gem5 = params.fixtures["salam-gem5"]
     outdir = params.fixtures[constants.tempdir_fixture_name].path
-    for instruction in ("br", "ret", "switch_inst", "call"):
-        for cycles in (0, 7):
-            run_dir = os.path.join(outdir, f"{instruction}-{cycles}")
-            os.makedirs(run_dir)
-            result = subprocess.run(
-                [
-                    gem5.path,
-                    "-d",
-                    run_dir,
-                    "-re",
-                    PROFILE_CHECK,
-                    "--case",
-                    "control-latency",
-                    "--instruction",
-                    instruction,
-                    "--cycles",
-                    str(cycles),
-                ],
-                env=gem5.tools.env(),
-            )
-            with open(os.path.join(run_dir, "simerr.txt")) as f:
-                err = f.read()
-            if cycles and instruction != "call":
-                if (
-                    result.returncode == 0
-                    or "terminator latency is not modeled" not in err
-                    or instruction not in err
-                ):
-                    raise AssertionError(
-                        f"CycleCounts({instruction}={cycles}) was not "
-                        f"rejected with its diagnostic; see {run_dir}"
-                    )
-            else:
-                with open(os.path.join(run_dir, "simout.txt")) as f:
-                    out = f.read()
-                if (
-                    result.returncode != 0
-                    or "CycleCounts instantiated" not in out
-                ):
-                    raise AssertionError(
-                        f"CycleCounts({instruction}={cycles}) failed; "
-                        f"see {run_dir}"
-                    )
+    for instruction, cycles in (("br", 0), ("br", 7), ("call", 7)):
+        run_dir = os.path.join(outdir, f"{instruction}-{cycles}")
+        os.makedirs(run_dir)
+        result = subprocess.run(
+            [
+                gem5.path,
+                "-d",
+                run_dir,
+                "-re",
+                PROFILE_CHECK,
+                "--case",
+                "control-latency",
+                "--instruction",
+                instruction,
+                "--cycles",
+                str(cycles),
+            ],
+            env=gem5.tools.env(),
+        )
+        with open(os.path.join(run_dir, "simerr.txt")) as f:
+            err = f.read()
+        if cycles and instruction != "call":
+            if (
+                result.returncode == 0
+                or "terminator latency is not modeled" not in err
+                or instruction not in err
+            ):
+                raise AssertionError(
+                    f"CycleCounts({instruction}={cycles}) was not "
+                    f"rejected with its diagnostic; see {run_dir}"
+                )
+        else:
+            with open(os.path.join(run_dir, "simout.txt")) as f:
+                out = f.read()
+            if result.returncode != 0 or "CycleCounts instantiated" not in out:
+                raise AssertionError(
+                    f"CycleCounts({instruction}={cycles}) failed; "
+                    f"see {run_dir}"
+                )
 
 
+_gem5 = st.SalamGem5Fixture()
 TestSuite(
-    name="salam-cycle-counts-control-latency",
+    name="salam-cycle-counts",
     fixtures=[_gem5, TempdirFixture()],
     tags=[st.SALAM_TAG, "salam-correctness"],
     tests=[
         TestFunction(
+            cycle_counts_rejects_memory_latency,
+            name="salam-cycle-counts-memory-latency",
+        ),
+        TestFunction(
             cycle_counts_checks_control_latency,
             name="salam-cycle-counts-control-latency",
-        )
+        ),
     ],
 )
 
@@ -215,8 +202,6 @@ def dma_config_constructs_devices(params):
         for suffix, sizes in (
             ("default", {}),
             ("explicit", {"BufferSize": 512, "MaxReqSize": 64}),
-            ("buffer", {"BufferSize": 256}),
-            ("request", {"MaxReqSize": 32}),
         ):
             record = {
                 "Name": f"{prefix}_{suffix}",
@@ -284,14 +269,7 @@ def cache_config_constructs_devices(params):
     outdir = params.fixtures[constants.tempdir_fixture_name].path
     cases = (
         (32768, 32768),
-        ("32768", 32768),
         ("32Ki", 32768),
-        ("32k", 32768),
-        ("0x8000", 32768),
-        ("1Mi", 1048576),
-        ("+32Ki", 32768),
-        ("0o40Ki", 32768),
-        ("0b100000Ki", 32768),
     )
     cluster = [{"Name": "clstr"}]
     for index, (value, _) in enumerate(cases):

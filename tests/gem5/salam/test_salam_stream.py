@@ -90,10 +90,11 @@ def check_roundtrip(params):
         raise AssertionError(f"stream payloads {observed} != {expected}")
     stats = st.read_stats(outdir)[-1]
     # Two 32-bit words cross the stream in each direction per invocation.
+    expected_bytes = len(INPUTS) * RUNS * 4
     for direction in ("read", "write"):
         key = f"system.harness_clstr.pipe.stream.{direction}Bytes"
-        if stats[key] != 16:
-            raise AssertionError(f"{key}: {stats[key]} != 16")
+        if stats[key] != expected_bytes:
+            raise AssertionError(f"{key}: {stats[key]} != {expected_bytes}")
 
 
 gem5 = st.SalamGem5Fixture()

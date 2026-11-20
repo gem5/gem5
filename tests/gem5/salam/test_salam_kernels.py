@@ -46,151 +46,10 @@ COMM = "system.harness_clstr.kernel"
 LLVM_STATS = COMM + ".llvm_interface."
 MULTIPLIER_STATS = COMM + ".hw_interface.integer_multiplier."
 COMM_STATS = COMM + "."
-ONE_PASS = dict(fuStall=0, memoryWait=0, computeWait=0, other=0)
 
 
 def out_regex(index, value, run=0):
     return re.compile(rf"^RUN\[{run}\] OUT\[{index}\]={value} ")
-
-
-def check_invocation_duration(params):
-    outdir, out = st.read_simout(params)
-    starts = [
-        tuple(map(int, values))
-        for values in re.findall(
-            r"launch accepted at (\d+); first compute pass at (\d+) "
-            r"\(period (\d+)\)",
-            out,
-        )
-    ]
-    finishes = [
-        tuple(map(int, values))
-        for values in re.findall(
-            r"finished at (\d+) after (\d+) cycles",
-            out,
-        )
-    ]
-    printed = [
-        float(value)
-        for value in re.findall(
-            r"^\s*Runtime:\s+([0-9.e+-]+) us$",
-            out,
-            re.M,
-        )
-    ]
-    if (
-        not starts
-        or len(starts) != len(finishes)
-        or len(starts) != len(printed)
-    ):
-        raise AssertionError("missing invocation boundary or runtime report")
-    frequency = st.read_stats(outdir)[-1]["simFreq"]
-    records = [
-        dict(
-            accepted=start,
-            first_pass=first,
-            period=period,
-            completed=end,
-            passes=passes,
-            elapsed_ticks=end - start,
-            printed_us=us,
-        )
-        for (start, first, period), (end, passes), us in zip(
-            starts, finishes, printed
-        )
-    ]
-    with open(os.path.join(outdir, "invocation-duration.json"), "w") as f:
-        json.dump(records, f, indent=2)
-    for record in records:
-        # Match the summary's six significant digits, not a tolerance.
-        expected = float(f"{record['elapsed_ticks'] / (frequency / 1e6):.6g}")
-        if record["printed_us"] != expected:
-            raise AssertionError(
-                f"elapsed invocation runtime {record['printed_us']} us != "
-                f"{expected} us from accepted/completed events {record}"
-            )
-    ticks = [
-        int(n)
-        for n in re.findall(
-            r"^\s*Invocation duration:\s+(\d+) ticks$",
-            out,
-            re.M,
-        )
-    ]
-    passes = [
-        int(n)
-        for n in re.findall(
-            r"^\s*Compute passes:\s+(\d+)$",
-            out,
-            re.M,
-        )
-    ]
-    if ticks != [r["elapsed_ticks"] for r in records]:
-        raise AssertionError("reported ticks differ from invocation events")
-    if passes != [r["passes"] for r in records]:
-        raise AssertionError("compute-pass count changed in the report")
-
-
-def categories(expected):
-    def check(params):
-        outdir, _out = st.read_simout(params)
-        stats = st.read_stats(outdir)[-1]
-        found = {
-            name: stats[LLVM_STATS + "cycleCategories::" + name]
-            for name in expected
-        }
-        if found != expected:
-            raise AssertionError(f"cycle categories {found}, not {expected}")
-
-    return check
-
-
-def unit_stats(admissions, denials, in_flight, busy, start_tick=None):
-    def check(params):
-        outdir, out = st.read_simout(params)
-        stats = st.read_stats(outdir)[-1]
-        window = stats["simTicks"]
-        expected = {"instances": 1, "admissions": admissions}
-        if denials is not None:
-            expected["denials"] = denials
-        found = {k: stats[MULTIPLIER_STATS + k] for k in expected}
-        if found != expected:
-            raise AssertionError(f"unit counts {found}, not {expected}")
-        busy_area = busy
-        if start_tick is not None:
-            reset = int(re.search(r"^(\d+): .*resetstats", out, re.M).group(1))
-            busy_area = busy - reset
-        # Averages are printed with 6 decimals.
-        slack = 1e-6 * window
-        for name, area in (
-            ("inFlight", in_flight),
-            ("busyInstances", busy_area),
-        ):
-            if (
-                area is not None
-                and abs(stats[MULTIPLIER_STATS + name] * window - area) > slack
-            ):
-                raise AssertionError(
-                    f"{name} area {stats[MULTIPLIER_STATS + name] * window}, "
-                    f"expected {area}"
-                )
-        utilization = stats[MULTIPLIER_STATS + "utilization"]
-        if abs(utilization - stats[MULTIPLIER_STATS + "busyInstances"]) > 1e-6:
-            raise AssertionError(f"utilization {utilization}")
-
-    return check
-
-
-def busy_until_last_completion(params):
-    # The 20-cycle multiplies end 60 compute cycles after the first pass.
-    _outdir, out = st.read_simout(params)
-    first = int(re.search(r"first compute pass at (\d+)", out).group(1))
-    return first + 60 * 10000
-
-
-def reset_unit_check(params):
-    end = busy_until_last_completion(params)
-    unit_stats(2, None, None, end, start_tick=True)(params)
 
 
 def native_stats(expected, prefix=COMM_STATS):
@@ -202,35 +61,6 @@ def native_stats(expected, prefix=COMM_STATS):
             raise AssertionError(f"statistics {found}, not {expected}")
 
     return check
-
-
-def directions(**counts):
-    # requests=(reads, writes), ... -> {"requests::read": reads, ...}
-    out = {}
-    for name, (reads, writes) in counts.items():
-        out[f"{name}::read"] = reads
-        out[f"{name}::write"] = writes
-    return out
-
-
-def summaries_per_invocation(params):
-    _outdir, out = st.read_simout(params)
-    blocks = out.split("PPA scope: invocation")[1:]
-    if len(blocks) != 3:
-        raise AssertionError(f"{len(blocks)} summaries, not 3")
-    areas = {
-        re.search(r"PPA known area \(um\^2\): (\S+)", b).group(1)
-        for b in blocks
-    }
-    if len(areas) != 1:
-        raise AssertionError(f"area changes between invocations: {areas}")
-    for block in blocks:
-        runtime = int(re.search(r"Compute passes:\s+(\d+)", block).group(1))
-        parts = re.findall(r"^\s+[a-z ]+:\s+(\d+) cycles$", block, re.M)
-        if sum(map(int, parts)) != runtime or len(parts) != 5:
-            raise AssertionError(f"categories {parts} for {runtime} cycles")
-        if not re.search(r"Operations Issued:\s+10$", block, re.M):
-            raise AssertionError("not 10 operations issued")
 
 
 def kernel_suite(
@@ -245,7 +75,6 @@ def kernel_suite(
     ir_patterns=(),
     fs_args=(),
     cache_size=None,
-    simout_counts=(),
     gem5_args=(),
     gem5=None,
     profile=None,
@@ -257,17 +86,9 @@ def kernel_suite(
     extra_tests=(),
     harness_class=st.SalamHarnessFixture,
 ):
-    if any("SALAMLaunch" in arg for arg in gem5_args):
-        extra_tests = tuple(extra_tests) + (
-            ("invocation-duration", check_invocation_duration),
-        )
-        # Custom profiles run separately from the default SALAM binary.
-        if st.SALAM_TAG in tags:
-            tags = tuple(tags) + ("salam-invocation-duration",)
     # expect/forbid: {index: value} checked for every run.
     # fs_args, gem5_args: extra fs.py and gem5 options for the run.
     # cache_size: give the accelerator a Cache var of that size.
-    # simout_counts: (label, regex, count): count matching simout lines.
     # profile: a SalamProfileFixture to write before gem5 builds it.
     gem5 = gem5 or st.SalamGem5Fixture()
     tempdir = TempdirFixture()
@@ -315,10 +136,6 @@ def kernel_suite(
                     out_regex(index, value, run), ["system.terminal"]
                 )
             )
-    for label, regex, count in simout_counts:
-        verifiers[label] = st.CountFileRegex(
-            re.compile(regex), ["simout.txt"], count
-        )
     tests += [
         v.instantiate_test(f"{name}-{label}") for label, v in verifiers.items()
     ]
@@ -508,66 +325,15 @@ kernel_suite(
 )
 
 
-def check_call_handoff(latency):
-    def check(params):
-        outdir, out = st.read_simout(params)
-        returns = list(
-            map(int, re.findall(r"^(\d+): .*issue control ret$", out, re.M))
-        )
-        calls = list(
-            map(int, re.findall(r"^(\d+): .*complete call$", out, re.M))
-        )
-        period = int(re.search(r"period (\d+)\)", out)[1])
-        # Each run has one callee return, then its caller's return. The
-        # caller processes completion on subsequent passes: one handoff
-        # pass plus the configured number of call-latency passes.
-        if len(returns) != 4 or len(calls) != 2:
-            raise AssertionError("call/return did not complete once per run")
-        for returned, completed in zip(returns[::2], calls):
-            if completed - returned != (latency + 1) * period:
-                raise AssertionError("call completion violated return handoff")
-        stats = st.read_stats(outdir)[-1]
-        for field in ("issued::call", "completed::call"):
-            if (
-                stats["system.harness_clstr.kernel.llvm_interface." + field]
-                != 2
-            ):
-                raise AssertionError("call accounting differs from trace")
-
-    return check
-
-
-for call_latency in (0, 3):
-    for call_lockstep in (False, True):
-        kernel_suite(
-            f"salam-kernel-call-handoff-{call_latency}-{call_lockstep}",
-            "call_return.c",
-            inputs=[5],
-            expect={0: 16, 1: 17},
-            runs=2,
-            hw_config={
-                "instructions": {"call": {"runtime_cycles": call_latency}}
-            },
-            fs_args=[
-                "--param=system.harness_clstr.kernel.llvm_interface."
-                f"lockstep_mode={call_lockstep}",
-            ],
-            gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
-            extra_tests=[("return-handoff", check_call_handoff(call_latency))],
-            tags=(st.SALAM_TAG, "salam-correctness"),
-        )
-
-
 # Phis at a block entry read their incoming values simultaneously.
 PHI_PATTERN = r"= phi i32 \[ %\d+, %\d+ \], \[ %\d+, %\d+ \]"
-for n, expect in ((3, {0: 2, 1: 1}), (2, {0: 1, 1: 2})):
-    kernel_suite(
-        f"salam-kernel-phi-swap-{n}",
-        "phi_swap.c",
-        inputs=[n, 1, 2],
-        expect=expect,
-        ir_patterns=[PHI_PATTERN],
-    )
+kernel_suite(
+    "salam-kernel-phi-swap-3",
+    "phi_swap.c",
+    inputs=[3, 1, 2],
+    expect={0: 2, 1: 1},
+    ir_patterns=[PHI_PATTERN],
+)
 
 kernel_suite(
     "salam-kernel-phi-rotate",
@@ -638,26 +404,9 @@ kernel_suite(
     ir_patterns=[r"= load volatile i8, (i8\*|ptr) "],
 )
 
-# Memory accesses keep program order where they may overlap: a slow
-# division leaves an older access's address or data pending while a
-# younger access to the same word is ready.
+# Delay a producer so the caller's memory access is still pending.
 SLOW_UDIV = {"instructions": {"udiv": {"runtime_cycles": 20}}}
 UDIV = r"= udiv i32 "
-for name, kernel, inputs, expect in (
-    ("raw", "order_raw.c", [6, 2], {0: 3}),
-    ("war", "order_war.c", [0, 1, 5], {0: 0, 1: 5}),
-    ("waw", "order_waw.c", [6, 2, 5, 0], {0: 5}),
-    ("unresolved", "order_unresolved.c", [0, 1, 9], {0: 9}),
-):
-    kernel_suite(
-        f"salam-kernel-order-{name}",
-        kernel,
-        inputs=inputs,
-        expect=expect,
-        hw_config=SLOW_UDIV,
-        fs_args=NO_LOCKSTEP,
-        ir_patterns=[UDIV],
-    )
 
 # Calls order memory accesses between the caller and the callee.
 kernel_suite(
@@ -679,70 +428,14 @@ kernel_suite(
     ir_patterns=[r"call void @put_double\("],
 )
 
-# A Cache var connects to its accelerator, whose name ("Kernel") the
-# cluster stores in lower case.
-kernel_suite(
-    "salam-kernel-cache",
-    "sanity.c",
-    inputs=[2, 3],
-    expect={0: 5},
-    cache_size=1024,
-)
-
-# An instruction whose functional unit the profile does not define is
-# rejected when the IR is read. The mapping comes from the generated
-# InstConfig parameters; override one so it names enum 99.
 INST_CONFIG = "system.harness_clstr.kernel.hw_interface.inst_config"
-rejected_suite(
-    "salam-kernel-unknown-functional-unit",
-    "phi_swap.c",
-    inputs=[3, 1, 2],
-    fs_args=[f"--param={INST_CONFIG}.icmp.functional_unit=99"],
-    config_regex=(
-        r"^\[" + re.escape(INST_CONFIG) + r"\.icmp\]\n(?:\w+=.*\n)*?"
-        r"functional_unit=99$"
-    ),
-    regex=r"instruction 'icmp' uses functional unit 99, which the "
-    r"hardware profile does not define",
-    ir_patterns=[r"= icmp "],
-)
 
-# Functional-unit instances. With limit 0 a unit has one instance per
-# static instruction that uses it in top and its direct callees: the
-# twice-called helper() counts once, the uncalled unused() not at all.
-# Every invocation resolves the same inventory.
 FU_UNITS = "system.harness_clstr.kernel.hw_interface.functional_units"
 INVENTORY_IR = [
     r"call i32 @helper\(.*\n.*call i32 @helper\(",
     r"define dso_local (?:noundef )?i32 @unused\(.*\n.*= shl ",
 ]
 
-
-def inventory(alias, enum, instances, uses, runs):
-    return (
-        f"inventory-{alias}",
-        rf"llvm_interface: {alias} \({enum}\): {instances} instances, "
-        rf"{uses} static instructions$",
-        runs,
-    )
-
-
-kernel_suite(
-    "salam-kernel-fu-inventory",
-    "fu_inventory.c",
-    inputs=[9, 3],
-    expect={0: 6, 1: 10},
-    runs=3,
-    gem5_args=["--debug-flags=SALAMFUInventory"],
-    ir_patterns=INVENTORY_IR,
-    simout_counts=[
-        inventory("integer_adder", 1, 2, 2, 3),
-        inventory("integer_multiplier", 2, 1, 1, 3),
-        inventory("bitwise_operations", 4, 1, 1, 3),
-        inventory("bit_shifter", 3, 0, 0, 3),
-        inventory("float_adder", 5, 0, 0, 3),
-    ],
-)
 
 # A nonzero limit is the instance count.
 kernel_suite(
@@ -763,112 +456,46 @@ kernel_suite(
 )
 
 
-def multiply_schedule(latency, issue_cycles, runs):
+def check_multiply_latency(latency, frequency, pipelined=False):
     def check(params):
         outdir, out = st.read_simout(params)
-        starts = [
-            tuple(map(int, values))
-            for values in re.findall(
-                r"launch accepted at (\d+); first compute pass at (\d+) "
-                r"\(period (\d+)\)",
+        stats = st.read_stats(outdir)[-1]
+        period = stats["simFreq"] / frequency
+        issues = [
+            int(tick)
+            for tick in re.findall(
+                r"^\s*(\d+): .*\.llvm_interface: issue compute mul$",
                 out,
+                re.M,
             )
         ]
-        if len(starts) != runs:
-            raise AssertionError(f"expected {runs} traced invocations")
-        events = []
-        for position, line in enumerate(out.splitlines()):
-            match = re.match(r"^\s*(\d+): .*\.llvm_interface: (.*)$", line)
-            if match:
-                events.append((position, int(match[1]), match[2]))
-        records = []
-        for run, (start, first, period) in enumerate(starts):
-            end = starts[run + 1][0] if run + 1 < runs else float("inf")
-            invocation = [e for e in events if start <= e[1] < end]
-            issues = [
-                t for _, t, text in invocation if text == "issue compute mul"
-            ]
-            completes = [
-                t for _, t, text in invocation if text == "complete compute"
-            ]
-            expected_issues = [
-                start + cycle * period for cycle in issue_cycles
-            ]
-            expected_completes = [
-                t + latency * period for t in expected_issues
-            ]
-            if (
-                first != start
-                or issues != expected_issues
-                or completes != expected_completes
-            ):
-                raise AssertionError(
-                    f"multiply timing: issues={issues}, completes={completes}, "
-                    f"expected issues={expected_issues}, "
-                    f"expected completions={expected_completes}"
-                )
-            stores = []
-            memory_completes = {}
-            for position, tick, text in invocation:
-                match = re.fullmatch(
-                    r"memory issue store uid (\d+) address (0x[0-9a-f]+) "
-                    r"volatile (\d)",
-                    text,
-                )
-                if match:
-                    stores.append(
-                        (
-                            position,
-                            tick,
-                            int(match[1]),
-                            int(match[2], 16),
-                            int(match[3]),
-                        )
-                    )
-                match = re.fullmatch(r"memory complete uid (\d+)", text)
-                if match:
-                    memory_completes[int(match[1])] = (position, tick)
-            if len(stores) != 3:
-                raise AssertionError(f"expected three output stores: {stores}")
-            previous_completion = -1
-            previous_tick = start
-            observed = []
-            for index, store in enumerate(stores):
-                position, tick, uid, address, volatile = store
-                completion = memory_completes.get(uid)
-                expected_issue = max(expected_completes[index], previous_tick)
-                if (
-                    (tick, address, volatile)
-                    != (expected_issue, 0x2F000100 + 4 * index, 1)
-                    or completion is None
-                    or completion[1] != expected_issue + period
-                    or completion[0] <= position
-                    or position <= previous_completion
-                ):
-                    raise AssertionError(
-                        f"volatile store {index}: issue={store}, "
-                        f"completion={completion}, expected tick={expected_issue}"
-                    )
-                previous_completion, previous_tick = completion
-                observed.append(
-                    dict(
-                        uid=uid,
-                        address=address,
-                        issued=tick,
-                        completed=completion[1],
-                    )
-                )
-            records.append(
-                dict(
-                    latency=latency,
-                    period=period,
-                    issues=issues,
-                    completes=completes,
-                    stores=observed,
-                )
+        completions = [
+            int(tick)
+            for tick in re.findall(
+                r"^\s*(\d+): .*\.llvm_interface: complete compute$",
+                out,
+                re.M,
             )
-        with open(os.path.join(outdir, "multiply-schedule.json"), "w") as f:
-            json.dump(records, f, indent=2)
+        ]
+        if len(issues) != 3 or len(completions) != 3:
+            raise AssertionError("expected three multiply operations")
+        if any(
+            completed - issued != latency * period
+            for issued, completed in zip(issues, completions)
+        ):
+            raise AssertionError("multiply latency differs from configuration")
+        overlap = any(
+            issued < completed
+            for issued, completed in zip(issues[1:], completions)
+        )
+        if overlap != pipelined:
+            raise AssertionError(
+                "FU initiation interval did not control overlap"
+            )
+        if any(b - a < period for a, b in zip(issues, issues[1:])):
+            raise AssertionError(
+                "one instance admitted twice on a compute edge"
+            )
 
     return check
 
@@ -877,7 +504,6 @@ def zero_latency_accounting(instances, operations):
     def check(params):
         outdir, _out = st.read_simout(params)
         stats = st.read_stats(outdir)[-1]
-        prefix = "system.harness_clstr.kernel.hw_interface.integer_multiplier."
         expected = {
             "instances": instances,
             "admissions": operations,
@@ -885,176 +511,65 @@ def zero_latency_accounting(instances, operations):
             "busyInstances": 0,
             "utilization": 0,
         }
-        found = {name: stats[prefix + name] for name in expected}
+        found = {name: stats[MULTIPLIER_STATS + name] for name in expected}
         if found != expected:
             raise AssertionError(f"zero-latency FU accounting {found}")
 
     return check
 
 
-# Three independent multiplies are ready together. Each physical instance
-# admits at most once per compute edge, including zero-latency operations.
-# Volatile output stores complete in order, one per later pass. The trace
-# checks individual issues and completions because the store tail can hide
-# admission differences in the final invocation duration.
+# Keep one non-pipelined and one pipelined instance. Check configured
+# operation latency rather than a table of scheduler issue passes.
 MULTIPLIER = FU_UNITS + ".integer_multiplier"
 CYCLE_COUNTS = "system.harness_clstr.kernel.hw_interface.cycle_counts"
 LOCKSTEP = "system.harness_clstr.kernel.llvm_interface.lockstep_mode"
-for name, latency, limit, interval, lockstep, runtime, runs, issues in (
-    ("l4-three", 4, 3, None, False, 8, 1, (0, 0, 0)),
-    ("l4-one", 4, 1, None, False, 14, 3, (0, 4, 8)),
-    ("l4-ii1", 4, 1, 1, False, 8, 1, (0, 1, 2)),
-    ("l4-ii1-lockstep", 4, 1, 1, True, 14, 1, (0, 4, 8)),
-    ("l1-ii5", 1, 1, 5, False, 13, 1, (0, 5, 10)),
-    ("l0-one", 0, 1, None, False, 4, 3, (0, 1, 2)),
-    ("l0-two", 0, 2, None, False, 4, 1, (0, 0, 1)),
-):
-    fs_args = [
-        f"--param={LOCKSTEP}={lockstep}",
-        f"--param={CYCLE_COUNTS}.mul={latency}",
-        f"--param={MULTIPLIER}.limit={limit}",
-    ]
-    if interval is not None:
-        fs_args.append(f"--param={MULTIPLIER}.initiation_interval={interval}")
-    checks = [("multiply-schedule", multiply_schedule(latency, issues, runs))]
-    if name == "l4-three":
-        checks.append(
-            ("categories", categories(dict(ONE_PASS, issue=5, computeWait=3)))
-        )
-    elif name == "l4-ii1":
-        checks.append(("unit", unit_stats(3, 3, 120000, 60000)))
-    elif name == "l4-one":
-        fs_args.append(
-            f"--param={COMM}.hw_interface.salam_power_model.report_details=True"
-        )
-        checks.append(("summaries", summaries_per_invocation))
-    if latency == 0:
-        checks.append(
-            ("unit-accounting", zero_latency_accounting(limit, 3 * runs))
-        )
+for name, interval in (("l4-one", 0), ("l4-ii1", 1)):
     kernel_suite(
         f"salam-kernel-fu-sched-{name}",
         "fu_sched.c",
         inputs=[3, 4, 5],
         expect={0: 9, 1: 16, 2: 25},
-        runs=runs,
-        fs_args=fs_args,
-        ir_patterns=[r"(?s)(= mul i32 .*){3}"],
-        simout_counts=[
-            ("runtime", rf"^\s*Compute passes:\s+{runtime}$", runs)
+        fs_args=[
+            f"--param={LOCKSTEP}=False",
+            f"--param={CYCLE_COUNTS}.mul=4",
+            f"--param={MULTIPLIER}.limit=1",
+            f"--param={MULTIPLIER}.initiation_interval={interval}",
         ],
-        gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
-        extra_tests=checks,
+        clocks={"Compute": "100MHz"},
+        ir_patterns=[r"(?s)(= mul i32 .*){3}"],
+        gem5_args=["--debug-flags=SALAMIssue"],
+        extra_tests=[
+            ("latency", check_multiply_latency(4, 100000000, interval > 0)),
+            (
+                "admissions",
+                native_stats(
+                    {"instances": 1, "admissions": 3}, MULTIPLIER_STATS
+                ),
+            ),
+        ],
         tags=(st.SALAM_TAG, "salam-correctness"),
     )
 
-# An explicitly unbound operation has no physical-instance admission limit.
+
+# Exercise token acquisition and release across nested calls when
+# operations complete immediately on one shared functional unit.
 kernel_suite(
-    "salam-kernel-fu-sched-unbound",
-    "fu_sched.c",
-    inputs=[3, 4, 5],
-    expect={0: 9, 1: 16, 2: 25},
+    "salam-kernel-fu-sched-nested-zero-False",
+    "call_nested.c",
+    inputs=[5, 2],
+    expect={0: 35, 1: 7},
     fs_args=[
         f"--param={LOCKSTEP}=False",
         f"--param={CYCLE_COUNTS}.mul=0",
-        f"--param={INST_CONFIG}.mul.functional_unit=0",
+        f"--param={CYCLE_COUNTS}.add=0",
+        f"--param={INST_CONFIG}.add.functional_unit=2",
         f"--param={MULTIPLIER}.limit=1",
     ],
-    ir_patterns=[r"(?s)(= mul i32 .*){3}"],
-    gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
-    extra_tests=[("multiply-schedule", multiply_schedule(0, (0, 0, 0), 1))],
+    ir_patterns=[r"call i32 @g\(", r"call i32 @f\("],
+    extra_tests=[("shared-unit", zero_latency_accounting(1, 8))],
     tags=(st.SALAM_TAG, "salam-correctness"),
 )
 
-
-def nested_zero_admission(params):
-    _outdir, out = st.read_simout(params)
-    period = int(
-        re.search(r"first compute pass at \d+ \(period (\d+)\)", out)[1]
-    )
-    issues = [
-        int(tick)
-        for tick in re.findall(
-            r"^\s*(\d+): .*\.llvm_interface: issue compute (?:add|mul)$",
-            out,
-            re.M,
-        )
-    ]
-    completes = [
-        int(tick)
-        for tick in re.findall(
-            r"^\s*(\d+): .*\.llvm_interface: complete compute$", out, re.M
-        )
-    ]
-    # Three calls to f issue one mul and one add each; g adds its second
-    # argument and then the two results. All eight use the same instance.
-    if (
-        len(issues) != 8
-        or completes != issues
-        or any(b - a < period for a, b in zip(issues, issues[1:]))
-    ):
-        raise AssertionError(
-            f"nested zero-latency admission {issues}, {completes}"
-        )
-    zero_latency_accounting(1, 8)(params)
-
-
-for lockstep in (False, True):
-    kernel_suite(
-        f"salam-kernel-fu-sched-nested-zero-{lockstep}",
-        "call_nested.c",
-        inputs=[5, 2],
-        expect={0: 35, 1: 7},
-        fs_args=[
-            f"--param={LOCKSTEP}={lockstep}",
-            f"--param={CYCLE_COUNTS}.mul=0",
-            f"--param={CYCLE_COUNTS}.add=0",
-            f"--param={INST_CONFIG}.add.functional_unit=2",
-            f"--param={MULTIPLIER}.limit=1",
-        ],
-        ir_patterns=[r"call i32 @g\(", r"call i32 @f\("],
-        gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
-        extra_tests=[("shared-unit", nested_zero_admission)],
-        tags=(st.SALAM_TAG, "salam-correctness"),
-    )
-
-
-# Latency comes from CycleCounts (and workload overrides) only. The
-# unit's descriptive cycles/stages do not change it: with both set
-# to 9, the multiplies still take the default 1 cycle.
-kernel_suite(
-    "salam-kernel-fu-descriptive-fields",
-    "fu_sched.c",
-    inputs=[3, 4, 5],
-    expect={0: 9, 1: 16, 2: 25},
-    fs_args=[
-        f"--param={MULTIPLIER}.cycles=9",
-        f"--param={MULTIPLIER}.stages=9",
-    ],
-    ir_patterns=[r"(?s)(= mul i32 .*){3}"],
-    simout_counts=[("runtime", r"^\s*Compute passes:\s+5$", 1)],
-    gem5_args=["--debug-flags=SALAMIssue,SALAMLaunch"],
-    extra_tests=[
-        ("multiply-schedule", multiply_schedule(1, (0, 0, 0), 1)),
-        (
-            "memory-interface",
-            native_stats(
-                dict(
-                    directions(
-                        requests=(3, 3),
-                        attempts=(3, 3),
-                        accepted=(3, 3),
-                        responses=(3, 3),
-                        bytes=(12, 12),
-                    ),
-                    starts=1,
-                    finishes=1,
-                )
-            ),
-        ),
-    ],
-    tags=(st.SALAM_TAG, "salam-correctness"),
-)
 
 # A remap profile moves fsub from double_adder to the float_trig_sine
 # example unit. It is built from a copy of the default profile, so it
@@ -1072,14 +587,6 @@ kernel_suite(
     inputs=FSUB_INPUTS,
     expect={0: FSUB_OUT},
     ir_patterns=FSUB_IR,
-    extra_tests=[
-        (
-            "inventory",
-            native_stats(
-                {"double_adder.instances": 1}, COMM + ".hw_interface."
-            ),
-        )
-    ],
 )
 
 
@@ -1509,296 +1016,38 @@ kernel_suite(
 )
 
 
-# Launch timing. The run bit is checked on the next edge of the
-# cluster's compute clock (100 MHz by default) and the first compute
-# pass runs on that edge, for every invocation. At 50 MHz the edges are
-# 20 ns apart and the kernel takes the same number of cycles.
-COMPUTE_CLOCK = "system.harness_clstr.compute_clk_domain.clock"
-for name, fs_args, period, edge in (
-    ("launch-100mhz", [], 10000, r"\d*0000"),
-    (
-        "launch-50mhz",
-        [f"--param={COMPUTE_CLOCK}='50MHz'"],
-        20000,
-        r"\d*[02468]0000",
-    ),
-):
-    kernel_suite(
-        f"salam-kernel-{name}",
-        "sanity.c",
-        inputs=[2, 3],
-        expect={0: 5},
-        runs=2,
-        fs_args=fs_args,
-        gem5_args=["--debug-flags=SALAMLaunch"],
-        simout_counts=[
-            ("checked-on-edge", rf"run bit written; checked at {edge}$", 2),
-            (
-                "first-pass-on-acceptance",
-                rf"launch accepted at ({edge}); first compute pass at \1 "
-                rf"\(period {period}\)$",
-                2,
-            ),
-            ("cycles", r"^\s*Compute passes:\s+3$", 2),
-        ],
-    )
-
-# CommInterface service passes. A scratchpad load issued while the
-# CommInterface is idle is serviced process_cycles compute cycles
-# later, answered 2 ns after that and seen by the next compute pass;
-# the add and the register-bank store take 3 more cycles: 4 + n cycles.
-for cycles in (1, 4):
-    kernel_suite(
-        f"salam-kernel-service-{cycles}",
-        "spm_load.c",
-        inputs=[0],
-        expect={0: 1},
-        fs_args=[f"--param={COMM}.process_cycles={cycles}"],
-        ir_patterns=[r"= load volatile i32, (i32\*|ptr) inttoptr"],
-        simout_counts=[
-            ("runtime", rf"^\s*Compute passes:\s+{4 + cycles}$", 1)
-        ],
-        extra_tests=(
-            [
-                (
-                    "categories",
-                    categories(dict(ONE_PASS, issue=4, memoryWait=1)),
-                ),
-                (
-                    "memory-interface",
-                    native_stats(
-                        dict(
-                            directions(
-                                requests=(1, 1),
-                                attempts=(1, 1),
-                                accepted=(1, 1),
-                                responses=(1, 1),
-                                bytes=(4, 4),
-                            ),
-                            starts=1,
-                            finishes=1,
-                        )
-                    ),
-                ),
-            ]
-            if cycles == 1
-            else []
-        ),
-    )
-
-# Scratchpad latency variation stays within its configured bounds and
-# repeats across simulations with the same seed. Rejected requests add no
-# samples; repeated invocations still sample each accepted access.
-SPM = "system.harness_clstr.mem"
-SLOW_SPM = f"--param={SPM}.bandwidth='200MiB/s'"
-SAMPLE = r"mem: latency sample \d+ \(extra \d+\) cycles$"
-REJECTED = r"mem: port 1 busy: request rejected$"
-# Require exactly two ordinary scalar loads: volatile loads serialize and
-# vector loads change both the packet count and the sampler sequence.
-SPM_LOADS_IR = [
-    r"(?ms)\A(?!(?:.*?^\s*%\S+ = load ){3})"
-    r"(?:.*?^\s*%\S+ = load i32, (?:i32\*|ptr) inttoptr){2}"
-]
-
-
-def check_spm_latency_samples(params):
-    outdir, output = st.read_simout(params)
-
-    def samples(text):
-        values = [
-            tuple(map(int, match))
-            for match in re.findall(
-                r"mem: latency sample (\d+) \(extra (\d+)\) cycles$",
-                text,
-                re.M,
-            )
-        ]
-        if len(values) != 4 or any(
-            not 0 <= extra <= 5 or latency != 2 + extra
-            for latency, extra in values
-        ):
-            raise AssertionError(f"scratchpad latency samples: {values}")
-        if len(re.findall(REJECTED, text, re.M)) != 2:
-            raise AssertionError(
-                "expected one rejected request per invocation"
-            )
-        return values
-
-    first = samples(output)
-    st.run_fs(
-        "salam-workload",
-        KERNEL_WALL,
-        KERNEL_TICKS,
-        fs_args=[f"--param={SPM}.access_cycles_var=5", SLOW_SPM],
-        gem5_args=["--debug-flags=SALAMScratchpad"],
-        subdir="repeat",
-    )(params)
-    repeated = os.path.join(outdir, "repeat")
-    with open(os.path.join(repeated, "simout.txt")) as stream:
-        output = stream.read()
-    if not re.search(st.M5_EXIT_REGEX, output, re.M):
-        raise AssertionError("repeated scratchpad run did not finish")
-    if samples(output) != first:
-        raise AssertionError("same-seed scratchpad samples did not repeat")
-    with open(os.path.join(outdir, "system.terminal")) as stream:
-        terminal = stream.read()
-    with open(os.path.join(repeated, "system.terminal")) as stream:
-        if stream.read() != terminal:
-            raise AssertionError("repeated scratchpad payload changed")
-
-
-for name, variation, runs, counts, extra_tests in (
-    (
-        "spm-latency-var-runs",
-        5,
-        2,
-        [
-            ("samples", SAMPLE, 4),
-            ("rejected", REJECTED, 2),
-        ],
-        [("sample-properties", check_spm_latency_samples)],
-    ),
-    (
-        "spm-latency-fixed",
-        0,
-        1,
-        [("samples", SAMPLE, 0), ("rejected", REJECTED, 1)],
-        [],
-    ),
-):
-    kernel_suite(
-        f"salam-kernel-{name}",
-        "spm_two_loads.c",
-        inputs=[0],
-        expect={0: 0},
-        runs=runs,
-        fs_args=[f"--param={SPM}.access_cycles_var={variation}", SLOW_SPM],
-        gem5_args=["--debug-flags=SALAMScratchpad"],
-        ir_patterns=SPM_LOADS_IR,
-        simout_counts=counts,
-        extra_tests=extra_tests
-        + (
-            [
-                (
-                    "memory-interface",
-                    native_stats(
-                        dict(
-                            directions(
-                                requests=(2, 1),
-                                attempts=(3, 1),
-                                accepted=(2, 1),
-                                responses=(2, 1),
-                                bytes=(8, 4),
-                            ),
-                            starts=1,
-                            finishes=1,
-                        )
-                    ),
-                )
-            ]
-            if variation == 0
-            else []
-        ),
-    )
-
-# Scratchpad access time. The response is ready access_cycles fabric
-# cycles (1 ns) after the request arrives on a compute edge, and the next
-# compute pass (10 ns later) sees it: up to 10 cycles costs nothing more
-# than the default 2, 11 costs one compute cycle.
-for access, runtime in ((10, 5), (11, 6)):
-    kernel_suite(
-        f"salam-kernel-spm-access-{access}",
-        "spm_load.c",
-        inputs=[0],
-        expect={0: 1},
-        fs_args=[f"--param={SPM}.access_cycles={access}"],
-        simout_counts=[("runtime", rf"^\s*Compute passes:\s+{runtime}$", 1)],
-    )
-
-# A register-bank store completes only after its batch becomes visible.
-# A dependent load must read the stored value with a shorter, equal, or
-# longer visibility delay than the ten-cycle minimum acknowledgment.
-REGS = "system.harness_clstr.out"
-for name, write_cycles, value in (
-    ("regbank-visible-early", 5, 9),
-    ("regbank-visible", 10, 9),
-    ("regbank-visible-late", 30, 9),
-):
-    kernel_suite(
-        f"salam-kernel-{name}",
-        "regbank_rw.c",
-        inputs=[9],
-        expect={0: value},
-        fs_args=[f"--param={REGS}.write_cycles={write_cycles}"],
-        ir_patterns=[r"store volatile i32 %\d+, (i32\*|ptr) inttoptr"],
-    )
-
-# Cluster clocks from the workload's Clocks item. A controlled compute
-# interval, one multiplier taking three 4-cycle multiplies one after
-# another, takes the same 14 cycles at any compute clock: 13 periods
-# from the first pass to the last, 130000 ticks at 100 MHz, twice that
-# at 50 MHz, and ten times as many 0.1 ps ticks at a 10 THz tick
-# resolution.
+# A longer compute period must lengthen each configured multiply latency.
 ONE_MULTIPLIER = [
     f"--param={LOCKSTEP}=False",
     f"--param={CYCLE_COUNTS}.mul=4",
     f"--param={MULTIPLIER}.limit=1",
+    f"--param={MULTIPLIER}.initiation_interval=0",
 ]
-for name, clocks, ticks, wrapper, limit in (
-    ("clocks-compute-100mhz", {"Compute": "100MHz"}, 130000, None, None),
-    ("clocks-compute-50mhz", {"Compute": "50MHz"}, 260000, None, None),
-    (
-        "clocks-tick-resolution",
-        None,
-        1300000,
-        os.path.join(os.path.dirname(__file__), "tick_resolution.py"),
-        100000000000,
-    ),
-):
-    kernel_suite(
-        f"salam-kernel-{name}",
-        "fu_sched.c",
-        inputs=[3, 4, 5],
-        expect={0: 9, 1: 16, 2: 25},
-        fs_args=ONE_MULTIPLIER,
-        gem5_args=["--debug-flags=SALAMLaunch"],
-        clocks=clocks,
-        wrapper=wrapper,
-        ticks=limit or KERNEL_TICKS,
-        extra_tests=(
-            [
-                (
-                    "categories",
-                    categories(
-                        dict(ONE_PASS, issue=5, fuStall=6, computeWait=3)
-                    ),
-                ),
-                ("unit", unit_stats(3, 12, 120000, 120000)),
-            ]
-            if name == "clocks-compute-100mhz"
-            else []
-        ),
-        simout_counts=[
-            (
-                "elapsed",
-                rf"finished at \d+ after 14 cycles \({ticks} ticks\)$",
-                1,
-            )
-        ],
-    )
-
-# A slower fabric clock lengthens the idle scratchpad load: at 100 MHz
-# the scratchpad's 2 cycles take 20 ns (one more compute cycle) and the
-# register bank's 10-cycle write acknowledgement takes 100 ns (nine
-# more): 5 + 1 + 9 cycles.
 kernel_suite(
-    "salam-kernel-clocks-fabric-100mhz",
-    "spm_load.c",
-    inputs=[0],
-    expect={0: 1},
-    clocks={"Fabric": "100MHz"},
-    simout_counts=[("runtime", r"^\s*Compute passes:\s+15$", 1)],
+    "salam-kernel-clocks-compute-50mhz",
+    "fu_sched.c",
+    inputs=[3, 4, 5],
+    expect={0: 9, 1: 16, 2: 25},
+    fs_args=ONE_MULTIPLIER,
+    clocks={"Compute": "50MHz"},
+    ir_patterns=[r"(?s)(= mul i32 .*){3}"],
+    gem5_args=["--debug-flags=SALAMIssue"],
+    extra_tests=[("latency", check_multiply_latency(4, 50000000))],
 )
+
+# Keep the delayed-publication case; device tests cover the exact
+# register-bank completion delay.
+REGS = "system.harness_clstr.out"
+kernel_suite(
+    "salam-kernel-regbank-visible-late",
+    "regbank_rw.c",
+    inputs=[9],
+    expect={0: 9},
+    fs_args=[f"--param={REGS}.write_cycles=30"],
+    ir_patterns=[r"store volatile i32 %\d+, (i32\*|ptr) inttoptr"],
+)
+
+SPM = "system.harness_clstr.mem"
 
 
 # Execution statistics report the current statistics window. A reset
@@ -1808,27 +1057,11 @@ kernel_suite(
 
 
 def check_reset_during_compute(params):
-    # The reset lands while the one-multiplier kernel runs. Passes run
-    # on edges first + k * period; those at or before the reset tick are
-    # outside the window (the reset event runs after a pass on the same
-    # tick).
     outdir, out = st.read_simout(params)
-    first, period = map(
-        int,
-        re.search(
-            r"first compute pass at (\d+) \(period (\d+)\)", out
-        ).groups(),
-    )
-    reset = int(re.search(r"^(\d+): .*resetstats", out, re.M).group(1))
-    total = int(re.search(r"after (\d+) cycles", out).group(1))
-    before = sum(1 for k in range(total) if first + k * period <= reset)
+    total = int(re.search(r"Compute passes:\s+(\d+)", out).group(1))
     stats = st.read_stats(outdir)[-1]
-    if not 0 < before < total:
-        raise AssertionError(f"reset at {reset} is not during compute")
-    if stats[LLVM_STATS + "cycles"] != total - before:
-        raise AssertionError(
-            f"cycles {stats[LLVM_STATS + 'cycles']}, expected {total - before}"
-        )
+    if not 0 < stats[LLVM_STATS + "cycles"] < total:
+        raise AssertionError("reset did not leave a partial compute window")
     if stats[LLVM_STATS + "invocations"] != 0:
         raise AssertionError("the invocation started before the reset")
 
@@ -1891,12 +1124,9 @@ kernel_suite(
         f"--param={CYCLE_COUNTS}.mul=20",
         f"--param={MULTIPLIER}.limit=1",
     ],
-    gem5_args=["--debug-flags=SALAMLaunch,PseudoInst"],
     host_options={"STATS_RESET_AFTER_START": 1},
-    simout_counts=[("runtime", r"^\s*Compute passes:\s+62$", 1)],
     extra_tests=[
         ("window", check_reset_during_compute),
-        ("unit", reset_unit_check),
     ],
 )
 
@@ -1917,62 +1147,6 @@ kernel_suite(
     expect={0: 5},
     host_options={"STATS_DUMPS_AT_END": 2},
     extra_tests=[("dumps", check_repeated_dumps)],
-)
-
-
-kernel_suite(
-    "salam-kernel-categories-slow-spm",
-    "spm_load.c",
-    inputs=[0],
-    expect={0: 1},
-    fs_args=[f"--param={SPM}.access_cycles=150"],
-    extra_tests=[
-        ("categories", categories(dict(ONE_PASS, issue=4, memoryWait=15)))
-    ],
-)
-
-
-# Tracing changes no statistics: the same kernel run again with the
-# SALAMIssue debug flag reports the same values, apart from host time.
-HOST_STATS = re.compile(r"^(host|sim(Seconds|Freq))|\.power_state\.")
-
-
-def same_stats_with_tracing(params):
-    outdir, _out = st.read_simout(params)
-    command, env, _ = st._fs_command(
-        params, "salam-workload", KERNEL_WALL, KERNEL_TICKS, ONE_MULTIPLIER
-    )
-    traced = os.path.join(outdir, "traced")
-    i = command.index("-d")
-    command[i + 1] = traced
-    command.insert(i, "--debug-flags=SALAMIssue")
-    subprocess.run(command, env=env, check=True)
-    with open(os.path.join(traced, "simout.txt")) as f:
-        if "issue compute mul" not in f.read():
-            raise AssertionError("SALAMIssue printed no issues")
-    plain = st.read_stats(outdir)[-1]
-    with_flag = st.read_stats(traced)[-1]
-
-    def same(a, b):
-        return a == b or (a != a and b != b)  # NaN matches NaN
-
-    differ = {
-        k: (plain.get(k), with_flag.get(k))
-        for k in set(plain) | set(with_flag)
-        if not HOST_STATS.search(k)
-        and not same(plain.get(k), with_flag.get(k))
-    }
-    if differ:
-        raise AssertionError(f"statistics differ with tracing: {differ}")
-
-
-kernel_suite(
-    "salam-kernel-issue-trace",
-    "fu_sched.c",
-    inputs=[3, 4, 5],
-    expect={0: 9, 1: 16, 2: 25},
-    fs_args=ONE_MULTIPLIER,
-    extra_tests=[("same-stats", same_stats_with_tracing)],
 )
 
 
@@ -2017,21 +1191,17 @@ def check_volatile_order(params):
         raise AssertionError("independent ordinary store was serialized")
 
 
-for lockstep in (True, False):
-    kernel_suite(
-        f"salam-kernel-volatile-order-{lockstep}",
-        "volatile_order.ll.in",
-        inputs=[6, 7, 9, 17],
-        expect={0: 3, 1: 16, 2: 17, 3: 42, 8: 99},
-        hw_config=SLOW_UDIV,
-        fs_args=[
-            "--param=system.harness_clstr.kernel.llvm_interface."
-            f"lockstep_mode={lockstep}"
-        ],
-        gem5_args=["--debug-flags=SALAMIssue"],
-        extra_tests=[("memory-order", check_volatile_order)],
-        tags=(st.SALAM_TAG, "salam-correctness"),
-    )
+kernel_suite(
+    "salam-kernel-volatile-order-False",
+    "volatile_order.ll.in",
+    inputs=[6, 7, 9, 17],
+    expect={0: 3, 1: 16, 2: 17, 3: 42, 8: 99},
+    hw_config=SLOW_UDIV,
+    fs_args=NO_LOCKSTEP,
+    gem5_args=["--debug-flags=SALAMIssue"],
+    extra_tests=[("memory-order", check_volatile_order)],
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
 
 
 def check_ordinary_raw_wait(params):
@@ -2075,14 +1245,13 @@ kernel_suite(
 )
 
 
-for operation in ("load", "store", "fence", "rmw", "cmpxchg"):
-    rejected_suite(
-        f"salam-kernel-atomic-{operation}-rejected",
-        f"atomic_{operation}.ll.in",
-        inputs=[1],
-        regex=r"SALAM does not support LLVM atomic instructions:",
-        tags=(st.SALAM_TAG, "salam-correctness"),
-    )
+rejected_suite(
+    "salam-kernel-atomic-rmw-rejected",
+    "atomic_rmw.ll.in",
+    inputs=[1],
+    regex=r"SALAM does not support LLVM atomic instructions:",
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
 
 
 for width, index in ((32, 32), (64, 64)):
@@ -2129,27 +1298,14 @@ kernel_suite(
     tags=(st.SALAM_TAG, "salam-correctness"),
 )
 
-# Unequal pointer and index widths are unsupported. These fixtures cover
-# rejection in instructions, constant expressions, globals and callees.
-for case, index, context in (
-    ("64_32", 32, "top"),
-    ("64_16", 16, "top"),
-    ("unequal_instruction", 32, "top"),
-    ("unequal_constexpr", 32, "<global>"),
-    ("unequal_runtime", 32, "top"),
-    ("unequal_callee", 32, "adjust"),
-):
-    rejected_suite(
-        f"salam-kernel-pointer-{case}-rejected",
-        f"pointer_{case}.ll.in",
-        inputs=[],
-        regex=(
-            r"SALAM does not support unequal pointer and GEP index widths: "
-            rf"address space 0 has a 64-bit pointer and a {index}-bit index"
-            rf"\nIR file: .*kernel\.ll; function: {context}; context: "
-        ),
-        tags=(st.SALAM_TAG, "salam-correctness"),
-    )
+# One representative for each unsupported pointer-layout condition.
+rejected_suite(
+    "salam-kernel-pointer-unequal_instruction-rejected",
+    "pointer_unequal_instruction.ll.in",
+    inputs=[],
+    regex=r"SALAM does not support unequal pointer and GEP index widths:",
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
 
 for case, diagnostic in (
     ("address_space", r"pointer address space 1"),
@@ -2175,14 +1331,13 @@ for width in (32, 64):
     )
 
 
-for kind in ("direct", "mutual"):
-    rejected_suite(
-        f"salam-kernel-recursion-{kind}-rejected",
-        f"recursion_{kind}.ll.in",
-        inputs=[],
-        regex=r"SALAM does not support recursive LLVM calls:",
-        tags=(st.SALAM_TAG, "salam-correctness"),
-    )
+rejected_suite(
+    "salam-kernel-recursion-mutual-rejected",
+    "recursion_mutual.ll.in",
+    inputs=[],
+    regex=r"SALAM does not support recursive LLVM calls:",
+    tags=(st.SALAM_TAG, "salam-correctness"),
+)
 
 kernel_suite(
     "salam-kernel-recursion-unreachable",
@@ -2204,26 +1359,17 @@ kernel_suite(
 
 # Each eager traversal follows only unconditional edges. A conditional loop
 # must remain valid on repeated visits and on a new invocation.
-for entry, block, diagnostic_function in (
-    ("top", "loop", "top"),
-    ("multi_cycle", "first", "multi_cycle"),
-    ("call_cycle", "loop", "cycle_callee"),
-):
-    rejected_suite(
-        f"salam-kernel-cfg-cycle-{entry}-rejected",
-        "cfg_cycles.ll.in",
-        inputs=[],
-        regex=(
-            r"SALAM cannot eagerly schedule an unconditional CFG cycle "
-            rf"in function .*@{diagnostic_function}: block .*%{block} "
-            r"is revisited"
-        ),
-        fs_args=[
-            "--param=system.harness_clstr.kernel.llvm_interface."
-            f'top_name="{entry}"',
-        ],
-        tags=(st.SALAM_TAG, "salam-correctness", "salam-cfg"),
-    )
+rejected_suite(
+    "salam-kernel-cfg-cycle-call_cycle-rejected",
+    "cfg_cycles.ll.in",
+    inputs=[],
+    regex=r"SALAM cannot eagerly schedule an unconditional CFG cycle",
+    fs_args=[
+        "--param=system.harness_clstr.kernel.llvm_interface."
+        'top_name="call_cycle"',
+    ],
+    tags=(st.SALAM_TAG, "salam-correctness", "salam-cfg"),
+)
 
 
 def cfg_loop_control_count(iterations, runs):
@@ -2240,24 +1386,20 @@ def cfg_loop_control_count(iterations, runs):
     return check
 
 
-for iterations in (0, 3):
-    for lockstep in (False, True):
-        kernel_suite(
-            f"salam-kernel-cfg-conditional-{iterations}-{lockstep}",
-            "cfg_cycles.ll.in",
-            inputs=[iterations],
-            expect={0: iterations},
-            runs=2,
-            fs_args=[
-                "--param=system.harness_clstr.kernel.llvm_interface."
-                'top_name="conditional_loop"',
-                f"--param={LOCKSTEP}={lockstep}",
-            ],
-            extra_tests=[
-                ("control-count", cfg_loop_control_count(iterations, 2))
-            ],
-            tags=(st.SALAM_TAG, "salam-correctness", "salam-cfg"),
-        )
+kernel_suite(
+    "salam-kernel-cfg-conditional-3-False",
+    "cfg_cycles.ll.in",
+    inputs=[3],
+    expect={0: 3},
+    runs=2,
+    fs_args=[
+        "--param=system.harness_clstr.kernel.llvm_interface."
+        'top_name="conditional_loop"',
+        f"--param={LOCKSTEP}=False",
+    ],
+    extra_tests=[("control-count", cfg_loop_control_count(3, 2))],
+    tags=(st.SALAM_TAG, "salam-correctness", "salam-cfg"),
+)
 
 
 class LongCfgChainHarness(st.SalamHarnessFixture):

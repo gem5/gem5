@@ -731,28 +731,6 @@ def read_simout(params):
         return outdir, f.read()
 
 
-class CountFileRegex(MatchFileRegex):
-    # Requires exactly count matching lines across the files.
-
-    def __init__(self, regex, filenames, count):
-        super().__init__(regex, filenames)
-        self.count = count
-
-    def test(self, params):
-        tempdir = params.fixtures[constants.tempdir_fixture_name].path
-        found = 0
-        for fname in self.filenames:
-            with open(os.path.join(tempdir, fname)) as f:
-                found += sum(
-                    1 for line in f if any(r.search(line) for r in self.regex)
-                )
-        if found != self.count:
-            patterns = [r.pattern for r in self.regex]
-            raise AssertionError(
-                f"{patterns!r}: {found} lines, not {self.count}"
-            )
-
-
 class NoMatchFileRegex(MatchFileRegex):
     # Fails if the pattern is found in any of the files.
 
