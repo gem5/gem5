@@ -27,10 +27,10 @@
 
 import os
 
-from slicc.generate import html
-from slicc.symbols.StateMachine import StateMachine
-from slicc.symbols.Type import Type
-from slicc.util import Location
+from ..generate import html
+from ..util import Location
+from .StateMachine import StateMachine
+from .Type import Type
 
 
 def makeDir(path):

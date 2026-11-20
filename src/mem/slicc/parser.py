@@ -41,15 +41,17 @@ import os.path
 import re
 import sys
 
-from code_formatter import code_formatter
-from grammar import (
+from build_tools.code_formatter import code_formatter
+from build_tools.grammar import (
     Grammar,
     ParseError,
 )
 
-import slicc.ast as ast
-import slicc.util as util
-from slicc.symbols import SymbolTable
+from . import (
+    ast,
+    util,
+)
+from .symbols import SymbolTable
 
 
 class SLICC(Grammar):
