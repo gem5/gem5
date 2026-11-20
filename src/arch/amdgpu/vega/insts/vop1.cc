@@ -1306,7 +1306,7 @@ Inst_VOP1__V_RCP_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vdst[lane] = 1.0 / src[lane];
+            vdst[lane] = rcpF32(src[lane]);
         }
     }
 

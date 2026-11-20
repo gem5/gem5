@@ -77,4 +77,8 @@ if env['CONF']['TARGET_GPU_ISA'] == 'vega':
     Source('insts/vop3p.cc')
     Source('insts/vop3p_mai.cc')
 
+    GTest('insts/inst_util.test', 'insts/inst_util.test.cc',
+          '../../../base/debug.cc', '../../../cpu/reg_class.cc',
+          '../../../sim/bufval.cc')
+
     DebugFlag('VEGA', 'Debug flag for VEGA GPU ISA')

@@ -33,6 +33,9 @@
 #define __ARCH_VEGA_INSTS_INST_UTIL_HH__
 
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 
 #include "arch/amdgpu/vega/gpu_registers.hh"
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
@@ -268,6 +271,217 @@ roundNearestEven(T val)
     }
 
     return nearest_round;
+}
+
+// FP32 division-macro helpers (v_div_scale_f32, v_div_fmas_f32,
+// v_div_fixup_f32) and v_rcp_f32. These follow the MI300 ISA pseudocode
+// where it matches hardware and MI300X measurements where it does not; the
+// differences from the pseudocode are noted inline. They operate on raw bits
+// so that NaN payloads, signed zeros and subnormals are preserved exactly.
+
+inline uint32_t
+f32ToBits(float val)
+{
+    uint32_t bits;
+    std::memcpy(&bits, &val, sizeof(bits));
+    return bits;
+}
+
+inline float
+f32FromBits(uint32_t bits)
+{
+    float val;
+    std::memcpy(&val, &bits, sizeof(val));
+    return val;
+}
+
+// The ISA's exponent(): the biased exponent field.
+inline int
+f32Exponent(float val)
+{
+    return (f32ToBits(val) >> 23) & 0xff;
+}
+
+inline float
+f32QuietNaN(float val)
+{
+    return f32FromBits(f32ToBits(val) | 0x00400000);
+}
+
+// The NaN the hardware produces for invalid operations.
+inline float
+f32DefaultNaN()
+{
+    return f32FromBits(0xffc00000);
+}
+
+// v_div_scale_f32. Differences from the pseudocode, measured on MI300X:
+// VCC is |exponent(S2) - exponent(S1)| >= 96 for every input class (also when
+// D is NaN); "1/S1 is denormal" means exponent(S1) >= 253; "numerator is tiny"
+// means exponent(S2) <= 24; when exponent(S2) - exponent(S1) <= -96 and
+// exponent(S1) >= 253 the denominator form is scaled by 2^-64 and the
+// numerator form is left unscaled; NaN and infinite S0 pass through unchanged.
+inline float
+divScaleF32(float s0, float s1, float s2, bool &vcc)
+{
+    const int e1 = f32Exponent(s1);
+    const int e2 = f32Exponent(s2);
+    const int diff = e2 - e1;
+    vcc = std::abs(diff) >= 96;
+
+    if (s1 == 0.0f || s2 == 0.0f) {
+        return f32DefaultNaN();
+    }
+
+    const bool scale_den = f32ToBits(s0) == f32ToBits(s1);
+    const bool scale_num = f32ToBits(s0) == f32ToBits(s2);
+    int scale = 0;
+    if (diff >= 96) {
+        scale = scale_den ? 64 : 0;
+    } else if (diff <= -96) {
+        if (e1 >= 253) {
+            scale = scale_den ? -64 : 0;
+        } else {
+            scale = scale_num ? 64 : 0;
+        }
+    } else if (std::fpclassify(s1) == FP_SUBNORMAL) {
+        scale = 64;
+    } else if (e1 >= 253) {
+        scale = -64;
+    } else if (e2 <= 24) {
+        scale = 64;
+    }
+
+    if (std::isnan(s0) || std::isinf(s0) || scale == 0) {
+        return s0;
+    }
+    return std::ldexp(s0, scale);
+}
+
+// IEEE fma with the hardware's NaN rules: a NaN operand gives the quiet
+// version of the first NaN operand; an invalid operation gives 0xffc00000.
+// When scale is nonzero the exact result is multiplied by 2^scale and rounded
+// once, as v_div_fmas_f32 does.
+inline float
+fmaScaledF32(float s0, float s1, float s2, int scale)
+{
+    if (std::isnan(s0)) {
+        return f32QuietNaN(s0);
+    }
+    if (std::isnan(s1)) {
+        return f32QuietNaN(s1);
+    }
+    if (std::isnan(s2)) {
+        return f32QuietNaN(s2);
+    }
+
+    const bool prod_inf = std::isinf(s0) || std::isinf(s1);
+    if (prod_inf && (s0 == 0.0f || s1 == 0.0f)) {
+        return f32DefaultNaN();
+    }
+    if (prod_inf || std::isinf(s2)) {
+        const bool prod_neg = std::signbit(s0) != std::signbit(s1);
+        if (prod_inf && std::isinf(s2) && prod_neg != std::signbit(s2)) {
+            return f32DefaultNaN();
+        }
+        if (prod_inf) {
+            return prod_neg ? -INFINITY : INFINITY;
+        }
+        return s2;
+    }
+
+    const float rounded = std::fma(s0, s1, s2);
+    if (scale == 0) {
+        return rounded;
+    }
+
+    // The product of two floats is exact in double; TwoSum recovers the
+    // exact sum as hi + lo. Rounding hi to odd keeps the following scaling
+    // and conversion to float a single correct rounding.
+    const double prod = static_cast<double>(s0) * static_cast<double>(s1);
+    const double addend = static_cast<double>(s2);
+    double hi = prod + addend;
+    const double bb = hi - prod;
+    const double lo = (prod - (hi - bb)) + (addend - bb);
+    if (hi == 0.0 && lo == 0.0) {
+        return rounded; // exact zero: keep the IEEE sign rules
+    }
+    if (lo != 0.0) {
+        uint64_t hi_bits;
+        std::memcpy(&hi_bits, &hi, sizeof(hi_bits));
+        if ((hi_bits & 1) == 0) {
+            hi = std::nextafter(hi, lo > 0.0 ? INFINITY : -INFINITY);
+        }
+    }
+    return static_cast<float>(std::ldexp(hi, scale));
+}
+
+// v_div_fmas_f32. The pseudocode says the result is scaled by 2^32 when VCC
+// is set; MI300X scales by 2^64 if exponent(S2) > 127 and by 2^-64 otherwise,
+// with a single rounding.
+inline float
+divFmasF32(float s0, float s1, float s2, bool vcc)
+{
+    int scale = 0;
+    if (vcc) {
+        scale = f32Exponent(s2) > 127 ? 64 : -64;
+    }
+    return fmaScaledF32(s0, s1, s2, scale);
+}
+
+// v_div_fixup_f32, as in the pseudocode (UNDERFLOW_F32 is zero) except for a
+// NaN quotient, see below.
+inline float
+divFixupF32(float s0, float s1, float s2)
+{
+    const uint32_t sign_out = (f32ToBits(s1) ^ f32ToBits(s2)) & 0x80000000u;
+    if (std::isnan(s2)) {
+        return f32QuietNaN(s2);
+    }
+    if (std::isnan(s1)) {
+        return f32QuietNaN(s1);
+    }
+    if (s1 == 0.0f && s2 == 0.0f) {
+        return f32DefaultNaN();
+    }
+    if (std::isinf(s1) && std::isinf(s2)) {
+        return f32DefaultNaN();
+    }
+    if (s1 == 0.0f || std::isinf(s2)) {
+        return f32FromBits(sign_out | 0x7f800000u);
+    }
+    if (std::isinf(s1) || s2 == 0.0f) {
+        return f32FromBits(sign_out);
+    }
+    if (f32Exponent(s2) - f32Exponent(s1) < -150) {
+        return f32FromBits(sign_out);
+    }
+    if (f32Exponent(s1) == 255) {
+        return f32FromBits(sign_out | 0x7f800000u);
+    }
+    if (std::isnan(s0)) {
+        // Measured on MI300X: a NaN quotient (inf - inf after an overflowing
+        // step of the division macro) becomes a signed infinity, where the
+        // pseudocode would return abs(S0).
+        return f32FromBits(sign_out | 0x7f800000u);
+    }
+    return f32FromBits(sign_out | (f32ToBits(s0) & 0x7fffffffu));
+}
+
+// v_rcp_f32. MI300X flushes subnormal inputs (giving +-inf) and subnormal
+// results (giving +-0). Otherwise this returns the correctly rounded
+// reciprocal; the hardware approximation is within 1 ULP of it.
+inline float
+rcpF32(float src)
+{
+    if (std::fpclassify(src) == FP_SUBNORMAL) {
+        return std::signbit(src) ? -INFINITY : INFINITY;
+    }
+    const float result = 1.0f / src;
+    if (std::fpclassify(result) == FP_SUBNORMAL) {
+        return std::signbit(result) ? -0.0f : 0.0f;
+    }
+    return result;
 }
 
 inline VecElemU32
