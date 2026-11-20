@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017,2024 Arm Limited
+ * Copyright (c) 2012-2014,2017,2024,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -191,18 +191,8 @@ class IndexingPolicyTemplate : public SimObject
      * @param addr The addr to a find possible entries for.
      * @return The possible entries.
      */
-    virtual std::vector<ReplaceableEntry*> getPossibleEntries(const KeyType &key)
-                                                                    const = 0;
-
-    /**
-     * Regenerate an entry's address from its tag and assigned indexing bits.
-     *
-     * @param tag The tag bits.
-     * @param entry The entry.
-     * @return the entry's original address.
-     */
-    virtual Addr regenerateAddr(const KeyType &key,
-                                const ReplaceableEntry* entry) const = 0;
+    virtual std::vector<ReplaceableEntry *>
+    getPossibleEntries(const KeyType &key) const = 0;
 };
 
 class AddrTypes

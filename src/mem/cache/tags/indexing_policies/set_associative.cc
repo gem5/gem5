@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014,2017,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -60,13 +60,6 @@ uint32_t
 SetAssociative::extractSet(const Addr addr) const
 {
     return (addr >> setShift) & setMask;
-}
-
-Addr
-SetAssociative::regenerateAddr(const Addr &tag,
-                               const ReplaceableEntry* entry) const
-{
-    return (tag << tagShift) | (entry->getSet() << setShift);
 }
 
 std::vector<ReplaceableEntry*>
