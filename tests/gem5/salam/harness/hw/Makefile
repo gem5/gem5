@@ -26,8 +26,12 @@
 
 # kernel.ll comes from kernel.c, or is written directly by the test.
 
+CLANG ?= clang
+
+.PHONY: clean
+
 %.ll: %.c
-	clang -O1 -S -target armv7-pc-none-eabi -ffreestanding -emit-llvm \
+	$(CLANG) -O1 -S -target armv7-pc-none-eabi -ffreestanding -emit-llvm \
 		-o $@ $<
 
 clean:

@@ -24,11 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-include ../../common/Makefile
+include toolchain.mk
 
-OBJS = boot.o ../../common/syscalls.o main.o isr.o m5op.o
+.DEFAULT_GOAL := main.elf
 
-main.elf: $(OBJS) $(LNK_SCRIPT) Makefile
+OBJS = boot.o syscalls.o main.o isr.o m5op.o
+
+.PHONY: clean
+
+$(OBJS): Makefile toolchain.mk
+main.o: main.c bench.h inputs.h ../harness_clstr_hw_defines.h
+isr.o: isr.c bench.h
+
+main.elf: $(OBJS) $(LNK_SCRIPT) Makefile toolchain.mk
 	$(CC) $(LNK_FILE_OPT) -o $@ $(OBJS) $(LNK_OPT)
 
 m5op.o: $(M5OP_SRC)

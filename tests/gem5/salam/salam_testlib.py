@@ -764,7 +764,6 @@ class NoMatchFileRegex(MatchFileRegex):
 
 
 HARNESS_DIR = "tests/gem5/salam/harness"
-HARNESS_FROM_BFS = ("sw/boot.s", "sw/boot.ld", "sw/isr.c")
 
 
 def _copy_tracked(tools, paths, dest_for):
@@ -855,11 +854,9 @@ class SalamHarnessFixture(Fixture):
         self.root = os.path.join(self.tempdir.path, "workload")
         src = os.path.join(self.root, "src")
         self.accpath = os.path.join(src, self.bench)
-        bfs = os.path.join(BENCH_DIR, "bfs") + "/"
         copied = _copy_tracked(
             tools,
-            [os.path.join(BENCH_DIR, "common"), HARNESS_DIR]
-            + [bfs + rel for rel in HARNESS_FROM_BFS],
+            [HARNESS_DIR],
             lambda rel: self._dest(src, rel),
         )
         self._write_inputs()
@@ -867,10 +864,7 @@ class SalamHarnessFixture(Fixture):
             self._add_cache()
         if self.clocks is not None:
             self._add_clocks()
-        shim = os.path.join(self.root, "bin")
-        os.makedirs(shim)
-        os.symlink(tools.clang, os.path.join(shim, "clang"))
-        env = tools.env(extra={"M5_PATH": config.base_dir}, path_prefix=[shim])
+        env = tools.env(extra={"M5_PATH": config.base_dir})
         self.build_env = env
         builder = os.path.join(
             config.base_dir,
@@ -893,9 +887,19 @@ class SalamHarnessFixture(Fixture):
         )
         self._place_kernel(tools)
         self.build_log = os.path.join(self.root, "build.log")
+        cross_compile = os.path.join(
+            os.path.dirname(tools.arm["gcc"]), "arm-none-eabi-"
+        )
         _run_logged(
             "make",
-            [tools.make, "-C", self.accpath, "build"],
+            [
+                tools.make,
+                "-C",
+                self.accpath,
+                "CROSS_COMPILE=" + cross_compile,
+                "CLANG=" + tools.clang,
+                "build",
+            ],
             env,
             self.build_log,
         )
@@ -938,10 +942,6 @@ class SalamHarnessFixture(Fixture):
             return os.path.join(
                 src, self.bench, os.path.relpath(rel, HARNESS_DIR)
             )
-        bfs = os.path.join(BENCH_DIR, "bfs") + "/"
-        if rel.startswith(bfs):
-            return os.path.join(src, self.bench, os.path.relpath(rel, bfs))
-        return os.path.join(src, os.path.relpath(rel, BENCH_DIR))
 
     def _write_inputs(self):
         path = os.path.join(self.accpath, "sw", "inputs.h")

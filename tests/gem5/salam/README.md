@@ -5,6 +5,11 @@ ARM bare-metal toolchain and libraries (`gcc-arm-none-eabi`,
 `libnewlib-arm-none-eabi`, `libstdc++-arm-none-eabi-newlib`). Tests build
 workloads in temporary directories.
 
+Kernel workloads keep their boot code, linker script, interrupt handler,
+syscall support, and build rules in `harness/`. The fixture copies tracked
+harness sources into each workload and passes the selected Clang and ARM
+cross compiler to Make through `CLANG` and `CROSS_COMPILE`.
+
 From the repository root, list the selected suites before running them:
 
 ```bash
