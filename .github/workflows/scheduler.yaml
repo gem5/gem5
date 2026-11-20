@@ -26,6 +26,8 @@ on:
         - cron: 30 16 * * 2
         # Agentics maintenance at 4:30pm UTC on Friday.
         - cron: 30 16 * * 5
+        # Test Failure Doctor every two hours.
+        - cron: 0 */2 * * *
 
 env:
   # This is the token used to authenticate with GitHub.
@@ -72,6 +74,39 @@ jobs:
                   gh workflow run weekly-repo-status.lock.yml \
                       --ref develop >/dev/null
                   echo "Weekly repository status scheduled on develop."
+
+            - name: Test Failure Doctor
+              if: github.event.schedule == '0 */2 * * *'
+              run: |
+                  # Runs that completed within the past three hours.
+                  since=$(date -u -d '3 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+                  created_after=$(date -u -d '7 days ago' +%Y-%m-%d)
+                  runs=$(
+                      for workflow in ci-tests daily-tests weekly-tests \
+                                      compiler-tests; do
+                          gh api --paginate \
+                              "repos/${{ github.repository }}/actions/workflows/${workflow}.yaml/runs?status=completed&created=>=${created_after}&per_page=100" \
+                              --jq ".workflow_runs[]
+                                    | select(.updated_at > \"${since}\")
+                                    | [.id, .run_attempt] | @tsv"
+                      done | sort -t "$(printf '\t')" -k1,1n
+                  )
+                  if [ -z "${runs}" ]; then
+                      echo "No completed test workflows since ${since}."
+                      exit 0
+                  else
+                      echo ${runs}
+                  fi
+                  run_ids=$(printf '%s\n' "${runs}" | cut -f1 | paste -sd, -)
+                  run_attempts=$(printf '%s\n' "${runs}" | cut -f2 | paste -sd, -)
+
+                  # Run the test-failure-doctor workflow
+                  gh aw run test-failure-doctor --ref develop \
+                      --raw-field failed_workflow_ids="${run_ids}" \
+                      --raw-field failed_workflow_attempts="${run_attempts}" \
+                      >/dev/null
+                  echo "Test Failure Doctor scheduled on develop for" \
+                  "runs: ${run_ids} (attempts: ${run_attempts})"
 
             - name: Agentics Maintenance
               if: github.event.schedule == '30 16 * * 5'
