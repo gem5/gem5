@@ -74,3 +74,11 @@ class VirtIO9PSocket(VirtIO9PProxy):
 
     server = Param.String("127.0.0.1", "9P server address or host name")
     port = Param.String("564", "9P server port")
+
+
+class VirtIO9PUfs(VirtIO9PProxy):
+    type = "VirtIO9PUfs"
+    cxx_header = "dev/virtio/fs9pufs.hh"
+    cxx_class = "gem5::VirtIO9PUfs"
+
+    root = Param.String("Host directory to export through npfs/ufs")
