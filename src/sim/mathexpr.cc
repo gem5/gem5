@@ -38,6 +38,7 @@
 #include "sim/mathexpr.hh"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <regex>
 #include <string>
@@ -67,6 +68,43 @@ MathExpr::MathExpr(std::string expr)
     panic_if(!root, "Invalid expression\n");
 }
 
+namespace
+{
+
+/**
+ * Whether the '+' or '-' at position i is the sign of the exponent of a
+ * number such as 1.8e-09, rather than an operator. The characters before
+ * it must be a mantissa (digits and '.', with at least one digit)
+ * followed by 'e' or 'E', not preceded by a character of a variable
+ * name, and a digit must follow it.
+ */
+bool
+isExponentSign(const std::string &expr, int i)
+{
+    if ((expr[i] != '+' && expr[i] != '-') || i < 2 ||
+        (expr[i - 1] != 'e' && expr[i - 1] != 'E') ||
+        i + 1 >= (int)expr.size() || !isdigit((unsigned char)expr[i + 1])) {
+        return false;
+    }
+
+    int j = i - 2;
+    bool has_digit = false;
+    while (j >= 0 && (isdigit((unsigned char)expr[j]) || expr[j] == '.')) {
+        has_digit = has_digit || isdigit((unsigned char)expr[j]);
+        j--;
+    }
+    if (!has_digit) {
+        return false;
+    }
+    if (j >= 0 && (isalpha((unsigned char)expr[j]) || expr[j] == '_' ||
+                   expr[j] == '$' || expr[j] == '\\' || expr[j] == ':')) {
+        return false;
+    }
+    return true;
+}
+
+} // anonymous namespace
+
 /**
  * This function parses a string expression into an expression tree.
  * It will look for operators in priority order to recursively build the
@@ -90,6 +128,9 @@ MathExpr::parse(std::string expr) {
 
             if (par < 0) return NULL;
             if (par > 0) continue;
+            if (isExponentSign(expr, i)) {
+                continue;
+            }
 
             for (unsigned opt = 0; opt < ops.size(); opt++) {
                 if (ops[opt].priority != p) continue;

@@ -123,6 +123,7 @@ GTest('globals.test', 'globals.test.cc', 'globals.cc',
     with_tag('gem5 serialize'))
 GTest('global_event.test', 'global_event.test.cc', with_tag('gem5 drain'))
 GTest('guest_abi.test', 'guest_abi.test.cc')
+GTest('mathexpr.test', 'mathexpr.test.cc', 'mathexpr.cc')
 GTest('port.test', 'port.test.cc', 'port.cc')
 GTest('proxy_ptr.test', 'proxy_ptr.test.cc')
 GTest('serialize.test', 'serialize.test.cc', with_tag('gem5 serialize'))
