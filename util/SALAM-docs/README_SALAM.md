@@ -25,6 +25,17 @@ Otherwise, SCons uses `llvm-config` on `PATH`, then searches for the highest
 available `llvm-config-N` with N from 11 through 20. Generate accelerator
 IR with a Clang from the same LLVM major version.
 
+The workload Makefiles invoke `clang` on `PATH`; setting `LLVM_CONFIG`
+alone does not select that compiler. For example, to use installed LLVM
+and Clang 14 together:
+
+```bash
+export LLVM_CONFIG=/usr/bin/llvm-config-14
+export PATH="$("$LLVM_CONFIG" --bindir):$PATH"
+"$LLVM_CONFIG" --version
+clang --version
+```
+
 The offline CACTI helper additionally needs `g++-multilib` on x86_64
 Ubuntu; see [Offline CACTI characterization](#offline-cacti-characterization).
 
@@ -250,13 +261,35 @@ Here `my_kernel` must match the accelerator's `Profile` field. The unit's
 BFS has no floating-point operations. Use a workload whose IR contains
 `fsub` to observe the remapping. The kernel at
 `tests/gem5/salam/harness/kernels/fsub.c` shows a minimal subtraction.
-For a workload under `$ACC_BENCH_PATH/fsub`, enable inventory tracing with:
+For a complete runnable check, run the custom-profile regression suites
+from the gem5 repository root:
 
 ```bash
-$M5_PATH/util/SALAM-tools/run_system.sh --bench fsub --bench-path fsub \
-    -f SALAMFUInventory --print
+cd tests
+./main.py list gem5/salam --include-tags fu-remap -q --suites \
+    > /tmp/salam-fu-remap-suites.txt
+./main.py run gem5/salam --include-tags fu-remap -j 8
+python3 gem5/salam/check_salam_results.py /tmp/salam-fu-remap-suites.txt \
+    testing-results/results.xml
 ```
 
+These suites copy the default profile to `build/salam-fu-remap-profile/`,
+apply the four edits above, rebuild `build/ARM/gem5.opt`, and build the
+complete test workloads. The subtraction check requires `5.5 - 2.25` to
+produce `3.25`, with one admission to `float_trig_sine` and none to
+`double_adder`. The same tag also checks characterized bitwise units.
+Do not use `--skip-build` with a binary built for another profile.
+
+The custom build replaces the default ARM binary. Restore and check the
+default profile before running ordinary SALAM suites:
+
+```bash
+./main.py run --uid \
+    SuiteUID:tests/gem5/salam/test_salam_kernels.py:salam-kernel-fsub -j 8
+```
+
+For a separately constructed subtraction workload, enable the
+`SALAMFUInventory` debug flag when launching gem5.
 With the example's `limit: 0`, exactly one static `fsub` in the reachable
 kernel graph gives `float_trig_sine (17): 1 instances, 1 static instructions`
 in the trace. More static uses allocate more instances. Check
