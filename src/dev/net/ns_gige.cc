@@ -52,7 +52,6 @@
 using std::make_shared;
 using std::min;
 using std::ostream;
-using std::string;
 
 namespace gem5
 {
@@ -1910,7 +1909,6 @@ NSGigE::rxFilter(const EthPacketPtr &packet)
 {
     EthPtr eth = packet;
     bool drop = true;
-    string type;
 
     const EthAddr &dst = eth->dst();
     if (dst.unicast()) {
