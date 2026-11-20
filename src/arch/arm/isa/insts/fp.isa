@@ -470,7 +470,7 @@ let {{
     halfCode = vfpEnabledCheckCode + '''
         [[maybe_unused]] FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
         uint16_t half_src1 = FpOp1_uw & 0xFFFF;
-        uint16_t half_src2 = (FpOp1_uw >> 16) & 0xFFFF;
+        [[maybe_unused]] uint16_t half_src2 = (FpOp1_uw >> 16) & 0xFFFF;
         static_assert(std::is_same_v<decltype(%(op1)s), uint16_t>,
                       "operation triggers invalid implicit conversion");
         static_assert(std::is_same_v<decltype(%(op2)s), uint16_t>,
@@ -721,8 +721,9 @@ let {{
     buildSimpleUnaryFpOp("vneg", "Vneg", "FpRegRegOp", "SimdFloatMiscOp",
                          "fplibNeg(half_src1)", "fplibNeg(half_src2)",
                          "fplibNeg(FpOp1_uw)", "fplibNeg(cOp1)")
+    # Scalar FP16 VABS clears the upper half of the S register.
     buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp", "SimdFloatMiscOp",
-                         "fplibAbs(half_src1)", "fplibAbs(half_src2)",
+                         "fplibAbs(half_src1)", "uint16_t(0)",
                          "fplibAbs(FpOp1_uw)", "fplibAbs(cOp1)")
     buildSimpleUnaryFpOp("vrintp", "VRIntP", "FpRegRegOp", "SimdCvtOp",
         "fplibRoundInt<uint16_t>(half_src1, FPRounding_POSINF, false, fpscr)",
