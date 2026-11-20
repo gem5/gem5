@@ -210,6 +210,8 @@ Decoder::doPrefixState(uint8_t nextByte)
             emi.opcode.op = 0x0B;
         } else {
             emi.vex.present = 1;
+            emi.vex.invalidLegacyPrefix = emi.legacy.op || emi.legacy.rep ||
+                                          emi.legacy.repne || emi.legacy.lock;
             nextState = Vex2Of2State;
         }
         break;
@@ -226,6 +228,8 @@ Decoder::doPrefixState(uint8_t nextByte)
             emi.opcode.op = 0x0B;
         } else {
             emi.vex.present = 1;
+            emi.vex.invalidLegacyPrefix = emi.legacy.op || emi.legacy.rep ||
+                                          emi.legacy.repne || emi.legacy.lock;
             nextState = Vex2Of3State;
         }
         break;
