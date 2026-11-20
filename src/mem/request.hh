@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2017-2022 Arm Limited
+ * Copyright (c) 2012-2013,2017-2022,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1134,11 +1134,15 @@ class Request : public Extensible<Request>
     bool isToPOC() const { return _flags.isSet(DST_POC); }
     Flags getDest() const { return _flags & DST_BITS; }
 
-    bool isAcquire() const { return _cacheCoherenceFlags.isSet(ACQUIRE); }
+    bool
+    isAcquire() const
+    {
+        return _flags.isSet(ACQUIRE);
+    }
     bool
     isAcquirePC() const
     {
-        return _cacheCoherenceFlags.isSet(ACQUIRE_PC);
+        return _flags.isSet(ACQUIRE_PC);
     }
 
     /**
