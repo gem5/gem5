@@ -485,8 +485,38 @@ TLB::translate(const RequestPtr &req,
 
             DPRINTF(TLB, "Entry found with paddr %#x, "
                     "doing protection checks.\n", entry->paddr);
-            // Do paging protection checks.
+
             bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
+
+            if (cr4.pke) {
+                // Memory protection keys enabled
+                PKRU pkru = tc->readMiscRegNoEffect(misc_reg::Pkru);
+
+                uint8_t key = entry->memoryKey & 0xF;
+                auto permission = bits(pkru, 2 * key + 1, 2 * key);
+
+                bool accessDisable = bits(permission, 0);
+                bool writeDisable = bits(permission, 1);
+                if (accessDisable) {
+
+                    DPRINTF(TLB,
+                            "MPK Illegal access to "
+                            "address %#x.\n",
+                            vaddr);
+
+                    return std::make_shared<PageFault>(vaddr, true, mode,
+                                                       inUser, false);
+                } else if (writeDisable && mode == BaseMMU::Write) {
+                    DPRINTF(TLB,
+                            "MPK Illegal write to"
+                            " address %#x.\n",
+                            vaddr);
+                    return std::make_shared<PageFault>(vaddr, true, mode,
+                                                       inUser, false);
+                }
+            }
+
+            // Do paging protection checks.
             CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
             if ((inUser && !entry->user) ||
