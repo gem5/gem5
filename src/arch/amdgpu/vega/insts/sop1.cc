@@ -35,6 +35,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_SOP1__S_MOV_B32 class methods ---
@@ -1444,4 +1447,5 @@ Inst_SOP1__S_SET_GPR_IDX_IDX::execute(GPUDynInstPtr gpuDynInst)
     panicUnimplemented();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

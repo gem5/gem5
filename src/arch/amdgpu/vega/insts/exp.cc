@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_EXP__EXP class methods ---
@@ -52,4 +55,5 @@ Inst_EXP__EXP::execute(GPUDynInstPtr gpuDynInst)
     panicUnimplemented();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

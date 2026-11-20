@@ -39,6 +39,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 VEGAGPUStaticInst::VEGAGPUStaticInst(const std::string &opcode)
@@ -54,4 +57,5 @@ VEGAGPUStaticInst::panicUnimplemented() const
     fatal("Encountered unimplemented VEGA instruction: %s\n", _opcode);
 }
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

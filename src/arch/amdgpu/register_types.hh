@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2026 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,80 +29,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_VEGA_FAULTS_HH__
-#define __ARCH_AMDGPU_VEGA_FAULTS_HH__
+#ifndef __ARCH_AMDGPU_REGISTER_TYPES_HH__
+#define __ARCH_AMDGPU_REGISTER_TYPES_HH__
 
-#include <string>
-
-#include "arch/generic/mmu.hh"
-#include "sim/faults.hh"
+#include <cstdint>
 
 namespace gem5
 {
-namespace VegaISA
+
+namespace AMDGPU
 {
 
-enum ExceptionCode : uint64_t
-{
-    INST_PAGE = 0,
-    LOAD_PAGE = 1,
-    STORE_PAGE = 2
-};
+// Typedefs for the various sizes/types of scalar regs
+typedef uint8_t ScalarRegU8;
+typedef int8_t ScalarRegI8;
+typedef uint16_t ScalarRegU16;
+typedef int16_t ScalarRegI16;
+typedef uint32_t ScalarRegU32;
+typedef int32_t ScalarRegI32;
+typedef float ScalarRegF32;
+typedef uint64_t ScalarRegU64;
+typedef int64_t ScalarRegI64;
+typedef double ScalarRegF64;
 
-class VegaFault : public FaultBase
-{
-  protected:
-    const FaultName _name;
-    const bool _interrupt;
-    ExceptionCode _code;
+// Typedefs for the various sizes/types of vector reg elements
+typedef uint8_t VecElemU8;
+typedef int8_t VecElemI8;
+typedef uint16_t VecElemU16;
+typedef int16_t VecElemI16;
+typedef uint32_t VecElemU32;
+typedef int32_t VecElemI32;
+typedef float VecElemF32;
+typedef uint64_t VecElemU64;
+typedef int64_t VecElemI64;
+typedef double VecElemF64;
 
-    VegaFault(FaultName n, bool i, ExceptionCode c)
-        : _name(n), _interrupt(i), _code(c)
-    {}
-
-    FaultName
-    name() const override
-    {
-        return _name;
-    }
-    bool
-    isInterrupt() const
-    {
-        return _interrupt;
-    }
-    ExceptionCode
-    exception() const
-    {
-        return _code;
-    }
-    virtual RegVal
-    trap_value() const
-    {
-        return 0;
-    }
-
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst) override;
-};
-
-class PageFault : public VegaFault
-{
-  protected:
-    Addr addr;
-
-  public:
-    PageFault(Addr _addr, ExceptionCode code, bool present, BaseMMU::Mode mode,
-              bool user)
-        : VegaFault("PageFault", false, code), addr(_addr)
-    {}
-
-    RegVal
-    trap_value() const override
-    {
-        return addr;
-    }
-};
-
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
-#endif // __ARCH_VEGA_FAULTS_HH__
+#endif // __ARCH_AMDGPU_REGISTER_TYPES_HH__

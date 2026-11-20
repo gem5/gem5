@@ -30,7 +30,7 @@
  *
  */
 
-#include "arch/amdgpu/common/tlb.hh"
+#include "arch/amdgpu/common/x86_gpu_tlb.hh"
 
 #include <cmath>
 #include <cstring>

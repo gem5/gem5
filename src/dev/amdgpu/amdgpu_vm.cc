@@ -31,8 +31,8 @@
 
 #include "dev/amdgpu/amdgpu_vm.hh"
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
-#include "arch/amdgpu/vega/tlb.hh"
+#include "arch/amdgpu/common/amdgpu_tlb.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 #include "arch/generic/mmu.hh"
 #include "base/trace.hh"
 #include "debug/AMDGPUDevice.hh"
@@ -273,7 +273,7 @@ AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
 }
 
 void
-AMDGPUVM::registerTLB(VegaISA::GpuTLB *tlb)
+AMDGPUVM::registerTLB(AMDGPU::GpuTLB *tlb)
 {
     DPRINTF(AMDGPUDevice, "Registered a TLB with device\n");
     gpu_tlbs.push_back(tlb);

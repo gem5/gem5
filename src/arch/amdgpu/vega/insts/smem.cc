@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_SMEM__S_LOAD_DWORD class methods ---
@@ -974,4 +977,5 @@ Inst_SMEM__S_ATC_PROBE_BUFFER::execute(GPUDynInstPtr gpuDynInst)
     panicUnimplemented();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
