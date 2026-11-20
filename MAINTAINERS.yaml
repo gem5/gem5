@@ -101,6 +101,11 @@ cpu-minor:
 cpu-o3:
     status: orphaned
 
+cpu-pin:
+    status: maintained
+    maintainers:
+        - Nicholas Mosier <nh.mosier@gmail.com>
+
 cpu-simple:
     status: orphaned
     experts:

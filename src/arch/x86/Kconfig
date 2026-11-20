@@ -25,3 +25,5 @@
 
 config USE_X86_ISA
     bool "X86 ISA support"
+
+rsource "pin/Kconfig"
