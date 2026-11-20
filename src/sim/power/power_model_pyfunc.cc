@@ -57,20 +57,19 @@ PowerModelPyFunc::PowerModelPyFunc(const Params &p)
       pwr_interval(p.pwr_interval),
       auto_start(p.auto_start),
       intervalEvent([this] { powerAtInterval(); }, name()),
-      stats(this)
+      stats(this),
+      regions(this, "regions")
 {}
 
 void
 PowerModelPyFunc::startup()
 {
-    if (pwr_interval > 0) {
-        // This queue runs after the SimObject and legacy stats are reset.
-        statistics::registerResetCallback([this] {
-            if (sampling) {
-                startSampleWindow();
-            }
-        });
-    }
+    // This queue runs after the SimObject and legacy stats are reset.
+    statistics::registerResetCallback([this] {
+        if (sampling || (activeRegion && pwr_interval == 0)) {
+            startSampleWindow();
+        }
+    });
     if (auto_start && pwr_interval > 0) {
         startSampling();
     }
@@ -191,7 +190,7 @@ PowerModelPyFunc::preDumpStats()
     PowerModelState::preDumpStats();
     // Root.preDumpStats() also prepares stats inside Python power equations.
     if (!powerLoggingEnabled() || pwr_interval > 0 || preparing_log ||
-        last_log_tick == curTick()) {
+        activeRegion || last_log_tick == curTick()) {
         return;
     }
     preparing_log = true;
@@ -205,6 +204,66 @@ PowerModelPyFunc::preDumpStats()
         throw;
     }
     preparing_log = false;
+}
+
+void
+PowerModelPyFunc::addRegion(const std::string &region)
+{
+    constexpr char allowed[] =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+    if (region.empty() ||
+        region.find_first_not_of(allowed) != std::string::npos) {
+        throw pybind11::value_error(
+            "Power region names must use letters, digits, '_' or '-'");
+    }
+    if (regionStats.find(region) != regionStats.end()) {
+        return;
+    }
+
+    auto group =
+        std::make_unique<PowerModelPyFuncStats>(&regions, region.c_str());
+    // A region can be registered after the initial stats enable traversal.
+    for (auto *info : group->getStats()) {
+        fatal_if(!info->check() || !info->baseCheck(),
+                 "%s: invalid power statistics for region '%s'", name(),
+                 region);
+        info->enable();
+    }
+    regionStats.emplace(region, std::move(group));
+}
+
+void
+PowerModelPyFunc::beginRegion(const std::string &region)
+{
+    if (activeRegion) {
+        throw pybind11::value_error("A power region is already active");
+    }
+    const auto it = regionStats.find(region);
+    if (it == regionStats.end()) {
+        throw pybind11::value_error("Unregistered power region: " + region);
+    }
+
+    stopSampling();
+    if (pwr_interval > 0) {
+        startSampling();
+    } else {
+        startSampleWindow();
+    }
+    activeRegion = it->second.get();
+}
+
+void
+PowerModelPyFunc::endRegion()
+{
+    if (!activeRegion) {
+        return;
+    }
+    if (pwr_interval > 0) {
+        stopSampling();
+    } else {
+        sample();
+    }
+    activeRegion = nullptr;
 }
 
 void
@@ -229,9 +288,12 @@ PowerModelPyFunc::startSampleWindow()
         on_sample_start();
     }
     last_sample_tick = curTick();
-    reschedule(intervalEvent,
-               last_sample_tick + clocked_object->cyclesToTicks(pwr_interval),
-               true);
+    if (pwr_interval > 0) {
+        reschedule(intervalEvent,
+                   last_sample_tick +
+                       clocked_object->cyclesToTicks(pwr_interval),
+                   true);
+    }
 }
 
 void
@@ -265,8 +327,14 @@ PowerModelPyFunc::sample()
 
     DPRINTF(PwrIntervalEvent, "Sample at %llu: dur %llu dyn %.17g st %.17g\n",
             curTick(), sample_duration, dyn, st);
-    stats.sample(dyn, st);
+    if (sampling) {
+        stats.sample(dyn, st);
+    }
+    if (activeRegion) {
+        activeRegion->sample(dyn, st);
+    }
     logPower(dyn, st, _temp.toKelvin());
+    last_log_tick = curTick();
 }
 
 void
@@ -286,8 +354,9 @@ PowerModelPyFunc::getSampleDurationSeconds() const
 }
 
 PowerModelPyFunc::PowerModelPyFuncStats::PowerModelPyFuncStats(
-    statistics::Group *parent)
-    : statistics::Group(parent),
+    statistics::Group *parent, const char *name)
+    : statistics::Group(parent, name),
+      retainAcrossReset(name != nullptr),
       ADD_STAT(powerDist, statistics::units::Watt::get(),
                "Sampled total power"),
       ADD_STAT(dynamicPowerDist, statistics::units::Watt::get(),
@@ -317,6 +386,15 @@ PowerModelPyFunc::PowerModelPyFuncStats::PowerModelPyFuncStats(
     dynamicPowerMax.prereq(dynamicPowerDist);
     staticPowerMin.prereq(staticPowerDist);
     staticPowerMax.prereq(staticPowerDist);
+}
+
+void
+PowerModelPyFunc::PowerModelPyFuncStats::resetStats()
+{
+    // Guest stats resets must preserve previously recorded kernel samples.
+    if (!retainAcrossReset) {
+        statistics::Group::resetStats();
+    }
 }
 
 void

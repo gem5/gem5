@@ -29,7 +29,10 @@
 #ifndef __SIM_POWERMODEL_PYFUNC_PM_HH__
 #define __SIM_POWERMODEL_PYFUNC_PM_HH__
 
+#include <map>
+#include <memory>
 #include <optional>
+#include <string>
 
 #include "base/compiler.hh"
 #include "base/statistics.hh"
@@ -81,8 +84,12 @@ class GEM5_LOCAL PowerModelPyFunc : public PowerModelState
 
     struct PowerModelPyFuncStats : public statistics::Group
     {
-        PowerModelPyFuncStats(statistics::Group *parent);
+        PowerModelPyFuncStats(statistics::Group *parent,
+                              const char *name = nullptr);
         void sample(double dyn, double st);
+        void resetStats() override;
+
+        const bool retainAcrossReset;
 
         statistics::Histogram powerDist;
         statistics::Histogram dynamicPowerDist;
@@ -94,6 +101,10 @@ class GEM5_LOCAL PowerModelPyFunc : public PowerModelState
         statistics::Scalar staticPowerMin;
         statistics::Scalar staticPowerMax;
     } stats;
+
+    statistics::Group regions;
+    std::map<std::string, std::unique_ptr<PowerModelPyFuncStats>> regionStats;
+    PowerModelPyFuncStats *activeRegion = nullptr;
 
   public:
     PARAMS(PowerModelPyFunc);
@@ -109,6 +120,11 @@ class GEM5_LOCAL PowerModelPyFunc : public PowerModelState
 
     void startSampling();
     void stopSampling();
+
+    // Register a region name once, then reuse it across any number of windows.
+    void addRegion(const std::string &name);
+    void beginRegion(const std::string &name);
+    void endRegion();
 
     bool
     inPowerAtInterval() const

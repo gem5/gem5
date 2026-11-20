@@ -47,6 +47,9 @@ runtime, or combine it with --pwr-interval to print each sample, including
 the final partial sample. Use --power-log=power.log to write power reports
 to a dedicated file under gem5's output directory. This works independently
 of the debug flags and leaves --debug-file available for other traces.
+
+Use --power-region roi to collect separate power stats under regions.roi
+from the end of a 1,000-instruction warmup through workload exit.
 """
 
 import argparse
@@ -76,6 +79,9 @@ parser.add_argument(
     const="power.log",
     default="",
     help="Dedicated power report destination (default with flag: power.log).",
+)
+parser.add_argument(
+    "--power-region", help="Name of the power stats region after warmup."
 )
 args = parser.parse_args()
 
@@ -114,7 +120,15 @@ board.set_se_binary_workload(
 )
 
 simulator = Simulator(board=board)
+if args.power_region is not None:
+    simulator.schedule_max_insts(1000)
+    simulator.run()
+    power_on.addRegion(args.power_region)
+    power_on.beginRegion(args.power_region)
+
 simulator.run()
 
-if args.pwr_interval > 0:
+if args.power_region is not None:
+    power_on.endRegion()
+elif args.pwr_interval > 0:
     power_on.stopSampling()

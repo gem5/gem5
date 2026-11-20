@@ -128,6 +128,19 @@ def check_sampling(params):
                 ), f"{name}{suffix}: {actual} != {expected}"
 
 
+def check_region(params):
+    out = run_example(
+        params, "region", "--pwr-interval", "1000", "--power-region", "roi"
+    )
+    assert (
+        "Hello world!" in (out / constants.gem5_simulation_stdout).read_text()
+    )
+    stats = read_power_stats(out)
+    for name in ("power", "dynamicPower", "staticPower"):
+        stat = name + "Dist::samples"
+        assert 0 < stats[f"regions.roi.{stat}"] < stats[stat]
+
+
 for isa in (constants.all_compiled_tag, constants.arm_tag):
     for host in constants.supported_hosts:
         for variant in (constants.opt_tag, constants.debug_tag):
@@ -136,6 +149,7 @@ for isa in (constants.all_compiled_tag, constants.arm_tag):
                 fixtures=(Gem5Fixture(isa, variant),),
                 tests=(
                     TestFunction(check_sampling, fixtures=(TempdirFixture(),)),
+                    TestFunction(check_region, fixtures=(TempdirFixture(),)),
                 ),
                 tags=(isa, host, variant, constants.quick_tag),
             )

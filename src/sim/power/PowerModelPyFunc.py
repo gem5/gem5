@@ -52,7 +52,7 @@ class PowerModelPyFunc(PowerModelState):
         False, "Start sampling at startup instead of on startSampling()"
     )
     on_sample_start = Param.PyFunc(
-        None, "Optional callback to snapshot counters on start and stats reset"
+        None, "Optional counter snapshot on sampling or region start and reset"
     )
 
     power_log = Param.PyFunc(
@@ -72,4 +72,7 @@ class PowerModelPyFunc(PowerModelState):
         PyBindMethod("stopSampling"),
         PyBindMethod("inPowerAtInterval"),
         PyBindMethod("getSampleDurationSeconds"),
+        PyBindMethod("addRegion"),
+        PyBindMethod("beginRegion"),
+        PyBindMethod("endRegion"),
     ]
