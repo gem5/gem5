@@ -99,6 +99,9 @@ let {{
 
     StaticInstPtr
     decodeAdvancedSIMD(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeFloatingPointDataProcessing(ExtMachInst machInst);
     '''
 
     decoder_output = '''
@@ -354,6 +357,13 @@ let {{
                 // VINS
                 return new NVins<uint16_t>(machInst, vd, vm, 0);
             }
+        }
+
+        // Single/double scalar FP shares the unconditional encoding space.
+        // The overlapping FP16 moves above take precedence.
+        if (bits(machInst, 31, 24) == 0xfe &&
+            bits(machInst, 11, 9) == 0x5 && !bits(machInst, 4)) {
+            return decodeFloatingPointDataProcessing(machInst);
         }
 
         uint8_t bit_31_24 = bits(machInst, 31, 24);
@@ -3582,6 +3592,12 @@ let {{
                 // VINS
                 return new NVins<uint16_t>(machInst, vd, vm, 0);
             }
+        }
+
+        // Preserve the overlapping FP16 moves before scalar routing.
+        if (bits(machInst, 31, 24) == 0xfe &&
+            bits(machInst, 11, 9) == 0x5 && !bits(machInst, 4)) {
+            return decodeFloatingPointDataProcessing(machInst);
         }
 
         const uint32_t opc1 = bits(machInst, 23, 20);
