@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Inria
  * All rights reserved.
  *
@@ -84,6 +96,12 @@ class SkewedAssociative : public BaseIndexingPolicy
      * The amount to shift a set index to get its MSB.
      */
     const int msbShift;
+
+    /** Mask used by the power-of-two skewing functions. */
+    const unsigned setMask;
+
+    /** The amount to shift an address to get its tag. */
+    const int tagShift;
 
     /**
      * The hash function itself. Uses the hash function H, as described in

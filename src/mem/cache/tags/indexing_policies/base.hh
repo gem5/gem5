@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017,2024 Arm Limited
+ * Copyright (c) 2012-2014,2017,2024,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -49,7 +49,6 @@
 
 #include <vector>
 
-#include "base/intmath.hh"
 #include "base/logging.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "params/BaseIndexingPolicy.hh"
@@ -91,35 +90,38 @@ class IndexingPolicyTemplate : public SimObject
     const int setShift;
 
     /**
-     * Mask out all bits that aren't part of the set index.
-     */
-    const unsigned setMask;
-
-    /**
      * The cache sets.
      */
     std::vector<std::vector<ReplaceableEntry*>> sets;
 
     /**
-     * The amount to shift the address to get the tag.
+     * Extract the set from an address using modulo indexing.
+     *
+     * @param addr The address to get the set from.
+     * @return The set for the given address.
      */
-    const int tagShift;
+    uint32_t
+    extractSet(const Addr addr) const
+    {
+        return (addr >> setShift) % numSets;
+    }
 
   public:
     /**
      * Construct and initialize this policy.
      */
-    IndexingPolicyTemplate(const Params &p,
-                           const uint32_t num_entries,
+    IndexingPolicyTemplate(const Params &p, const uint32_t num_entries,
                            const uint32_t set_shift)
-      : SimObject(p), assoc(p.assoc),
-        numSets(num_entries / assoc),
-        setShift(set_shift), setMask(numSets - 1), sets(numSets),
-        tagShift(setShift + floorLog2(numSets))
+        : SimObject(p),
+          assoc(p.assoc),
+          numSets(num_entries / p.assoc),
+          setShift(set_shift),
+          sets(numSets)
     {
-        fatal_if(!isPowerOf2(numSets),
-            "# of sets must be non-zero and a power of 2");
-        fatal_if(assoc <= 0, "associativity must be greater than zero");
+        fatal_if(p.assoc <= 0, "associativity must be greater than zero");
+        fatal_if(num_entries % assoc != 0,
+                 "# of entries must be a multiple of associativity");
+        fatal_if(numSets == 0, "# of sets must be non-zero");
 
         // Make space for the entries
         for (uint32_t i = 0; i < numSets; ++i) {
@@ -179,7 +181,7 @@ class IndexingPolicyTemplate : public SimObject
     virtual Addr
     extractTag(const Addr addr) const
     {
-        return (addr >> tagShift);
+        return (addr >> setShift) / numSets;
     }
 
 

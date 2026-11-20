@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014,2017,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -46,27 +46,24 @@
 
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
 
+#include "base/intmath.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 namespace gem5
 {
 
 SetAssociative::SetAssociative(const Params &p)
-    : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size))
+    : BaseIndexingPolicy(p, p.size / p.entry_size,
+                         p.index_start_bit >= 0 ? p.index_start_bit
+                                                : floorLog2(p.entry_size))
 {
-}
-
-uint32_t
-SetAssociative::extractSet(const Addr addr) const
-{
-    return (addr >> setShift) & setMask;
 }
 
 Addr
 SetAssociative::regenerateAddr(const Addr &tag,
                                const ReplaceableEntry* entry) const
 {
-    return (tag << tagShift) | (entry->getSet() << setShift);
+    return ((tag * numSets) + entry->getSet()) << setShift;
 }
 
 std::vector<ReplaceableEntry*>

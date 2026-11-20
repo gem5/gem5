@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #include <cassert>
 
 #include "base/cprintf.hh"
+#include "base/intmath.hh"
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
@@ -79,7 +80,7 @@ class TaggedSetAssociative : public TaggedIndexingPolicy
     virtual uint32_t
     extractSet(const KeyType &key) const
     {
-        return (key.address >> setShift) & setMask;
+        return TaggedIndexingPolicy::extractSet(key.address);
     }
 
   public:
@@ -98,7 +99,7 @@ class TaggedSetAssociative : public TaggedIndexingPolicy
     regenerateAddr(const KeyType &key,
                    const ReplaceableEntry *entry) const override
     {
-        return (key.address << tagShift) | (entry->getSet() << setShift);
+        return ((key.address * numSets) + entry->getSet()) << setShift;
     }
 };
 
