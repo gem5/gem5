@@ -1,4 +1,7 @@
 # Copyright (c) 2015, 2021 Arm Limited
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2026 Akanksha Chaudhari, Matt Sinclair
+# (University of Wisconsin-Madison)
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -9,9 +12,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are

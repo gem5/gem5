@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2025 Akanksha Chaudhari, Matt Sinclair
+# Copyright (c) 2025-2026 Akanksha Chaudhari, Matt Sinclair
 # (University of Wisconsin-Madison)
 # All rights reserved.
 #
-# This file contains modifications and/or code derived from:
-# gem5-SALAM: https://github.com/TeCSAR-UNCC/gem5-SALAM
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# This file contains code derived from gem5-SALAM:
+# https://github.com/TeCSAR-UNCC/gem5-SALAM
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are

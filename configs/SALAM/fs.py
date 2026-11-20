@@ -1,10 +1,14 @@
 # Copyright (c) 2010-2013, 2016, 2019-2020 ARM Limited
 # Copyright (c) 2020 Barkhausen Institut
-# Copyright (c) 2025 Akanksha Chaudhari, Matt Sinclair (University of Wisconsin-Madison)
+# Copyright (c) 2012-2014 Mark D. Hill and David A. Wood
+# Copyright (c) 2009-2011 Advanced Micro Devices, Inc.
+# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2025-2026 Akanksha Chaudhari, Matt Sinclair
+# (University of Wisconsin-Madison)
 # All rights reserved.
 #
-# This file contains modifications and/or code derived from:
-# gem5-SALAM: https://github.com/TeCSAR-UNCC/gem5-SALAM
+# This file contains code derived from gem5-SALAM:
+# https://github.com/TeCSAR-UNCC/gem5-SALAM
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -14,11 +18,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2012-2014 Mark D. Hill and David A. Wood
-# Copyright (c) 2009-2011 Advanced Micro Devices, Inc.
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are

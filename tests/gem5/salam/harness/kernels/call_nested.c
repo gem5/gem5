@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2026 Akanksha Chaudhari
+ * Copyright (c) 2026 Akanksha Chaudhari, Matt Sinclair
+ * (University of Wisconsin-Madison)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

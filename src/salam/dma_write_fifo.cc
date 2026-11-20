@@ -1,10 +1,12 @@
 /*
- * Copyright (c) 2025 Akanksha Chaudhari, Matt Sinclair
+ * Copyright (c) 2012, 2015, 2017, 2019 ARM Limited
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2025-2026 Akanksha Chaudhari, Matt Sinclair
  * (University of Wisconsin-Madison)
  * All rights reserved.
  *
- * This file contains modifications and/or code derived from:
- * gem5-SALAM: https://github.com/TeCSAR-UNCC/gem5-SALAM
+ * This file contains code derived from gem5-SALAM:
+ * https://github.com/TeCSAR-UNCC/gem5-SALAM
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
