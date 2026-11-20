@@ -56,6 +56,57 @@
 namespace gem5
 {
 
+DmaPort::PacketStats::PacketStats(statistics::Group *parent, const char *name)
+    : statistics::Group(parent, name),
+      ADD_STAT(readAttempts, statistics::units::Count::get(),
+               "Read packet send attempts, including retries"),
+      ADD_STAT(writeAttempts, statistics::units::Count::get(),
+               "Write packet send attempts, including retries"),
+      ADD_STAT(readPackets, statistics::units::Count::get(),
+               "Read packets accepted by the downstream port"),
+      ADD_STAT(writePackets, statistics::units::Count::get(),
+               "Write packets accepted by the downstream port"),
+      ADD_STAT(readResponses, statistics::units::Count::get(),
+               "Read packet responses received"),
+      ADD_STAT(writeResponses, statistics::units::Count::get(),
+               "Write packet responses received"),
+      ADD_STAT(readBytes, statistics::units::Byte::get(),
+               "Bytes in read packet responses"),
+      ADD_STAT(writeBytes, statistics::units::Byte::get(),
+               "Bytes acknowledged by write packet responses")
+{}
+
+void
+DmaPort::enablePacketStats(statistics::Group *parent, const char *name)
+{
+    panic_if(packetStats, "DMA packet statistics already enabled");
+    packetStats = std::make_unique<PacketStats>(parent, name);
+}
+
+void
+DmaPort::countAttempt(bool is_read)
+{
+    if (packetStats) {
+        if (is_read) {
+            packetStats->readAttempts++;
+        } else {
+            packetStats->writeAttempts++;
+        }
+    }
+}
+
+void
+DmaPort::countPacket(bool is_read)
+{
+    if (packetStats) {
+        if (is_read) {
+            packetStats->readPackets++;
+        } else {
+            packetStats->writePackets++;
+        }
+    }
+}
+
 DmaPort::DmaPort(ClockedObject *dev, System *s,
                  std::optional<uint32_t> sid, std::optional<uint32_t> ssid)
     : RequestPort(dev->name() + ".dma"),
@@ -67,6 +118,15 @@ DmaPort::DmaPort(ClockedObject *dev, System *s,
 void
 DmaPort::handleRespPacket(PacketPtr pkt, Tick delay)
 {
+    if (packetStats) {
+        if (pkt->isRead()) {
+            packetStats->readResponses++;
+            packetStats->readBytes += pkt->getSize();
+        } else {
+            packetStats->writeResponses++;
+            packetStats->writeBytes += pkt->getSize();
+        }
+    }
     // Should always see a response with a sender state.
     assert(pkt->isResponse());
     warn_if(pkt->isError(), "Response pkt error.");
@@ -272,7 +332,10 @@ DmaPort::trySendTimingReq()
     // Check if this was the last packet now, since hypothetically the packet
     // response may come immediately, and state may be deleted.
     bool last = state->gen.last();
+    const bool is_read = pkt->isRead();
+    countAttempt(is_read);
     if (sendTimingReq(pkt)) {
+        countPacket(is_read);
         pendingCount++;
     } else {
         retryPending = true;
@@ -306,6 +369,8 @@ DmaPort::sendAtomicReq(DmaReqState *state)
     DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
             state->gen.addr(), state->gen.size());
     pendingCount++;
+    countAttempt(pkt->isRead());
+    countPacket(pkt->isRead());
     Tick lat = sendAtomic(pkt);
 
     // Check if we're done, since handleResp may delete state.
@@ -329,6 +394,8 @@ DmaPort::sendAtomicBdReq(DmaReqState *state)
                 state->gen.addr(), state->gen.size());
 
         MemBackdoorPtr bd = nullptr;
+        countAttempt(pkt->isRead());
+        countPacket(pkt->isRead());
         Tick lat = sendAtomicBackdoor(pkt, bd);
 
         // If we got a backdoor, record it.
@@ -429,12 +496,12 @@ DmaDevice::getPort(const std::string &if_name, PortID idx)
     return PioDevice::getPort(if_name, idx);
 }
 
-DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
-                         unsigned max_req_size,
-                         unsigned max_pending,
-                         Request::Flags flags)
-    : maxReqSize(max_req_size), fifoSize(size),
-      reqFlags(flags), port(_port), cacheLineSize(port.sys->cacheLineSize()),
+DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size, unsigned max_req_size,
+                         unsigned max_pending, Request::Flags flags)
+    : maxReqSize(max_req_size),
+      fifoSize(size),
+      reqFlags(flags),
+      port(_port),
       buffer(size)
 {
     freeRequests.resize(max_pending);
@@ -527,6 +594,7 @@ DmaReadFifo::resumeFill()
         return;
 
     const bool old_eob(atEndOfBlock());
+    const size_t old_size = buffer.size();
 
     if (port.sys->bypassCaches())
         resumeFillBypass();
@@ -535,28 +603,37 @@ DmaReadFifo::resumeFill()
 
     if (!old_eob && atEndOfBlock())
         onEndOfBlock();
+    if (buffer.size() > old_size) {
+        onDataAvailable();
+    }
 }
 
 void
 DmaReadFifo::resumeFillBypass()
 {
+    // A consumer may need more bytes while leaving less than one cache
+    // line free. Waiting for a whole line then prevents either side from
+    // making progress. Bypass accesses complete synchronously, so fill
+    // the available space without imposing a cache-line minimum.
     const size_t fifo_space = buffer.capacity() - buffer.size();
-    if (fifo_space >= cacheLineSize || buffer.capacity() < cacheLineSize) {
-        const size_t block_remaining = endAddr - nextAddr;
-        const size_t xfer_size = std::min(fifo_space, block_remaining);
-        std::vector<uint8_t> tmp_buffer(xfer_size);
-
-        assert(pendingRequests.empty());
-        DPRINTF(DMA, "Direct bypass startAddr=%#x xfer_size=%#x " \
-                "fifo_space=%#x block_remaining=%#x\n",
-                nextAddr, xfer_size, fifo_space, block_remaining);
-
-        port.dmaAction(MemCmd::ReadReq, nextAddr, xfer_size, nullptr,
-                tmp_buffer.data(), 0, reqFlags);
-
-        buffer.write(tmp_buffer.begin(), xfer_size);
-        nextAddr += xfer_size;
+    const size_t block_remaining = endAddr - nextAddr;
+    const size_t xfer_size = std::min(fifo_space, block_remaining);
+    if (xfer_size == 0) {
+        return;
     }
+
+    std::vector<uint8_t> tmp_buffer(xfer_size);
+    assert(pendingRequests.empty());
+    DPRINTF(DMA,
+            "Direct bypass startAddr=%#x xfer_size=%#x "
+            "fifo_space=%#x block_remaining=%#x\n",
+            nextAddr, xfer_size, fifo_space, block_remaining);
+
+    port.dmaAction(MemCmd::ReadReq, nextAddr, xfer_size, nullptr,
+                   tmp_buffer.data(), 0, reqFlags);
+
+    buffer.write(tmp_buffer.begin(), xfer_size);
+    nextAddr += xfer_size;
 }
 
 void
@@ -589,12 +666,16 @@ void
 DmaReadFifo::dmaDone()
 {
     const bool old_active(isActive());
+    const size_t old_size = buffer.size();
 
     handlePending();
     resumeFill();
 
     if (old_active && !isActive())
         onIdle();
+    if (buffer.size() > old_size) {
+        onDataAvailable();
+    }
 }
 
 void
