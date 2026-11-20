@@ -546,12 +546,12 @@ AbstractController::MemoryPort::MemoryPort(const std::string &_name,
 {
 }
 
-AbstractController::
-ControllerStats::ControllerStats(statistics::Group *parent)
+AbstractController::ControllerStats::ControllerStats(statistics::Group *parent)
     : statistics::Group(parent),
-      ADD_STAT(fullyBusyCycles,
+      ADD_STAT(fullyBusyCycles, statistics::units::Cycle::get(),
                "cycles for which number of transistions == max transitions"),
-      ADD_STAT(delayHistogram, "delay_histogram")
+      ADD_STAT(delayHistogram, statistics::units::Cycle::get(),
+               "delay_histogram")
 {
     fullyBusyCycles
         .flags(statistics::nozero);
