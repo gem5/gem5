@@ -401,19 +401,14 @@ class FloatConstantHarness(st.SalamHarnessFixture):
             "salam-workload",
             gem5,
             tempdir,
-            f"float-constant-{operation}.ll.in",
+            "float_constant.ll.in",
             [],
             3,
         )
         self.operation = operation
 
     def _place_kernel(self, tools):
-        header = os.path.join(self.accpath, "harness_clstr_hw_defines.h")
-        with open(header) as stream:
-            defines = dict(
-                re.findall(r"#define (\w+) (0x[0-9a-fA-F]+)", stream.read())
-            )
-        out = int(defines["OUT"], 16)
+        super()._place_kernel(tools)
         int_ptr = "i32*" if tools.llvm_major < 15 else "ptr"
         float_ptr = "float*" if tools.llvm_major < 15 else "ptr"
         offset = -1 if self.operation == "sitofp" else 1
@@ -432,20 +427,13 @@ class FloatConstantHarness(st.SalamHarnessFixture):
             ),
             "literal": "4.000000e+00",
         }[self.operation]
-        ir = (
-            'target datalayout = "e-p:64:64-i64:64-n32:64-S128"\n'
-            'target triple = "armv7-pc-none-eabi"\n'
-            "define void @top() {\n"
-            f"  store volatile float {expression}, {float_ptr} "
-            f"inttoptr (i64 {out} to {float_ptr})\n"
-            f"  store volatile i32 305419896, {int_ptr} "
-            f"inttoptr (i64 {out + 4} to {int_ptr})\n"
-            f"  store volatile i32 2309737967, {int_ptr} "
-            f"inttoptr (i64 {out + 8} to {int_ptr})\n"
-            "  ret void\n}\n"
-        )
-        with open(os.path.join(self.accpath, "hw", "kernel.ll"), "w") as f:
-            f.write(ir)
+        path = os.path.join(self.accpath, "hw", "kernel.ll")
+        with open(path) as stream:
+            ir = stream.read()
+        ir = ir.replace("{EXPRESSION}", expression)
+        ir = ir.replace("{PTR_FLOAT}", float_ptr)
+        with open(path, "w") as stream:
+            stream.write(ir)
 
 
 def check_float_constant(operation):

@@ -431,18 +431,22 @@ def source_tree_import_detected(params):
     # The wrapper the stdlib runs use reports a module loaded from util/.
     gem5 = params.fixtures["salam-gem5"]
     outdir = params.fixtures[constants.tempdir_fixture_name].path
-    script = os.path.join(outdir, "imports_util.py")
+    script = os.path.join(
+        os.path.dirname(__file__), "configs", "import_util.py"
+    )
     configurator = os.path.join(
         config.base_dir, "util", "SALAM-tools", "SALAM-Configurator"
     )
-    with open(script, "w") as f:
-        f.write(
-            "import sys\n"
-            f"sys.path.insert(0, {configurator!r})\n"
-            "import workload_config\n"
-        )
     result = subprocess.run(
-        [gem5.path, "-d", outdir, "-re", st.NO_SOURCE_TREE, script],
+        [
+            gem5.path,
+            "-d",
+            outdir,
+            "-re",
+            st.NO_SOURCE_TREE,
+            script,
+            configurator,
+        ],
         env=gem5.tools.env(),
     )
     err = _read(outdir, "simerr.txt")

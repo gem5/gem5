@@ -240,51 +240,24 @@ def toolchain():
         return _toolchain
 
 
+def _profile_data(tools, profile, kind):
+    generator = os.path.join(config.base_dir, "util/SALAM-tools/hw_generator")
+    script = os.path.join(os.path.dirname(__file__), "profile_data.py")
+    return json.loads(
+        _output(
+            [tools.python, script, kind, generator, profile], env=tools.env()
+        )
+    )
+
+
 def _expected_generated(tools, profile):
     # Render the sources the generator produces for this profile.
-    generator = os.path.join(config.base_dir, "util/SALAM-tools/hw_generator")
-    script = (
-        "import hashlib, json, sys\n"
-        "sys.path.insert(0, sys.argv[1])\n"
-        "import SALAMGeneratedSources as g\n"
-        "model = g.load_generated_sources(g.load_source_config(sys.argv[2]))\n"
-        "out = g.generate_sources(model)\n"
-        "print(json.dumps({k: hashlib.sha256(v.encode()).hexdigest()"
-        " for k, v in out.items()}))\n"
-    )
-    text = _output(
-        [tools.python, "-c", script, generator, profile], env=tools.env()
-    )
-    return json.loads(text)
+    return _profile_data(tools, profile, "generated")
 
 
 def _expected_profile(tools, profile):
     # Read the selected inputs independently of the generated data module.
-    generator = os.path.join(config.base_dir, "util/SALAM-tools/hw_generator")
-    script = (
-        "import dataclasses, json, sys\n"
-        "sys.path.insert(0, sys.argv[1])\n"
-        "import SALAMGeneratedSources as g\n"
-        "model = g.load_generated_sources(g.load_source_config(sys.argv[2]))\n"
-        "metadata = {'path', 'instruction_names', 'characterization',\n"
-        "            'characterization_path'}\n"
-        "units = [(u.alias, {k: v for k, v in dataclasses.asdict(u).items()\n"
-        "                    if k not in metadata})\n"
-        "         for u in model.functional_units]\n"
-        "instructions = [(i.name, {k: v for k, v in\n"
-        "                         dataclasses.asdict(i).items() if k != 'name'})\n"
-        "                for i in model.instructions]\n"
-        "print(json.dumps(dict(\n"
-        "    profile=sys.argv[2], functional_units=units,\n"
-        "    instructions=instructions,\n"
-        "    characterization=g.power_model.merge(\n"
-        "        u.characterization for u in model.functional_units))))\n"
-    )
-    return json.loads(
-        _output(
-            [tools.python, "-c", script, generator, profile], env=tools.env()
-        )
-    )
+    return _profile_data(tools, profile, "profile")
 
 
 def _built_generated(build_dir):

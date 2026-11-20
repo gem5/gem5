@@ -38,6 +38,9 @@ from testlib import *
 
 # inst_list.yml names that differ from the Instruction.def names.
 ALIASES = {"gep": "getelementptr"}
+PROFILE_CHECK = os.path.join(
+    os.path.dirname(__file__), "configs", "profile_check.py"
+)
 
 
 def check_opcodes(params):
@@ -78,17 +81,17 @@ TestSuite(
 def cycle_counts_rejects_memory_latency(params):
     gem5 = params.fixtures["salam-gem5"]
     outdir = params.fixtures[constants.tempdir_fixture_name].path
-    script = os.path.join(outdir, "cycle_counts_load.py")
-    with open(script, "w") as f:
-        f.write(
-            "import m5\n"
-            "from m5.objects import CycleCounts, Root\n"
-            "root = Root(full_system=False)\n"
-            "root.cycle_counts = CycleCounts(load=1)\n"
-            "m5.instantiate()\n"
-        )
     result = subprocess.run(
-        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+        [
+            gem5.path,
+            "-d",
+            outdir,
+            "-re",
+            PROFILE_CHECK,
+            "--case",
+            "memory-latency",
+        ],
+        env=gem5.tools.env(),
     )
     with open(os.path.join(outdir, "simerr.txt")) as f:
         err = f.read()
@@ -119,19 +122,20 @@ def cycle_counts_checks_control_latency(params):
         for cycles in (0, 7):
             run_dir = os.path.join(outdir, f"{instruction}-{cycles}")
             os.makedirs(run_dir)
-            script = os.path.join(run_dir, "cycle_counts.py")
-            with open(script, "w") as f:
-                f.write(
-                    "import m5\n"
-                    "from m5.objects import CycleCounts, Root\n"
-                    "root = Root(full_system=False)\n"
-                    "root.cycle_counts = CycleCounts(**"
-                    f"{{{instruction!r}: {cycles}}})\n"
-                    "m5.instantiate()\n"
-                    "print('CycleCounts instantiated')\n"
-                )
             result = subprocess.run(
-                [gem5.path, "-d", run_dir, "-re", script],
+                [
+                    gem5.path,
+                    "-d",
+                    run_dir,
+                    "-re",
+                    PROFILE_CHECK,
+                    "--case",
+                    "control-latency",
+                    "--instruction",
+                    instruction,
+                    "--cycles",
+                    str(cycles),
+                ],
                 env=gem5.tools.env(),
             )
             with open(os.path.join(run_dir, "simerr.txt")) as f:
@@ -237,42 +241,24 @@ def dma_config_constructs_devices(params):
         yaml.safe_dump(
             {"acc_cluster": [{"Name": "clstr"}, {"DMA": records}]}, f
         )
-    script = os.path.join(outdir, "dma_config.py")
-    with open(script, "w") as f:
-        f.write(
-            "from m5.objects import (IOXBar, NoncoherentDma, Root, "
-            "StreamDma, System, SystemXBar, VExpress_GEM5_V1)\n"
-            "from gem5.salam.cluster import build_clusters\n"
-            "root = Root(full_system=False)\n"
-            "root.system = system = System(cache_line_size=128)\n"
-            "system.iobus = IOXBar()\n"
-            "system.membus = SystemXBar()\n"
-            "system.realview = VExpress_GEM5_V1()\n"
-            f"build_clusters(system, {outdir!r})\n"
-            f"records = {records!r}\n"
-            "for record in records:\n"
-            "    dma = getattr(system.clstr, record['Name'])\n"
-            "    stream = record['Type'] == 'Stream'\n"
-            "    assert isinstance(dma, StreamDma if stream "
-            "else NoncoherentDma)\n"
-            "    capacity = record.get('BufferSize', 1024)\n"
-            "    request = record.get('MaxReqSize', 128)\n"
-            "    assert int(dma.max_req_size.unproxy(dma)) == request\n"
-            "    assert int(dma.max_pending) == 8\n"
-            "    if stream:\n"
-            "        assert int(dma.read_buffer_size) == capacity\n"
-            "        assert int(dma.write_buffer_size) == capacity\n"
-            "        assert int(dma.stream_size) == 8\n"
-            "        assert int(dma.rd_int) == record.get('ReadInt', 210)\n"
-            "        assert int(dma.wr_int) == record.get('WriteInt', 211)\n"
-            "    else:\n"
-            "        assert int(dma.buffer_size) == capacity\n"
-            "        assert int(dma.int_num) == "
-            "record.get('InterruptNum', 200)\n"
-            "    print(record['Name'], capacity, request, 'checked')\n"
-        )
+    expected = os.path.join(outdir, "expected.json")
+    with open(expected, "w") as stream:
+        json.dump(records, stream)
     result = subprocess.run(
-        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+        [
+            gem5.path,
+            "-d",
+            outdir,
+            "-re",
+            PROFILE_CHECK,
+            "--case",
+            "dma",
+            "--workload",
+            outdir,
+            "--expected",
+            expected,
+        ],
+        env=gem5.tools.env(),
     )
     with open(os.path.join(outdir, "simout.txt")) as f:
         out = f.read()
@@ -335,30 +321,24 @@ def cache_config_constructs_devices(params):
         yaml.safe_dump(
             {"acc_cluster": cluster, "hw_config": {"kernel": None}}, f
         )
-    script = os.path.join(outdir, "cache_config.py")
-    with open(script, "w") as f:
-        f.write(
-            "from m5.objects import (IOXBar, Root, System, "
-            "SystemXBar, VExpress_GEM5_V1)\n"
-            "from gem5.salam.cluster import AcceleratorCache, "
-            "build_clusters\n"
-            "root = Root(full_system=False)\n"
-            "root.system = system = System()\n"
-            "system.iobus = IOXBar()\n"
-            "system.membus = SystemXBar()\n"
-            "system.realview = VExpress_GEM5_V1()\n"
-            f"build_clusters(system, {outdir!r})\n"
-            f"cases = {cases!r}\n"
-            "for index, (value, expected) in enumerate(cases):\n"
-            "    cache = getattr(system.clstr, f'cache_{index}')\n"
-            "    assert isinstance(cache, AcceleratorCache), "
-            "(value, type(cache))\n"
-            "    assert int(cache.size) == expected, "
-            "(value, cache.size, expected)\n"
-            "    print(repr(value), expected, 'checked')\n"
-        )
+    expected = os.path.join(outdir, "expected.json")
+    with open(expected, "w") as stream:
+        json.dump(cases, stream)
     result = subprocess.run(
-        [gem5.path, "-d", outdir, "-re", script], env=gem5.tools.env()
+        [
+            gem5.path,
+            "-d",
+            outdir,
+            "-re",
+            PROFILE_CHECK,
+            "--case",
+            "cache",
+            "--workload",
+            outdir,
+            "--expected",
+            expected,
+        ],
+        env=gem5.tools.env(),
     )
     with open(os.path.join(outdir, "simout.txt")) as f:
         out = f.read()
@@ -439,36 +419,18 @@ def connection_config_constructs_devices(params):
         yaml.safe_dump(
             {"acc_cluster": items, "hw_config": {"k": None}}, stream
         )
-    script = os.path.join(outdir, "connection_config.py")
-    with open(script, "w") as stream:
-        stream.write(
-            "from m5.objects import (IOXBar, Root, System, SystemXBar, "
-            "VExpress_GEM5_V1)\n"
-            "from gem5.salam.cluster import build_clusters\n"
-            "root = Root(full_system=False)\n"
-            "root.system = system = System(cache_line_size=128)\n"
-            "system.iobus = IOXBar()\n"
-            "system.membus = SystemXBar()\n"
-            "system.realview = VExpress_GEM5_V1()\n"
-            f"build_clusters(system, {outdir!r})\n"
-            "c = system.clstr\n"
-            "for obj in (c.ndma, c.same, c.split, c.a, c.b, c.c):\n"
-            "    assert obj.pio.peer.simobj is c.local_bus\n"
-            "for obj in (c.a, c.b, c.c):\n"
-            "    assert obj.local[0].peer.simobj is c.local_bus\n"
-            "assert c.same.stream_in.peer.simobj is c.a\n"
-            "assert c.same.stream_out.peer.simobj is c.a\n"
-            "assert len(c.a.stream) == 2\n"
-            "assert c.split.stream_in.peer.simobj is c.b\n"
-            "assert c.split.stream_out.peer.simobj is c.c\n"
-            "assert c.flow.stream_in.peer.simobj is c.b\n"
-            "assert c.flow.stream_out.peer.simobj is c.c\n"
-            "for clock in (c.compute_clk_domain, c.fabric_clk_domain):\n"
-            "    assert abs(clock.clock[0].value - 1e-8) < 1e-20\n"
-            "print('SALAM connection configuration checked')\n"
-        )
     result = subprocess.run(
-        [gem5.path, "-d", outdir, "-re", script],
+        [
+            gem5.path,
+            "-d",
+            outdir,
+            "-re",
+            PROFILE_CHECK,
+            "--case",
+            "connections",
+            "--workload",
+            outdir,
+        ],
         env=gem5.tools.env(),
         timeout=60,
     )

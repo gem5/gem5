@@ -48,121 +48,15 @@ REL_TOL = 1e-12
 ENERGY_ABS = 1e-24
 POWER_ABS = 1e-18
 
-BASIC = """
-define void @top() {
-entry:
-  %a = load volatile i32, PTR inttoptr (i32 IN to PTR), align 4
-  %b = load volatile i32, PTR inttoptr (i32 IN1 to PTR), align 4
-  %sum = add i32 %a, %b
-  %product = mul i32 %sum, 3
-  store volatile i32 %product, PTR inttoptr (i32 OUT to PTR), align 4
-  ret void
-}
-"""
+BASIC = "ppa_basic.ll.in"
 
-DIVISION = """
-define void @top() {
-entry:
-  %a = load volatile i32, PTR inttoptr (i32 IN to PTR), align 4
-  %quotient = sdiv i32 %a, 3
-  store volatile i32 %quotient, PTR inttoptr (i32 OUT to PTR), align 4
-  ret void
-}
-"""
+DIVISION = "ppa_division.ll.in"
 
-LOOP = """
-define void @top() {
-entry:
-  %v = load volatile i32, PTR inttoptr (i32 IN to PTR), align 4
-  br label %loop
-loop:
-  %i = phi i32 [ 0, %entry ], [ %inc, %loop ]
-  %acc = phi i32 [ 0, %entry ], [ %sum, %loop ]
-  %sum = add i32 %acc, %v
-  %inc = add i32 %i, 1
-  %more = icmp ult i32 %inc, 3
-  br i1 %more, label %loop, label %done
-done:
-  store volatile i32 %sum, PTR inttoptr (i32 OUT to PTR), align 4
-  ret void
-}
-"""
+LOOP = "ppa_loop.ll.in"
 
-CALLEE = """
-define i32 @helper(i16 %x) {
-entry:
-  %wide = zext i16 %x to i32
-  %y = add i32 %wide, 1
-  ret i32 %y
-}
-define void @top() {
-entry:
-  %a = load volatile i32, PTR inttoptr (i32 IN to PTR), align 4
-  %n = trunc i32 %a to i16
-  %x = call i32 @helper(i16 %n)
-  %condition = icmp eq i32 %x, 3
-  %selected = select i1 %condition, i32 %x, i32 0
-  store volatile i32 %selected, PTR inttoptr (i32 OUT to PTR), align 4
-  ret void
-}
-define i32 @unreachable(i32 %unused) {
-entry:
-  %product = mul i32 %unused, 17
-  ret i32 %product
-}
-"""
+CALLEE = "ppa_callee.ll.in"
 
-MIXED_FU = """
-define void @top() {
-entry:
-  %a = load volatile i32, PTR inttoptr (i32 IN to PTR), align 4
-  %big = add i32 %a, 1
-  %small = trunc i32 %big to i16
-  %sum = add i16 %small, 1
-  %out = zext i16 %sum to i32
-  store volatile i32 %out, PTR inttoptr (i32 OUT to PTR), align 4
-  ret void
-}
-"""
-
-
-class PPAHarness(st.SalamHarnessFixture):
-    def __init__(self, gem5, tempdir, ir, inputs, runs, host_options=None):
-        super().__init__(
-            "salam-workload",
-            gem5,
-            tempdir,
-            "ppa.ll.in",
-            inputs,
-            1,
-            runs=runs,
-            host_options=host_options,
-        )
-        self.template = ir
-
-    def _place_kernel(self, tools):
-        header = os.path.join(self.accpath, "harness_clstr_hw_defines.h")
-        with open(header) as stream:
-            addresses = dict(
-                re.findall(r"#define (\w+) (0x[0-9a-fA-F]+)", stream.read())
-            )
-        ir = self.template.replace(
-            "PTR", "i32*" if tools.llvm_major < 15 else "ptr"
-        )
-        for name, address in (
-            ("IN1", int(addresses["IN"], 16) + 4),
-            ("IN", int(addresses["IN"], 16)),
-            ("OUT", int(addresses["OUT"], 16)),
-        ):
-            ir = re.sub(r"\b" + name + r"\b", str(address), ir)
-        with open(
-            os.path.join(self.accpath, "hw", "kernel.ll"), "w"
-        ) as stream:
-            stream.write(
-                'target datalayout = "e-m:e-p:32:32-Fi8-i64:64-'
-                'v128:64:128-a:0:32-n32-S64"\n'
-                'target triple = "armv7-pc-none-eabi"\n' + ir
-            )
+MIXED_FU = "ppa_mixed_fu.ll.in"
 
 
 def coefficients():
@@ -572,10 +466,19 @@ CALLEE_EXPECTED = dict(
 )
 
 
-def suite(name, ir, check, inputs=(2, 3), runs=1, host_options=None):
+def suite(name, kernel, check, inputs=(2, 3), runs=1, host_options=None):
     gem5 = st.SalamGem5Fixture()
     tempdir = TempdirFixture()
-    workload = PPAHarness(gem5, tempdir, ir, inputs, runs, host_options)
+    workload = st.SalamHarnessFixture(
+        "salam-workload",
+        gem5,
+        tempdir,
+        kernel,
+        inputs,
+        1,
+        runs=runs,
+        host_options=host_options,
+    )
     TestSuite(
         name=name,
         fixtures=[gem5, tempdir, workload],
@@ -1014,27 +917,21 @@ def dump_reporting_controls(params):
     for enabled, strict, details in cases:
         outdir = os.path.join(base, f"dump-{enabled}-{strict}-{details}")
         os.makedirs(outdir)
-        settings = dict(enabled=enabled, strict=strict)
-        if details:
-            settings["report_details"] = True
-        script = os.path.join(outdir, "dump.py")
-        with open(script, "w") as stream:
-            stream.write(
-                "import m5\n"
-                "from m5.objects import Root, SALAMPowerModel\n"
-                "root = Root(full_system=False)\n"
-                f"root.ppa = SALAMPowerModel(**{settings!r})\n"
-                "m5.instantiate()\n"
-                "m5.simulate(1)\n"
-                "print('PPA_DUMP_READY', flush=True)\n"
-                "m5.stats.dump()\n"
-                "print('PPA_DUMP_COMPLETE', flush=True)\n"
-            )
-        result = subprocess.run(
-            [gem5.path, "-d", outdir, "-re", script],
-            env=gem5.tools.env(),
-            timeout=30,
+        script = os.path.join(
+            os.path.dirname(__file__), "configs", "ppa_dump.py"
         )
+        command = [
+            gem5.path,
+            "-d",
+            outdir,
+            "-re",
+            script,
+            "--enabled" if enabled else "--no-enabled",
+            "--strict" if strict else "--no-strict",
+        ]
+        if details:
+            command.append("--report-details")
+        result = subprocess.run(command, env=gem5.tools.env(), timeout=30)
         output = read_text(os.path.join(outdir, "simout.txt"))
         error = read_text(os.path.join(outdir, "simerr.txt"))
         if "PPA_DUMP_READY" not in output:

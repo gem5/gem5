@@ -39,216 +39,7 @@ from testlib import *
 
 MODEL = "system.memory.ppa."
 PHASE = 1000000
-
-# These programs use native gem5 requestors. Functional transfers exercise
-# PortProxy without advancing simulated time; no custom service hook is used.
-TRAFFIC_CONFIG = r"""
-import m5
-from m5.objects import (
-    AddrRange, Bridge, NoncoherentXBar, PyTrafficGen, RegisterBank, Root,
-    SALAMPowerModel, ScratchpadMemory, SrcClockDomain, System, VoltageDomain,
-)
-
-system = System(mem_mode="timing", mem_ranges=[AddrRange(4096)])
-system.clk_domain = SrcClockDomain(
-    clock="1GHz", voltage_domain=VoltageDomain()
-)
-system.bus = NoncoherentXBar(
-    width=1, frontend_latency=0, forward_latency=0, response_latency=1,
-    header_latency=1,
-)
-model = SALAMPowerModel(**CONFIG["model"])
-if CONFIG["kind"] == "spm":
-    system.memory = ScratchpadMemory(
-        range=system.mem_ranges[0], access_cycles=CONFIG.get("access_cycles", 10),
-        bandwidth=CONFIG["bandwidth"], ppa=model,
-    )
-    system.memory.port = system.bus.mem_side_ports
-else:
-    system.memory = RegisterBank(
-        range=system.mem_ranges[0], access_cycles=10,
-        write_cycles=10, ppa=model,
-    )
-    # The private register interface can answer reads synchronously.
-    # A standard bridge queues forwarding until the crossbar has recorded
-    # its response route; this is the fixture topology, not a model delay.
-    system.bridge = Bridge(ranges=system.mem_ranges, delay="0ns")
-    system.bridge.cpu_side_port = system.bus.mem_side_ports
-    system.bridge.mem_side_port = system.memory.reg_port
-system.system_port = system.bus.cpu_side_ports
-system.generators = [
-    PyTrafficGen(elastic_req=True) for _ in range(CONFIG["requestors"])
-]
-for gen in system.generators:
-    gen.port = system.bus.cpu_side_ports
-root = Root(full_system=False, system=system)
-m5.instantiate()
-proxy = system.getCCObject().physProxy
-proxy.write(2048, b"functional-only")
-assert proxy.read(2048, 15) == b"functional-only"
-proxy.write(0, bytes(4096))
-# Global dumps at tick zero and repeated ticks are suppressed by the
-# Python statistics wrapper. Explicit-root snapshots preserve those
-# zero-duration checks without adding any simulated delay.
-root.preDumpStats()
-m5.stats.prepare()
-m5.stats.dump(roots=[root])
-
-for index, gen in enumerate(system.generators):
-    base = index * 256
-    def traffic(gen=gen, base=base):
-        # Three one-byte writes, two unaligned four-byte writes,
-        # and four aligned four-byte reads. Data limits are exact.
-        yield gen.createLinear(1000000, base + 3, base + 6, 1,
-                               1, 1, 0, 3)
-        yield gen.createLinear(1000000, base + 9, base + 17, 4,
-                               1, 1, 0, 8)
-        yield gen.createLinear(1000000, base, base + 16, 4,
-                               1, 1, 100, 16)
-        yield gen.createIdle(10000000)
-    gen.start(traffic())
-event = m5.simulate(1000000)
-assert event.getCause() == "simulate() limit reached"
-m5.stats.dump()
-if CONFIG["reset"]:
-    m5.stats.reset()
-event = m5.simulate(2000000)
-assert event.getCause() == "simulate() limit reached"
-m5.stats.dump()
-# TrafficGen fills written bytes with its requestor ID. Check the exact
-# affected byte locations and agreement of both writing phases. The DMA
-# companion below additionally checks a fixed, independent payload.
-for index in range(CONFIG["requestors"]):
-    payload = proxy.read(index * 256, 32)
-    written = set(range(3, 6)) | set(range(9, 17))
-    identity = payload[3]
-    assert identity != 0
-    assert all(value == (identity if pos in written else 0)
-               for pos, value in enumerate(payload))
-    print("PAYLOAD", index, payload.hex())
-proxy.write(2048, b"functional-after-traffic")
-assert proxy.read(2048, 24) == b"functional-after-traffic"
-m5.stats.dump(roots=[root])
-m5.stats.dump(roots=[root])
-if CONFIG.get("reset_after_traffic", False):
-    m5.stats.reset()
-    root.preDumpStats()
-    m5.stats.prepare()
-    m5.stats.dump(roots=[root])
-print("STORAGE_CHECK_PASSED", m5.curTick())
-"""
-
-REGISTER_FUNCTIONAL_CONFIG = r"""
-import m5
-from m5.objects import (
-    AddrRange, RegisterBank, Root, SALAMDeviceTester, SALAMPowerModel,
-    SimpleMemory, SrcClockDomain, System, VoltageDomain,
-)
-
-system = System(mem_mode="timing", mem_ranges=[AddrRange(0x10000, size=4096)])
-system.clk_domain = SrcClockDomain(
-    clock="1GHz", voltage_domain=VoltageDomain()
-)
-system.backing = SimpleMemory(range=system.mem_ranges[0])
-system.system_port = system.backing.port
-system.memory = RegisterBank(
-    range=AddrRange(0, size=4096), access_cycles=10, write_cycles=30,
-    ppa=SALAMPowerModel(**CONFIG["model"]),
-)
-system.testers = [SALAMDeviceTester(), SALAMDeviceTester()]
-system.testers[0].port = system.memory.reg_port
-system.testers[1].port = system.memory.load_port
-root = Root(full_system=False, system=system)
-m5.instantiate()
-reg, load = system.testers
-
-
-def until(tick):
-    event = m5.simulate(tick - m5.curTick())
-    assert event.getCause() == "simulate() limit reached"
-    assert m5.curTick() == tick
-
-
-def snapshot():
-    root.preDumpStats()
-    m5.stats.prepare()
-    m5.stats.dump(roots=[root])
-
-
-until(1)
-reg.functionalWrite(8, 8, 0x8877665544332211)
-assert load.functionalRead(8, 8) == 0x8877665544332211
-load.functionalWrite(10, 2, 0xBBAA)
-assert reg.functionalRead(8, 8) == 0x88776655BBAA2211
-snapshot()
-assert load.send(False, 0, 8, 0x0807060504030201)
-assert reg.send(True, 0, 8, 0)
-assert reg.getResponses()[-1][3] == 0
-assert load.send(True, 0, 8, 0)
-reg.functionalWrite(2, 2, 0xBBAA)
-load.functionalWrite(12, 2, 0xDDCC)
-for reader in (reg, load):
-    assert reader.functionalRead(0, 8) == 0x08070605BBAA0201
-snapshot()
-until(11001)
-# The read completes at 11000; the write waits until its buffered data
-# becomes visible at 31000.
-assert [r[0] for r in load.getResponses()] == [11000]
-assert load.getResponses()[-1][3] == 0xBBAA0000
-reg.blockResponsesUntil(20000)
-assert reg.send(True, 0, 8, 0)
-assert reg.send(True, 8, 8, 0)
-assert reg.getResponseRejections() == [11001]
-load.functionalWrite(4, 2, 0xEEFF)
-snapshot()
-until(20001)
-assert [r[0] for r in reg.getResponses()] == [1, 20000, 20000]
-assert reg.getResponses()[-2][3] == 0xEEFFBBAA0000
-assert reg.getResponses()[-1][3] == 0x8877DDCCBBAA2211
-until(31001)
-assert [r[0] for r in load.getResponses()] == [11000, 31000]
-assert reg.send(True, 0, 8, 0)
-assert reg.getResponses()[-1][3] == 0x0807EEFFBBAA0201
-for reader in (reg, load):
-    assert reader.functionalRead(0, 8) == 0x0807EEFFBBAA0201
-    assert reader.functionalRead(8, 8) == 0x8877DDCCBBAA2211
-snapshot()
-print("PAYLOAD", hex(reg.getResponses()[-1][3]))
-print("STORAGE_CHECK_PASSED", m5.curTick())
-"""
-
-
-DMA_CONFIG = r"""
-import m5
-from m5.objects import AddrRange, SALAMPowerModel, ScratchpadMemory
-from gem5.components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import PrivateL1SharedL2CacheHierarchy
-from gem5.components.memory.single_channel import SingleChannelDDR4_2400
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.isas import ISA
-from gem5.salam.board import SALAMArmBoard
-
-board = SALAMArmBoard(
-    clk_freq="1GHz",
-    processor=SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.ARM,
-                              num_cores=1, clk_freq="1GHz"),
-    memory=SingleChannelDDR4_2400(size="4GiB"),
-    cache_hierarchy=PrivateL1SharedL2CacheHierarchy(
-        l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"),
-)
-board.set_bare_metal_binary(CONFIG["binary"])
-board.attach_accelerators(CONFIG["accpath"])
-board.test_memory = ScratchpadMemory(
-    range=AddrRange(0x2FF10000, size=4096), access_cycles=10000,
-    bandwidth="8MiB/s", ppa=SALAMPowerModel(**CONFIG["model"]),
-)
-board.test_memory.port = board.iobus.mem_side_ports
-board.harness_clstr.coherency_bus.header_latency = 10
-root = board._pre_instantiate()
-m5.instantiate()
-event = m5.simulate(4000000000)
-print(f"Exiting @ tick {m5.curTick()} because {event.getCause()}")
-"""
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), "configs")
 
 
 def model(kind, mask="byte_enable", enabled=True, strict=True):
@@ -294,7 +85,7 @@ def model(kind, mask="byte_enable", enabled=True, strict=True):
 def run_config(
     params,
     name,
-    program,
+    script,
     values,
     rejected=False,
     reason="memory:partial_write_physical_model",
@@ -304,9 +95,10 @@ def run_config(
         params.fixtures[constants.tempdir_fixture_name].path, name
     )
     os.makedirs(outdir)
-    config_path = os.path.join(outdir, "storage_config.py")
-    with open(config_path, "w") as stream:
-        stream.write("CONFIG = " + repr(values) + "\n" + program)
+    config_path = os.path.join(CONFIG_DIR, script)
+    parameters = os.path.join(outdir, "storage_parameters.json")
+    with open(parameters, "w") as stream:
+        json.dump(values, stream)
     result = subprocess.run(
         [
             gem5.path,
@@ -315,6 +107,7 @@ def run_config(
             "-re",
             "--debug-flags=MemoryAccess,NoncoherentXBar,SALAMScratchpad,DMA,NoncoherentDma",
             config_path,
+            parameters,
         ],
         env=gem5.tools.env(),
         timeout=180,
@@ -408,7 +201,7 @@ def traffic(
             bandwidth="1TiB/s" if fast else "128MiB/s",
             model=model(kind, mask),
         )
-        outdir = run_config(params, "enabled", TRAFFIC_CONFIG, values)
+        outdir = run_config(params, "enabled", "storage_traffic.py", values)
         output = read(outdir, "simout.txt")
         if "STORAGE_CHECK_PASSED 3000000" not in output:
             raise AssertionError("missing functional/traffic completion")
@@ -467,7 +260,9 @@ def traffic(
             raise AssertionError("response retry was not exercised")
         if equivalence or reset:
             values["model"]["enabled"] = False
-            disabled = run_config(params, "disabled", TRAFFIC_CONFIG, values)
+            disabled = run_config(
+                params, "disabled", "storage_traffic.py", values
+            )
             same_behavior(outdir, disabled)
 
     return check
@@ -476,7 +271,9 @@ def traffic(
 def register_functional_ports(params):
     values = dict(model=model("register"))
     values["model"]["rw_ports"] = 2
-    outdir = run_config(params, "enabled", REGISTER_FUNCTIONAL_CONFIG, values)
+    outdir = run_config(
+        params, "enabled", "storage_register_functional.py", values
+    )
     dumps = st.read_stats(outdir)
     if len(dumps) < 4:
         raise AssertionError("missing register functional snapshots")
@@ -497,7 +294,7 @@ def register_functional_ports(params):
         raise AssertionError("register functional or timing contract failed")
     values["model"]["enabled"] = False
     disabled = run_config(
-        params, "disabled", REGISTER_FUNCTIONAL_CONFIG, values
+        params, "disabled", "storage_register_functional.py", values
     )
     same_behavior(outdir, disabled)
 
@@ -510,10 +307,10 @@ def unsupported_mask(params):
         bandwidth="128MiB/s",
         model=model("spm", "unsupported"),
     )
-    run_config(params, "strict", TRAFFIC_CONFIG, values, rejected=True)
+    run_config(params, "strict", "storage_traffic.py", values, rejected=True)
     values["model"]["strict"] = False
     values["reset_after_traffic"] = True
-    outdir = run_config(params, "incomplete", TRAFFIC_CONFIG, values)
+    outdir = run_config(params, "incomplete", "storage_traffic.py", values)
     output = read(outdir, "simout.txt")
     if "STORAGE_CHECK_PASSED" not in output:
         raise AssertionError("unsupported mask changed execution")
@@ -548,7 +345,7 @@ def dma(reset):
         values = dict(
             binary=workload.elf, accpath=workload.accpath, model=model("spm")
         )
-        outdir = run_config(params, "dma-enabled", DMA_CONFIG, values)
+        outdir = run_config(params, "dma-enabled", "storage_dma.py", values)
         output = read(outdir, "simout.txt")
         terminal = read(outdir, "board.terminal")
         if (
@@ -623,7 +420,9 @@ def dma(reset):
             raise AssertionError("CPU/DMA memory service sequence differs")
         if reset:
             values["model"]["enabled"] = False
-            disabled = run_config(params, "dma-disabled", DMA_CONFIG, values)
+            disabled = run_config(
+                params, "dma-disabled", "storage_dma.py", values
+            )
             same_behavior(outdir, disabled)
             if terminal != read(disabled, "board.terminal"):
                 raise AssertionError("memory PPA changed DMA payload")
@@ -644,13 +443,15 @@ def timing_boundaries(params):
     run_config(
         params,
         "latency-strict",
-        TRAFFIC_CONFIG,
+        "storage_traffic.py",
         values,
         rejected=True,
         reason="memory:configured_access_latency",
     )
     values["model"]["strict"] = False
-    outdir = run_config(params, "latency-incomplete", TRAFFIC_CONFIG, values)
+    outdir = run_config(
+        params, "latency-incomplete", "storage_traffic.py", values
+    )
     final = st.read_stats(outdir)[-1]
     if final[MODEL + "dynamicComplete"] != 0:
         raise AssertionError("incompatible access latency was hidden")
@@ -667,14 +468,14 @@ def timing_boundaries(params):
         model=model("spm", "read_modify_write"),
     )
     values["model"]["minimum_access_interval_s"] = 1e-9
-    outdir = run_config(params, "rmw-boundary", TRAFFIC_CONFIG, values)
+    outdir = run_config(params, "rmw-boundary", "storage_traffic.py", values)
     energy(st.read_stats(outdir)[-1], 11, 7, 43e-12, elapsed=3e-6)
     # A faster configured service interval cannot absorb both accesses.
     values["bandwidth"] = "640000000B/s"
     run_config(
         params,
         "rmw-too-fast",
-        TRAFFIC_CONFIG,
+        "storage_traffic.py",
         values,
         rejected=True,
         reason="memory:configured_service_rate",
@@ -690,7 +491,7 @@ def timing_boundaries(params):
     run_config(
         params,
         "register-latency",
-        TRAFFIC_CONFIG,
+        "storage_traffic.py",
         values,
         rejected=True,
         reason="memory:immediate_RegisterBank_read_latency",
@@ -700,7 +501,7 @@ def timing_boundaries(params):
     run_config(
         params,
         "register-rmw",
-        TRAFFIC_CONFIG,
+        "storage_traffic.py",
         values,
         rejected=True,
         reason="flip-flop read-modify-write is unsupported",
@@ -720,13 +521,15 @@ def cell_only_scope(params):
     run_config(
         params,
         "cell-only-strict",
-        TRAFFIC_CONFIG,
+        "storage_traffic.py",
         values,
         rejected=True,
         reason=reason,
     )
     values["model"]["strict"] = False
-    outdir = run_config(params, "cell-only-incomplete", TRAFFIC_CONFIG, values)
+    outdir = run_config(
+        params, "cell-only-incomplete", "storage_traffic.py", values
+    )
     final = st.read_stats(outdir)[-1]
     if "STORAGE_CHECK_PASSED" not in read(outdir, "simout.txt"):
         raise AssertionError("cell-only reporting changed execution")
@@ -751,7 +554,7 @@ def unknown_word_width(params):
         bandwidth="128MiB/s",
         model=dict(enabled=True, strict=False, report_details=True),
     )
-    outdir = run_config(params, "unknown-width", TRAFFIC_CONFIG, values)
+    outdir = run_config(params, "unknown-width", "storage_traffic.py", values)
     output = read(outdir, "simout.txt")
     if "STORAGE_CHECK_PASSED" not in output:
         raise AssertionError("unknown characterization changed execution")
