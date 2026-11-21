@@ -80,6 +80,22 @@ StoreSet::~StoreSet()
 }
 
 void
+StoreSet::setFoldIndex(bool fold, int ssit_assoc)
+{
+    fatal_if(ssit_assoc <= 0 || SSITSize % ssit_assoc != 0,
+             "SSIT associativity %d must be positive and divide the SSIT "
+             "size %d.\n",
+             ssit_assoc, SSITSize);
+    const int num_sets = SSITSize / ssit_assoc;
+    fatal_if(!isPowerOf2(num_sets),
+             "SSIT set count %d must be a power of 2.\n", num_sets);
+    // With a single set the index has no bits to fold into. A shift of 1
+    // would also reduce the key to (PC & 1), so fold only with 2+ sets;
+    // for any shift of 2 or more the key is a bijection of the PC.
+    foldShift = (fold && num_sets > 1) ? floorLog2(num_sets) + 1 : 0;
+}
+
+void
 StoreSet::init(uint64_t clear_period, size_t _SSIT_entries,
                int _SSIT_assoc, replacement_policy::Base *_replPolicy,
                BaseIndexingPolicy *_indexingPolicy, int _LFST_size)
@@ -111,8 +127,8 @@ StoreSet::init(uint64_t clear_period, size_t _SSIT_entries,
 void
 StoreSet::violation(Addr store_PC, Addr load_PC)
 {
-    auto ld_entry = SSIT.findEntry({load_PC});
-    auto st_entry = SSIT.findEntry({store_PC});
+    auto ld_entry = SSIT.findEntry({ssitKey(load_PC)});
+    auto st_entry = SSIT.findEntry({ssitKey(store_PC)});
 
     bool valid_load_SSID  = ld_entry && ld_entry->isValid();
     bool valid_store_SSID = st_entry && st_entry->isValid();
@@ -123,22 +139,22 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 
         assert(new_set < LFSTSize);
 
-        SSITEntry *ld_entry = SSIT.findVictim({load_PC});
+        SSITEntry *ld_entry = SSIT.findVictim({ssitKey(load_PC)});
         ld_entry->setSSID(new_set);
-        SSIT.insertEntry({load_PC}, ld_entry);
+        SSIT.insertEntry({ssitKey(load_PC)}, ld_entry);
 
-        SSITEntry *st_entry = SSIT.findVictim({store_PC});
+        SSITEntry *st_entry = SSIT.findVictim({ssitKey(store_PC)});
         st_entry->setSSID(new_set);
-        SSIT.insertEntry({store_PC}, st_entry);
+        SSIT.insertEntry({ssitKey(store_PC)}, st_entry);
 
         DPRINTF(StoreSet, "StoreSet: Neither load nor store had a valid "
                 "storeset, creating a new one: %i for load %#x, store %#x\n",
                 new_set, load_PC, store_PC);
     } else if (valid_load_SSID && !valid_store_SSID) {
         SSID load_SSID = ld_entry->getSSID();
-        SSITEntry *st_entry = SSIT.findVictim({store_PC});
+        SSITEntry *st_entry = SSIT.findVictim({ssitKey(store_PC)});
         st_entry->setSSID(load_SSID);
-        SSIT.insertEntry({store_PC}, st_entry);
+        SSIT.insertEntry({ssitKey(store_PC)}, st_entry);
 
         assert(load_SSID < LFSTSize);
 
@@ -147,9 +163,9 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
                 load_SSID, load_PC, store_PC);
     } else if (!valid_load_SSID && valid_store_SSID) {
         SSID store_SSID = st_entry->getSSID();
-        SSITEntry *ld_entry = SSIT.findVictim({load_PC});
+        SSITEntry *ld_entry = SSIT.findVictim({ssitKey(load_PC)});
         ld_entry->setSSID(store_SSID);
-        SSIT.insertEntry({load_PC}, ld_entry);
+        SSIT.insertEntry({ssitKey(load_PC)}, ld_entry);
 
         DPRINTF(StoreSet, "StoreSet: Store had a valid store set: %i for "
                 "load %#x, store %#x\n",
@@ -200,7 +216,7 @@ StoreSet::insertLoad(Addr load_PC, InstSeqNum load_seq_num)
 void
 StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
 {
-    auto st_entry = SSIT.findEntry({store_PC});
+    auto st_entry = SSIT.findEntry({ssitKey(store_PC)});
 
     bool valid_entry = st_entry && st_entry->isValid();
 
@@ -231,7 +247,7 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
 InstSeqNum
 StoreSet::checkInst(Addr PC)
 {
-    auto entry = SSIT.findEntry({PC});
+    auto entry = SSIT.findEntry({ssitKey(PC)});
     bool valid_ssit = entry && entry->isValid();
 
     int inst_SSID;
@@ -269,7 +285,7 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
         return;
     }
 
-    auto entry = SSIT.findEntry({issued_PC});
+    auto entry = SSIT.findEntry({ssitKey(issued_PC)});
     bool valid_ssit = entry && entry->isValid();
 
     int store_SSID;

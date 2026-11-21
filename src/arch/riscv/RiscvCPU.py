@@ -28,10 +28,12 @@ from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
+from m5.objects.IndexingPolicies import SetAssociative
 from m5.objects.RiscvDecoder import RiscvDecoder
 from m5.objects.RiscvInterrupts import RiscvInterrupts
 from m5.objects.RiscvISA import RiscvISA
 from m5.objects.RiscvMMU import RiscvMMU
+from m5.proxy import Parent
 
 
 class RiscvCPU:
@@ -55,6 +57,14 @@ class RiscvTimingSimpleCPU(BaseTimingSimpleCPU, RiscvCPU):
 
 class RiscvO3CPU(BaseO3CPU, RiscvCPU):
     mmu = RiscvMMU()
+    # With the C extension, memory instructions can be 2 bytes apart.
+    # Index the store-set table in 2-byte steps and fold the upper bits
+    # in, so such neighbours do not share an entry while 4-byte code
+    # still uses every set.
+    SSITIndexingPolicy = SetAssociative(
+        size=Parent.SSITSize * 2, assoc=Parent.SSITAssoc, entry_size=2
+    )
+    SSITFoldIndex = True
 
 
 class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):
