@@ -28,6 +28,7 @@
 
 #include "cpu/o3/mem_dep_unit.hh"
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
@@ -409,6 +410,25 @@ MemDepUnit::replay()
 
         instsToReplay.pop_front();
     }
+}
+
+void
+MemDepUnit::replay(const DynInstPtr &inst)
+{
+    ListIt replay_it =
+        std::find(instsToReplay.begin(), instsToReplay.end(), inst);
+    if (replay_it == instsToReplay.end()) {
+        return;
+    }
+
+    MemDepEntryPtr inst_entry = findInHash(inst);
+
+    DPRINTF(MemDepUnit, "Replaying mem instruction PC %s [sn:%lli].\n",
+            inst->pcState(), inst->seqNum);
+
+    moveToReady(inst_entry);
+
+    instsToReplay.erase(replay_it);
 }
 
 void

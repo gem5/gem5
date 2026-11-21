@@ -1317,6 +1317,12 @@ InstructionQueue::replayMemInst(const DynInstPtr &replay_inst)
 }
 
 void
+InstructionQueue::replaySingleMemInst(const DynInstPtr &replay_inst)
+{
+    memDepUnit[replay_inst->threadNumber].replay(replay_inst);
+}
+
+void
 InstructionQueue::deferMemInst(const DynInstPtr &deferred_inst)
 {
     deferredMemInsts.push_back(deferred_inst);
