@@ -154,6 +154,13 @@ class GarnetNetwork : public Network
         m_total_hops += hops;
     }
 
+    void
+    increment_mesh_injected_flits(int vnet)
+    {
+        m_mesh_flits_injected[vnet]++;
+    }
+    void record_mesh_stats(int vnet, const RouteInfo &route);
+
     void update_traffic_distribution(RouteInfo route);
     int getNextPacketID() { return m_next_packet_id++; }
 
@@ -199,6 +206,17 @@ class GarnetNetwork : public Network
 
     statistics::Scalar  m_total_hops;
     statistics::Formula m_avg_hops;
+
+    // Mesh-only stats (routers with router_type "mesh")
+    statistics::Vector m_mesh_flits_injected;
+    statistics::Vector m_mesh_flits_received;
+    statistics::Vector m_core_internal_flits;
+    statistics::Scalar m_mesh_hops;
+    statistics::Formula m_avg_mesh_hops;
+    statistics::VectorDistribution m_mesh_hops_hist;
+    statistics::Vector m_mesh_flit_latency;
+    statistics::Formula m_avg_mesh_flit_latency;
+    statistics::Distribution m_mesh_flit_latency_hist;
 
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;

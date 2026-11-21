@@ -81,6 +81,9 @@ CrossbarSwitch::wakeup()
             // flit performs LT_ in the next cycle
             t_flit->advance_stage(LT_, m_router->clockEdge(Cycles(1)));
             t_flit->set_time(m_router->clockEdge(Cycles(1)));
+            if (m_router->getRouterType() == RubyRouterType::mesh) {
+                t_flit->mesh_exit(m_router->clockEdge(Cycles(1)));
+            }
 
             // This will take care of waking up the Network Link
             // in the next cycle

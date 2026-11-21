@@ -31,6 +31,7 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__
 #define __MEM_RUBY_NETWORK_GARNET_0_COMMONTYPES_HH__
 
+#include "base/types.hh"
 #include "mem/ruby/common/NetDest.hh"
 
 namespace gem5
@@ -56,8 +57,15 @@ enum RoutingAlgorithm { TABLE_ = 0, XY_ = 1, CUSTOM_ = 2,
 struct RouteInfo
 {
     RouteInfo()
-        : vnet(0), src_ni(0), src_router(0), dest_ni(0), dest_router(0),
-          hops_traversed(0)
+        : vnet(0),
+          src_ni(0),
+          src_router(0),
+          dest_ni(0),
+          dest_router(0),
+          hops_traversed(0),
+          mesh_routers_visited(0),
+          mesh_entry_tick(0),
+          mesh_exit_tick(0)
     {}
 
     // destination format for table-based routing
@@ -70,6 +78,12 @@ struct RouteInfo
     int dest_ni;
     int dest_router;
     int hops_traversed;
+
+    // Mesh-only stats: mesh routers (router_type "mesh") visited, time the
+    // flit entered the first one and left the crossbar of the last one.
+    int mesh_routers_visited;
+    Tick mesh_entry_tick;
+    Tick mesh_exit_tick;
 };
 
 #define INFINITE_ 10000

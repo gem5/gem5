@@ -55,6 +55,11 @@ Router::Router(const Params &p)
     m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
     crossbarSwitch(this)
 {
+    fatal_if(m_latency < 1,
+             "%s: Garnet router latency must be at least 1 cycle (got %d). "
+             "A Garnet router always holds a flit for one cycle; use the "
+             "simple network for zero-latency routers.",
+             name(), m_latency);
     m_input_unit.clear();
     m_output_unit.clear();
 }
@@ -192,30 +197,27 @@ Router::regStats()
 {
     BasicRouter::regStats();
 
-    m_buffer_reads
-        .name(name() + ".buffer_reads")
-        .flags(statistics::nozero)
-    ;
+    namespace units = statistics::units;
 
-    m_buffer_writes
-        .name(name() + ".buffer_writes")
-        .flags(statistics::nozero)
-    ;
+    m_buffer_reads.name(name() + ".buffer_reads")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 
-    m_crossbar_activity
-        .name(name() + ".crossbar_activity")
-        .flags(statistics::nozero)
-    ;
+    m_buffer_writes.name(name() + ".buffer_writes")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 
-    m_sw_input_arbiter_activity
-        .name(name() + ".sw_input_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
+    m_crossbar_activity.name(name() + ".crossbar_activity")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 
-    m_sw_output_arbiter_activity
-        .name(name() + ".sw_output_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
+    m_sw_input_arbiter_activity.name(name() + ".sw_input_arbiter_activity")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
+
+    m_sw_output_arbiter_activity.name(name() + ".sw_output_arbiter_activity")
+        .unit(units::Count::get())
+        .flags(statistics::nozero);
 }
 
 void
