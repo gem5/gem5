@@ -366,6 +366,8 @@ PySource('gem5.prebuilt.viper',
     'gem5/prebuilt/viper/gpu_cache_hierarchy.py')
 PySource('gem5.prebuilt.viper',
     'gem5/prebuilt/viper/viper_network.py')
+PySource('gem5.prebuilt.viper',
+    'gem5/prebuilt/viper/viper_garnet_network.py')
 PySource('gem5.resources', 'gem5/resources/__init__.py')
 PySource('gem5.resources', 'gem5/resources/client.py')
 PySource('gem5.resources', 'gem5/resources/downloader.py')

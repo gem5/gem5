@@ -1220,6 +1220,7 @@ Inst_VOP1__V_EXP_F32::Inst_VOP1__V_EXP_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpExp);
 } // Inst_VOP1__V_EXP_F32
 
 Inst_VOP1__V_EXP_F32::~Inst_VOP1__V_EXP_F32()
@@ -1254,6 +1255,7 @@ Inst_VOP1__V_LOG_F32::Inst_VOP1__V_LOG_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpLg);
 } // Inst_VOP1__V_LOG_F32
 
 Inst_VOP1__V_LOG_F32::~Inst_VOP1__V_LOG_F32()
@@ -1288,6 +1290,7 @@ Inst_VOP1__V_RCP_F32::Inst_VOP1__V_RCP_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpDiv);
 } // Inst_VOP1__V_RCP_F32
 
 Inst_VOP1__V_RCP_F32::~Inst_VOP1__V_RCP_F32()
@@ -1322,6 +1325,7 @@ Inst_VOP1__V_RCP_IFLAG_F32::Inst_VOP1__V_RCP_IFLAG_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpDiv);
 } // Inst_VOP1__V_RCP_IFLAG_F32
 
 Inst_VOP1__V_RCP_IFLAG_F32::~Inst_VOP1__V_RCP_IFLAG_F32()
@@ -1358,6 +1362,7 @@ Inst_VOP1__V_RSQ_F32::Inst_VOP1__V_RSQ_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpSqrt);
 } // Inst_VOP1__V_RSQ_F32
 
 Inst_VOP1__V_RSQ_F32::~Inst_VOP1__V_RSQ_F32()
@@ -1392,6 +1397,7 @@ Inst_VOP1__V_RCP_F64::Inst_VOP1__V_RCP_F64(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F64);
+    setFlag(FpDiv);
 } // Inst_VOP1__V_RCP_F64
 
 Inst_VOP1__V_RCP_F64::~Inst_VOP1__V_RCP_F64()
@@ -1438,6 +1444,7 @@ Inst_VOP1__V_RSQ_F64::Inst_VOP1__V_RSQ_F64(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F64);
+    setFlag(FpSqrt);
 } // Inst_VOP1__V_RSQ_F64
 
 Inst_VOP1__V_RSQ_F64::~Inst_VOP1__V_RSQ_F64()
@@ -1482,6 +1489,7 @@ Inst_VOP1__V_SQRT_F32::Inst_VOP1__V_SQRT_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpSqrt);
 } // Inst_VOP1__V_SQRT_F32
 
 Inst_VOP1__V_SQRT_F32::~Inst_VOP1__V_SQRT_F32()
@@ -1516,6 +1524,7 @@ Inst_VOP1__V_SQRT_F64::Inst_VOP1__V_SQRT_F64(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F64);
+    setFlag(FpSqrt);
 } // Inst_VOP1__V_SQRT_F64
 
 Inst_VOP1__V_SQRT_F64::~Inst_VOP1__V_SQRT_F64()
@@ -1550,6 +1559,7 @@ Inst_VOP1__V_SIN_F32::Inst_VOP1__V_SIN_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpSin);
 } // Inst_VOP1__V_SIN_F32
 
 Inst_VOP1__V_SIN_F32::~Inst_VOP1__V_SIN_F32()
@@ -1592,6 +1602,7 @@ Inst_VOP1__V_COS_F32::Inst_VOP1__V_COS_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpSin);
 } // Inst_VOP1__V_COS_F32
 
 Inst_VOP1__V_COS_F32::~Inst_VOP1__V_COS_F32()
@@ -2140,6 +2151,7 @@ Inst_VOP1__V_RCP_F16::Inst_VOP1__V_RCP_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpDiv);
 } // Inst_VOP1__V_RCP_F16
 
 Inst_VOP1__V_RCP_F16::~Inst_VOP1__V_RCP_F16()
@@ -2162,6 +2174,7 @@ Inst_VOP1__V_SQRT_F16::Inst_VOP1__V_SQRT_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpSqrt);
 } // Inst_VOP1__V_SQRT_F16
 
 Inst_VOP1__V_SQRT_F16::~Inst_VOP1__V_SQRT_F16()
@@ -2184,6 +2197,7 @@ Inst_VOP1__V_RSQ_F16::Inst_VOP1__V_RSQ_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpSqrt);
 } // Inst_VOP1__V_RSQ_F16
 
 Inst_VOP1__V_RSQ_F16::~Inst_VOP1__V_RSQ_F16()
@@ -2206,6 +2220,7 @@ Inst_VOP1__V_LOG_F16::Inst_VOP1__V_LOG_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpLg);
 } // Inst_VOP1__V_LOG_F16
 
 Inst_VOP1__V_LOG_F16::~Inst_VOP1__V_LOG_F16()
@@ -2228,6 +2243,7 @@ Inst_VOP1__V_EXP_F16::Inst_VOP1__V_EXP_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpExp);
 } // Inst_VOP1__V_EXP_F16
 
 Inst_VOP1__V_EXP_F16::~Inst_VOP1__V_EXP_F16()
@@ -2402,6 +2418,7 @@ Inst_VOP1__V_SIN_F16::Inst_VOP1__V_SIN_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpSin);
 } // Inst_VOP1__V_SIN_F16
 
 Inst_VOP1__V_SIN_F16::~Inst_VOP1__V_SIN_F16()
@@ -2421,6 +2438,7 @@ Inst_VOP1__V_COS_F16::Inst_VOP1__V_COS_F16(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F16);
+    setFlag(FpSin);
 } // Inst_VOP1__V_COS_F16
 
 Inst_VOP1__V_COS_F16::~Inst_VOP1__V_COS_F16()
@@ -2440,6 +2458,7 @@ Inst_VOP1__V_EXP_LEGACY_F32::Inst_VOP1__V_EXP_LEGACY_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpExp);
 } // Inst_VOP1__V_EXP_LEGACY_F32
 
 Inst_VOP1__V_EXP_LEGACY_F32::~Inst_VOP1__V_EXP_LEGACY_F32()
@@ -2474,6 +2493,7 @@ Inst_VOP1__V_LOG_LEGACY_F32::Inst_VOP1__V_LOG_LEGACY_F32(InFmt_VOP1 *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpLg);
 } // Inst_VOP1__V_LOG_LEGACY_F32
 
 Inst_VOP1__V_LOG_LEGACY_F32::~Inst_VOP1__V_LOG_LEGACY_F32()

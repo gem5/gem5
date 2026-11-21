@@ -59,6 +59,9 @@ class ExitEvent(Enum):
     # GPU model specific exit events
     KERNEL_START = "GPU Kernel Started"
     KERNEL_END = "GPU Kernel Completed"
+    KERNEL_WG_START = "GPU Kernel First WG Dispatched"
+    KERNEL_WG_END = "GPU Kernel All WGs Retired"
+    BLIT_START = "GPU Blit Kernel Started"
     BLIT_END = "GPU Blit Kernel Completed"
     KERNEL_SKIP = "Skipping GPU Kernel"
 
@@ -127,6 +130,12 @@ class ExitEvent(Enum):
             return ExitEvent.KERNEL_START
         elif exit_string == "GPU Kernel Completed":
             return ExitEvent.KERNEL_END
+        elif exit_string == "GPU Kernel First WG Dispatched":
+            return ExitEvent.KERNEL_WG_START
+        elif exit_string == "GPU Kernel All WGs Retired":
+            return ExitEvent.KERNEL_WG_END
+        elif exit_string == "GPU Blit Kernel Started":
+            return ExitEvent.BLIT_START
         elif exit_string == "GPU Blit Kernel Completed":
             return ExitEvent.BLIT_END
         elif exit_string == "Skipping GPU Kernel":

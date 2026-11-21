@@ -605,6 +605,15 @@ FetchUnit::FetchBufDesc::decodeInsts()
                 wavefront->computeUnit, wavefront, gpu_static_inst,
                 wavefront->computeUnit->getAndIncSeqNum());
             wavefront->instructionBuffer.push_back(gpu_dyn_inst);
+            wavefront->computeUnit->stats.decodedInsts++;
+            if (gpu_dyn_inst->isALU()) {
+                if (gpu_dyn_inst->isF16() || gpu_dyn_inst->isF32() ||
+                    gpu_dyn_inst->isF64()) {
+                    wavefront->computeUnit->stats.decodedFpInsts++;
+                } else {
+                    wavefront->computeUnit->stats.decodedIntInsts++;
+                }
+            }
 
             DPRINTF(GPUFetch,
                     "WF[%d][%d]: Id%ld decoded %s (%d bytes). "
@@ -643,6 +652,15 @@ FetchUnit::FetchBufDesc::decodeSplitInst()
         wavefront->computeUnit, wavefront, gpu_static_inst,
         wavefront->computeUnit->getAndIncSeqNum());
     wavefront->instructionBuffer.push_back(gpu_dyn_inst);
+    wavefront->computeUnit->stats.decodedInsts++;
+    if (gpu_dyn_inst->isALU()) {
+        if (gpu_dyn_inst->isF16() || gpu_dyn_inst->isF32() ||
+            gpu_dyn_inst->isF64()) {
+            wavefront->computeUnit->stats.decodedFpInsts++;
+        } else {
+            wavefront->computeUnit->stats.decodedIntInsts++;
+        }
+    }
 
     DPRINTF(GPUFetch,
             "WF[%d][%d]: Id%d decoded split inst %s (%#x) "
