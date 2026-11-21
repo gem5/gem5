@@ -47,6 +47,7 @@ TlbEntry::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(asid);
     SERIALIZE_SCALAR(trieKey);
     SERIALIZE_SCALAR(pte);
+    SERIALIZE_SCALAR(gpte);
     SERIALIZE_SCALAR(lruSeq);
 }
 
@@ -61,6 +62,7 @@ TlbEntry::unserialize(CheckpointIn &cp)
         trieKey = 0;
     }
     UNSERIALIZE_SCALAR(pte);
+    UNSERIALIZE_SCALAR(gpte);
     UNSERIALIZE_SCALAR(lruSeq);
 }
 

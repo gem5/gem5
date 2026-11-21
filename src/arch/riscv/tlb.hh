@@ -145,7 +145,8 @@ class TLB : public BaseTLB
                            XlateStage stage = XlateStage::FIRST_STAGE);
 
     Fault createPagefault(Addr vaddr, BaseMMU::Mode mode, Addr gvaddr = 0x0,
-                          bool gpf = false, bool virt = false);
+                          bool gpf = false, bool virt = false,
+                          RegVal tinst = 0);
 
     MemAccessInfo getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode,
                                   const Request::ArchFlagsType arch_flags);

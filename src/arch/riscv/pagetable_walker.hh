@@ -129,11 +129,15 @@ namespace RiscvISA
             Fault timingFault;
             BaseMMU::Translation * translation;
             BaseMMU::Mode mode;
+            // The current translation may serve an implicit VS PTE access.
+            BaseMMU::Mode walkMode;
             MemAccessInfo memaccess;
             XlateStage curstage;
             SATP satp;
             SATP hgatp;
             STATUS status;
+            bool adUpdate;
+            bool vsAdUpdate;
             PrivilegeMode pmode;
             bool functional;
             bool timing;
@@ -145,12 +149,13 @@ namespace RiscvISA
                         const RequestPtr &_req, bool _isFunctional = false) :
                 walker(_walker), req(_req), state(Ready),
                 nextState(Ready), level(0), glevel(0), inflight(0),
-                translation(_translation),
+                read(nullptr), translation(_translation),
                 functional(_isFunctional), timing(false),
                 retrying(false), started(false), squashed(false)
             {
             }
-            void initState(ThreadContext * _tc, BaseMMU::Mode _mode,
+            void initState(ThreadContext *_tc, BaseMMU::Mode _mode,
+                           Request::ArchFlagsType arch_flags,
                            bool _isTiming = false);
 
             Fault walk();
@@ -166,17 +171,23 @@ namespace RiscvISA
 
           private:
             // Mutates pte's access (a) and dirty (d) bits.
-            Fault checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
+            Fault checkPTEPermissions(PTE &pte, WalkFlags &stepWalkFlags,
                                       int level);
+            Fault checkAddressPermission(const RequestPtr &req,
+                                         BaseMMU::Mode mode,
+                                         PrivilegeMode pmode,
+                                         ThreadContext *tc, Addr vaddr);
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
             Fault stepWalkGStage(PacketPtr &write);
-            Fault walkGStage(Addr guest_paddr, Addr& host_paddr);
+            Fault walkGStage(Addr guest_paddr, Addr &host_paddr,
+                             BaseMMU::Mode accessMode);
             Fault walkOneStage(Addr vaddr);
             Fault walkTwoStage(Addr vaddr);
             void sendPackets();
             void endWalk();
             Fault pageFault();
+            Fault accessFault();
             Fault guestToHostPage(Addr vaddr);
             PacketPtr createReqPacket(Addr paddr, MemCmd cmd, size_t bytes);
         };
@@ -200,8 +211,9 @@ namespace RiscvISA
         Fault start(ThreadContext * _tc, BaseMMU::Translation *translation,
                 const RequestPtr &req, BaseMMU::Mode mode,
                 TlbEntry* result_entry = nullptr);
-        Fault startFunctional(ThreadContext * _tc, Addr &addr,
-                unsigned &logBytes, BaseMMU::Mode mode);
+        Fault startFunctional(ThreadContext *_tc, Addr &addr,
+                              unsigned &logBytes, BaseMMU::Mode mode,
+                              Request::ArchFlagsType arch_flags);
         Port &getPort(const std::string &if_name,
                       PortID idx=InvalidPortID) override;
 

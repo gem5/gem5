@@ -88,6 +88,11 @@ class RiscvFault : public FaultBase
     ExceptionCode exception() const { return _code; }
     virtual RegVal trap_value() const { return 0; }
     virtual RegVal trap_value2() const { return 0; }
+    virtual RegVal
+    trap_inst() const
+    {
+        return 0;
+    }
     virtual bool mustSetGva() const { return false; }
 
     virtual void invokeSE(ThreadContext *tc, const StaticInstPtr &inst);
@@ -216,13 +221,16 @@ class AddressFault : public RiscvFault
     const Addr _vaddr;
     const Addr _gpaddr;
     const bool _two_stage;
+    const RegVal _tinst;
 
   public:
-    AddressFault(
-        const Addr vaddr, ExceptionCode code,
-        const Addr gpaddr = 0x0, const bool two_stage = false)
+    AddressFault(const Addr vaddr, ExceptionCode code, const Addr gpaddr = 0x0,
+                 const bool two_stage = false, const RegVal tinst = 0)
         : RiscvFault("Address", FaultType::OTHERS, code),
-        _vaddr(vaddr), _gpaddr(gpaddr), _two_stage(two_stage)
+          _vaddr(vaddr),
+          _gpaddr(gpaddr),
+          _two_stage(two_stage),
+          _tinst(tinst)
     {}
 
     bool mustSetGva() const override {
@@ -241,6 +249,11 @@ class AddressFault : public RiscvFault
     }
     RegVal trap_value() const override { return _vaddr; }
     RegVal trap_value2() const override { return _gpaddr >> 2; }
+    RegVal
+    trap_inst() const override
+    {
+        return _tinst;
+    }
 };
 
 class BreakpointFault : public RiscvFault
