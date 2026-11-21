@@ -86,13 +86,15 @@ def main():
     print(f"CACTI exited with code: {cacti_result.returncode}\n")
 
     print("==================================================================")
-    print("Next, to run cacti-SALAM use run_cacti_salam.py\n")
-    print("Usage: ./run_cacti_salam.py <path to benchmark configs list>")
+    print("From the gem5 repository root, discover SPM identities:")
+    print("  python3 util/SALAM-tools/cacti-SALAM/run_cacti_SALAM.py \\")
+    print("      --config /path/to/workload.yml --list")
+    print("Then select --memory with --geometry, --format, --source-dir,")
+    print("--binary and a new --output-dir; use --help for details.")
     print(
-        "Each line of benchmark configs list contains"
-        " </path/to/config> <benchmark name> <config>"
+        "See util/SALAM-docs/README_SALAM.md: "
+        "Offline CACTI characterization."
     )
-    print("<benchmark name> and <config> are only used for grouping")
     print("==================================================================")
 
 
