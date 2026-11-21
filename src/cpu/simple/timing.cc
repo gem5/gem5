@@ -44,6 +44,7 @@
 #include "arch/generic/decoder.hh"
 #include "base/compiler.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/utils.hh"
 #include "debug/Config.hh"
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
@@ -470,6 +471,16 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
     req->setByteEnable(byte_enable);
 
     req->taskId(taskId());
+
+    if (!byte_enable.empty() &&
+        !isAnyActiveElement(byte_enable.cbegin(), byte_enable.cend())) {
+        req->setFlags(Request::NO_ACCESS);
+        _status = DcacheWaitResponse;
+        schedule(new EventFunctionWrapper([this, req, size] {
+            sendData(req, new uint8_t[size](), nullptr, true);
+        }, name() + ".maskedRead", true), clockEdge(Cycles(1)));
+        return NoFault;
+    }
 
     Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
