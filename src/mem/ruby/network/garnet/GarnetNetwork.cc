@@ -76,6 +76,8 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     if (m_enable_fault_model)
         fault_model = p.fault_model;
 
+    m_ignore_mesh_chk = p.ignore_mesh_chk;
+
     m_vnet_type.resize(m_virtual_networks);
 
     for (int i = 0 ; i < m_virtual_networks ; i++) {
@@ -122,7 +124,7 @@ GarnetNetwork::init()
     m_topology_ptr->createLinks(this);
 
     // Initialize topology specific parameters
-    if (getNumRows() > 0) {
+    if (getNumRows() > 0 && !m_ignore_mesh_chk) {
         // Only for Mesh topology
         // m_num_rows and m_num_cols are only used for
         // implementing XY or custom routing in RoutingUnit.cc
@@ -309,6 +311,13 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 PortDirection src_outport_dirn,
                                 PortDirection dst_inport_dirn)
 {
+    DPRINTF(RubyNetwork,
+        "makeInternalLink(): src=%d -> dst=%d (link=%s) dests:\n",
+        src, dest, link->name()
+    );
+    for (auto d : routing_table_entry) {
+        DPRINTF(RubyNetwork, "    %s\n", d);
+    }
     GarnetIntLink* garnet_link = safe_cast<GarnetIntLink*>(link);
 
     // GarnetIntLink is unidirectional
