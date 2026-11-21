@@ -39,12 +39,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.objects.BaseCPU import BaseCPU
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import *
+from m5.util import fatal
 
 
 class BranchType(Enum):
@@ -217,6 +219,75 @@ class ConditionalPredictor(ClockedObject):
         Parent.speculativeHistUpdate,
         "Use speculative update for the conditional predictor",
     )
+
+
+class RUNLTS(ConditionalPredictor):
+    type = "RUNLTS"
+    cxx_class = "gem5::branch_prediction::RUNLTS"
+    cxx_header = "cpu/pred/runlts_192KB.hh"
+    cxx_exports = [PyBindMethod("setProbeTarget")]
+
+    useLogical = Param.Bool(False, "Use Log-RBias instead of Seq-RBias")
+
+    minHist = Param.Unsigned(6, "Minimum history size of TAGE")
+    histRate = Param.Float(1.19, "Geometric ratio of TAGE history lengths")
+    numLowBanks = Param.Unsigned(9, "Number of low TAGE banks")
+    numHighBanks = Param.Unsigned(25, "Number of high TAGE banks")
+    logLowBankSize = Param.Unsigned(11, "Log size of each low TAGE bank")
+    logHighBankSize = Param.Unsigned(11, "Log size of each high TAGE bank")
+    lowBankTagBits = Param.Unsigned(9, "Tag size of the low TAGE banks")
+    highBankTagBits = Param.Unsigned(13, "Tag size of the high TAGE banks")
+    pathHistBits = Param.Unsigned(27, "Path history size")
+    logBimodalSize = Param.Unsigned(17, "Log size of the bimodal table")
+    logRatioBimodalHystEntries = Param.Unsigned(
+        2,
+        "Log num of prediction entries for a shared hysteresis bit "
+        "for the Bimodal",
+    )
+
+    useSC = Param.Bool(True, "Use the statistical corrector")
+    updateThresholdWidth = Param.Unsigned(
+        12, "Number of bits for the update threshold counter"
+    )
+    pUpdateThresholdWidth = Param.Unsigned(
+        8, "Number of bits for the pUpdate threshold counters"
+    )
+    chooserConfWidth = Param.Unsigned(
+        7, "Number of bits for the chooser counters"
+    )
+    useBackwardGEHL = Param.Bool(True, "Use the global backward GEHL")
+    logBwnb = Param.Unsigned(
+        11, "Log num of global backward branch GEHL entries"
+    )
+    usePathGEHL = Param.Bool(True, "Use the path GEHL")
+    logPnbSeq = Param.Unsigned(9, "Log size of the path GEHL (Seq-RBias)")
+    logPnbLog = Param.Unsigned(10, "Log size of the path GEHL (Log-RBias)")
+    useLocalH = Param.Bool(True, "Use the first local history GEHL")
+    logLnb = Param.Unsigned(
+        11, "Log number of first local history GEHL entries"
+    )
+    useLocalS = Param.Bool(True, "Use the second local history GEHL")
+    logSnb = Param.Unsigned(
+        11, "Log number of second local history GEHL entries"
+    )
+    useLocalT = Param.Bool(True, "Use the third local history GEHL")
+    logTnb = Param.Unsigned(
+        11, "Log number of third local history GEHL entries"
+    )
+    useCallStackHistory = Param.Bool(True, "Use the call stack history GEHL")
+    logCnb = Param.Unsigned(11, "Log size of the call stack history GEHL")
+    useIMLI = Param.Bool(True, "Use the IMLI components")
+    useRBias = Param.Bool(True, "Use the RBias component")
+
+    def createCCObject(self):
+        super().createCCObject()
+
+        cpu = self.get_parent()
+        while cpu is not None and not isinstance(cpu, BaseCPU):
+            cpu = cpu.get_parent()
+        if cpu is None:
+            fatal("RUNLTS must be a child of a BaseCPU")
+        self.getCCObject().setProbeTarget(cpu.getCCObject())
 
 
 class IndirectPredictor(SimObject):
