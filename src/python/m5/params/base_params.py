@@ -670,6 +670,49 @@ class DictParamKeyFactory:
         return DictParamValueFactory(self.param_desc_class, key_ptype_str)
 
 
+class PyFunc(ParamValue):
+    """A parameter type that allows for python functions to be passed as
+    parameters. This is useful for creating callbacks to python functions
+    from C++ code. Optional callbacks may use None to indicate absence.
+    Usage example:
+    ```
+    class SomeDevice(SimObject):
+        callback = Param.PyFunc(lambda x: print(x))
+    ```
+    """
+
+    cxx_type = "PyObject *"
+
+    def __init__(self, value):
+        if value is not None and not callable(value):
+            raise TypeError("PyFunc requires a callable or None")
+        self.value = value
+
+    def __call__(self, value):
+        self.__init__(value)
+        return value
+
+    def getValue(self):
+        return self.value
+
+    def __str__(self):
+        if self.value is None:
+            return "None"
+        func = getattr(self.value, "__func__", self.value)
+        module = getattr(func, "__module__", None) or type(func).__module__
+        name = getattr(func, "__qualname__", type(func).__qualname__)
+        return f"{module}.{name}"
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "python/pybind11/pybind.hh"', add_once=True)
+
+    @classmethod
+    def pybind_predecls(cls, code):
+        cls.cxx_predecls(code)
+        code('#include "pybind11/type_caster_pyobject_ptr.h"', add_once=True)
+
+
 Param = ParamFactory(SingleTypeParamDesc)
 VectorParam = ParamFactory(VectorParamDesc)
 OptionalParam = ParamFactory(OptionalParamDesc)

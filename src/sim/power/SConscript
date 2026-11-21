@@ -35,6 +35,9 @@ SimObject('ThermalDomain.py', sim_objects=['ThermalDomain'])
 SimObject('ThermalModel.py', sim_objects=[
     'ThermalNode', 'ThermalResistor', 'ThermalCapacitor',
     'ThermalReference', 'ThermalModel'])
+if env['USE_PYTHON']:
+    SimObject('PowerModelPyFunc.py', sim_objects=['PowerModelPyFunc'])
+    Source('power_model_pyfunc.cc', tags=['python'])
 
 Source('power_model.cc')
 Source('mathexpr_powermodel.cc')
@@ -43,3 +46,5 @@ Source('thermal_model.cc')
 Source('thermal_node.cc')
 
 DebugFlag('ThermalDomain')
+DebugFlag('PwrIntervalEvent')
+DebugFlag('PowerLog', 'Per-sample or per-dump PowerModelPyFunc power')
