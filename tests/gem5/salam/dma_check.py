@@ -70,7 +70,8 @@ def check_read_fifo(case):
         frontend_latency=0,
         forward_latency=0,
         response_latency=0,
-        header_latency=0,
+        # Timing requests at tick zero must occupy the crossbar.
+        header_latency=1,
     )
     system.memory = SimpleMemory(
         range=system.mem_ranges[0],
