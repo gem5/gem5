@@ -83,7 +83,7 @@ SHiP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 
     // The predictor is detrained when an entry that has not been re-
     // referenced since insertion is invalidated
-    if (casted_replacement_data->wasReReferenced()) {
+    if (!casted_replacement_data->wasReReferenced()) {
         SHCT[casted_replacement_data->getSignature()]--;
     }
 
@@ -97,9 +97,9 @@ SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
 
-    // When a hit happens the SHCT entry indexed by the signature is
-    // incremented
-    SHCT[getSignature(pkt)]++;
+    // When a hit happens the SHCT entry indexed by the signature stored
+    // at insertion is incremented
+    SHCT[casted_replacement_data->getSignature()]++;
     casted_replacement_data->setReReferenced();
 
     // This was a hit; update replacement data accordingly
