@@ -37,8 +37,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from slicc.ast.AST import AST
-from slicc.symbols import Var
+from ..symbols import Var
+from .AST import AST
 
 
 class FormalParamAST(AST):

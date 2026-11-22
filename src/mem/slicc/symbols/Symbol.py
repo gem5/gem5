@@ -37,15 +37,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from slicc.util import PairContainer
+from ..util import PairContainer
 
 
 class Symbol(PairContainer):
     def __init__(self, symtab, ident, location, pairs=None):
         super().__init__()
 
-        from slicc.symbols import SymbolTable
-        from slicc.util import Location
+        from ..util import Location
+        from . import SymbolTable
 
         if not isinstance(symtab, SymbolTable):
             raise AttributeError

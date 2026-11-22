@@ -26,8 +26,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-from slicc.ast.ExprAST import ExprAST
-from slicc.symbols import Type
+from ..symbols import Type
+from .ExprAST import ExprAST
 
 
 class IsValidPtrExprAST(ExprAST):

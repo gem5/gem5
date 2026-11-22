@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from slicc.ast.DeclAST import DeclAST
-from slicc.symbols import (
+from ..symbols import (
     Func,
     Type,
 )
+from .DeclAST import DeclAST
 
 
 class StateDeclAST(DeclAST):
