@@ -43,7 +43,10 @@ from gem5.components.processors.cpu_types import (
 )
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource
+from gem5.resources.resource import (
+    BinaryResource,
+    obtain_resource,
+)
 from gem5.simulate.simulator import Simulator
 
 parser = argparse.ArgumentParser(
@@ -52,6 +55,12 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "resource", type=str, help="The gem5 resource binary to run."
+)
+
+parser.add_argument(
+    "--local-binary",
+    action="store_true",
+    help="Use resource as the path to a local binary.",
 )
 
 parser.add_argument(
@@ -120,9 +129,12 @@ motherboard = SimpleBoard(
 )
 
 # Set the workload
-binary = obtain_resource(
-    args.resource, resource_directory=args.resource_directory
-)
+if args.local_binary:
+    binary = BinaryResource(local_path=args.resource)
+else:
+    binary = obtain_resource(
+        args.resource, resource_directory=args.resource_directory
+    )
 motherboard.set_se_binary_workload(binary)
 
 # Run the simulation

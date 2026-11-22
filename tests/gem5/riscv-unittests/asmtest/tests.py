@@ -397,6 +397,35 @@ rv32_binaries = (
 cpu_types = ("atomic", "timing", "minor", "o3")
 
 for cpu_type in cpu_types:
+    gem5_verify_config(
+        name=f"asm-riscv-zfa-fminmax-h-{cpu_type}",
+        verifiers=(),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "riscv-unittests",
+            "asmtest",
+            "configs",
+            "riscv_asmtest.py",
+        ),
+        config_args=[
+            joinpath(
+                config.base_dir,
+                "tests",
+                "test-progs",
+                "riscv-zfa",
+                "bin",
+                "riscv",
+                "linux",
+                "fminmax-h",
+            ),
+            cpu_type,
+            "--local-binary",
+        ],
+        valid_isas=(constants.all_compiled_tag, constants.riscv_tag),
+        valid_hosts=constants.supported_hosts,
+    )
     for binary in rv64_binaries:
         gem5_verify_config(
             name=f"asm-riscv-{binary}-{cpu_type}",
