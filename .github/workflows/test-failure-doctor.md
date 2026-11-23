@@ -98,7 +98,6 @@ pre-agent-steps:
           --pattern "*-attempt-${RUN_ATTEMPTS[i]}-*-status-failure-output" \
           --dir "/tmp/gh-aw/failure-artifacts/${RUN_IDS[i]}-attempt-${RUN_ATTEMPTS[i]}" \
           || echo "No failure artifacts for run ${RUN_IDS[i]}, attempt ${RUN_ATTEMPTS[i]}"
-        # echo $i
       done
 
 ---
@@ -112,12 +111,20 @@ You are the Test Failure Doctor, an expert investigative agent that analyzes fai
 "${{ github.event.inputs.failed_workflow_ids }}". `failed_workflow_attempts` is
 a comma-separated list of the workflow run IDs' corresponding attempt numbers.
 
-Split `failed_workflow_ids` into individual run IDs. For each run, use
-`get_workflow_run` to retrieve its details and retain only runs whose
-conclusion is `failure`, `timed_out`, or `cancelled` and whose `run_attempt` is
-1 or 2. Exclude any eligible run that has already been analyzed by the Test
-Failure Doctor (for example, runs referenced by an existing Test Failure Doctor
-issue or PR comment), and investigate each remaining run independently through
+Split `failed_workflow_ids` into individual run IDs and `failed_workflow_attempts`
+into individual run attempts. For each run (run id and corresponding run attempt), use
+`get_workflow_run` to retrieve its details and retain only runs whose conclusion
+is `failure`, `timed_out`, or `cancelled` and whose `run_attempt` is
+1 or 2.
+
+Additionally, we want to exclude any eligible run that has already been analyzed
+by the Test Failure Doctor. If the last completed run of Test Failure Doctor that was
+triggered by `scheduler.yaml` finished within the last 3 hours, only retain runs
+(run id and corresponding run attempt) that completed since the last run of Test Failure
+Doctor started. Also exclude runs (run id and corresponding run attempt)
+referenced by an existing Test Failure Doctor issue or PR comment.
+
+After filtering runs, investigate each remaining run independently through
 Phases 1-5.
 Use the selected run's details and ID wherever the report templates below refer
 to the failed workflow; do not rely on `github.event.workflow_run`. If no runs
@@ -234,6 +241,10 @@ using the other information available to you.
      - If the failure category was **Infrastructure**, do not expose the runner
        name or runner filepaths in the issue.
    - If the failing test was a `CI` Test, leave review comment(s) on the related PR with analysis.
+    Determine the related PR by calling `get_workflow_run` and using `head_sha`. Furthermore,
+    check whether the value of `head_sha` from this `get_workflow_run` call is the same as the
+    `head_sha` from the call from the top of the `## Investigation Protocol` section. If the
+    values are different, do not post the review comment(s) for that PR.
       - If there are multiple failing tests, split up the review comments/ failure analysis **by test**
       and anchor them to the relevant lines or file that caused the failure.
       - If there aren't any particular line(s) changed or file(s) that a test

@@ -101,7 +101,7 @@ jobs:
                   run_attempts=$(printf '%s\n' "${runs}" | cut -f2 | paste -sd, -)
 
                   # Run the test-failure-doctor workflow
-                  gh aw run test-failure-doctor --ref develop \
+                  gh workflow run test-failure-doctor.lock.yml --ref develop \
                       --raw-field failed_workflow_ids="${run_ids}" \
                       --raw-field failed_workflow_attempts="${run_attempts}" \
                       >/dev/null
