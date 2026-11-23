@@ -993,10 +993,10 @@ getcwdFunc(SyscallDesc *desc, ThreadContext *tc,
             return -ERANGE;
         }
         strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
-        result = cwd.length();
+        result = cwd.length() + 1;
     } else {
         if (getcwd((char *)buf.bufferPtr(), size)) {
-            result = strlen((char *)buf.bufferPtr());
+            result = strlen((char *)buf.bufferPtr()) + 1;
         } else {
             result = -1;
         }
