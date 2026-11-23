@@ -34,6 +34,8 @@
 
 #include <algorithm>
 
+#include "sim/serialize.hh"
+
 StreamDma::TransferStats::TransferStats(StreamDma *dma)
     : statistics::Group(dma, "transfers"),
       ADD_STAT(readTransfers, statistics::units::Count::get(),
@@ -487,4 +489,111 @@ StreamDma::getPort(const std::string &if_name, PortID idx)
         return statusOut;
     }
     return DmaDevice::getPort(if_name, idx);
+}
+
+void
+StreamDma::serialize(CheckpointOut &cp) const
+{
+    fatal_if(DrainManager::instance().state() != DrainState::Drained,
+             "%s: stream DMA checkpoint requires a drained system", name());
+    DmaDevice::serialize(cp);
+    paramOut(cp, "checkpoint_version", 1);
+    SERIALIZE_ARRAY(mmreg, BUFFER_ACCESS_OFF);
+    SERIALIZE_SCALAR(rdIntPending);
+    SERIALIZE_SCALAR(wrIntPending);
+    SERIALIZE_SCALAR(rdRunning);
+    SERIALIZE_SCALAR(wrRunning);
+    SERIALIZE_SCALAR(running);
+    SERIALIZE_SCALAR(readAddr);
+    SERIALIZE_SCALAR(readFrameSize);
+    SERIALIZE_SCALAR(framesToRead);
+    SERIALIZE_SCALAR(readFrameBuffSize);
+    SERIALIZE_SCALAR(framesRead);
+    SERIALIZE_SCALAR(readIntFrames);
+    SERIALIZE_SCALAR(readPtr);
+    SERIALIZE_SCALAR(writeAddr);
+    SERIALIZE_SCALAR(writeFrameSize);
+    SERIALIZE_SCALAR(framesToWrite);
+    SERIALIZE_SCALAR(writeFrameBuffSize);
+    SERIALIZE_SCALAR(framesWritten);
+    SERIALIZE_SCALAR(writeIntFrames);
+    SERIALIZE_SCALAR(writePtr);
+    const bool tick_scheduled = tickEvent.scheduled();
+    SERIALIZE_SCALAR(tick_scheduled);
+    if (tick_scheduled) {
+        const Tick tick_when = tickEvent.when();
+        SERIALIZE_SCALAR(tick_when);
+    }
+
+    readFifo->serializeSection(cp, "readFifo");
+    writeFifo->serializeSection(cp, "writeFifo");
+    {
+        ScopedCheckpointSection section(cp, "streamIn");
+        streamIn.serialize(cp);
+    }
+    {
+        ScopedCheckpointSection section(cp, "streamOut");
+        streamOut.serialize(cp);
+    }
+}
+
+void
+StreamDma::unserialize(CheckpointIn &cp)
+{
+    DmaDevice::unserialize(cp);
+    unsigned checkpoint_version;
+    UNSERIALIZE_SCALAR(checkpoint_version);
+    fatal_if(checkpoint_version != 1,
+             "%s: unsupported stream DMA checkpoint version %u", name(),
+             checkpoint_version);
+    UNSERIALIZE_ARRAY(mmreg, BUFFER_ACCESS_OFF);
+    UNSERIALIZE_SCALAR(rdIntPending);
+    UNSERIALIZE_SCALAR(wrIntPending);
+    UNSERIALIZE_SCALAR(rdRunning);
+    UNSERIALIZE_SCALAR(wrRunning);
+    UNSERIALIZE_SCALAR(running);
+    UNSERIALIZE_SCALAR(readAddr);
+    UNSERIALIZE_SCALAR(readFrameSize);
+    UNSERIALIZE_SCALAR(framesToRead);
+    UNSERIALIZE_SCALAR(readFrameBuffSize);
+    UNSERIALIZE_SCALAR(framesRead);
+    UNSERIALIZE_SCALAR(readIntFrames);
+    UNSERIALIZE_SCALAR(readPtr);
+    UNSERIALIZE_SCALAR(writeAddr);
+    UNSERIALIZE_SCALAR(writeFrameSize);
+    UNSERIALIZE_SCALAR(framesToWrite);
+    UNSERIALIZE_SCALAR(writeFrameBuffSize);
+    UNSERIALIZE_SCALAR(framesWritten);
+    UNSERIALIZE_SCALAR(writeIntFrames);
+    UNSERIALIZE_SCALAR(writePtr);
+    readFifo->unserializeSection(cp, "readFifo");
+    writeFifo->unserializeSection(cp, "writeFifo");
+    {
+        ScopedCheckpointSection section(cp, "streamIn");
+        streamIn.unserialize(cp);
+    }
+    {
+        ScopedCheckpointSection section(cp, "streamOut");
+        streamOut.unserialize(cp);
+    }
+
+    bool tick_scheduled;
+    UNSERIALIZE_SCALAR(tick_scheduled);
+    if (tick_scheduled) {
+        Tick tick_when;
+        UNSERIALIZE_SCALAR(tick_when);
+        fatal_if(tick_when < curTick(),
+                 "%s: stream DMA checkpoint tick is in the past", name());
+        schedule(tickEvent, tick_when);
+    }
+    transferStats.readActive = rdRunning;
+    transferStats.writeActive = wrRunning;
+}
+
+void
+StreamDma::loadState(CheckpointIn &cp)
+{
+    fatal_if(!cp.sectionExists(name()),
+             "%s: checkpoint is missing stream DMA state", name());
+    DmaDevice::loadState(cp);
 }

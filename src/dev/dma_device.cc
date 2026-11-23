@@ -704,6 +704,11 @@ DmaReadFifo::drain()
         DrainState::Drained : DrainState::Draining;
 }
 
+void
+DmaReadFifo::drainResume()
+{
+    resumeFill();
+}
 
 DmaReadFifo::DmaDoneEvent::DmaDoneEvent(DmaReadFifo *_parent, size_t max_size)
     : parent(_parent), _data(max_size, 0)

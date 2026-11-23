@@ -47,6 +47,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
+#include <sstream>
 
 #include "base/intmath.hh"
 #include "base/random.hh"
@@ -58,6 +59,7 @@
 #include "mem/packet_access.hh"
 #include "salam/latency_sample.hh"
 #include "sim/core.hh"
+#include "sim/serialize.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -631,6 +633,56 @@ ScratchpadMemory::drain()
     } else {
         return DrainState::Drained;
     }
+}
+
+void
+ScratchpadMemory::serialize(CheckpointOut &cp) const
+{
+    panic_if(!packetQueue.empty() || dequeueEvent.scheduled(),
+             "%s: scratchpad memory must be drained before checkpointing",
+             name());
+    AbstractMemory::serialize(cp);
+    SERIALIZE_SCALAR(initial);
+    if (readyMode) {
+        SERIALIZE_ARRAY(ready, range.size());
+    }
+    SERIALIZE_CONTAINER(isBusy);
+    SERIALIZE_CONTAINER(retryReq);
+    SERIALIZE_CONTAINER(retryResp);
+    SERIALIZE_CONTAINER(releaseTick);
+    std::ostringstream rng_state;
+    rng_state << rng->gen;
+    paramOut(cp, "rng", rng_state.str());
+}
+
+void
+ScratchpadMemory::unserialize(CheckpointIn &cp)
+{
+    AbstractMemory::unserialize(cp);
+    UNSERIALIZE_SCALAR(initial);
+    if (readyMode) {
+        UNSERIALIZE_ARRAY(ready, range.size());
+    }
+    UNSERIALIZE_CONTAINER(isBusy);
+    UNSERIALIZE_CONTAINER(retryReq);
+    UNSERIALIZE_CONTAINER(retryResp);
+    UNSERIALIZE_CONTAINER(releaseTick);
+    const auto ports = releaseEvent.size();
+    fatal_if(isBusy.size() != ports || retryReq.size() != ports ||
+                 retryResp.size() != ports || releaseTick.size() != ports,
+             "%s: scratchpad checkpoint port count does not match", name());
+    for (unsigned i = 0; i < ports; ++i) {
+        if (isBusy[i]) {
+            fatal_if(releaseTick[i] < curTick(),
+                     "%s: scratchpad release tick is in the past", name());
+            schedule(releaseEvent[i], releaseTick[i]);
+        }
+    }
+    std::string rng_state;
+    paramIn(cp, "rng", rng_state);
+    std::istringstream rng_stream(rng_state);
+    fatal_if(!(rng_stream >> rng->gen),
+             "%s: invalid scratchpad checkpoint RNG state", name());
 }
 
 ScratchpadMemory::MemoryPort::MemoryPort(const std::string &_name,

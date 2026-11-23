@@ -258,12 +258,30 @@ StreamBuffer::getPort(const std::string &if_name, PortID idx)
 void
 StreamBuffer::serialize(CheckpointOut &cp) const
 {
+    ClockedObject::serialize(cp);
     SERIALIZE_CONTAINER(buffer);
+    {
+        ScopedCheckpointSection section(cp, "streamIn");
+        streamIn.serialize(cp);
+    }
+    {
+        ScopedCheckpointSection section(cp, "streamOut");
+        streamOut.serialize(cp);
+    }
 }
 
 void
 StreamBuffer::unserialize(CheckpointIn &cp)
 {
+    ClockedObject::unserialize(cp);
     UNSERIALIZE_CONTAINER(buffer);
     bufferOccupancy = buffer.size();
+    {
+        ScopedCheckpointSection section(cp, "streamIn");
+        streamIn.unserialize(cp);
+    }
+    {
+        ScopedCheckpointSection section(cp, "streamOut");
+        streamOut.unserialize(cp);
+    }
 }

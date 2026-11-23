@@ -84,9 +84,9 @@ class LLVMInterface : public AccComputeUnit
     Tick lastPass = MaxTick;
     // The tick of this invocation's first compute pass.
     Tick firstPass = 0;
-    int cycle;
+    int cycle = 0;
 
-    bool running;
+    bool running = false;
     bool loadOpScheduled;
     bool storeOpScheduled;
     bool compOpScheduled;
@@ -338,6 +338,9 @@ class LLVMInterface : public AccComputeUnit
   public:
     PARAMS(LLVMInterface);
     LLVMInterface(const LLVMInterfaceParams &p);
+    DrainState drain() override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
     void tick();
     void constructStaticGraph();
     void resolveFunctionalUnits();

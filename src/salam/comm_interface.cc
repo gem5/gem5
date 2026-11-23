@@ -756,6 +756,7 @@ CommInterface::tick()
     if (requestsInQueues > 0) {
         processMemoryRequests();
     }
+    checkDrainDone();
 }
 
 void
@@ -1184,6 +1185,7 @@ CommInterface::finish()
             port->setReadyStatus(false);
         }
     }
+    checkDrainDone();
 }
 
 Addr
@@ -1425,3 +1427,60 @@ CommInterface::clearMemRequest(MemoryRequest *req, bool isRead)
 void
 CommInterface::startup()
 {}
+
+void
+CommInterface::serialize(CheckpointOut &cp) const
+{
+    fatal_if(DrainManager::instance().state() != DrainState::Drained,
+             "%s: drain the system before checkpointing", name());
+    fatal_if(!drained(), "%s: communication interface must be drained",
+             name());
+    BasicPioDevice::serialize(cp);
+    const unsigned version = 1;
+    SERIALIZE_SCALAR(version);
+    SERIALIZE_ARRAY(mmreg, io_size);
+    SERIALIZE_SCALAR(int_flag);
+}
+
+void
+CommInterface::unserialize(CheckpointIn &cp)
+{
+    BasicPioDevice::unserialize(cp);
+    unsigned version;
+    UNSERIALIZE_SCALAR(version);
+    fatal_if(version != 1,
+             "%s: unsupported communication checkpoint version %u", name(),
+             version);
+    UNSERIALIZE_ARRAY(mmreg, io_size);
+    UNSERIALIZE_SCALAR(int_flag);
+}
+
+void
+CommInterface::loadState(CheckpointIn &cp)
+{
+    fatal_if(!cp.sectionExists(name()),
+             "%s: checkpoint is missing communication interface state",
+             name());
+    BasicPioDevice::loadState(cp);
+}
+
+bool
+CommInterface::drained() const
+{
+    return !computationNeeded && !tickEvent.scheduled() && readQueue.empty() &&
+           writeQueue.empty() && accRdQ.empty() && accWrQ.empty();
+}
+
+DrainState
+CommInterface::drain()
+{
+    return drained() ? DrainState::Drained : DrainState::Draining;
+}
+
+void
+CommInterface::checkDrainDone()
+{
+    if (drainState() == DrainState::Draining && drained()) {
+        signalDrainDone();
+    }
+}

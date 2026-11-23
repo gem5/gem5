@@ -150,6 +150,31 @@ end-of-transmission; the supplied workloads also use `m5_exit`.
 The example uses a 2 GHz O3 CPU, a 1 GHz board, private L1 caches, a shared
 L2, and 16 GiB of DDR4 memory.
 
+## Checkpoints
+
+SALAM supports `m5.checkpoint()` and `m5.instantiate(checkpoint_dir)` with
+programmed accelerator arguments, controller registers, private memories,
+and buffered stream data. Ordinary draining also remains available for CPU
+and memory-mode switching.
+
+An active, finite LLVM invocation finishes during checkpoint drain. Its
+completed output and Done status are saved, and the restored accelerator
+can be launched again with new arguments. A checkpoint does not freeze the
+LLVM interpreter in the middle of an instruction. A kernel that cannot
+complete without new external input must receive that input before drain
+can finish.
+
+DMA controllers settle in-flight memory packets during drain and save the
+remaining transfer or frame, FIFO contents, and next service event. Restore
+resumes that unfinished work; drain does not require an entire stream or
+bulk transfer to finish. Register-bank writes publish before saving, while
+scratchpad readiness and stream-buffer contents survive restoration.
+
+Restore requires the same accelerator IR, profiles, object hierarchy, and
+memory configuration. Older checkpoints missing the SALAM state are not
+compatible. Statistics follow gem5's ordinary checkpoint behavior; these
+checkpoints do not preserve accumulated power, area, or statistics reports.
+
 ## Statistics and reset windows
 
 SALAM writes reset-window counters to `stats.txt`. Resetting statistics

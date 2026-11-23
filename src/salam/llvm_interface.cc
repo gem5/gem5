@@ -65,6 +65,32 @@ LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
     dbg = comm->debug();
 }
 
+DrainState
+LLVMInterface::drain()
+{
+    // Finish the current invocation, including its memory operations.
+    // The static graph is rebuilt from the configured IR on the next launch.
+    return running ? DrainState::Draining : DrainState::Drained;
+}
+
+void
+LLVMInterface::serialize(CheckpointOut &cp) const
+{
+    fatal_if(running || !activeFunctions.empty() || !globalReadQueue.empty() ||
+                 !globalWriteQueue.empty(),
+             "%s: accelerator must finish draining before checkpointing",
+             name());
+    AccComputeUnit::serialize(cp);
+    SERIALIZE_SCALAR(lastPass);
+}
+
+void
+LLVMInterface::unserialize(CheckpointIn &cp)
+{
+    AccComputeUnit::unserialize(cp);
+    UNSERIALIZE_SCALAR(lastPass);
+}
+
 LLVMInterface::ExecStats::ExecStats(LLVMInterface *owner)
     : statistics::Group(owner),
       ADD_STAT(invocations, statistics::units::Count::get(),
@@ -1321,6 +1347,9 @@ LLVMInterface::finalize()
     functions.clear();
     values.clear();
     comm->finish();
+    if (drainState() == DrainState::Draining) {
+        signalDrainDone();
+    }
 }
 
 void

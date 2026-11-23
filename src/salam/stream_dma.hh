@@ -265,26 +265,29 @@ class StreamDma : public DmaDevice
         return letoh(value);
     }
 
-    uint64_t readAddr;
-    uint32_t readFrameSize;
-    uint8_t framesToRead;
-    uint8_t readFrameBuffSize;
-    uint64_t framesRead;
-    uint8_t readIntFrames;
-    uint64_t readPtr;
+    uint64_t readAddr = 0;
+    uint32_t readFrameSize = 0;
+    uint8_t framesToRead = 0;
+    uint8_t readFrameBuffSize = 0;
+    uint64_t framesRead = 0;
+    uint8_t readIntFrames = 0;
+    uint64_t readPtr = 0;
 
-    uint64_t writeAddr;
-    uint32_t writeFrameSize;
-    uint8_t framesToWrite;
-    uint8_t writeFrameBuffSize;
-    uint64_t framesWritten;
-    uint8_t writeIntFrames;
-    uint64_t writePtr;
+    uint64_t writeAddr = 0;
+    uint32_t writeFrameSize = 0;
+    uint8_t framesToWrite = 0;
+    uint8_t writeFrameBuffSize = 0;
+    uint64_t framesWritten = 0;
+    uint8_t writeIntFrames = 0;
+    uint64_t writePtr = 0;
 
   protected:
   public:
     PARAMS(StreamDma);
     StreamDma(const StreamDmaParams &p);
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void loadState(CheckpointIn &cp) override;
     void init() override;
     ~StreamDma() {}
 

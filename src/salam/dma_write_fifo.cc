@@ -273,6 +273,12 @@ DmaWriteFifo::drain()
                                    : DrainState::Draining;
 }
 
+void
+DmaWriteFifo::drainResume()
+{
+    resumeEmpty();
+}
+
 DmaWriteFifo::DmaDoneEvent::DmaDoneEvent(DmaWriteFifo *_parent,
                                          size_t max_size)
     : parent(_parent), _done(false), _canceled(false), _data(max_size, 0)

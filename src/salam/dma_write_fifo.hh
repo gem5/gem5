@@ -71,6 +71,7 @@ class DmaWriteFifo : public Drainable, public Serializable
 
   public: // Drainable
     DrainState drain() override;
+    void drainResume() override;
 
   public: // FIFO access
     /**

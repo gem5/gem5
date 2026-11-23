@@ -36,6 +36,7 @@
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "mem/tport.hh"
+#include "sim/serialize.hh"
 
 using namespace gem5;
 
@@ -209,6 +210,36 @@ template <class Device> class StreamResponsePortT : public StreamResponsePort
     }
 
   public:
+    void
+    serialize(CheckpointOut &cp) const
+    {
+        SERIALIZE_SCALAR(isBusy);
+        SERIALIZE_SCALAR(retryReq);
+        SERIALIZE_SCALAR(retrySize);
+        SERIALIZE_SCALAR(retryRead);
+        if (isBusy) {
+            assert(releaseEvent.scheduled());
+            const Tick release_tick = releaseEvent.when();
+            SERIALIZE_SCALAR(release_tick);
+        }
+    }
+
+    void
+    unserialize(CheckpointIn &cp)
+    {
+        UNSERIALIZE_SCALAR(isBusy);
+        UNSERIALIZE_SCALAR(retryReq);
+        UNSERIALIZE_SCALAR(retrySize);
+        UNSERIALIZE_SCALAR(retryRead);
+        if (isBusy) {
+            Tick release_tick;
+            UNSERIALIZE_SCALAR(release_tick);
+            fatal_if(release_tick < curTick(),
+                     "%s: stream release tick is in the past", name());
+            device->schedule(releaseEvent, release_tick);
+        }
+    }
+
     void
     notifyReady()
     {

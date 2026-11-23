@@ -150,6 +150,21 @@ SALAMDeviceTester::readCommArgument(CommInterface *comm, unsigned offset,
     return comm->getGlobalVar(offset, size);
 }
 
+bool
+SALAMDeviceTester::scratchpadReady(ScratchpadMemory *memory, Addr addr,
+                                   unsigned size, bool read)
+{
+    return memory->isReady(addr, size, read);
+}
+
+void
+SALAMDeviceTester::suspendThread()
+{
+    panic_if(params().system->threads.size() != 1,
+             "Expected one test thread to suspend");
+    params().system->threads.quiesce(0);
+}
+
 uint64_t
 SALAMDeviceTester::functionalRead(Addr addr, unsigned size)
 {
@@ -169,6 +184,15 @@ SALAMDeviceTester::functionalWrite(Addr addr, unsigned size, uint64_t data)
     auto pkt = packet(false, addr, size, data);
     port.sendFunctional(pkt);
     delete pkt;
+}
+
+Tick
+SALAMDeviceTester::atomicWrite(Addr addr, unsigned size, uint64_t data)
+{
+    auto pkt = packet(false, addr, size, data);
+    const Tick latency = port.sendAtomic(pkt);
+    delete pkt;
+    return latency;
 }
 
 void

@@ -100,12 +100,12 @@ class NoncoherentDma : public DmaDevice
 
     uint8_t last_flag;
 
-    Addr activeSrc;
-    Addr activeDst;
-    int writesLeft;
+    Addr activeSrc = 0;
+    Addr activeDst = 0;
+    int writesLeft = 0;
     bool running;
 
-    Tick start_time;
+    Tick start_time = 0;
 
     EventFunctionWrapper tickEvent;
 
@@ -117,6 +117,9 @@ class NoncoherentDma : public DmaDevice
   public:
     PARAMS(NoncoherentDma);
     NoncoherentDma(const NoncoherentDmaParams &p);
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void loadState(CheckpointIn &cp) override;
     ~NoncoherentDma() {}
 
     AddrRangeList getAddrRanges() const;

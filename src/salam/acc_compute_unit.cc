@@ -35,3 +35,33 @@
 AccComputeUnit::AccComputeUnit(const AccComputeUnitParams &p)
     : ClockedObject(p), comm(p.comm_int), hw(p.hw_int), tickEvent(this)
 {}
+
+void
+AccComputeUnit::serialize(CheckpointOut &cp) const
+{
+    fatal_if(DrainManager::instance().state() != DrainState::Drained,
+             "%s: drain the system before checkpointing", name());
+    fatal_if(tickEvent.scheduled(), "%s: compute unit must be drained",
+             name());
+    ClockedObject::serialize(cp);
+    const unsigned version = 1;
+    SERIALIZE_SCALAR(version);
+}
+
+void
+AccComputeUnit::unserialize(CheckpointIn &cp)
+{
+    ClockedObject::unserialize(cp);
+    unsigned version;
+    UNSERIALIZE_SCALAR(version);
+    fatal_if(version != 1, "%s: unsupported compute checkpoint version %u",
+             name(), version);
+}
+
+void
+AccComputeUnit::loadState(CheckpointIn &cp)
+{
+    fatal_if(!cp.sectionExists(name()),
+             "%s: checkpoint is missing compute unit state", name());
+    ClockedObject::loadState(cp);
+}

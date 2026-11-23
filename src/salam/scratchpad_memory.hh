@@ -447,6 +447,8 @@ class ScratchpadMemory : public AbstractMemory
 
   public:
     DrainState drain() override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 
     Port &getPort(const std::string &if_name,
                   PortID idx = InvalidPortID) override;

@@ -34,6 +34,8 @@
 
 #include <algorithm>
 
+#include "sim/serialize.hh"
+
 namespace
 {
 
@@ -271,4 +273,84 @@ NoncoherentDma::getPort(const std::string &if_name, PortID idx)
         return accPort;
     }
     return DmaDevice::getPort(if_name, idx);
+}
+
+void
+NoncoherentDma::serialize(CheckpointOut &cp) const
+{
+    fatal_if(DrainManager::instance().state() != DrainState::Drained,
+             "%s: DMA checkpoint requires a drained system", name());
+    DmaDevice::serialize(cp);
+    paramOut(cp, "checkpoint_version", 1);
+    SERIALIZE_ARRAY(mmreg, pioSize);
+    SERIALIZE_SCALAR(last_flag);
+    SERIALIZE_SCALAR(activeSrc);
+    SERIALIZE_SCALAR(activeDst);
+    SERIALIZE_SCALAR(writesLeft);
+    SERIALIZE_SCALAR(running);
+    SERIALIZE_SCALAR(start_time);
+    const bool read_from_cluster = readFifo == accSideReadFifo;
+    const bool write_to_cluster = writeFifo == accSideWriteFifo;
+    SERIALIZE_SCALAR(read_from_cluster);
+    SERIALIZE_SCALAR(write_to_cluster);
+    const bool tick_scheduled = tickEvent.scheduled();
+    SERIALIZE_SCALAR(tick_scheduled);
+    if (tick_scheduled) {
+        const Tick tick_when = tickEvent.when();
+        SERIALIZE_SCALAR(tick_when);
+    }
+
+    // The FIFO drainables settle packets without requiring the logical
+    // transfer to finish. Keep both buffered data and its remaining range.
+    memSideReadFifo->serializeSection(cp, "memSideReadFifo");
+    memSideWriteFifo->serializeSection(cp, "memSideWriteFifo");
+    accSideReadFifo->serializeSection(cp, "accSideReadFifo");
+    accSideWriteFifo->serializeSection(cp, "accSideWriteFifo");
+}
+
+void
+NoncoherentDma::unserialize(CheckpointIn &cp)
+{
+    DmaDevice::unserialize(cp);
+    unsigned checkpoint_version;
+    UNSERIALIZE_SCALAR(checkpoint_version);
+    fatal_if(checkpoint_version != 1,
+             "%s: unsupported DMA checkpoint version %u", name(),
+             checkpoint_version);
+    UNSERIALIZE_ARRAY(mmreg, pioSize);
+    UNSERIALIZE_SCALAR(last_flag);
+    UNSERIALIZE_SCALAR(activeSrc);
+    UNSERIALIZE_SCALAR(activeDst);
+    UNSERIALIZE_SCALAR(writesLeft);
+    UNSERIALIZE_SCALAR(running);
+    UNSERIALIZE_SCALAR(start_time);
+    bool read_from_cluster;
+    bool write_to_cluster;
+    UNSERIALIZE_SCALAR(read_from_cluster);
+    UNSERIALIZE_SCALAR(write_to_cluster);
+    readFifo = read_from_cluster ? accSideReadFifo : memSideReadFifo;
+    writeFifo = write_to_cluster ? accSideWriteFifo : memSideWriteFifo;
+    memSideReadFifo->unserializeSection(cp, "memSideReadFifo");
+    memSideWriteFifo->unserializeSection(cp, "memSideWriteFifo");
+    accSideReadFifo->unserializeSection(cp, "accSideReadFifo");
+    accSideWriteFifo->unserializeSection(cp, "accSideWriteFifo");
+
+    bool tick_scheduled;
+    UNSERIALIZE_SCALAR(tick_scheduled);
+    if (tick_scheduled) {
+        Tick tick_when;
+        UNSERIALIZE_SCALAR(tick_when);
+        fatal_if(tick_when < curTick(),
+                 "%s: DMA checkpoint tick is in the past", name());
+        schedule(tickEvent, tick_when);
+    }
+    stats.active = running;
+}
+
+void
+NoncoherentDma::loadState(CheckpointIn &cp)
+{
+    fatal_if(!cp.sectionExists(name()), "%s: checkpoint is missing DMA state",
+             name());
+    DmaDevice::loadState(cp);
 }

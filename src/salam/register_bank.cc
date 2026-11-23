@@ -308,7 +308,8 @@ RegisterBank::dequeue()
         packetQueue.push_front(deferred_pkt);
     } else if (!packetQueue.empty()) {
         scheduleNextResponse();
-    } else if (drainState() == DrainState::Draining) {
+    } else if (!deltaEvent.scheduled() &&
+               drainState() == DrainState::Draining) {
         DPRINTF(Drain, "Draining of RegisterBank complete\n");
         signalDrainDone();
     }
@@ -318,6 +319,10 @@ void
 RegisterBank::delta()
 {
     std::memcpy(pmemAddr, deltaAddr, range.size());
+    if (packetQueue.empty() && !sendingResponse &&
+        drainState() == DrainState::Draining) {
+        signalDrainDone();
+    }
 }
 
 void
@@ -354,8 +359,8 @@ RegisterBank::getPort(const std::string &if_name, PortID idx)
 DrainState
 RegisterBank::drain()
 {
-    if (!packetQueue.empty()) {
-        DPRINTF(Drain, "ScratchpadMemory Queue has requests, "
+    if (!packetQueue.empty() || sendingResponse || deltaEvent.scheduled()) {
+        DPRINTF(Drain, "RegisterBank has pending accesses, "
                        "waiting to drain\n");
         return DrainState::Draining;
     } else {

@@ -407,8 +407,10 @@ class CommInterface : public BasicPioDevice
     virtual void checkMMR();
     virtual void processMemoryRequests();
     virtual void tick();
+    bool drained() const;
+    void checkDrainDone();
 
-    bool running;
+    bool running = false;
     bool computationNeeded;
     bool int_flag;
 
@@ -469,6 +471,10 @@ class CommInterface : public BasicPioDevice
     PARAMS(CommInterface);
 
     CommInterface(const CommInterfaceParams &p);
+    DrainState drain() override;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void loadState(CheckpointIn &cp) override;
 
     void startup();
 

@@ -50,6 +50,7 @@
 #include "mem/port.hh"
 #include "params/SALAMDeviceTester.hh"
 #include "salam/comm_interface.hh"
+#include "salam/scratchpad_memory.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
@@ -130,8 +131,12 @@ class SALAMDeviceTester : public ClockedObject
                                  unsigned size);
     uint64_t readCommArgument(CommInterface *comm, unsigned offset,
                               unsigned size);
+    bool scratchpadReady(ScratchpadMemory *memory, Addr addr, unsigned size,
+                         bool read);
+    void suspendThread();
     uint64_t functionalRead(Addr addr, unsigned size);
     void functionalWrite(Addr addr, unsigned size, uint64_t data);
+    Tick atomicWrite(Addr addr, unsigned size, uint64_t data);
     void functionalWriteMasked(Addr addr, unsigned size, uint64_t data,
                                const std::vector<bool> &byte_enable);
     void

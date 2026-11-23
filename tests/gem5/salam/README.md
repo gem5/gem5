@@ -39,13 +39,14 @@ syscall support, and build rules in `harness/`. The fixture copies tracked
 harness sources into each workload and passes the selected Clang and ARM
 cross compiler to Make through `CLANG` and `CROSS_COMPILE`.
 
-The current baseline has 103 default suites. Keep a suite for a distinct
+The current baseline has 107 default suites. Keep a suite for a distinct
 behavior or regression rather than every combination of its parameters.
 
 | Family | Suites | Retained coverage |
 | --- | ---: | --- |
 | LLVM kernels | 48 | LLVM semantics, scheduling, clocks, stats windows |
 | Devices | 25 | Register/SPM/stream protocols, DMA, invalid accesses |
+| Checkpoints | 4 | Argument and output roundtrips, active DMA, storage state |
 | Stdlib | 17 | Board wiring, BFS parity, source isolation, DMA/FIFOs |
 | BFS | 3 | Checked workload, checker negative control, and build cleanup |
 | Profiles | 6 | Opcodes, latency rules, ownership, device construction |

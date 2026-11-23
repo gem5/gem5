@@ -75,6 +75,9 @@ class AccComputeUnit : public ClockedObject
     tick()
     {}
     AccComputeUnit(const AccComputeUnitParams &p);
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void loadState(CheckpointIn &cp) override;
     virtual void
     initialize()
     {}
