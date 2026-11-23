@@ -105,7 +105,9 @@ class CacheController(CHI_Cache_Controller):
         # port latency
         self.transitions_per_cycle = 1024
         # This should be set to true in the data cache controller to enable
-        # timeouts on unique lines when a store conditional fails
+        # timeouts on unique lines when a store conditional fails.
+        # Forward progress for LR/SC loops (RISC-V Ziccrse) relies on it:
+        # enable it on the L1D controllers of systems that need it
         self.sc_lock_enabled = False
 
         # Use 32-byte channels (two flits per message)
