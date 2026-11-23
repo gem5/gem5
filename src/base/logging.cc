@@ -101,40 +101,40 @@ shouldANSI()
 Logger&
 Logger::getPanic() {
     // bold red
-    auto prefix = shouldANSI() ? "\x1b[1;31mpanic\e[0m: " : "panic: ";
-    static ExitLogger *panic_logger = new ExitLogger(prefix);
+    static ExitLogger *panic_logger =
+        new ExitLogger(shouldANSI() ? "\x1b[1;31mpanic\e[0m: " : "panic: ");
     return *panic_logger;
 }
 
 Logger&
 Logger::getFatal() {
     // bold red
-    auto prefix = shouldANSI() ? "\x1b[1;31mfatal\e[0m: " : "fatal: ";
-    static FatalLogger *fatal_logger = new FatalLogger(prefix);
+    static FatalLogger *fatal_logger =
+        new FatalLogger(shouldANSI() ? "\x1b[1;31mfatal\e[0m: " : "fatal: ");
     return *fatal_logger;
 }
 
 Logger&
 Logger::getWarn() {
     // bold yellow
-    auto prefix = shouldANSI() ? "\x1b[1;33mwarn\e[0m: " : "warn: ";
-    static Logger *warn_logger = new Logger(prefix);
+    static Logger *warn_logger =
+        new Logger(shouldANSI() ? "\x1b[1;33mwarn\e[0m: " : "warn: ");
     return *warn_logger;
 }
 
 Logger&
 Logger::getInfo() {
     // bold cyan
-    auto prefix = shouldANSI() ? "\x1b[1;36minfo\e[0m: " : "info: ";
-    static Logger *info_logger = new Logger(prefix);
+    static Logger *info_logger =
+        new Logger(shouldANSI() ? "\x1b[1;36minfo\e[0m: " : "info: ");
     return *info_logger;
 }
 
 Logger&
 Logger::getHack() {
     // yellow, non-bold
-    auto prefix = shouldANSI() ? "\x1b[33mhack\e[0m: " : "hack: ";
-    static Logger *hack_logger = new Logger(prefix);
+    static Logger *hack_logger =
+        new Logger(shouldANSI() ? "\x1b[33mhack\e[0m: " : "hack: ");
     return *hack_logger;
 }
 

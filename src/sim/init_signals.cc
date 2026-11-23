@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <csignal>
 #include <cstring>
 #include <iostream>
@@ -61,6 +62,7 @@
 #include "base/atomicio.hh"
 #include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "base/output.hh"
 #include "debug/ExternalSignal.hh"
 #include "sim/async.hh"
 #include "sim/backtrace.hh"
@@ -151,6 +153,23 @@ exitNowHandler(int sigtype)
     getEventQueue(0)->wakeup();
 }
 
+/**
+ * Write out buffered output (e.g. a .gz debug trace) before the process
+ * dies. flushAll() closes the .gz streams, so only call this on a fatal
+ * path. Closing a .gz file frees memory; if the heap is corrupt, the
+ * malloc lock may be held and the close would block forever. The alarm
+ * turns such a hang into termination by SIGALRM. It is cancelled once
+ * the flush is done, so it cannot cut short a core dump.
+ */
+static void
+flushOutputsBeforeDying()
+{
+    std::signal(SIGALRM, SIG_DFL);
+    alarm(10);
+    simout.flushAll();
+    alarm(0);
+}
+
 /// Abort signal handler.
 void
 abortHandler(int sigtype)
@@ -164,6 +183,7 @@ abortHandler(int sigtype)
     }
 
     print_backtrace();
+    flushOutputsBeforeDying();
     raiseFatalSignal(sigtype);
 }
 
@@ -174,6 +194,9 @@ segvHandler(int sigtype)
     STATIC_ERR("gem5 has encountered a segmentation fault!\n\n");
 
     print_backtrace();
+    // Best effort: the heap may be corrupt, but the handler is installed
+    // with SA_RESETHAND, so a second fault here just ends the process.
+    flushOutputsBeforeDying();
     raiseFatalSignal(SIGSEGV);
 }
 
@@ -290,7 +313,9 @@ processExternalSignal(void)
     id_pos += id_field.length();
 
     // Skip whitespace
-    while (id_pos < full_payload_str.length() && isspace(id_pos)) {
+    while (
+        id_pos < full_payload_str.length() &&
+        std::isspace(static_cast<unsigned char>(full_payload_str[id_pos]))) {
         id_pos++;
     }
 

@@ -377,8 +377,8 @@ class Wavefront : public SimObject
     // For MI355X MFMAs, some instructions take a scale value set by a
     // previous instruction. Store these in the wavefront since that is
     // accessible from the instruction execute method.
-    std::array<uint8_t, VegaISA::NumVecElemPerVecReg> mfmaAScale;
-    std::array<uint8_t, VegaISA::NumVecElemPerVecReg> mfmaBScale;
+    std::array<uint8_t, TheGpuISA::NumVecElemPerVecReg> mfmaAScale;
+    std::array<uint8_t, TheGpuISA::NumVecElemPerVecReg> mfmaBScale;
 
   public:
     struct WavefrontStats : public statistics::Group

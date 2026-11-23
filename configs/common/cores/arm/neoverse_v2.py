@@ -384,7 +384,6 @@ class L1I(L1Cache):
     mshrs = 16
     size = "64KiB"
     assoc = 8
-    mshrs = 12
     is_read_only = True
 
 
@@ -393,7 +392,6 @@ class L1D(L1Cache):
     mshrs = 16
     size = "64KiB"
     assoc = 8
-    mshrs = 12
     tag_latency = 4
     data_latency = 4
     response_latency = 4

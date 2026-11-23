@@ -34,7 +34,7 @@
 #include <limits>
 
 #include "arch/amdgpu/common/gpu_translation_state.hh"
-#include "arch/amdgpu/common/tlb.hh"
+#include "arch/amdgpu/common/x86_gpu_tlb.hh"
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"
 #include "debug/GPUExec.hh"
@@ -1177,12 +1177,13 @@ ComputeUnit::ScalarDataPort::handleResponse(PacketPtr pkt)
 void
 ComputeUnit::ScalarDataPort::recvReqRetry()
 {
-    for (const auto &pkt : retries) {
-        if (!sendTimingReq(pkt)) {
+    // Resend in order until the peer refuses again. Popping inside a
+    // range-for over the same deque invalidated the loop's iterator.
+    while (!retries.empty()) {
+        if (!sendTimingReq(retries.front())) {
             break;
-        } else {
-            retries.pop_front();
         }
+        retries.pop_front();
     }
 }
 

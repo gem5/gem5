@@ -37,6 +37,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 union InstFormat;
@@ -61,6 +64,7 @@ typedef uint64_t RawMachInst;
 typedef InstFormat *MachInst;
 
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_GPU_TYPES_HH__

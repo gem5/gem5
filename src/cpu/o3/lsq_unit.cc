@@ -197,6 +197,16 @@ LSQUnit::completeDataAccess(PacketPtr pkt)
             // This is a regular store (i.e., not store conditionals and
             // atomics), so it can complete without writing back
             completeStore(request->instruction()->sqIt);
+        } else if ((inst->isDataPrefetch() || inst->isInstPrefetch()) &&
+                   !inst->isExecuted()) {
+            // executeLoad() retires a prefetch early only when it sends
+            // the request without a fault. A split prefetch with a
+            // partial fault waits for this response instead. A prefetch
+            // has no writeback, so send it to commit here.
+            iewStage->wakeCPU();
+            inst->setExecuted();
+            iewStage->instToCommit(inst);
+            iewStage->activityThisCycle();
         }
     }
 }
@@ -289,7 +299,11 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(lqAvgOccupancy, statistics::units::Ratio::get(),
                "Average LQ Occupancy (UsedSlots/TotalSlots)"),
       ADD_STAT(sqAvgOccupancy, statistics::units::Ratio::get(),
-               "Average SQ Occupancy (UsedSlots/TotalSlots)")
+               "Average SQ Occupancy (UsedSlots/TotalSlots)"),
+      ADD_STAT(vecMemPackAccesses, statistics::units::Count::get(),
+               "Unit-stride vector accesses with pack width enabled"),
+      ADD_STAT(vecMemPackFlows, statistics::units::Count::get(),
+               "LSQ fragments for those accesses")
 {
     loadToUse
         .init(0, 299, 10)
@@ -298,6 +312,13 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
     lqAvgOccupancy.precision(2);
 
     sqAvgOccupancy.precision(2);
+}
+
+void
+LSQUnit::recordVecMemPack(uint64_t flows)
+{
+    stats.vecMemPackAccesses++;
+    stats.vecMemPackFlows += flows;
 }
 
 void
@@ -687,6 +708,27 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     } else {
+        // A prefetch has no destination register and no architectural
+        // side effects, so retirement need not wait for the response;
+        // commit it as soon as the request has been sent. A late
+        // response is dropped like a squashed one (recvTimingResp bails
+        // out on isReleased(), LSQ::recvTimingResp still cleans up).
+        // Prefetches in an HTM transaction are excluded: their response
+        // may signal a transaction abort, which is only raised from
+        // completeDataAccess().
+        if ((inst->isDataPrefetch() || inst->isInstPrefetch()) &&
+            inst->savedRequest && inst->savedRequest->isSent() &&
+            !inst->inHtmTransactionalState()) {
+            DPRINTF(LSQUnit,
+                    "Prefetch [sn:%lli] retired early after the "
+                    "request was sent\n",
+                    inst->seqNum);
+            inst->setExecuted();
+            iewStage->instToCommit(inst);
+            iewStage->activityThisCycle();
+            return NoFault;
+        }
+
         if (inst->effAddrValid()) {
             auto it = inst->lqIt;
             ++it;
@@ -1359,6 +1401,12 @@ unsigned int
 LSQUnit::cacheLineSize()
 {
     return cpu->cacheLineSize();
+}
+
+unsigned
+LSQUnit::splitGrain(const DynInstPtr &inst)
+{
+    return lsq->splitGrain(inst);
 }
 
 Fault

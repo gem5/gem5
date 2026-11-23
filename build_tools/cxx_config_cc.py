@@ -295,7 +295,7 @@ ${param_class}::setParamVector(const std::string &name,
             if not is_simobj and is_vector:
                 code('} else if (name == "${{param.name}}") {')
                 code.indent()
-                code("${{param.name}}.clear();")
+                code("this->${{param.name}}.clear();")
                 code(
                     "for (auto i = values.begin(); ret && i != values.end(); i ++)"
                 )
@@ -333,7 +333,7 @@ ${param_class}::setParamDict(const std::string &name,
         if is_dict:
             code('} else if (name == "${{param.name}}") {')
             code.indent()
-            code("${{param.name}}.clear();")
+            code("this->${{param.name}}.clear();")
             code(
                 "for (auto i = values.begin(); ret && i != values.end(); i ++)"
             )

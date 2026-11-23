@@ -94,8 +94,12 @@ class HSAQueueEntry
           _numWgCompleted(0),
           _globalWgId(0),
           dispatchComplete(false)
-
     {
+        // Set if wave32 and check the ISA is valid.
+        // This will be updated for future gfx12 support
+        _isWave32 = akc->enable_wavefront_size32;
+        panic_if(_isWave32, "Wave32 not supported in gfx9");
+
         // Use the resource descriptors to determine number of GPRs. This will
         // round up in some cases, however the exact number field in the AMD
         // kernel code struct is not backwards compatible and that field is
@@ -428,6 +432,12 @@ class HSAQueueEntry
         return _accumOffset;
     }
 
+    int
+    waveSize() const
+    {
+        return _isWave32 ? 32 : 64;
+    }
+
     void
     preloadLength(unsigned val)
     {
@@ -563,6 +573,7 @@ class HSAQueueEntry
     std::bitset<NumScalarInitFields> initialSgprState;
 
     unsigned _accumOffset;
+    bool _isWave32 = false;
 
     // For preloading args there are extra bytes of space after the dispatch
     // packet containing values that should be preloaded into SGPRs. This

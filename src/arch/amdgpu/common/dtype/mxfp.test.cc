@@ -51,6 +51,17 @@ test_raw_mxfp(T raw_mxfp, int bits)
 }
 
 template <typename T>
+bool
+test_scale_unchanged(uint32_t raw)
+{
+    T down(raw), up(raw);
+    down.scaleDiv(64.0f);
+    up.scaleMul(1.0f / 1024);
+
+    return down.data == T(raw).data && up.data == T(raw).data;
+}
+
+template <typename T>
 int
 test_type(int bits)
 {
@@ -69,6 +80,53 @@ test_type(int bits)
     return errors;
 }
 
+// Checks rounding to nearest, ties to even, from float: values between two
+// neighbouring T values convert to the nearer one and midpoints to the one
+// with the even encoding. Values past the largest finite T value convert
+// like an infinity.
+template <typename T>
+int
+test_rounding()
+{
+    using FMT = decltype(T().getFmt());
+    const int shift = 32 - T::size();
+    const uint32_t sign = 1 << (T::size() - 1);
+
+    // Largest finite encoding, without the sign bit.
+    uint32_t max_bits = sign - 1;
+    if (std::numeric_limits<FMT>::has_infinity) {
+        max_bits -= 1 << FMT::mbits;
+    } else if (std::numeric_limits<FMT>::has_quiet_NaN) {
+        max_bits -= 1;
+    }
+    const uint32_t overflow =
+        (std::numeric_limits<FMT>::has_infinity ? FMT::inf : FMT::max) >>
+        shift;
+
+    auto value = [](uint32_t bits) { return float(T(bits)); };
+    auto convert = [shift](float f) { return T(f).data >> shift; };
+    const float inf = std::numeric_limits<float>::infinity();
+
+    int errors = 0;
+    for (uint32_t bits = 0; bits <= max_bits; ++bits) {
+        float lo = value(bits);
+        float step =
+            bits < max_bits ? value(bits + 1) - lo : lo - value(bits - 1);
+        float mid = lo + step / 2;
+        uint32_t up = bits < max_bits ? bits + 1 : overflow;
+        uint32_t even = (bits & 1) ? up : bits;
+
+        errors += convert(std::nextafter(mid, 0.0f)) != bits;
+        errors += convert(mid) != even;
+        errors += convert(-mid) != (even | sign);
+        errors += convert(std::nextafter(mid, inf)) != up;
+    }
+    errors += convert(std::numeric_limits<float>::max()) != overflow;
+    errors += convert(std::numeric_limits<float>::denorm_min()) != 0;
+
+    return errors;
+}
+
 TEST(MxfpTest, MxBf16Test)
 {
     using T = gem5::AMDGPU::mxbfloat16;
@@ -76,6 +134,7 @@ TEST(MxfpTest, MxBf16Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp16Test)
@@ -85,6 +144,7 @@ TEST(MxfpTest, MxFp16Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxBf8Test)
@@ -94,6 +154,7 @@ TEST(MxfpTest, MxBf8Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp8Test)
@@ -103,6 +164,7 @@ TEST(MxfpTest, MxFp8Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxBf6Test)
@@ -112,6 +174,7 @@ TEST(MxfpTest, MxBf6Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp6Test)
@@ -121,6 +184,7 @@ TEST(MxfpTest, MxFp6Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
 }
 
 TEST(MxfpTest, MxFp4Test)
@@ -130,4 +194,34 @@ TEST(MxfpTest, MxFp4Test)
     int errors = test_type<T>(T::size());
 
     EXPECT_EQ(errors, 0);
+    EXPECT_EQ(test_rounding<T>(), 0);
+}
+
+TEST(MxfpTest, ScaleInfNanTest)
+{
+    using namespace gem5::AMDGPU;
+
+    // Scaling keeps infinity and NaN in every format that has them.
+    EXPECT_TRUE(test_scale_unchanged<mxfloat32>(0x7f800000));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat32>(0xff800000));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat32>(0x7fc00000));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat16>(0x7c00));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat16>(0x7e00));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat16>(0xff80));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat16>(0x7fc0));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat8>(0x7c));
+    EXPECT_TRUE(test_scale_unchanged<mxbfloat8>(0xfe));
+    EXPECT_TRUE(test_scale_unchanged<mxfloat8>(0x7f));
+
+    // Finite values, including E4M3 values with an all ones exponent, are
+    // still scaled.
+    mxfloat32 down(1.5f), up(1.5f);
+    down.scaleDiv(64.0f);
+    up.scaleMul(1.0f / 1024);
+    EXPECT_EQ(float(down), 1.5f / 64);
+    EXPECT_EQ(float(up), 1.5f / 1024);
+
+    mxfloat8 e4m3_max(uint32_t(0x7e));
+    e4m3_max.scaleDiv(2.0f);
+    EXPECT_EQ(float(e4m3_max), 224.0f);
 }

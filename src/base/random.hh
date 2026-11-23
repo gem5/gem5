@@ -45,6 +45,7 @@
 #ifndef __BASE_RANDOM_HH__
 #define __BASE_RANDOM_HH__
 
+#include <cmath>
 #include <random>
 #include <string>
 #include <type_traits>

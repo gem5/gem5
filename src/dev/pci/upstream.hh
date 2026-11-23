@@ -105,6 +105,7 @@ class PciUpstream
     PciUpstream(PciUpDownBridge *up_to_down, PciConfigError *config_error_dev,
                 const std::vector<PciDevice *> &pci_devices,
                 std::string upstream_name);
+    virtual ~PciUpstream() = default;
 
     void init();
 

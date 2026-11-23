@@ -28,9 +28,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Device import DmaDevice
+from m5.params import *
 
 
 class TesterDma(DmaDevice):
     type = "TesterDma"
     cxx_header = "cpu/testers/gpu_ruby_test/tester_dma.hh"
     cxx_class = "gem5::TesterDma"
+
+    # PIO window this device claims on the piobus. Every TesterDma used to claim
+    # the same fixed [0, 0xc0000000), so two or more on one IOXBar made the
+    # crossbar fatal ("two ports responding within range"); give each its own.
+    pio_addr = Param.Addr(0, "Start of this DMA engine's PIO range")
+    pio_size = Param.Addr(0xC0000000, "Size of this DMA engine's PIO range")

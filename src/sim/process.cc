@@ -169,17 +169,21 @@ void
 Process::clone(ThreadContext *otc, ThreadContext *ntc,
                Process *np, RegVal flags)
 {
+// The guest's clone flags are Linux ABI values and are compared against
+// these constants regardless of the host. Hosts that don't define them
+// (e.g. macOS) must fall back to the Linux values, not 0, or every clone
+// would be treated like fork().
 #ifndef CLONE_VM
-#define CLONE_VM 0
+#define CLONE_VM 0x00000100
 #endif
 #ifndef CLONE_FILES
-#define CLONE_FILES 0
+#define CLONE_FILES 0x00000400
 #endif
 #ifndef CLONE_THREAD
-#define CLONE_THREAD 0
+#define CLONE_THREAD 0x00010000
 #endif
 #ifndef CLONE_VFORK
-#define CLONE_VFORK 0
+#define CLONE_VFORK 0x00004000
 #endif
     if (CLONE_VM & flags) {
         /**
@@ -368,10 +372,10 @@ Process::deallocateMem(Addr vaddr, int64_t size)
                 // achieve the same result, but would be more expensive
                 // because it would unnecessarily zero out pages that
                 // were allocated for the first time.
-                SETranslatingPortProxy virt_mem(
-                    system->threads[0], SETranslatingPortProxy::Always);
-                const std::vector<uint8_t> zero_page(page_size, 0);
-                virt_mem.writeBlob(page_vaddr, zero_page.data(), page_size);
+                // Write through the physical address: a virtual write
+                // would need a thread context of this process, and
+                // system->threads[0] may belong to another process.
+                system->physProxy.memsetBlob(page_paddr, 0, page_size);
             }
 
             // Unmap the virtual page.

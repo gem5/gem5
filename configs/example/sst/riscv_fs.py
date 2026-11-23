@@ -77,13 +77,14 @@ def generateDtb(system):
 
 
 def createHiFivePlatform(system):
-    # Since the latency from CPU to the bus was set in SST, additional latency
-    # is undesirable.
+    # SST accounts for forwarding latency. Keep one cycle of header occupancy,
+    # as NoncoherentXBar did before it honored header_latency, so the first
+    # request at tick zero does not release the crossbar layer at tick zero.
     system.membus = NoncoherentXBar(
         frontend_latency=0,
         forward_latency=0,
         response_latency=0,
-        header_latency=0,
+        header_latency=1,
         width=64,
     )
     system.membus.badaddr_responder = BadAddr()

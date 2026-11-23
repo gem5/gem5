@@ -185,6 +185,7 @@ class Queued : public Base
         statistics::Scalar pfInCache;
         statistics::Scalar pfRemovedDemand;
         statistics::Scalar pfRemovedFull;
+        statistics::Scalar pfRemovedFullTranslating;
         statistics::Scalar pfSpanPage;
         statistics::Scalar pfUsefulSpanPage;
     } statsQueued;

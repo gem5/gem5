@@ -138,6 +138,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <iterator>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -270,6 +271,42 @@ char
 i2digit(int n)
 {
     return "0123456789abcdef"[n & 0x0f];
+}
+
+// Convert a byte array into a printable string. Backslash is escaped as
+// "\\", common control characters as "\n", "\r" and "\t", and other
+// non-printable bytes as "\xHH".
+std::string
+escapeNonPrintable(const char *data, size_t len)
+{
+    std::string out;
+    out.reserve(len);
+    for (size_t i = 0; i < len; i++) {
+        switch (data[i]) {
+            case '\\':
+                out += "\\\\";
+                break;
+            case '\n':
+                out += "\\n";
+                break;
+            case '\r':
+                out += "\\r";
+                break;
+            case '\t':
+                out += "\\t";
+                break;
+            default:
+                if (std::isprint(data[i], std::locale::classic())) {
+                    out += data[i];
+                } else {
+                    out += "\\x";
+                    out += i2digit(data[i] >> 4);
+                    out += i2digit(data[i]);
+                }
+                break;
+        }
+    }
+    return out;
 }
 
 // Convert a byte array into an hex string.
@@ -743,22 +780,23 @@ BaseRemoteGDB::recv(std::vector<char>& bp)
     DPRINTF(GDBRecv, "recv:  %s\n", bp.data());
 }
 
-// Send a packet to gdb
+// Send a packet with the given length to gdb
 void
-BaseRemoteGDB::send(const char *bp)
+BaseRemoteGDB::sendBinary(const char *data, size_t len)
 {
-    const char *p;
     uint8_t csum, c;
 
-    DPRINTF(GDBSend, "send:  %s\n", bp);
+    // The data may be binary, so escape it to keep the debug output readable.
+    DPRINTF(GDBSend, "send:  %s\n", escapeNonPrintable(data, len));
     //removing GDBBadP that could be waiting in the buffer
     while (try_getbyte(&c,0));
     do {
-        p = bp;
         // Start sending a packet
         putbyte(GDBStart);
         // Send the contents, and also keep a check sum.
-        for (csum = 0; (c = *p); p++) {
+        csum = 0;
+        for (size_t i = 0; i < len; i++) {
+            c = static_cast<uint8_t>(data[i]);
             putbyte(c);
             csum += c;
         }
@@ -860,8 +898,8 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 #if TRACING_ON
     if (debug::GDBRead) {
         if (debug::GDBExtra) {
-            char buf[1024];
-            mem2hex(buf, data, size);
+            std::string buf(2 * size, '\0');
+            mem2hex(buf.data(), data, size);
             DPRINTFNR(": %s\n", buf);
         } else
             DPRINTFNR("\n");
@@ -878,8 +916,8 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
     if (debug::GDBWrite) {
         DPRINTFN("write: addr=%#x, size=%d", vaddr, size);
         if (debug::GDBExtra) {
-            char buf[1024];
-            mem2hex(buf, data, size);
+            std::string buf(2 * size, '\0');
+            mem2hex(buf.data(), data, size);
             DPRINTFNR(": %s\n", buf);
         } else
             DPRINTFNR("\n");
@@ -1133,8 +1171,7 @@ BaseRemoteGDB::cmdDetach(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdRegR(GdbCommand::Context &ctx)
 {
-    std::string buf;
-    buf.reserve(2 * regCachePtr->size());
+    std::string buf(2 * regCachePtr->size(), '\0');
     mem2hex(buf.data(), regCachePtr->data(), regCachePtr->size());
     send(buf.c_str());
     return true;
@@ -1227,8 +1264,7 @@ BaseRemoteGDB::cmdMemR(GdbCommand::Context &ctx)
     if (!read(addr, len, buf.get()))
         throw CmdError("E05");
 
-    std::string temp;
-    temp.reserve(2 * len);
+    std::string temp(2 * len, '\0');
     mem2hex(temp.data(), buf.get(), len);
     send(temp.c_str());
     return true;
@@ -1376,9 +1412,16 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     split = splitAt(split.second, ":");
     auto operation = split.first;
 
-    // Only the "features" object and "read"ing are supported currently.
-    if (object != "features" || operation != "read")
+    // Only "read"ing is supported currently.
+    if (operation != "read") {
         throw Unsupported();
+    }
+
+    // Only the objects registered in queryXferReadMap are supported.
+    auto handler_it = queryXferReadMap.find(object);
+    if (handler_it == queryXferReadMap.end()) {
+        throw Unsupported();
+    }
 
     // Extract the annex name.
     split = splitAt(split.second, ":");
@@ -1386,8 +1429,9 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 
     // Read the contents of the annex.
     std::string content;
-    if (!getXferFeaturesRead(annex, content))
+    if (!handler_it->second(annex, content)) {
         throw CmdError("E00");
+    }
 
     // Extract the offset and length.
     split = splitAt(split.second, ",");
@@ -1405,7 +1449,7 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 
     std::string encoded;
     encodeXferResponse(content, encoded, offset, length);
-    send(encoded);
+    sendBinary(encoded.data(), encoded.size());
     return true;
 }
 bool
@@ -1526,14 +1570,21 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 std::vector<std::string>
 BaseRemoteGDB::availableFeatures() const
 {
-    return {};
+    return xferReadFeatures;
 };
 
-bool
-BaseRemoteGDB::getXferFeaturesRead(
-    const std::string &annex, std::string &output)
+void
+BaseRemoteGDB::setXferReadHandler(const std::string &object,
+                                  XferReadHandler handler)
 {
-    return false;
+    panic_if(!handler, "Empty qXfer read handler for object '%s'.", object);
+    const bool inserted =
+        queryXferReadMap.insert_or_assign(object, std::move(handler)).second;
+    // Only a newly inserted object is added, so each object is advertised
+    // exactly once even if its handler is replaced.
+    if (inserted) {
+        xferReadFeatures.push_back(csprintf("qXfer:%s:read+", object));
+    }
 }
 
 void

@@ -25,11 +25,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "systemc/core/channel.hh"
+#include "systemc/ext/core/sc_prim.hh"
+#include "systemc/core/channel_ops.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
-#include "systemc/ext/core/sc_prim.hh"
 
 namespace sc_gem5
 {
@@ -53,7 +53,7 @@ sc_prim_channel::sc_prim_channel() : _gem5_channel(nullptr)
     if (::sc_gem5::scheduler().elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "elaboration done");
     }
-    _gem5_channel = new sc_gem5::Channel(this);
+    _gem5_channel = ::sc_gem5::newChannel(this);
 }
 
 sc_prim_channel::sc_prim_channel(const char *_name) :
@@ -65,21 +65,24 @@ sc_prim_channel::sc_prim_channel(const char *_name) :
     if (::sc_gem5::scheduler().elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "elaboration done");
     }
-    _gem5_channel = new sc_gem5::Channel(this);
+    _gem5_channel = ::sc_gem5::newChannel(this);
 }
 
-sc_prim_channel::~sc_prim_channel() { delete _gem5_channel; }
+sc_prim_channel::~sc_prim_channel()
+{
+    ::sc_gem5::destroyChannel(_gem5_channel);
+}
 
 void
 sc_prim_channel::request_update()
 {
-    _gem5_channel->requestUpdate();
+    ::sc_gem5::requestChannelUpdate(_gem5_channel);
 }
 
 void
 sc_prim_channel::async_request_update()
 {
-    _gem5_channel->asyncRequestUpdate();
+    ::sc_gem5::asyncRequestChannelUpdate(_gem5_channel);
 }
 
 void

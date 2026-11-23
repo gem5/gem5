@@ -334,9 +334,7 @@ let {{
 
         switch (misc_reg) {
           case MISCREG_UNKNOWN:
-            return new FailUnimplemented(is_read ? "mrc" : "mcr", machInst,
-                    csprintf("miscreg crm:%d opc1:%d 64-bit %s unknown",
-                    crm, opc1, is_read ? "read" : "write"));
+            return new Unknown(machInst);
           default:
             auto& miscreg_info = lookUpMiscReg[misc_reg].info;
             if (miscreg_info[MISCREG_WARN_NOT_FAIL]) {

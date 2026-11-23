@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 std::string
@@ -291,4 +294,5 @@ isVectorReg(int opIdx)
 }
 
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

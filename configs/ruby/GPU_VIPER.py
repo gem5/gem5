@@ -1081,7 +1081,7 @@ def create_system(
                 size=options.l3_size,
                 line_size=options.cacheline_size,
                 assoc=options.l3_assoc,
-                cpus=[n for n in range(options.num_cpus)],
+                cpus=[*range(options.num_cpus)],
             )
 
     # Create TCPs

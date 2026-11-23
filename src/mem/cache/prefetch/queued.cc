@@ -273,21 +273,24 @@ Queued::getPacket()
 
 Queued::QueuedStats::QueuedStats(statistics::Group *parent)
     : statistics::Group(parent),
-    ADD_STAT(pfIdentified, statistics::units::Count::get(),
-             "number of prefetch candidates identified"),
-    ADD_STAT(pfBufferHit, statistics::units::Count::get(),
-             "number of redundant prefetches already in prefetch queue"),
-    ADD_STAT(pfInCache, statistics::units::Count::get(),
-             "number of redundant prefetches already in cache/mshr dropped"),
-    ADD_STAT(pfRemovedDemand, statistics::units::Count::get(),
-             "number of prefetches dropped due to a demand for the same "
-             "address"),
-    ADD_STAT(pfRemovedFull, statistics::units::Count::get(),
-             "number of prefetches dropped due to prefetch queue size"),
-    ADD_STAT(pfSpanPage, statistics::units::Count::get(),
-             "number of prefetches that crossed the page"),
-    ADD_STAT(pfUsefulSpanPage, statistics::units::Count::get(),
-             "number of prefetches that is useful and crossed the page")
+      ADD_STAT(pfIdentified, statistics::units::Count::get(),
+               "number of prefetch candidates identified"),
+      ADD_STAT(pfBufferHit, statistics::units::Count::get(),
+               "number of redundant prefetches already in prefetch queue"),
+      ADD_STAT(pfInCache, statistics::units::Count::get(),
+               "number of redundant prefetches already in cache/mshr dropped"),
+      ADD_STAT(pfRemovedDemand, statistics::units::Count::get(),
+               "number of prefetches dropped due to a demand for the same "
+               "address"),
+      ADD_STAT(pfRemovedFull, statistics::units::Count::get(),
+               "number of prefetches dropped due to prefetch queue size"),
+      ADD_STAT(pfRemovedFullTranslating, statistics::units::Count::get(),
+               "number of new prefetches dropped because the queue was full "
+               "of prefetches with an ongoing translation"),
+      ADD_STAT(pfSpanPage, statistics::units::Count::get(),
+               "number of prefetches that crossed the page"),
+      ADD_STAT(pfUsefulSpanPage, statistics::units::Count::get(),
+               "number of prefetches that is useful and crossed the page")
 {
 }
 
@@ -498,24 +501,41 @@ Queued::addToQueue(std::list<DeferredPacket> &queue,
     /* Verify prefetch buffer space for request */
     if (queue.size() == queueSize) {
         statsQueued.pfRemovedFull++;
-        /* Lowest priority packet */
+        /*
+         * Lowest priority packet. Skip the packets with an ongoing
+         * translation: the MMU keeps a pointer to them and calls finish()
+         * on them when the translation ends.
+         */
         iterator it = queue.end();
         panic_if (it == queue.begin(),
             "Prefetch queue is both full and empty!");
-        --it;
+        do {
+            --it;
+        } while (it->ongoingTranslation && it != queue.begin());
+        if (it->ongoingTranslation) {
+            /* Every queued packet waits for its translation */
+            statsQueued.pfRemovedFullTranslating++;
+            DPRINTF(HWPrefetch,
+                    "Prefetch queue full of ongoing "
+                    "translations, dropping new packet, addr: %#x\n",
+                    dpp.pfInfo.getAddr());
+            delete dpp.pkt;
+            dpp.pkt = nullptr;
+            return;
+        }
         /* Look for oldest in that level of priority */
-        panic_if (it == queue.begin(),
-            "Prefetch queue is full with 1 element!");
         iterator prev = it;
-        bool cont = true;
         /* While not at the head of the queue */
-        while (cont && prev != queue.begin()) {
+        while (prev != queue.begin()) {
             prev--;
             /* While at the same level of priority */
-            cont = prev->priority == it->priority;
-            if (cont)
+            if (prev->priority != it->priority) {
+                break;
+            }
+            if (!prev->ongoingTranslation) {
                 /* update pointer */
                 it = prev;
+            }
         }
         DPRINTF(HWPrefetch, "Prefetch queue full, removing lowest priority "
                             "oldest packet, addr: %#x\n",it->pfInfo.getAddr());

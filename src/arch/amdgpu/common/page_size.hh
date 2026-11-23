@@ -29,44 +29,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/pagetable.hh"
+#ifndef __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
+#define __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__
 
-#include "sim/serialize.hh"
+#include "base/types.hh"
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
-
-/**
- * Serialize all of the POD fields in a TLB entry. These fields contain all
- * of the information needed to handle any of the function calls in the entry.
- */
-void
-VegaTlbEntry::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(paddr);
-    SERIALIZE_SCALAR(vaddr);
-    SERIALIZE_SCALAR(logBytes);
-    SERIALIZE_SCALAR(vmid);
-    SERIALIZE_SCALAR(pte);
-    SERIALIZE_SCALAR(lruSeq);
-}
-
-/**
- * Unserialize all of the POD fields in a TLB entry. These fields contain all
- * of the information needed to handle any of the function calls in the entry.
- */
-void
-VegaTlbEntry::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(paddr);
-    UNSERIALIZE_SCALAR(vaddr);
-    UNSERIALIZE_SCALAR(logBytes);
-    UNSERIALIZE_SCALAR(vmid);
-    UNSERIALIZE_SCALAR(pte);
-    UNSERIALIZE_SCALAR(lruSeq);
-}
-
-} // namespace VegaISA
+const Addr PageShift = 12;
+const Addr PageBytes = 1ULL << PageShift;
+} // namespace AMDGPU
 } // namespace gem5
+
+#endif // __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__

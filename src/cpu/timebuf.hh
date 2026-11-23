@@ -33,6 +33,9 @@
 #include <type_traits>
 #include <vector>
 
+#include "base/compiler.hh"
+#include "base/logging.hh"
+
 namespace gem5
 {
 
@@ -49,9 +52,25 @@ class TimeBuffer
     std::vector<char *> index;
     unsigned base;
 
+    // Keep panicOutOfBounds() out-of-line via __attribute__((noinline)) for
+    // simulator performance reasons. Putting panic() directly inside valid()
+    // causes a 3-7% simulation slowdown because expanding the panic macro
+    // inlines extensive string formatting, Logger calls, and stack setup
+    // into every hot-path wire access site.
+    void
+    panicOutOfBounds(int idx) const __attribute__((noinline))
+    {
+        panic("TimeBuffer out-of-bounds access! Wire index %d is outside "
+              "valid range [-%d, +%d] (id=%d). "
+              "Increase forwardComSize or backComSize!",
+              idx, past, future, _id);
+    }
+
     void valid(int idx) const
     {
-        assert (idx >= -past && idx <= future);
+        if (GEM5_UNLIKELY(idx < -past || idx > future)) {
+            panicOutOfBounds(idx);
+        }
     }
 
   public:

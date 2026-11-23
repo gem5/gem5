@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
+
 from m5.objects import (
     ClockDomain,
     MessageBuffer,
@@ -58,10 +60,13 @@ class L1Cache(MI_example_L1Cache_Controller):
         super().__init__()
         self.version = self.versionCount()
         self._cache_line_size = cache_line_size
+        block_size_bits = int(math.log2(cache_line_size))
+        if 2**block_size_bits != int(cache_line_size):
+            raise ValueError("Cache line size must be a power of 2.")
         self.connectQueues(network)
 
         self.cacheMemory = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self._cache_line_size
+            size=size, assoc=assoc, start_index_bit=block_size_bits
         )
 
         self.clk_domain = clk_domain

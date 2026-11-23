@@ -492,9 +492,16 @@ class sc_vector : public sc_vector_base
     void
     emplace_back(Args &&...args)
     {
-        const char *unique_name = sc_gen_unique_name(this->basename());
-        T *p = new T(unique_name, std::forward<Args>(args)...);
-        objs.push_back(p);
+        forceParent();
+        try {
+            const char *unique_name = sc_gen_unique_name(this->basename());
+            T *p = new T(unique_name, std::forward<Args>(args)...);
+            objs.push_back(p);
+        } catch (...) {
+            unforceParent();
+            throw;
+        }
+        unforceParent();
     }
 
     T &operator [] (size_type index) { return *static_cast<T *>(objs[index]); }

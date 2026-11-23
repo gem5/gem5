@@ -34,6 +34,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 // --- Inst_VINTRP__V_INTERP_P1_F32 class methods ---
@@ -107,4 +110,5 @@ Inst_VINTRP__V_INTERP_MOV_F32::execute(GPUDynInstPtr gpuDynInst)
     panicUnimplemented();
 } // execute
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

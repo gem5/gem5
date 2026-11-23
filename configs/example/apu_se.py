@@ -1017,16 +1017,6 @@ else:
 
 ########################## Start simulation ########################
 
-redirect_paths = [
-    RedirectPath(
-        app_path="/proc", host_paths=[f"{m5.options.outdir}/fs/proc"]
-    ),
-    RedirectPath(app_path="/sys", host_paths=[f"{m5.options.outdir}/fs/sys"]),
-    RedirectPath(app_path="/tmp", host_paths=[f"{m5.options.outdir}/fs/tmp"]),
-]
-
-system.redirect_paths = redirect_paths
-
 root = Root(system=system, full_system=False)
 
 # Create the /sys/devices filesystem for the simulator so that the HSA Runtime

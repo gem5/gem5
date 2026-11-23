@@ -39,7 +39,6 @@
 
 #include "base/logging.hh"
 #include "base/trace.hh"
-#include "cpu/smt.hh"
 #include "debug/Checkpoint.hh"
 
 namespace gem5
@@ -133,6 +132,11 @@ Event::releaseImpl()
 void
 EventQueue::insert(Event *event)
 {
+    gem5_assert(
+        !inParallelMode || this == curEventQueue(),
+        "%s: cannot insert event %s from event queue %s in parallel mode",
+        name(), event->name(),
+        curEventQueue() ? curEventQueue()->name() : "<none>");
     gem5_assert(event->when() >= getCurTick(),
                 "Event must be inserted at or after the current tick.");
     // Deal with the head case
@@ -222,6 +226,13 @@ Event *
 EventQueue::serviceOne()
 {
     std::lock_guard<EventQueue> lock(*this);
+    // there should always be at least one event if this method is called
+    gem5_assert(!empty(),
+                "%s: serviceOne() called with an empty queue at position %llu",
+                name(), getCurTick());
+    gem5_assert(getCurTick() <= nextTick(),
+                "%s: event at %llu is before queue position %llu", name(),
+                nextTick(), getCurTick());
     Event *event = head;
     Event *next = head->nextInBin;
     event->flags.clear(Event::Scheduled);

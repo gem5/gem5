@@ -18,6 +18,20 @@ jobs:
               id: date
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+    pre-commit:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v7
+              with:
+                  python-version: '3.10'
+            - uses: tox-dev/action-pre-commit-uv@v1.1.2
+              env:
+                  # Keep pre-commit's normal hook environment installation.
+                  DISABLE_PRE_COMMIT_UV_PATCH: '1'
+                  SKIP: gem5-git-clang-format
+
+
     macos-compilation:
         # The purpose of this is to cache the macOS compilation.
         # MacOS compilation checks are run as part of the CI tests but as the
@@ -68,6 +82,29 @@ jobs:
                       ${CMD}
                   fi
               timeout-minutes: 120
+
+    build-clang-gem5-fast:
+        # Builds gem5.fast using the latest supported clang
+        # version. This is cached and used in the CI tests.
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/clang-version-22:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - name: Repo checkout
+              uses: actions/checkout@v7
+
+            - name: Clang compilation cache
+              uses: actions/cache@v6
+              with:
+                  path: build/ALL
+                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      clang-build-ALL-fast
+
+            - name: Clang compilation
+              run: scons build/ALL/gem5.fast -j $(nproc)
 
     build-testlib-gem5:
         runs-on: [self-hosted, linux, x64]
@@ -279,20 +316,12 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
-        needs: get-date
+        # The shared-library build changes the configuration and generated
+        # headers. Restoring it can race header regeneration on the next run.
         steps:
             - uses: actions/checkout@v7
-            - name: Cache the build
-              uses: actions/cache@v6
-              with:
-                  path: build/*
-                  key: systemc-build-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      systemc-build
-
             - name: Build ARM/gem5.opt
               run: |
-                  # The cached shared-library build has USE_SYSTEMC disabled.
                   scons defconfig build/ARM build_opts/ARM --ignore-style
                   scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc

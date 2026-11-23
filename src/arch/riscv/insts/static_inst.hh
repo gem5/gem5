@@ -122,6 +122,18 @@ class RiscvMacroInst : public RiscvStaticInst
 
     ~RiscvMacroInst() { microops.clear(); }
 
+    // Mark every micro-op except the last as delayed commit, so the CPU
+    // doesn't take an interrupt part-way through the macro-op. The simple
+    // CPUs keep fetching micro-ops from the current macro-op after an
+    // interrupt, which would run the rest of it at the trap handler's PC.
+    void
+    setDelayedCommitExceptLast()
+    {
+        for (size_t i = 0; i + 1 < microops.size(); i++) {
+            microops[i]->setDelayedCommit();
+        }
+    }
+
     StaticInstPtr
     fetchMicroop(MicroPC upc) const override
     {

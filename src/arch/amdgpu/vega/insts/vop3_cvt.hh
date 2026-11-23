@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 
@@ -1504,6 +1507,7 @@ using Inst_VOP3__V_CVT_SCALE_SR_PK_FP4_F32 =
                                      &MNEM__V_CVT_SCALE_SR_PK_FP4_F32>;
 
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_VEGA_INSTS_VOP3_CVT_HH__

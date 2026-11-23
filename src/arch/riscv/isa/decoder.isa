@@ -459,10 +459,32 @@ decode QUADRANT default Unknown::unknown() {
                         NPC = rvSext(Rc1 & (~0x1));
                     }}, IsIndirectControl, IsUncondControl, IsCall);
                 }
-                default: CompressedROp::c_add({{
-                    // RC1 == 0 is HINT
-                    Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
-                }});
+                default: decode CNTLHINT {
+                    0x02: CompressedROp::c_ntl_p1({{
+                        // HINT: c.add x0, x2
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    0x03: CompressedROp::c_ntl_pall({{
+                        // HINT: c.add x0, x3
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    0x04: CompressedROp::c_ntl_s1({{
+                        // HINT: c.add x0, x4
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    0x05: CompressedROp::c_ntl_all({{
+                        // HINT: c.add x0, x5
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+
+                    default: CompressedROp::c_add({{
+                        // RC1 == 0 is HINT
+                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                    }});
+                }
             }
         }
         format CompressedStore {
@@ -2065,15 +2087,201 @@ decode QUADRANT default Unknown::unknown() {
         }
 
         0x0b: decode FUNCT3 {
-            0x2: decode AMOFUNCT {
-                0x2: LoadReserved::lr_w({{
-                    Rd_sd = Mem_sw;
-                }}, mem_flags=[LLSC], xlate_flags=['LR']);
-                0x3: StoreCond::sc_w({{
-                    Mem_uw = Rs2_uw;
+            0x0: decode AMOFUNCT {
+                0x0: AtomicMemOp::amoadd_b({{
+                    Rd_sd = Mem_sb;
                 }}, {{
-                    Rd = rvSext(result);
-                }}, inst_flags=IsStoreConditional, mem_flags=LLSC);
+                    TypedAtomicOpFunctor<int8_t> *amo_op =
+                          new AtomicGenericOp<int8_t>(Rs2_sb,
+                                  [](int8_t* b, int8_t a){
+                                      int8_t mem_data = letoh(*b);
+                                      int8_t new_data = mem_data + a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1: AtomicMemOp::amoswap_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){ *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x4: AtomicMemOp::amoxor_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){
+                                      uint8_t mem_data = letoh(*b);
+                                      uint8_t new_data = mem_data ^ a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x8: AtomicMemOp::amoor_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){
+                                      uint8_t mem_data = letoh(*b);
+                                      uint8_t new_data = mem_data | a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0xc: AtomicMemOp::amoand_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                          new AtomicGenericOp<uint8_t>(Rs2_ub,
+                                  [](uint8_t* b, uint8_t a){
+                                      uint8_t mem_data = letoh(*b);
+                                      uint8_t new_data = mem_data & a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x10: AtomicMemOp::amomin_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<int8_t> *amo_op =
+                      new AtomicGenericOp<int8_t>(Rs2_sb,
+                        [](int8_t* b, int8_t a){
+                            int8_t mem_data = letoh(*b);
+                            int8_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x14: AtomicMemOp::amomax_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<int8_t> *amo_op =
+                      new AtomicGenericOp<int8_t>(Rs2_sb,
+                        [](int8_t* b, int8_t a){
+                            int8_t mem_data = letoh(*b);
+                            int8_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x18: AtomicMemOp::amominu_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                      new AtomicGenericOp<uint8_t>(Rs2_ub,
+                        [](uint8_t* b, uint8_t a){
+                            uint8_t mem_data = letoh(*b);
+                            uint8_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1c: AtomicMemOp::amomaxu_b({{
+                    Rd_sd = Mem_sb;
+                }}, {{
+                    TypedAtomicOpFunctor<uint8_t> *amo_op =
+                      new AtomicGenericOp<uint8_t>(Rs2_ub,
+                        [](uint8_t* b, uint8_t a){
+                            uint8_t mem_data = letoh(*b);
+                            uint8_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+            }
+            0x1: decode AMOFUNCT {
+                0x0: AtomicMemOp::amoadd_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<int16_t> *amo_op =
+                          new AtomicGenericOp<int16_t>(Rs2_sh,
+                                  [](int16_t* b, int16_t a){
+                                      int16_t mem_data = letoh(*b);
+                                      int16_t new_data = mem_data + a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1: AtomicMemOp::amoswap_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){ *b = a; });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x4: AtomicMemOp::amoxor_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){
+                                      uint16_t mem_data = letoh(*b);
+                                      uint16_t new_data = mem_data ^ a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x8: AtomicMemOp::amoor_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){
+                                      uint16_t mem_data = letoh(*b);
+                                      uint16_t new_data = mem_data | a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0xc: AtomicMemOp::amoand_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                          new AtomicGenericOp<uint16_t>(Rs2_uh,
+                                  [](uint16_t* b, uint16_t a){
+                                      uint16_t mem_data = letoh(*b);
+                                      uint16_t new_data = mem_data & a;
+                                      *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x10: AtomicMemOp::amomin_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<int16_t> *amo_op =
+                      new AtomicGenericOp<int16_t>(Rs2_sh,
+                        [](int16_t* b, int16_t a){
+                            int16_t mem_data = letoh(*b);
+                            int16_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x14: AtomicMemOp::amomax_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<int16_t> *amo_op =
+                      new AtomicGenericOp<int16_t>(Rs2_sh,
+                        [](int16_t* b, int16_t a){
+                            int16_t mem_data = letoh(*b);
+                            int16_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x18: AtomicMemOp::amominu_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                      new AtomicGenericOp<uint16_t>(Rs2_uh,
+                        [](uint16_t* b, uint16_t a){
+                            uint16_t mem_data = letoh(*b);
+                            uint16_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x1c: AtomicMemOp::amomaxu_h({{
+                    Rd_sd = Mem_sh;
+                }}, {{
+                    TypedAtomicOpFunctor<uint16_t> *amo_op =
+                      new AtomicGenericOp<uint16_t>(Rs2_uh,
+                        [](uint16_t* b, uint16_t a){
+                            uint16_t mem_data = letoh(*b);
+                            uint16_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+            }
+            0x2: decode AMOFUNCT {
                 0x0: AtomicMemOp::amoadd_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
@@ -2092,6 +2300,14 @@ decode QUADRANT default Unknown::unknown() {
                           new AtomicGenericOp<uint32_t>(Rs2_uw,
                                   [](uint32_t* b, uint32_t a){ *b = a; });
                 }}, mem_flags=ATOMIC_RETURN_OP);
+                0x2: LoadReserved::lr_w({{
+                    Rd_sd = Mem_sw;
+                }}, mem_flags=[LLSC], xlate_flags=['LR']);
+                0x3: StoreCond::sc_w({{
+                    Mem_uw = Rs2_uw;
+                }}, {{
+                    Rd = rvSext(result);
+                }}, inst_flags=IsStoreConditional, mem_flags=LLSC);
                 0x4: AtomicMemOp::amoxor_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
@@ -2101,6 +2317,20 @@ decode QUADRANT default Unknown::unknown() {
                                       uint32_t mem_data = letoh(*b);
                                       uint32_t new_data = mem_data ^ a;
                                       *b = htole(new_data);
+                                  });
+                }}, mem_flags=ATOMIC_RETURN_OP);
+                0x5: AtomicMemOp::amocas_w({{
+                    Rd_sd = Mem_sw;
+                }}, {{
+                    /* AMOCAS with RL semantics always run the pre-CAS fence,
+                       even if the comparison fails */
+                    TypedAtomicOpFunctor<uint32_t> *amo_op =
+                          new AtomicGeneric3Op<uint32_t>(Rd_sd, Rs2_uw,
+                                  [](uint32_t* b, uint32_t a, uint32_t c){
+                                      uint32_t mem_data = letoh(*b);
+                                      if (a == mem_data){
+                                          *b = htole(c);
+                                      }
                                   });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x8: AtomicMemOp::amoor_w({{
@@ -2172,14 +2402,6 @@ decode QUADRANT default Unknown::unknown() {
             }
             0x3: decode RVTYPE {
                 0x1: decode AMOFUNCT {
-                    0x2: LoadReserved::lr_d({{
-                        Rd_sd = Mem_sd;
-                    }}, mem_flags=[LLSC], xlate_flags=['LR']);
-                    0x3: StoreCond::sc_d({{
-                        Mem = Rs2;
-                    }}, {{
-                        Rd = result;
-                    }}, mem_flags=LLSC, inst_flags=IsStoreConditional);
                     0x0: AtomicMemOp::amoadd_d({{
                         Rd_sd = Mem_sd;
                     }}, {{
@@ -2198,6 +2420,14 @@ decode QUADRANT default Unknown::unknown() {
                               new AtomicGenericOp<uint64_t>(Rs2_ud,
                                       [](uint64_t* b, uint64_t a){ *b = a; });
                     }}, mem_flags=ATOMIC_RETURN_OP);
+                    0x2: LoadReserved::lr_d({{
+                        Rd_sd = Mem_sd;
+                    }}, mem_flags=[LLSC], xlate_flags=['LR']);
+                    0x3: StoreCond::sc_d({{
+                        Mem = Rs2;
+                    }}, {{
+                        Rd = result;
+                    }}, mem_flags=LLSC, inst_flags=IsStoreConditional);
                     0x4: AtomicMemOp::amoxor_d({{
                         Rd_sd = Mem_sd;
                     }}, {{
@@ -2208,6 +2438,20 @@ decode QUADRANT default Unknown::unknown() {
                                          uint64_t new_data = mem_data ^ a;
                                          *b = htole(new_data);
                                      });
+                    }}, mem_flags=ATOMIC_RETURN_OP);
+                    0x5: AtomicMemOp::amocas_d({{
+                        Rd_ud = Mem_ud;
+                    }}, {{
+                        /* AMOCAS with RL semantics always run the pre-CAS
+                          fence, even if the comparison fails */
+                        TypedAtomicOpFunctor<uint64_t> *amo_op =
+                            new AtomicGeneric3Op<uint64_t>(Rd_ud, Rs2_ud,
+                                    [](uint64_t* b, uint64_t a, uint64_t c){
+                                         uint64_t mem_data = letoh(*b);
+                                         if (a == mem_data){
+                                             *b = htole(c);
+                                         }
+                                    });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x8: AtomicMemOp::amoor_d({{
                         Rd_sd = Mem_sd;
@@ -2286,9 +2530,32 @@ decode QUADRANT default Unknown::unknown() {
             format ROp {
                 0x0: decode KFUNCT5 {
                     0x00: decode BS {
-                        0x0: add({{
-                            Rd = rvSext(Rs1_sd + Rs2_sd);
-                        }});
+                        0x0: decode NTLHINT {
+                            0x4000: ntl_p1({{
+                                // HINT: add x0, x0, x2
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            0x6000: ntl_pall({{
+                                // HINT: add x0, x0, x3
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            0x8000: ntl_s1({{
+                                // HINT: add x0, x0, x4
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            0xa000: ntl_all({{
+                                // HINT: add x0, x0, x5
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+
+                            default: add({{
+                                Rd = rvSext(Rs1_sd + Rs2_sd);
+                            }});
+                        }
+
                         0x1: sub({{
                             Rd = rvSext(Rs1_sd - Rs2_sd);
                         }});
@@ -2975,7 +3242,7 @@ decode QUADRANT default Unknown::unknown() {
                             Fd_bits = freg(f32(defaultNaNF32UI)).v;
                         }
                         else {
-                            Fd_bits = less ? fs1.v : fs2.v;
+                            Fd_bits = freg(less ? fs1 : fs2).v;
                         }
                         }}, FloatCmpOp);
                     0x3: fmaxm_s({{
@@ -2987,7 +3254,7 @@ decode QUADRANT default Unknown::unknown() {
                             Fd_bits = freg(f32(defaultNaNF32UI)).v;
                         }
                         else {
-                            Fd_bits = greater ? fs1.v : fs2.v;
+                            Fd_bits = freg(greater ? fs1 : fs2).v;
                         }
                         }}, FloatCmpOp);
                 }
@@ -3801,7 +4068,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x21: vsadd_vv({{
-                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Vs1_vu[i],
+                        Vd_vi[i] = sat_add<vi>(Vs2_vi[i], Vs1_vi[i],
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x22: vssubu_vv({{
@@ -3809,7 +4076,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x23: vssub_vv({{
-                        Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Vs1_vu[i],
+                        Vd_vi[i] = sat_sub<vi>(Vs2_vi[i], Vs1_vi[i],
                             vxsatptr);
                     }}, OPIVV, SimdAddOp);
                     0x27: vsmul_vv({{
@@ -3918,21 +4185,21 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] <= Vs1_vi[i]));
                     }}, OPIVV, SimdCmpOp);
                 }
-                format VectorIntNarrowingFormat {
+                format VectorNarrowingFormat {
                     0x2c: vnsrl_wv({{
-                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
-                            ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
+                        vd[i] = (vu)(vs2_elem >>
+                            ((vwu)vs1[i] & (sew * 2 - 1)));
                     }}, OPIVV, SimdShiftOp);
                     0x2d: vnsra_wv({{
-                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
-                            ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
+                        vd[i] = (vu)(vi)((vwi)vs2_elem >>
+                            ((vwu)vs1[i] & (sew * 2 - 1)));
                     }}, OPIVV, SimdShiftOp);
                     0x2e: vnclipu_wv({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
                             std::numeric_limits<uint64_t>::max() << sew;
-                        __uint128_t res = Vs2_vwu[i];
-                        unsigned shift = Vs1_vu[i + offset] & ((sew * 2) - 1);
+                        __uint128_t res = vs2_elem;
+                        unsigned shift = vs1[i] & ((sew * 2) - 1);
 
                         res = int_rounding<__uint128_t>(
                             res,
@@ -3946,13 +4213,13 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vu[i + offset] = (vu)res;
+                        vd[i] = (vu)res;
                     }}, OPIVV, SimdCvtOp);
                     0x2f: vnclip_wv({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
-                        __int128_t res = Vs2_vwi[i];
-                        unsigned shift = Vs1_vi[i + offset] & ((sew * 2) - 1);
+                        __int128_t res = (vwi)vs2_elem;
+                        unsigned shift = (vi)vs1[i] & ((sew * 2) - 1);
 
                         res = int_rounding<__int128_t>(
                             res,
@@ -3969,7 +4236,7 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vi[i + offset] = (vi)res;
+                        vd[i] = (vu)(vi)res;
                     }}, OPIVV, SimdCvtOp);
                 }
                 format VectorIntWideningFormat {
@@ -4114,47 +4381,46 @@ decode QUADRANT default Unknown::unknown() {
                                 softfloat_round_minMag);
                         }}, OPFVV, SimdFloatCvtOp);
                     }
-                    format VectorFloatNarrowingCvtFormat {
+                    format VectorNarrowingFormat {
                         0x10: vfncvt_xu_f_w({{
-                            Vd_vu[i + offset] = f_to_nui<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_nui<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_roundingMode);
                         }}, OPFVV, SimdFloatCvtOp);
                         0x11: vfncvt_x_f_w({{
-                            Vd_vu[i + offset] = f_to_ni<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_ni<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_roundingMode);
                         }}, OPFVV, SimdFloatCvtOp);
                         0x12: vfncvt_f_xu_w({{
-                            auto fd = ui_to_nf<et>(Vs2_vwu[i]);
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = ui_to_nf<et>(vs2_elem);
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x13: vfncvt_f_x_w({{
-                            auto fd = i_to_nf<et>(Vs2_vwu[i]);
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = i_to_nf<et>(vs2_elem);
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x14: vfncvt_f_f_w({{
-                            auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = f_to_nf<et>(ftype<ewt>(vs2_elem));
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x1d: vfncvtbf16_f_f_w({{
-                            auto fd = f_to_nf<et>(
-                                ftype<ewt>(Vs2_vwu[i]));
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = f_to_nf<et>(ftype<ewt>(vs2_elem));
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x15: vfncvt_rod_f_f_w({{
                             softfloat_roundingMode = softfloat_round_odd;
-                            auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
-                            Vd_vu[i + offset] = fd.v;
+                            auto fd = f_to_nf<et>(ftype<ewt>(vs2_elem));
+                            vd[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x16: vfncvt_rtz_xu_f_w({{
-                            Vd_vu[i + offset] = f_to_nui<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_nui<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_round_minMag);
                         }}, OPFVV, SimdFloatCvtOp);
                         0x17: vfncvt_rtz_x_f_w({{
-                            Vd_vu[i + offset] = f_to_ni<vu>(
-                                ftype<ewt>(Vs2_vwu[i]),
+                            vd[i] = f_to_ni<vu>(
+                                ftype<ewt>(vs2_elem),
                                 softfloat_round_minMag);
                         }}, OPFVV, SimdFloatCvtOp);
                     }
@@ -4404,8 +4670,8 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPMVV, SimdAddOp);
 
                     0x9: vaadd_vv({{
-                        __uint128_t res = (__uint128_t)Vs2_vi[i] + Vs1_vi[i];
-                        res = int_rounding<__uint128_t>(
+                        __int128_t res = (__int128_t)Vs2_vi[i] + Vs1_vi[i];
+                        res = int_rounding<__int128_t>(
                             res,
                             xc->readMiscReg(MISCREG_VXRM),
                             1
@@ -4424,8 +4690,8 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPMVV, SimdAddOp);
 
                     0xb: vasub_vv({{
-                        __uint128_t res = (__uint128_t)Vs2_vi[i] - Vs1_vi[i];
-                        res = int_rounding<__uint128_t>(
+                        __int128_t res = (__int128_t)Vs2_vi[i] - Vs1_vi[i];
+                        res = int_rounding<__int128_t>(
                             res,
                             xc->readMiscReg(MISCREG_VXRM),
                             1
@@ -4501,6 +4767,60 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPMVV, SimdMiscOp);
                 }
                 0x12: decode VS1 {
+                    0x08: VectorUnaryFormat::vbrev8_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint64_t result = 0;
+                        for (uint32_t j = 0; j < sew; j += 8) {
+                            uint64_t byte = (x >> j) & 0xff;
+                            for (uint32_t k = 0; k < 8; ++k) {
+                                result |= ((byte >> k) & 1ULL) << (j + 7 - k);
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdAluOp);
+                    0x09: VectorUnaryFormat::vrev8_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint64_t result = 0;
+                        for (uint32_t j = 0; j < sew; j += 8) {
+                            result |= ((x >> j) & 0xff) << (sew - 8 - j);
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdAluOp);
+                    0x0a: VectorUnaryFormat::vbrev_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint64_t result = 0;
+                        for (uint32_t j = 0; j < sew; ++j) {
+                            result |= ((x >> j) & 1ULL) << (sew - 1 - j);
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdAluOp);
+                    0x0c: VectorUnaryFormat::vclz_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint32_t count = 0;
+                        for (int32_t j = sew - 1; j >= 0; --j) {
+                            if ((x >> j) & 1)
+                                break;
+                            ++count;
+                        }
+                        Vd_vu[i] = count;
+                    }}, OPMVV, SimdAluOp);
+                    0x0d: VectorUnaryFormat::vctz_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint32_t count = 0;
+                        for (uint32_t j = 0; j < sew; ++j) {
+                            if ((x >> j) & 1)
+                                break;
+                            ++count;
+                        }
+                        Vd_vu[i] = count;
+                    }}, OPMVV, SimdAluOp);
+                    0x0e: VectorUnaryFormat::vcpop_v({{
+                        uint64_t x = Vs2_vu[i];
+                        uint32_t count = 0;
+                        for (uint32_t j = 0; j < sew; ++j)
+                            count += (x >> j) & 1;
+                        Vd_vu[i] = count;
+                    }}, OPMVV, SimdAluOp);
                     format VectorIntExtFormat {
                         0x02: vzext_vf8({{
                             auto offset = (vlen / SEW) * index;
@@ -4897,20 +5217,20 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] > (vi)sext<5>(SIMM5)));
                     }}, OPIVI, SimdCmpOp);
                 }
-                format VectorIntNarrowingFormat {
+                format VectorNarrowingFormat {
                     0x2c: vnsrl_wi({{
-                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
+                        vd[i] = (vu)(vs2_elem >>
                                             ((vwu)SIMM5 & (sew * 2 - 1)));
                     }}, OPIVI, SimdShiftOp);
                     0x2d: vnsra_wi({{
-                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
+                        vd[i] = (vu)(vi)((vwi)vs2_elem >>
                                             ((vwu)SIMM5 & (sew * 2 - 1)));
                     }}, OPIVI, SimdShiftOp);
                     0x2e: vnclipu_wi({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
                             std::numeric_limits<uint64_t>::max() << sew;
-                        __uint128_t res = Vs2_vwu[i];
+                        __uint128_t res = vs2_elem;
                         unsigned shift = VS1 & ((sew * 2) - 1);
 
                         res = int_rounding<__uint128_t>(
@@ -4925,12 +5245,12 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vu[i + offset] = (vu)res;
+                        vd[i] = (vu)res;
                     }}, OPIVI, SimdCvtOp);
                     0x2f: vnclip_wi({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
-                        __int128_t res = Vs2_vwi[i];
+                        __int128_t res = (vwi)vs2_elem;
                         unsigned shift = VS1 & ((sew * 2) - 1);
 
                         res = int_rounding<__int128_t>(
@@ -4948,7 +5268,7 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vi[i + offset] = (vi)res;
+                        vd[i] = (vu)(vi)res;
                     }}, OPIVI, SimdCvtOp);
                 }
                 format VectorIntWideningFormat {
@@ -5040,7 +5360,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x21: vsadd_vx({{
-                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Rs1_vu,
+                        Vd_vi[i] = sat_add<vi>(Vs2_vi[i], Rs1_vi,
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x22: vssubu_vx({{
@@ -5048,7 +5368,7 @@ decode QUADRANT default Unknown::unknown() {
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x23: vssub_vx({{
-                        Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Rs1_vu,
+                        Vd_vi[i] = sat_sub<vi>(Vs2_vi[i], Rs1_vi,
                             vxsatptr);
                     }}, OPIVX, SimdAddOp);
                     0x27: vsmul_vx({{
@@ -5099,21 +5419,21 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i] = val >> sh;
                     }}, OPIVX, SimdShiftOp);
                 }
-                format VectorIntNarrowingFormat {
+                format VectorNarrowingFormat {
                     0x2c: vnsrl_wx({{
-                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
-                                            ((vwu)Rs1_vu & (sew * 2 - 1)));
+                        vd[i] = (vu)(vs2_elem >>
+                                            ((vwu)rs1 & (sew * 2 - 1)));
                     }}, OPIVX, SimdShiftOp);
                     0x2d: vnsra_wx({{
-                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
-                                            ((vwu)Rs1_vu & (sew * 2 - 1)));
+                        vd[i] = (vu)(vi)((vwi)vs2_elem >>
+                                            ((vwu)rs1 & (sew * 2 - 1)));
                     }}, OPIVX, SimdShiftOp);
                     0x2e: vnclipu_wx({{
                         vu max = std::numeric_limits<vu>::max();
                         uint64_t sign_mask =
                             std::numeric_limits<uint64_t>::max() << sew;
-                        __uint128_t res = Vs2_vwu[i];
-                        unsigned shift = Rs1_vu & ((sew * 2) - 1);
+                        __uint128_t res = vs2_elem;
+                        unsigned shift = rs1 & ((sew * 2) - 1);
 
                         res = int_rounding<__uint128_t>(
                             res,
@@ -5127,13 +5447,13 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vu[i + offset] = (vu)res;
+                        vd[i] = (vu)res;
                     }}, OPIVX, SimdCvtOp);
                     0x2f: vnclip_wx({{
                         vi max = std::numeric_limits<vi>::max();
                         vi min = std::numeric_limits<vi>::min();
-                        __int128_t res = Vs2_vwi[i];
-                        unsigned shift = Rs1_vi & ((sew * 2) - 1);
+                        __int128_t res = (vwi)vs2_elem;
+                        unsigned shift = (vi)rs1 & ((sew * 2) - 1);
 
                         res = int_rounding<__int128_t>(
                             res,
@@ -5150,7 +5470,7 @@ decode QUADRANT default Unknown::unknown() {
                             *vxsatptr = true;
                         }
 
-                        Vd_vi[i + offset] = (vi)res;
+                        vd[i] = (vu)(vi)res;
                     }}, OPIVX, SimdCvtOp);
                 }
 
@@ -5758,6 +6078,83 @@ decode QUADRANT default Unknown::unknown() {
                         0x1: ebreak({{
                             return executeEBreakOrSemihosting(xc);
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                        0x0d: wrs_nto({{
+                            if (RD != 0 || RS1 != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "wrs requires rd = rs1 = x0", machInst);
+                            }
+                            auto tc = xc->tcBase();
+                            auto cpu = tc->getCpuPtr();
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
+                            if (!isa->reportsExtension("Zawrs")) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "Zawrs is not enabled", machInst);
+                            }
+                            auto ic = dynamic_cast<RiscvISA::Interrupts*>(
+                                cpu->getInterruptController(tc->threadId()));
+                            panic_if(!ic, "Invalid Interrupt Controller.");
+                            // Apply the WFI resume-on-pending interrupt rules.
+                            bool pending = (isa->resumeOnPending() ?
+                                ic->readIP() :
+                                (ic->readIP() & ic->readIE())) != 0 ||
+                                xc->readMiscReg(MISCREG_NMIP) != 0;
+                            if (isa->hasLoadReservation(tc->contextId()) &&
+                                !pending) {
+                                // Apply WRS.NTO timeout rules for TW & VTW.
+                                MISA misa = xc->readMiscReg(MISCREG_ISA);
+                                STATUS status =
+                                    xc->readMiscReg(MISCREG_STATUS);
+                                HSTATUS hstatus =
+                                    xc->readMiscReg(MISCREG_HSTATUS);
+                                auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
+                                if (pm != PRV_M && status.tw == 1) {
+                                    return std::make_shared<IllegalInstFault>(
+                                        "wrs.nto with TW enabled", machInst);
+                                } else if (misa.rvh &&
+                                           virtualizationEnabled(xc) &&
+                                           hstatus.vtw == 1) {
+                                    return std::make_shared<VirtualInstFault>(
+                                        "wrs.nto with VTW enabled", machInst);
+                                }
+                                isa->setWrsWaiting(true);
+                                tc->quiesceTick(curTick() +
+                                    cpu->cyclesToTicks(Cycles(
+                                        RiscvISA::ISA::WRS_NTO_CYCLES)));
+                            }
+                        }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
+                            IsSquashAfter, No_OpClass);
+                        0x1d: wrs_sto({{
+                            if (RD != 0 || RS1 != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "wrs requires rd = rs1 = x0", machInst);
+                            }
+                            auto tc = xc->tcBase();
+                            auto cpu = tc->getCpuPtr();
+                            auto isa = dynamic_cast<RiscvISA::ISA*>(
+                                tc->getIsaPtr());
+                            if (!isa->reportsExtension("Zawrs")) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "Zawrs is not enabled", machInst);
+                            }
+                            auto ic = dynamic_cast<RiscvISA::Interrupts*>(
+                                cpu->getInterruptController(tc->threadId()));
+                            panic_if(!ic, "Invalid Interrupt Controller.");
+                            // Same rules as WFI for a pending interrupt
+                            bool pending = (isa->resumeOnPending() ?
+                                ic->readIP() :
+                                (ic->readIP() & ic->readIE())) != 0 ||
+                                xc->readMiscReg(MISCREG_NMIP) != 0;
+                            if (isa->hasLoadReservation(tc->contextId()) &&
+                                !pending) {
+                                isa->setWrsWaiting(true);
+                                tc->quiesceTick(curTick() +
+                                    cpu->cyclesToTicks(Cycles(
+                                        RiscvISA::ISA::WRS_STO_CYCLES)));
+                            }
+                        }}, IsNonSpeculative, IsQuiesce, IsSerializeAfter,
+                            IsSquashAfter, No_OpClass);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{

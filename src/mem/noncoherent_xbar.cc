@@ -136,7 +136,7 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     calcPacketTiming(pkt, xbar_delay);
 
     // determine how long to be crossbar layer is busy
-    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
+    Tick packetFinishTime = clockEdge(headerLatency) + pkt->payloadDelay;
 
     // before forwarding the packet (and possibly altering it),
     // remember if we are expecting a response
@@ -212,7 +212,7 @@ NoncoherentXBar::recvTimingResp(PacketPtr pkt, PortID mem_side_port_id)
     calcPacketTiming(pkt, xbar_delay);
 
     // determine how long to be crossbar layer is busy
-    Tick packetFinishTime = clockEdge(Cycles(1)) + pkt->payloadDelay;
+    Tick packetFinishTime = clockEdge(headerLatency) + pkt->payloadDelay;
 
     // send the packet through the destination CPU-side port, and pay for
     // any outstanding latency

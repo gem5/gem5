@@ -145,7 +145,7 @@ class Extensible
                       "Extension should inherit from ExtensionBase.");
         assert(ext.get() != nullptr);
 
-        auto it = findExtension<T>();
+        auto it = findExtension(ext->getExtensionID());
 
         if (it != extensions.end()) {
             // There exists the same type of extension in the list.
@@ -169,7 +169,7 @@ class Extensible
         static_assert(std::is_base_of<ExtensionBase, T>::value,
                       "Extension should inherit from ExtensionBase.");
 
-        auto it = findExtension<T>();
+        auto it = findExtension(T::extensionID);
         if (it != extensions.end())
             extensions.erase(it);
     }
@@ -183,29 +183,39 @@ class Extensible
     {
         static_assert(std::is_base_of<ExtensionBase, T>::value,
                       "Extension should inherit from ExtensionBase.");
-        auto it = findExtension<T>();
+        auto it = findExtension(T::extensionID);
         if (it == extensions.end())
             return nullptr;
         return std::static_pointer_cast<T>(*it);
     }
 
-  protected:
-
     /**
-     * Go through the extension list and return the iterator to the instance of
-     * the type of extension. If there is no such an extension, return the end
-     * iterator of the list.
-     *
-     *  @return The iterator to the extension type T if there exists.
+     * Get all extensions attached to this object.
      */
-    template <typename T>
+    const std::list<std::shared_ptr<ExtensionBase>> &
+    getExtensions() const
+    {
+        return extensions;
+    }
+
+  protected:
+    /**
+     * Go through the extension list and return the iterator to the extension
+     * whose ID matches the given ID. If there is no such an extension, return
+     * the end iterator of the list.
+     *
+     *  @param id The unique ID of the extension type to find.
+     *  @return The iterator to the extension with the given ID if there
+     *          exists, otherwise the end iterator.
+     */
     std::list<std::shared_ptr<ExtensionBase>>::iterator
-    findExtension()
+    findExtension(unsigned int id)
     {
         auto it = extensions.begin();
         while (it != extensions.end()) {
-            if ((*it)->getExtensionID() == T::extensionID)
+            if ((*it)->getExtensionID() == id) {
                 break;
+            }
             it++;
         }
         return it;

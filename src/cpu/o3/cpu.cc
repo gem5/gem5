@@ -447,6 +447,13 @@ CPU::startup()
 {
     BaseCPU::startup();
 
+    // After a checkpoint restore, curCycle() is the restored cycle but
+    // lastRunningCycle still holds the cycle at construction (0). A core
+    // that is halted at the restore would then add every cycle since cycle
+    // 0 to quiesceCycles when activateContext() first wakes it. Count from
+    // the restore instead. Statistics only; no timing effect.
+    lastRunningCycle = curCycle();
+
     bac.startupStage();
     fetch.startupStage();
     decode.startupStage();

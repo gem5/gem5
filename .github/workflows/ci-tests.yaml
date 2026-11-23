@@ -18,11 +18,13 @@ jobs:
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v7
-            - uses: actions/setup-python@v6
+            - uses: actions/setup-python@v7
               with:
                   python-version: '3.10'
-            - uses: pre-commit/action@v3.0.1
+            - uses: tox-dev/action-pre-commit-uv@v1.1.2
               env:
+                  # Keep pre-commit's normal hook environment installation.
+                  DISABLE_PRE_COMMIT_UV_PATCH: '1'
                   # Formatting runs in the separate clang-format-check job
                   # so its failures remain advisory.
                   SKIP: gem5-git-clang-format
@@ -40,7 +42,7 @@ jobs:
                   fetch-depth: 0  # Need full history to get the merge base
 
             - name: Setup Python
-              uses: actions/setup-python@v6
+              uses: actions/setup-python@v7
               with:
                   python-version: '3.10'
 
@@ -55,10 +57,14 @@ jobs:
                   echo "base_commit=$MERGE_BASE" >> $GITHUB_OUTPUT
 
             - name: Run clang-format check
-              uses: pre-commit/action@v3.0.1
+              uses: tox-dev/action-pre-commit-uv@v1.1.2
               with:
-                  extra_args: gem5-git-clang-format --all-files
+                  extra_args: >-
+                      gem5-git-clang-format
+                      --from-ref ${{ steps.get-base-commit.outputs.base_commit }}
+                      --to-ref HEAD
               env:
+                  DISABLE_PRE_COMMIT_UV_PATCH: '1'
                   GEM5_CI_PR_BASE_COMMIT: ${{ steps.get-base-commit.outputs.base_commit }}
 
     get-date:
@@ -141,11 +147,21 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/clang-version-22:latest
-        needs: [pre-commit]
+        needs: [pre-commit, get-date]
         timeout-minutes: 90
         steps:
-            - uses: actions/checkout@v7
-            - name: Clang Compilation
+            - name: Repo checkout
+              uses: actions/checkout@v7
+
+            - name: Clang compilation cache restoration
+              uses: actions/cache/restore@v6
+              with:
+                  path: build/ALL
+                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      clang-build-ALL-fast
+
+            - name: Clang compilation
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/gem5.fast -j $(nproc)
 

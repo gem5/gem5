@@ -206,6 +206,11 @@ Platform::Platform(const ScmiPlatformParams &p)
     protocols({ {BASE, new BaseProtocol(*this)} }),
     dmaPort(this, p.sys)
 {
+    for (const auto &agent_name : agents) {
+        fatal_if(agent_name.length() > Protocol::MAX_STRING_SIZE,
+                 "Invalid BASE_PROTOCOL AGENT size\n");
+    }
+
     for (auto comm : comms) {
         comm->agentChan->dmaPort = &dmaPort;
         comm->agentChan->setPlatform(this);
