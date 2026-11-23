@@ -122,10 +122,8 @@ Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
         m_in.push_back(in_ptr);
         m_out.push_back(out_ptr);
 
-        // Set consumer and description
+        // Set consumer
         in_ptr->setConsumer(this);
-        std::string desc = "[Queue to Throttle " +
-            std::to_string(m_switch_id) + " " + std::to_string(m_node) + "]";
     }
 
     m_vnets = in_vec.size();
