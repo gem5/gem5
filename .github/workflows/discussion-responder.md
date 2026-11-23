@@ -18,6 +18,11 @@ concurrency:
   group: "discussion-responder-${{ github.event.inputs.discussion_number }}"
   job-discriminator: "discussion-responder-${{ github.event.inputs.discussion_number }}"
 
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_HEADERS: ""
+  GH_AW_OTLP_ENDPOINTS: "[]"
+
 permissions:
   discussions: read
   contents: read

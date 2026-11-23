@@ -6,6 +6,11 @@ description: |
 on:
   workflow_dispatch:
 
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_HEADERS: ""
+  GH_AW_OTLP_ENDPOINTS: "[]"
+
 permissions:
   contents: read
   issues: read
