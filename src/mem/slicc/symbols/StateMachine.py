@@ -980,6 +980,7 @@ $c_ident::regStats()
             t->init(num_controllers);
             t->flags(statistics::pdf | statistics::total |
                 statistics::oneline | statistics::nozero);
+            t->unit(statistics::units::Count::get());
 
             eventVec.push_back(t);
         }
@@ -1001,6 +1002,7 @@ $c_ident::regStats()
                 t->init(num_controllers);
                 t->flags(statistics::pdf | statistics::total |
                     statistics::oneline | statistics::nozero);
+                t->unit(statistics::units::Count::get());
                 transVec[state].push_back(t);
             }
         }
@@ -1048,11 +1050,15 @@ $c_ident::regStats()
         t->init(5);
         t->flags(statistics::pdf | statistics::total |
                  statistics::oneline | statistics::nozero);
+        t->unit(statistics::units::Cycle::get());
+        t->desc("outgoing transaction latency, in cycles of " +
+                params().clk_domain->name());
 
         statistics::Scalar* r = new statistics::Scalar(&stats,
                                              (stat_name + ".retries").c_str());
         stats.outTransRetryCnt[event] = r;
         r->flags(statistics::nozero);
+        r->unit(statistics::units::Count::get());
     }
 
     for (const auto event : in_trans_evs) {
@@ -1064,11 +1070,15 @@ $c_ident::regStats()
         t->init(5);
         t->flags(statistics::pdf | statistics::total |
                  statistics::oneline | statistics::nozero);
+        t->unit(statistics::units::Cycle::get());
+        t->desc("incoming transaction latency, in cycles of " +
+                params().clk_domain->name());
 
         statistics::Scalar* r = new statistics::Scalar(&stats,
                                              (stat_name + ".retries").c_str());
         stats.inTransRetryCnt[event] = r;
         r->flags(statistics::nozero);
+        r->unit(statistics::units::Count::get());
 
         auto &src_states = stats.inTransStateChanges[event];
         for (const auto initial_state : in_trans_evs_states.at(event)) {
@@ -1082,6 +1092,7 @@ $c_ident::regStats()
                 statistics::Scalar* t =
                     new statistics::Scalar(&stats, stat_name.c_str());
                 t->flags(statistics::nozero);
+                t->unit(statistics::units::Count::get());
                 dst_vector.push_back(t);
             }
         }
