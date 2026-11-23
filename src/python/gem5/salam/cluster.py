@@ -111,7 +111,13 @@ def _attach_cluster(options, system, clstr, spec, membus=None):
         voltage_domain=clstr.fabric_voltage_domain,
     )
     system.iobus.mem_side_ports = clstr.local_bus.cpu_side_ports
-    clstr._connect_caches(system, options, l2coherent=False, membus=membus)
+    clstr._connect_caches(
+        system,
+        options,
+        l2coherent=False,
+        cache_size=clstr.cache_size,
+        membus=membus,
+    )
     gic = system.realview.gic
 
     children = [(obj.name, obj.name) for obj in spec.dmas + spec.accs]

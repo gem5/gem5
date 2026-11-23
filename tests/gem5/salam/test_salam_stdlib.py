@@ -137,6 +137,43 @@ def board_needs_program_first(params):
         raise AssertionError(f"early attach not rejected; see {outdir}")
 
 
+def cluster_cache_instantiates(params):
+    # The legacy option must insert the shared cluster cache, which is
+    # separate from a per-accelerator Cache variable in the workload YAML.
+    st.run_fs(
+        "salam-workload",
+        180,
+        1000000000,
+        fs_args=["--acc_cache", "--initialize-only"],
+        subdir="cluster-cache",
+    )(params)
+    outdir = os.path.join(
+        params.fixtures[constants.tempdir_fixture_name].path, "cluster-cache"
+    )
+    ini = configparser.ConfigParser(interpolation=None, strict=False)
+    ini.optionxform = str
+    ini.read(os.path.join(outdir, "config.ini"))
+    clstr = "system.harness_clstr"
+    expected = [
+        (clstr + ".cluster_cache", "type", "Cache"),
+        (clstr + ".cluster_cache", "size", "32768"),
+        (
+            clstr + ".coherency_bus",
+            "mem_side_ports",
+            clstr + ".cluster_cache.cpu_side",
+        ),
+        (
+            clstr + ".cluster_cache",
+            "mem_side",
+            "system.membus.cpu_side_ports",
+        ),
+    ]
+    for section, key, value in expected:
+        found = ini.get(section, key, fallback=None)
+        if found is None or found.split("[")[0] != value:
+            raise AssertionError(f"[{section}] {key}={found!r}, not {value}")
+
+
 _gem5 = st.SalamGem5Fixture()
 _tempdir = TempdirFixture()
 TestSuite(
@@ -155,6 +192,7 @@ TestSuite(
         TestFunction(
             board_needs_program_first, name="salam-stdlib-board-order"
         ),
+        TestFunction(cluster_cache_instantiates, name="salam-cluster-cache"),
     ],
 )
 
