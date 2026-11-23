@@ -34,7 +34,7 @@ jobs:
         # We do this prior to building the other images to ensure that the base
         # are available when building the other images.
         runs-on: [self-hosted, linux, x64]
-        timeout-minutes: 720
+        timeout-minutes: 1800
         steps:
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v4
@@ -59,7 +59,7 @@ jobs:
 
     docker-buildx-bake-all:
         runs-on: [self-hosted, linux, x64]
-        timeout-minutes: 720
+        timeout-minutes: 1800
         needs:
             - obtain-targets
             - docker-buildx-bake-base-images
