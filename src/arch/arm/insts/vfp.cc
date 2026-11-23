@@ -1110,20 +1110,22 @@ FpOp::ternaryOp(FPSCR &fpscr, fpType op1, fpType op2, fpType op3,
         const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
         const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
         const bool signal3 = nan3 && ((fpToBits(op3) & qnan) != qnan);
+        // FPMulAdd processes the addend (op3) before the multiplicands
+        // within each NaN class, with signaling NaNs taking priority.
         if ((!nan1 && !nan2 && !nan3) || (defaultNan == 1)) {
             dest = bitsToFp(qnan, junk);
+        } else if (signal3) {
+            dest = bitsToFp(fpToBits(op3) | qnan, junk);
         } else if (signal1) {
             dest = bitsToFp(fpToBits(op1) | qnan, junk);
         } else if (signal2) {
             dest = bitsToFp(fpToBits(op2) | qnan, junk);
-        } else if (signal3) {
-            dest = bitsToFp(fpToBits(op3) | qnan, junk);
+        } else if (nan3) {
+            dest = op3;
         } else if (nan1) {
             dest = op1;
         } else if (nan2) {
             dest = op2;
-        } else if (nan3) {
-            dest = op3;
         }
     } else if (flush && flushToZero(dest)) {
         feraiseexcept(FeUnderflow);
