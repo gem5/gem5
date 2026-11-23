@@ -409,6 +409,13 @@ class Request : public Extensible<Request>
                    ((archFlags & flags.archFlags) == flags.archFlags);
         }
 
+        /** Return whether all request flags are clear. */
+        bool
+        noneSet() const
+        {
+            return genericFlags.noneSet() && !archFlags;
+        }
+
         /** Return whether a single request flag is clear. */
         bool
         noneSet(FlagsType flag) const

@@ -1830,7 +1830,7 @@ BaseCache::writecleanBlk(CacheBlk *blk, const Request::Flags &dest,
 
     PacketPtr pkt = new Packet(req, MemCmd::WriteClean, blkSize, id);
 
-    if (Request::Flags::LegacyAdaptor::flagsToBits(dest) != 0) {
+    if (!dest.noneSet()) {
         req->setFlags(dest);
         pkt->setWriteThrough();
     }

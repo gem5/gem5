@@ -307,3 +307,13 @@ TEST(BitsetFlagTest, Replace)
     ASSERT_TRUE(flags.isSet(TestFlag::FlagB));
     ASSERT_TRUE(flags.isSet(TestFlag::FlagC));
 }
+
+/** Test replacing a masked selection of flags. */
+TEST(BitsetFlagTest, NoneSet)
+{
+    const TestFlags empty_flags = {};
+    const TestFlags non_empty_flags = TestFlags(TestFlag::FlagA);
+
+    ASSERT_TRUE(empty_flags.noneSet());
+    ASSERT_FALSE(non_empty_flags.noneSet());
+}

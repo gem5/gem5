@@ -267,6 +267,13 @@ template <typename T, std::size_t NUM> class BitsetFlag
         return (_flags & flags._flags) == flags._flags;
     }
 
+    /** Verifies whether no flag is set. */
+    bool
+    noneSet() const
+    {
+        return _flags.none();
+    }
+
     /** Verifies whether no flag matching the given flag is set. */
     bool
     noneSet(Type flag) const
