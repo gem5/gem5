@@ -1,4 +1,5 @@
 # Copyright (c) 2009-2020, 2022 Arm Limited
+# Copyright (c) 2026 The Regents of The University of California
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -118,8 +119,14 @@ class GenericTimer(SimObject):
     # Another real world bootloader might be changing the CNTFRQ register
     # value, so this initial value will be discarded
     cntfrq = Param.UInt64(0x1800000, "Value for the CNTFRQ timer register")
+    generate_system_interface = Param.Bool(
+        True, "Generate the architectural timer system interface in the DTB"
+    )
 
     def generateDeviceTree(self, state):
+        if not self.generate_system_interface:
+            return
+
         node = FdtNode("timer")
 
         node.appendCompatible(
