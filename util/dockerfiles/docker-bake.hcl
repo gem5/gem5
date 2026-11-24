@@ -389,6 +389,6 @@ target "devcontainer" {
   dependencies = ["devcontainer"]
   context = "devcontainer"
   cache-from = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG},mode=max"]
   tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
 }
