@@ -149,10 +149,10 @@ class RiscvLinux64 : public RiscvLinux, public OpenFlagTable<RiscvLinux64>
     static const int TGT_SIGILL         =  4;
     static const int TGT_SIGTRAP        =  5;
     static const int TGT_SIGABRT        =  6;
-    static const int TGT_SIGIOT = 6;
+    static const int TGT_SIGIOT         =  6;
     static const int TGT_SIGFPE         =  8;
     static const int TGT_SIGKILL        =  9;
-    static const int TGT_SIGBUS = 7;
+    static const int TGT_SIGBUS         =  7;
     static const int TGT_SIGSEGV        = 11;
     static const int TGT_SIGSYS         = 12;
     static const int TGT_SIGPIPE        = 13;
@@ -328,10 +328,10 @@ class RiscvLinux32 : public RiscvLinux, public OpenFlagTable<RiscvLinux32>
     static const int TGT_SIGILL         =  4;
     static const int TGT_SIGTRAP        =  5;
     static const int TGT_SIGABRT        =  6;
-    static const int TGT_SIGIOT = 6;
+    static const int TGT_SIGIOT         =  6;
     static const int TGT_SIGFPE         =  8;
     static const int TGT_SIGKILL        =  9;
-    static const int TGT_SIGBUS = 7;
+    static const int TGT_SIGBUS         =  7;
     static const int TGT_SIGSEGV        = 11;
     static const int TGT_SIGSYS         = 12;
     static const int TGT_SIGPIPE        = 13;

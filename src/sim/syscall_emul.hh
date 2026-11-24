@@ -2110,7 +2110,6 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
     return (result == -1) ? -errno : result;
 }
 
-/// Target mmap() handler.
 template <class OS>
 constexpr auto
 getTargetSigbus(int) -> decltype(OS::TGT_SIGBUS)
@@ -2125,6 +2124,7 @@ getTargetSigbus(...)
     return 0;
 }
 
+/// Target mmap() handler.
 template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, ThreadContext *tc,

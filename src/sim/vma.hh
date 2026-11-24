@@ -49,6 +49,7 @@ class VMA
         int fd = -1, off_t off = 0, int bus_signal = 0)
         : _addrRange(r),
           _pageBytes(page_bytes),
+          _hostFileOffset(off),
           _vmaName(vma_name),
           _busSignal(bus_signal)
     {
@@ -58,8 +59,6 @@ class VMA
         if (fd != -1) {
             _origHostBuf =
                 std::make_shared<MappedFileBuffer>(fd, r.size(), off);
-            _hostBuf = _origHostBuf->getBuffer();
-            _hostBufLen = _origHostBuf->getLength();
         }
 
         sanityCheck();
@@ -86,6 +85,12 @@ class VMA
     bool hasHostBuf() const { return _origHostBuf != nullptr; }
 
     int
+    getBusSignal() const
+    {
+        return _busSignal;
+    }
+
+    int
     faultSignal(Addr addr) const
     {
         if (!_busSignal || !contains(addr)) {
@@ -94,7 +99,8 @@ class VMA
 
         const Addr offset = addr - _addrRange.start();
         const Addr page_offset = offset - offset % _pageBytes;
-        return page_offset >= _hostBufLen ? _busSignal : 0;
+        const uint64_t file_offset = _hostFileOffset + page_offset;
+        return file_offset >= _origHostBuf->getFileSize() ? _busSignal : 0;
     }
 
     /**
@@ -122,7 +128,7 @@ class VMA
     const std::string& getName() { return _vmaName; }
     off_t getFileMappingOffset() const
     {
-        return hasHostBuf() ? _origHostBuf->getOffset() : 0;
+        return hasHostBuf() ? _hostFileOffset : 0;
     }
 
     /**
@@ -169,6 +175,9 @@ class VMA
      */
     Addr _pageBytes;
 
+    /** File offset corresponding to the start of this VMA. */
+    off_t _hostFileOffset;
+
     /**
      * The host file backing will be chopped up and reassigned as pages are
      * mapped, remapped, and unmapped. In addition to the current host
@@ -177,16 +186,6 @@ class VMA
      * memory area to die cleans up the host memory it handles.
      */
     std::shared_ptr<MappedFileBuffer> _origHostBuf;
-
-    /**
-     * Host buffer ptr for this virtual memory area.
-     */
-    void *_hostBuf;
-
-    /**
-     * Length of host buffer for this virtual memory area.
-     */
-    uint64_t _hostBufLen;
 
     /**
      * Human-readable name associated with the virtual memory area.
@@ -200,10 +199,8 @@ class VMA
     int _busSignal;
 
     /**
-     * MappedFileBuffer is a wrapper around a region of host memory backed by a
-     * file. The constructor attempts to map a file from host memory, and the
-     * destructor attempts to unmap it.  If there is a problem with the host
-     * mapping/unmapping, then we panic.
+     * MappedFileBuffer retains a file mapping and descriptor so file-backed
+     * pages can be populated if the file grows after the target mmap call.
      */
     class MappedFileBuffer
     {
@@ -211,14 +208,14 @@ class VMA
         MappedFileBuffer(int fd, size_t length, off_t offset);
         ~MappedFileBuffer();
 
-        void *getBuffer() const { return _buffer; }
-        uint64_t getLength() const { return _length; }
-        off_t getOffset() const { return _offset; }
+        uint64_t getFileSize() const;
+        size_t readAt(off_t offset, uint8_t *buffer, size_t size) const;
 
       private:
         void *_buffer;       // Host buffer ptr
-        size_t _length;       // Length of host ptr
+        size_t _length;      // Length of host mapping
         off_t _offset;       // Offset in file at which mapping starts
+        int _fd;             // Duplicated backing file descriptor
     };
 };
 
