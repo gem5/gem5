@@ -44,21 +44,24 @@
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
 #include "mem/ruby/protocol/CHI/CHIResponseType.hh"
+#include "mem/ruby/protocol/CHI/generic/CHIGenericController.hh"
+#include "mem/ruby/protocol/CHI/tlm/port.hh"
 #include "mem/ruby/protocol/RequestStatus.hh"
 #include "mem/ruby/protocol/WriteMask.hh"
-#include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
-#include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "params/TlmController.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace ruby {
+namespace ruby
+{
 class CHIRequestMsg;
 class CHIResponseMsg;
 class CHIDataMsg;
-}
+} // namespace ruby
 
-namespace tlm::chi {
+namespace tlm::chi
+{
 
 /**
  * The tlm::chi::CacheController is a ruby CacheController which acts as
@@ -106,7 +109,7 @@ class CacheController : public ruby::CHIGenericController
     SourcePort<CacheController> outPort;
 
     /** Set this to send data upstream */
-    std::function<void(ARM::CHI::Payload* payload, ARM::CHI::Phase* phase)> bw;
+    std::function<void(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)> bw;
 
     Port &getPort(const std::string &if_name, PortID idx) override;
 
@@ -144,14 +147,13 @@ class CacheController : public ruby::CHIGenericController
             DATALESS
         };
 
-        Transaction(CacheController *parent,
-            ARM::CHI::Payload &_payload,
-            ARM::CHI::Phase &_phase);
+        Transaction(CacheController *parent, ARM::CHI::Payload &_payload,
+                    ARM::CHI::Phase &_phase);
         virtual ~Transaction();
 
         static std::unique_ptr<Transaction> gen(CacheController *parent,
-            ARM::CHI::Payload &_payload,
-            ARM::CHI::Phase &_phase);
+                                                ARM::CHI::Payload &_payload,
+                                                ARM::CHI::Phase &_phase);
 
         virtual bool
         handle(const CHIDataMsg *msg)
@@ -193,7 +195,8 @@ class CacheController : public ruby::CHIGenericController
         bool recvComp = false;
         bool recvDBID = false;
     };
-    std::unordered_map<uint16_t, std::unique_ptr<Transaction>> pendingTransactions;
+    std::unordered_map<uint16_t, std::unique_ptr<Transaction>>
+        pendingTransactions;
 };
 
 } // namespace tlm::chi

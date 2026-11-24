@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/py_snoop_handler.hh"
+#include "mem/ruby/protocol/CHI/tlm/py_snoop_handler.hh"
 
 namespace gem5
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ARM Limited
+ * Copyright (c) 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,15 +35,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_PORT_HH__
-#define __MEM_RUBY_PROTOCOL_CHI_TLM_PORT_HH__
+#ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_PY_SNOOP_HANDLER_HH__
+#define __MEM_RUBY_PROTOCOL_CHI_TLM_PY_SNOOP_HANDLER_HH__
 
-#include <type_traits>
+#include <list>
+#include <unordered_map>
 
-#include "base/trace.hh"
-#include "debug/TLMPort.hh"
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
-#include "sim/signal.hh"
+#include "mem/ruby/protocol/CHI/tlm/snp_handler.hh"
+#include "params/PySnoopHandler.hh"
 
 namespace gem5
 {
@@ -51,59 +50,44 @@ namespace gem5
 namespace tlm::chi
 {
 
-using TlmData = std::pair<ARM::CHI::Payload *, ARM::CHI::Phase *>;
-
-class SinkPortBase : public SignalSinkPort<TlmData>
+/**
+ * The PySnoopHandler is following the same principle behind the TlmGenerator;
+ * similar to Transactions which are defined and injected from python, we
+ * define SnoopResponses whose handling logic resides purely in python.  There
+ * is no internal state inside the PySnoopHandler.  We use the following API
+ * to generate SnoopResponse objects and return a handle to the response.
+ *
+ * snoop = snoop_handler.add_snoop(address)
+ *
+ * This will inform the SnoopHandler it is expected to receive a
+ * SNP request at the provided address. A user should then attach
+ * Transaction::Actions to the SnoopResponse which will entirely
+ * dictate how the handler will react to such snoop.
+ */
+class PySnoopHandler : public SnoopHandler
 {
   public:
-    template <class Device>
-    SinkPortBase(const std::string &_name, PortID _id, Device *dev)
-        : SignalSinkPort(_name, _id)
-    {}
+    PARAMS(PySnoopHandler);
+    PySnoopHandler(const Params &p);
+
+    void addSnoop(Addr address, SnoopResponse *transaction);
+
+  protected:
+    bool handleSnoop(ARM::CHI::Payload *payload,
+                     ARM::CHI::Phase *phase) override;
 
     /**
-     * We override the SignalSinkPort::set method as the base implementation
-     * checks if the new state is equal to the old state and blocks the message
-     * if that is true.
-     * We don't want to define a complex equality operator which checks on both
-     * Payload and Phae fields to see if there is any difference. Instead we
-     * always forward the TlmData to the receiver.
-     */
-    void
-    set(const TlmData &data, const bool bypass_on_change = false) override
-    {
-        _state = data;
-        DPRINTF(TLMPort, "recv %s\n",
-                transactionToString(*_state.first, *_state.second));
-        if (_onChange) {
-            _onChange(_state);
-        }
-    }
+     * True if the SnoopResponse transaction has to be discarded
+     * when all its actions/callbacks have been called or whether
+     * it will remain allocated to the matching address.
+     **/
+    const bool discardAfterSnoop;
+
+    std::unordered_map<Addr, std::list<SnoopResponse *>> snoopTransactions;
 };
-
-template <class Compat> using SinkPort = SinkPortBase;
-
-class SourcePortBase : public SignalSourcePort<TlmData>
-{
-  public:
-    template <class Device>
-    SourcePortBase(const std::string &_name, PortID _id, Device *owner)
-        : SignalSourcePort(_name, _id)
-    {}
-
-    void
-    send(TlmData &data)
-    {
-        DPRINTF(TLMPort, "send %s\n",
-                transactionToString(*data.first, *data.second));
-        set(data);
-    }
-};
-
-template <class Compat> using SourcePort = SourcePortBase;
 
 } // namespace tlm::chi
 
 } // namespace gem5
 
-#endif //__MEM_RUBY_PROTOCOL_CHI_TLM_PORT_HH__
+#endif // __MEM_RUBY_PROTOCOL_CHI_TLM_PY_SNOOP_HANDLER_HH__

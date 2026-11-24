@@ -35,18 +35,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/generator.hh"
+#include "mem/ruby/protocol/CHI/tlm/generator.hh"
 
 #include <algorithm>
 
 #include "debug/TLM.hh"
-#include "mem/ruby/protocol/chi/tlm/controller.hh"
-#include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
+#include "mem/ruby/protocol/CHI/tlm/controller.hh"
+#include "mem/ruby/protocol/CHI/tlm/snp_handler.hh"
 #include "sim/sim_exit.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace tlm::chi {
+namespace tlm::chi
+{
 
 bool
 TlmGenerator::Transaction::Expectation::run(Transaction *tran)
@@ -207,7 +209,7 @@ TlmGenerator::TlmGenerator(const Params &p)
         snpHandler->setGenerator(this);
     }
 
-    registerExitCallback([this](){ passFailCheck(); });
+    registerExitCallback([this]() { passFailCheck(); });
 }
 
 unsigned
@@ -411,7 +413,8 @@ TlmGenerator::getPCrd(uint16_t tgt_id)
 void
 TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
 {
-    DPRINTF(TLM, "[c%d] rcvd %s\n", cpuId, transactionToString(*payload, *phase));
+    DPRINTF(TLM, "[c%d] rcvd %s\n", cpuId,
+            transactionToString(*payload, *phase));
 
     if (handleSnoop(payload, phase)) {
         return;

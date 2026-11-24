@@ -71,40 +71,40 @@ class CHIGenericController : public AbstractController
     MessageBuffer *getMemRespQueue() const override;
     void initNetQueues() override;
 
-    void print(std::ostream& out) const override;
+    void print(std::ostream &out) const override;
     void wakeup() override;
     void resetStats() override;
     void regStats() override;
     void collateStats() override;
 
-    void recordCacheTrace(int cntrl, CacheRecorder* tr) override;
-    Sequencer* getCPUSequencer() const override;
-    DMASequencer* getDMASequencer() const override;
-    GPUCoalescer* getGPUCoalescer() const override;
+    void recordCacheTrace(int cntrl, CacheRecorder *tr) override;
+    Sequencer *getCPUSequencer() const override;
+    DMASequencer *getDMASequencer() const override;
+    GPUCoalescer *getGPUCoalescer() const override;
 
-    void addSequencer(RubyPort* seq);
+    void addSequencer(RubyPort *seq);
 
-    bool functionalReadBuffers(PacketPtr&) override;
-    bool functionalReadBuffers(PacketPtr&, WriteMask&) override;
-    int functionalWriteBuffers(PacketPtr&) override;
+    bool functionalReadBuffers(PacketPtr &) override;
+    bool functionalReadBuffers(PacketPtr &, WriteMask &) override;
+    int functionalWriteBuffers(PacketPtr &) override;
 
-    AccessPermission getAccessPermission(const Addr& param_addr) override;
+    AccessPermission getAccessPermission(const Addr &param_addr) override;
 
-    void functionalRead(const Addr& param_addr, Packet* param_pkt,
-                        WriteMask& param_mask) override;
-    int functionalWrite(const Addr& param_addr, Packet* param_pkt) override;
+    void functionalRead(const Addr &param_addr, Packet *param_pkt,
+                        WriteMask &param_mask) override;
+    int functionalWrite(const Addr &param_addr, Packet *param_pkt) override;
 
   protected:
-    MessageBuffer* const reqOut;
-    MessageBuffer* const snpOut;
-    MessageBuffer* const rspOut;
-    MessageBuffer* const datOut;
-    MessageBuffer* const reqIn;
-    MessageBuffer* const snpIn;
-    MessageBuffer* const rspIn;
-    MessageBuffer* const datIn;
+    MessageBuffer *const reqOut;
+    MessageBuffer *const snpOut;
+    MessageBuffer *const rspOut;
+    MessageBuffer *const datOut;
+    MessageBuffer *const reqIn;
+    MessageBuffer *const snpIn;
+    MessageBuffer *const rspIn;
+    MessageBuffer *const datIn;
 
-    std::vector<RubyPort*> sequencers;
+    std::vector<RubyPort *> sequencers;
 
   public:
     const int cacheLineSize;
@@ -160,19 +160,19 @@ class CHIGenericController : public AbstractController
     virtual bool recvDataMsg(const CHIDataMsg *msg) = 0;
 
   private:
-    template<typename MsgType>
-    bool receiveAllRdyMessages(MessageBuffer *buffer,
-                        const std::function<bool(const MsgType*)> &callback)
+    template <typename MsgType>
+    bool
+    receiveAllRdyMessages(MessageBuffer *buffer,
+                          const std::function<bool(const MsgType *)> &callback)
     {
         bool pending = false;
         Tick cur_tick = curTick();
         while (buffer->isReady(cur_tick)) {
-            const MsgType *msg =
-                dynamic_cast<const MsgType*>(buffer->peek());
+            const MsgType *msg = dynamic_cast<const MsgType *>(buffer->peek());
             assert(msg);
-            if (callback(msg))
+            if (callback(msg)) {
                 buffer->dequeue(cur_tick);
-            else {
+            } else {
                 pending = true;
                 break;
             }
@@ -180,20 +180,20 @@ class CHIGenericController : public AbstractController
         return pending;
     }
 
-    template<typename MessageType>
-    bool sendMessage(MessageType &msg, MessageBuffer *buffer)
+    template <typename MessageType>
+    bool
+    sendMessage(MessageType &msg, MessageBuffer *buffer)
     {
         Tick cur_tick = curTick();
         if (buffer->areNSlotsAvailable(1, cur_tick)) {
             buffer->enqueue(msg, curTick(), cyclesToTicks(Cycles(1)),
-                m_ruby_system->getRandomization(),
-                m_ruby_system->getWarmupEnabled());
+                            m_ruby_system->getRandomization(),
+                            m_ruby_system->getWarmupEnabled());
             return true;
         } else {
             return false;
         }
     }
-
 };
 
 } // namespace ruby

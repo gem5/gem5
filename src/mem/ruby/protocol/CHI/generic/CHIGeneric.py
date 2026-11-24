@@ -1,4 +1,4 @@
-# Copyright (c) 2023, 2025-2026 Arm Limited
+# Copyright (c) 2023, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -33,20 +33,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.CHIGeneric import CHIGenericController
-from m5.params import Param
-from m5.tlm_chi.port import (
-    TlmSinkPort,
-    TlmSourcePort,
-)
+from m5.objects.Controller import RubyController
+from m5.objects.MessageBuffer import MessageBuffer
+from m5.params import *
 
 
-class TlmController(CHIGenericController):
-    type = "TlmController"
-    cxx_header = "mem/ruby/protocol/chi/tlm/controller.hh"
-    cxx_class = "gem5::tlm::chi::CacheController"
+class CHIGenericController(RubyController):
+    type = "CHIGenericController"
+    cxx_header = "mem/ruby/protocol/CHI/generic/CHIGenericController.hh"
+    cxx_class = "gem5::ruby::CHIGenericController"
+    abstract = True
 
-    in_port = TlmSinkPort("CHI TLM input port")
-    out_port = TlmSourcePort("CHI TLM output port")
+    data_channel_size = Param.Int("")
 
-    ignore_functional = Param.Bool(False, "Don't panic on functional accesses")
+    reqOut = Param.MessageBuffer("")
+    snpOut = Param.MessageBuffer("")
+    rspOut = Param.MessageBuffer("")
+    datOut = Param.MessageBuffer("")
+    reqIn = Param.MessageBuffer("")
+    snpIn = Param.MessageBuffer("")
+    rspIn = Param.MessageBuffer("")
+    datIn = Param.MessageBuffer("")
+
+    def connectQueues(self, network):
+        """Connect all of the queues for this controller.
+        This may be extended in subclasses.
+        """
+        self.reqOut = MessageBuffer()
+        self.rspOut = MessageBuffer()
+        self.snpOut = MessageBuffer()
+        self.datOut = MessageBuffer()
+        self.reqIn = MessageBuffer()
+        self.rspIn = MessageBuffer()
+        self.snpIn = MessageBuffer()
+        self.datIn = MessageBuffer()
+        self.reqOut.out_port = network.in_port
+        self.rspOut.out_port = network.in_port
+        self.snpOut.out_port = network.in_port
+        self.datOut.out_port = network.in_port
+        self.reqIn.in_port = network.out_port
+        self.rspIn.in_port = network.out_port
+        self.snpIn.in_port = network.out_port
+        self.datIn.in_port = network.out_port

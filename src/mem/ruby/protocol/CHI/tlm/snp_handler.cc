@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
+#include "mem/ruby/protocol/CHI/tlm/snp_handler.hh"
 
 namespace gem5
 {

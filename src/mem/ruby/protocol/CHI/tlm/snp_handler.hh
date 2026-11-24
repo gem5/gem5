@@ -42,7 +42,7 @@
 #include <ARM/TLM/arm_chi_phase.h>
 
 #include "base/statistics.hh"
-#include "mem/ruby/protocol/chi/tlm/generator.hh"
+#include "mem/ruby/protocol/CHI/tlm/generator.hh"
 #include "params/SnoopHandler.hh"
 #include "sim/sim_object.hh"
 

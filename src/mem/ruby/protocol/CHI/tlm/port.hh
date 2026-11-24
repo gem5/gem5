@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, 2026 Arm Limited
+ * Copyright (c) 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,55 +35,75 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
-#define __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
+#ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_PORT_HH__
+#define __MEM_RUBY_PROTOCOL_CHI_TLM_PORT_HH__
 
-#include <ARM/TLM/arm_chi_payload.h>
-#include <ARM/TLM/arm_chi_phase.h>
+#include <type_traits>
 
-#include "arch/arm/mpam.hh"
-#include "base/types.hh"
-#include "mem/ruby/common/MachineID.hh"
-#include "mem/ruby/protocol/CHI/CHIDataType.hh"
-#include "mem/ruby/protocol/CHI/CHIRequestType.hh"
-#include "mem/ruby/protocol/CHI/CHIResponseType.hh"
+#include "base/trace.hh"
+#include "debug/TLMPort.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
+#include "sim/signal.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace tlm::chi {
+namespace tlm::chi
+{
 
-std::string transactionToString(const ARM::CHI::Payload &payload,
-                                const ARM::CHI::Phase &phase);
+using TlmData = std::pair<ARM::CHI::Payload *, ARM::CHI::Phase *>;
 
-namespace tlm_to_ruby {
+class SinkPortBase : public SignalSinkPort<TlmData>
+{
+  public:
+    template <class Device>
+    SinkPortBase(const std::string &_name, PortID _id, Device *dev)
+        : SignalSinkPort(_name, _id)
+    {}
 
-ruby::CHI::CHIRequestType reqOpcode(ARM::CHI::ReqOpcode req);
-ruby::CHI::CHIDataType datOpcode(ARM::CHI::DatOpcode dat, ARM::CHI::Resp resp);
-ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res,
-                                     ARM::CHI::Resp resp,
-                                     ARM::CHI::Resp fwd_state);
-ruby::MachineID srcId(uint16_t src_id);
-}
+    /**
+     * We override the SignalSinkPort::set method as the base implementation
+     * checks if the new state is equal to the old state and blocks the message
+     * if that is true.
+     * We don't want to define a complex equality operator which checks on both
+     * Payload and Phae fields to see if there is any difference. Instead we
+     * always forward the TlmData to the receiver.
+     */
+    void
+    set(const TlmData &data, const bool bypass_on_change = false) override
+    {
+        _state = data;
+        DPRINTF(TLMPort, "recv %s\n",
+                transactionToString(*_state.first, *_state.second));
+        if (_onChange) {
+            _onChange(_state);
+        }
+    }
+};
 
-namespace ruby_to_tlm {
+template <class Compat> using SinkPort = SinkPortBase;
 
-uint8_t datOpcode(ruby::CHI::CHIDataType dat);
-uint8_t rspOpcode(ruby::CHI::CHIResponseType res);
-uint8_t snpOpcode(ruby::CHI::CHIRequestType snp);
+class SourcePortBase : public SignalSourcePort<TlmData>
+{
+  public:
+    template <class Device>
+    SourcePortBase(const std::string &_name, PortID _id, Device *owner)
+        : SignalSourcePort(_name, _id)
+    {}
 
-ARM::CHI::Resp datResp(ruby::CHI::CHIDataType dat);
-ARM::CHI::Resp rspResp(ruby::CHI::CHIResponseType rsp);
-uint16_t srcId(ruby::MachineID src_id);
-}
+    void
+    send(TlmData &data)
+    {
+        DPRINTF(TLMPort, "send %s\n",
+                transactionToString(*data.first, *data.second));
+        set(data);
+    }
+};
 
-::gem5::ArmISA::mpam::MpamBundle getMpam(const ARM::CHI::Payload &payload);
-
-Addr transactionSize(ARM::CHI::Size sz);
-
-uint8_t dataId(Addr address);
+template <class Compat> using SourcePort = SourcePortBase;
 
 } // namespace tlm::chi
 
 } // namespace gem5
 
-#endif // __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
+#endif //__MEM_RUBY_PROTOCOL_CHI_TLM_PORT_HH__

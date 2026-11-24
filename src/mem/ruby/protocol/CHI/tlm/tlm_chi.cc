@@ -45,17 +45,18 @@ namespace py = pybind11;
 
 using namespace ARM::CHI;
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace {
+namespace
+{
 
 /** We are forced to define a custom deleter as the Payload
  * destructor is deleted and pybind11 will complain */
-template <typename T>
-struct PayloadDeleter
+template <typename T> struct PayloadDeleter
 {
     void
-    operator()(T * p) const
+    operator()(T *p) const
     {
         p->unref();
     }
@@ -161,30 +162,26 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .value("RESP_SC_PD", RESP_SC_PD)
         .value("RESP_UC_PD", RESP_UC_PD)
         .value("RESP_UD_PD", RESP_UD_PD)
-        .value("RESP_SD_PD", RESP_SD_PD)
-        ;
+        .value("RESP_SD_PD", RESP_SD_PD);
 
     py::enum_<RespErr>(tlm_chi, "RespErr")
         .value("RESP_ERR_OK", RESP_ERR_OK)
         .value("RESP_ERR_EXOK", RESP_ERR_EXOK)
         .value("RESP_ERR_DERR", RESP_ERR_DERR)
-        .value("RESP_ERR_NDERR", RESP_ERR_NDERR)
-        ;
+        .value("RESP_ERR_NDERR", RESP_ERR_NDERR);
 
     py::enum_<Order>(tlm_chi, "Order")
         .value("ORDER_NO_ORDER", ORDER_NO_ORDER)
         .value("ORDER_REQUEST_ACCEPTED", ORDER_REQUEST_ACCEPTED)
         .value("ORDER_REQUEST_ORDER", ORDER_REQUEST_ORDER)
-        .value("ORDER_ENDPOINT_ORDER", ORDER_ENDPOINT_ORDER)
-        ;
+        .value("ORDER_ENDPOINT_ORDER", ORDER_ENDPOINT_ORDER);
 
     py::enum_<TagOp>(tlm_chi, "TagOp")
         .value("TAG_OP_INVALID", TAG_OP_INVALID)
         .value("TAG_OP_TRANSFER", TAG_OP_TRANSFER)
         .value("TAG_OP_UPDATE", TAG_OP_UPDATE)
         .value("TAG_OP_MATCH", TAG_OP_MATCH)
-        .value("TAG_OP_FETCH", TAG_OP_FETCH)
-        ;
+        .value("TAG_OP_FETCH", TAG_OP_FETCH);
 
     py::enum_<SizeEnum>(tlm_chi, "Size")
         .value("SIZE_1", SIZE_1)
@@ -193,15 +190,13 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .value("SIZE_8", SIZE_8)
         .value("SIZE_16", SIZE_16)
         .value("SIZE_32", SIZE_32)
-        .value("SIZE_64", SIZE_64)
-        ;
+        .value("SIZE_64", SIZE_64);
 
     py::enum_<Channel>(tlm_chi, "Channel")
         .value("REQ", CHANNEL_REQ)
         .value("DAT", CHANNEL_DAT)
         .value("RSP", CHANNEL_RSP)
-        .value("SNP", CHANNEL_SNP)
-        ;
+        .value("SNP", CHANNEL_SNP);
 
     py::enum_<ReqOpcodeEnum>(tlm_chi, "ReqOpcode")
         .value("READ_SHARED", REQ_OPCODE_READ_SHARED)
@@ -233,8 +228,7 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .value("WRITE_UNIQUE_FULL_STASH", REQ_OPCODE_WRITE_UNIQUE_FULL_STASH)
         .value("WRITE_UNIQUE_PTL_STASH", REQ_OPCODE_WRITE_UNIQUE_PTL_STASH)
         .value("STASH_ONCE_SHARED", REQ_OPCODE_STASH_ONCE_SHARED)
-        .value("STASH_ONCE_UNIQUE", REQ_OPCODE_STASH_ONCE_UNIQUE)
-        ;
+        .value("STASH_ONCE_UNIQUE", REQ_OPCODE_STASH_ONCE_UNIQUE);
 
     py::enum_<RspOpcodeEnum>(tlm_chi, "RspOpcode")
         .value("RSP_LCRD_RETURN", RSP_OPCODE_RSP_LCRD_RETURN)
@@ -254,8 +248,7 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .value("DBID_RESP_ORD", RSP_OPCODE_DBID_RESP_ORD)
         .value("STASH_DONE", RSP_OPCODE_STASH_DONE)
         .value("COMP_STASH_DONE", RSP_OPCODE_COMP_STASH_DONE)
-        .value("COMP_CMO", RSP_OPCODE_COMP_CMO)
-        ;
+        .value("COMP_CMO", RSP_OPCODE_COMP_CMO);
 
     py::enum_<DatOpcodeEnum>(tlm_chi, "DatOpcode")
         .value("DAT_LCRD_RETURN", DAT_OPCODE_DAT_LCRD_RETURN)
@@ -267,8 +260,7 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .value("SNP_RESP_DATA_FWDED", DAT_OPCODE_SNP_RESP_DATA_FWDED)
         .value("WRITE_DATA_CANCEL", DAT_OPCODE_WRITE_DATA_CANCEL)
         .value("DATA_SEP_RESP", DAT_OPCODE_DATA_SEP_RESP)
-        .value("NCB_WR_DATA_COMP_ACK", DAT_OPCODE_NCB_WR_DATA_COMP_ACK)
-        ;
+        .value("NCB_WR_DATA_COMP_ACK", DAT_OPCODE_NCB_WR_DATA_COMP_ACK);
 
     py::enum_<SnpOpcodeEnum>(tlm_chi, "SnpOpcode")
         .value("SNP_LCRD_RETURN", SNP_OPCODE_SNP_LCRD_RETURN)
@@ -292,8 +284,7 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .value("SNP_NOT_SHARED_DIRTY_FWD", SNP_OPCODE_SNP_NOT_SHARED_DIRTY_FWD)
         .value("SNP_PREFER_UNIQUE", SNP_OPCODE_SNP_PREFER_UNIQUE)
         .value("SNP_PREFER_UNIQUE_FWD", SNP_OPCODE_SNP_PREFER_UNIQUE_FWD)
-        .value("SNP_UNIQUE_FWD", SNP_OPCODE_SNP_UNIQUE_FWD)
-        ;
+        .value("SNP_UNIQUE_FWD", SNP_OPCODE_SNP_UNIQUE_FWD);
 }
 
 EmbeddedPyBind embed_("tlm_chi", &tlm_chi_pybind);

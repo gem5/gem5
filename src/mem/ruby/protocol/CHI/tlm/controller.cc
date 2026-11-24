@@ -35,17 +35,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/controller.hh"
+#include "mem/ruby/protocol/CHI/tlm/controller.hh"
 
 #include "debug/TLM.hh"
 #include "mem/ruby/protocol/CHI/CHIDataMsg.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestMsg.hh"
 #include "mem/ruby/protocol/CHI/CHIResponseMsg.hh"
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace tlm::chi {
+namespace tlm::chi
+{
 
 using namespace ruby::CHI;
 
@@ -149,9 +151,10 @@ CacheController::recvResponseMsg(const CHIResponseMsg *msg)
     if (auto it = pendingTransactions.find(txn_id);
         it != pendingTransactions.end()) {
 
-        auto& transaction = it->second;
-        if (transaction->handle(msg))
+        auto &transaction = it->second;
+        if (transaction->handle(msg)) {
             pendingTransactions.erase(it);
+        }
     } else {
         panic("recvResponseMsg");
     }
@@ -164,9 +167,10 @@ CacheController::recvDataMsg(const CHIDataMsg *msg)
     auto txn_id = msg->m_txnId;
     if (auto it = pendingTransactions.find(txn_id);
         it != pendingTransactions.end()) {
-        auto& transaction = it->second;
-        if (transaction->handle(msg))
+        auto &transaction = it->second;
+        if (transaction->handle(msg)) {
             pendingTransactions.erase(it);
+        }
     } else {
         panic("Not able to find transaction");
     }
@@ -216,8 +220,9 @@ bool
 CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
 {
     for (auto byte = 0; byte < controller->cacheLineSize; byte++) {
-        if (msg->m_bitMask.test(byte))
+        if (msg->m_bitMask.test(byte)) {
             payload->data[byte] = msg->m_dataBlk.getByte(byte);
+        }
     }
 
     // ARM::CHI::Phase phase;
@@ -265,7 +270,7 @@ CacheController::ReadTransaction::handleCompletion()
         return true;
     } else if (compRespToMakeReadUnique(phase) ||
                (dataMsgCnt == controller->dataMsgsPerLine && rspMsgCnt != 0)) {
-        if (phase.exp_comp_ack == false) {
+        if (!phase.exp_comp_ack) {
             // This is a hack, we should fix it on the ruby side
             // The client is not sending a CompAck but ruby is
             // expecting it so we send it anyway
@@ -347,8 +352,8 @@ void
 CacheController::sendCompAck(ARM::CHI::Payload &payload,
                              ARM::CHI::Phase &phase)
 {
-    auto res_msg = std::make_shared<CHIResponseMsg>(
-        curTick(), cacheLineSize, m_ruby_system);
+    auto res_msg = std::make_shared<CHIResponseMsg>(curTick(), cacheLineSize,
+                                                    m_ruby_system);
 
     res_msg->m_addr = ruby::makeLineAddress(payload.address, cacheLineBits);
     res_msg->m_type = CHIResponseType_CompAck;
@@ -364,17 +369,17 @@ void
 CacheController::sendMsg(ARM::CHI::Payload &payload, ARM::CHI::Phase &phase)
 {
     switch (phase.channel) {
-      case ARM::CHI::CHANNEL_REQ:
-        sendRequestMsg(payload, phase);
-        break;
-      case ARM::CHI::CHANNEL_DAT:
-        sendDataMsg(payload, phase);
-        break;
-      case ARM::CHI::CHANNEL_RSP:
-        sendResponseMsg(payload, phase);
-        break;
-      default:
-        panic("Unimplemented channel: %d", phase.channel);
+        case ARM::CHI::CHANNEL_REQ:
+            sendRequestMsg(payload, phase);
+            break;
+        case ARM::CHI::CHANNEL_DAT:
+            sendDataMsg(payload, phase);
+            break;
+        case ARM::CHI::CHANNEL_RSP:
+            sendResponseMsg(payload, phase);
+            break;
+        default:
+            panic("Unimplemented channel: %d", phase.channel);
     }
 }
 
@@ -383,11 +388,11 @@ CacheController::reqAddr(ARM::CHI::Payload &payload,
                          ARM::CHI::Phase &phase) const
 {
     switch (phase.req_opcode) {
-      case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_PTL:
-        return ruby::makeLineAddress(payload.address, cacheLineBits) +
-            ctz64(payload.byte_enable);
-      default:
-        return payload.address;
+        case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_PTL:
+            return ruby::makeLineAddress(payload.address, cacheLineBits) +
+                   ctz64(payload.byte_enable);
+        default:
+            return payload.address;
     }
 }
 
@@ -396,11 +401,12 @@ CacheController::reqSize(ARM::CHI::Payload &payload,
                          ARM::CHI::Phase &phase) const
 {
     switch (phase.req_opcode) {
-      case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_PTL:
-        assert(transactionSize(payload.size) >= popCount(payload.byte_enable));
-        return popCount(payload.byte_enable);
-      default:
-        return transactionSize(payload.size);
+        case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_PTL:
+            assert(transactionSize(payload.size) >=
+                   popCount(payload.byte_enable));
+            return popCount(payload.byte_enable);
+        default:
+            return transactionSize(payload.size);
     }
 }
 
@@ -408,8 +414,8 @@ void
 CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
                                 ARM::CHI::Phase &phase)
 {
-    auto req_msg = std::make_shared<CHIRequestMsg>(
-        curTick(), cacheLineSize, m_ruby_system);
+    auto req_msg = std::make_shared<CHIRequestMsg>(curTick(), cacheLineSize,
+                                                   m_ruby_system);
 
     req_msg->m_addr = ruby::makeLineAddress(payload.address, cacheLineBits);
     req_msg->m_accAddr = reqAddr(payload, phase);
@@ -443,16 +449,16 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
 
     sendRequestMsg(req_msg);
 
-    pendingTransactions[req_msg->m_txnId] = Transaction::gen(
-        this, payload, phase);
+    pendingTransactions[req_msg->m_txnId] =
+        Transaction::gen(this, payload, phase);
 }
 
 void
 CacheController::sendDataMsg(ARM::CHI::Payload &payload,
                              ARM::CHI::Phase &phase)
 {
-    auto data_msg = std::make_shared<CHIDataMsg>(
-        curTick(), cacheLineSize, m_ruby_system);
+    auto data_msg =
+        std::make_shared<CHIDataMsg>(curTick(), cacheLineSize, m_ruby_system);
 
     data_msg->m_addr = ruby::makeLineAddress(payload.address, cacheLineBits);
     data_msg->m_responder = getMachineID();
@@ -479,8 +485,8 @@ void
 CacheController::sendResponseMsg(ARM::CHI::Payload &payload,
                                  ARM::CHI::Phase &phase)
 {
-    auto res_msg = std::make_shared<CHIResponseMsg>(
-        curTick(), cacheLineSize, m_ruby_system);
+    auto res_msg = std::make_shared<CHIResponseMsg>(curTick(), cacheLineSize,
+                                                    m_ruby_system);
 
     res_msg->m_addr = ruby::makeLineAddress(payload.address, cacheLineBits);
     res_msg->m_responder = getMachineID();
@@ -507,41 +513,42 @@ CacheController::Transaction::~Transaction()
 
 std::unique_ptr<CacheController::Transaction>
 CacheController::Transaction::gen(CacheController *controller,
-    ARM::CHI::Payload &payload,
-    ARM::CHI::Phase &phase)
+                                  ARM::CHI::Payload &payload,
+                                  ARM::CHI::Phase &phase)
 {
     switch (phase.req_opcode) {
-      case ARM::CHI::REQ_OPCODE_READ_SHARED:
-      case ARM::CHI::REQ_OPCODE_READ_CLEAN:
-      case ARM::CHI::REQ_OPCODE_READ_ONCE:
-      case ARM::CHI::REQ_OPCODE_READ_NO_SNP:
-      case ARM::CHI::REQ_OPCODE_READ_UNIQUE:
-      case ARM::CHI::REQ_OPCODE_READ_NOT_SHARED_DIRTY:
-      case ARM::CHI::REQ_OPCODE_READ_PREFER_UNIQUE:
-      case ARM::CHI::REQ_OPCODE_MAKE_READ_UNIQUE:
-        return std::make_unique<ReadTransaction>(controller, payload, phase);
-      case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_PTL:
-      case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_FULL:
-      case ARM::CHI::REQ_OPCODE_WRITE_UNIQUE_ZERO:
-      case ARM::CHI::REQ_OPCODE_WRITE_UNIQUE_FULL:
-      case ARM::CHI::REQ_OPCODE_WRITE_BACK_FULL:
-      // This is a write transaction for now. Will
-      // this still be the case once WriteEvictOrEvict will also be supported
-      // in ruby
-      case ARM::CHI::REQ_OPCODE_WRITE_EVICT_OR_EVICT:
-        return std::make_unique<WriteTransaction>(
-            controller, payload, phase);
-      case ARM::CHI::REQ_OPCODE_CLEAN_UNIQUE:
-      case ARM::CHI::REQ_OPCODE_MAKE_UNIQUE:
-      case ARM::CHI::REQ_OPCODE_EVICT:
-      case ARM::CHI::REQ_OPCODE_STASH_ONCE_SHARED:
-      case ARM::CHI::REQ_OPCODE_STASH_ONCE_UNIQUE:
-      case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_SHARED:
-      case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_UNIQUE:
-        return std::make_unique<DatalessTransaction>(
-            controller, payload, phase);
-      default:
-        panic("Impossible to generate transaction object");
+        case ARM::CHI::REQ_OPCODE_READ_SHARED:
+        case ARM::CHI::REQ_OPCODE_READ_CLEAN:
+        case ARM::CHI::REQ_OPCODE_READ_ONCE:
+        case ARM::CHI::REQ_OPCODE_READ_NO_SNP:
+        case ARM::CHI::REQ_OPCODE_READ_UNIQUE:
+        case ARM::CHI::REQ_OPCODE_READ_NOT_SHARED_DIRTY:
+        case ARM::CHI::REQ_OPCODE_READ_PREFER_UNIQUE:
+        case ARM::CHI::REQ_OPCODE_MAKE_READ_UNIQUE:
+            return std::make_unique<ReadTransaction>(controller, payload,
+                                                     phase);
+        case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_PTL:
+        case ARM::CHI::REQ_OPCODE_WRITE_NO_SNP_FULL:
+        case ARM::CHI::REQ_OPCODE_WRITE_UNIQUE_ZERO:
+        case ARM::CHI::REQ_OPCODE_WRITE_UNIQUE_FULL:
+        case ARM::CHI::REQ_OPCODE_WRITE_BACK_FULL:
+        // This is a write transaction for now. Will
+        // this still be the case once WriteEvictOrEvict will also be supported
+        // in ruby
+        case ARM::CHI::REQ_OPCODE_WRITE_EVICT_OR_EVICT:
+            return std::make_unique<WriteTransaction>(controller, payload,
+                                                      phase);
+        case ARM::CHI::REQ_OPCODE_CLEAN_UNIQUE:
+        case ARM::CHI::REQ_OPCODE_MAKE_UNIQUE:
+        case ARM::CHI::REQ_OPCODE_EVICT:
+        case ARM::CHI::REQ_OPCODE_STASH_ONCE_SHARED:
+        case ARM::CHI::REQ_OPCODE_STASH_ONCE_UNIQUE:
+        case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_SHARED:
+        case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_UNIQUE:
+            return std::make_unique<DatalessTransaction>(controller, payload,
+                                                         phase);
+        default:
+            panic("Impossible to generate transaction object");
     }
 }
 
