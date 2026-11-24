@@ -2112,6 +2112,20 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
 
 /// Target mmap() handler.
 template <class OS>
+constexpr auto
+getTargetSigbus(int) -> decltype(OS::TGT_SIGBUS)
+{
+    return OS::TGT_SIGBUS;
+}
+
+template <class OS>
+constexpr int
+getTargetSigbus(...)
+{
+    return 0;
+}
+
+template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, ThreadContext *tc,
          VPtr<> start, typename OS::size_t length, int prot,
@@ -2248,7 +2262,8 @@ mmapFunc(SyscallDesc *desc, ThreadContext *tc,
      * Setup the correct VMA for this region.  The physical pages will be
      * mapped lazily.
      */
-    p->memState->mapRegion(start, length, region_name, sim_fd, offset);
+    p->memState->mapRegion(start, length, region_name, sim_fd, offset,
+                           sim_fd == -1 ? 0 : getTargetSigbus<OS>(0));
 
     return (Addr)start;
 }

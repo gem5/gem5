@@ -128,8 +128,8 @@ class MemState : public Serializable
      * @param offset Offset in file in which region starts.
      */
     void mapRegion(Addr start_addr, Addr length,
-                   const std::string& name="anon", int sim_fd=-1,
-                   Addr offset=0);
+                   const std::string &name = "anon", int sim_fd = -1,
+                   Addr offset = 0, int bus_signal = 0);
 
     /**
      * Unmap a pre-existing region. Depending on the range being unmapped
@@ -171,6 +171,9 @@ class MemState : public Serializable
      * @return Whether the fault has been fixed.
      */
     bool fixupFault(Addr vaddr);
+
+    /** Return the target signal for a fault that cannot be fixed up. */
+    int faultSignal(Addr vaddr) const;
 
     /**
      * Given the vaddr and size, this method will chunk the allocation into

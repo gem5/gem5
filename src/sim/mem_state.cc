@@ -170,7 +170,8 @@ MemState::updateBrkRegion(Addr old_brk, Addr new_brk)
 
 void
 MemState::mapRegion(Addr start_addr, Addr length,
-                    const std::string& region_name, int sim_fd, Addr offset)
+                    const std::string &region_name, int sim_fd, Addr offset,
+                    int bus_signal)
 {
     DPRINTF(Vma, "memstate: creating vma (%s) [0x%x - 0x%x]\n",
             region_name.c_str(), start_addr, start_addr + length);
@@ -185,7 +186,7 @@ MemState::mapRegion(Addr start_addr, Addr length,
      * Record the region in our list structure.
      */
     _vmaList.emplace_back(AddrRange(start_addr, start_addr + length),
-                          _pageBytes, region_name, sim_fd, offset);
+                          _pageBytes, region_name, sim_fd, offset, bus_signal);
 }
 
 void
@@ -392,6 +393,10 @@ MemState::fixupFault(Addr vaddr)
      */
     for (const auto &vma : _vmaList) {
         if (vma.contains(vaddr)) {
+            if (vma.faultSignal(vaddr)) {
+                return false;
+            }
+
             Addr vpage_start = roundDown(vaddr, _pageBytes);
             _ownerProcess->allocateMem(vpage_start, _pageBytes);
 
@@ -446,6 +451,18 @@ MemState::fixupFault(Addr vaddr)
     }
 
     return false;
+}
+
+int
+MemState::faultSignal(Addr vaddr) const
+{
+    for (const auto &vma : _vmaList) {
+        const int signal = vma.faultSignal(vaddr);
+        if (signal) {
+            return signal;
+        }
+    }
+    return 0;
 }
 
 Addr

@@ -45,9 +45,12 @@ class VMA
   class MappedFileBuffer;
 
   public:
-    VMA(AddrRange r, Addr page_bytes, const std::string& vma_name="anon",
-        int fd=-1, off_t off=0)
-        : _addrRange(r), _pageBytes(page_bytes), _vmaName(vma_name)
+    VMA(AddrRange r, Addr page_bytes, const std::string &vma_name = "anon",
+        int fd = -1, off_t off = 0, int bus_signal = 0)
+        : _addrRange(r),
+          _pageBytes(page_bytes),
+          _vmaName(vma_name),
+          _busSignal(bus_signal)
     {
         DPRINTF(Vma, "Creating vma start %#x len %llu end %#x\n",
                 r.start(), r.size(), r.end());
@@ -81,6 +84,18 @@ class VMA
      * host machine.
      */
     bool hasHostBuf() const { return _origHostBuf != nullptr; }
+
+    int
+    faultSignal(Addr addr) const
+    {
+        if (!_busSignal || !contains(addr)) {
+            return 0;
+        }
+
+        const Addr offset = addr - _addrRange.start();
+        const Addr page_offset = offset - offset % _pageBytes;
+        return page_offset >= _hostBufLen ? _busSignal : 0;
+    }
 
     /**
      * Copy memory from a buffer which resides on the host machine into a
@@ -180,6 +195,9 @@ class VMA
      * application.
      */
     std::string _vmaName;
+
+    /** Target signal for accesses to file-backed pages beyond EOF. */
+    int _busSignal;
 
     /**
      * MappedFileBuffer is a wrapper around a region of host memory backed by a

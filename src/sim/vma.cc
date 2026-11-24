@@ -129,10 +129,16 @@ VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length,
         panic("Cannot stat file: %s\n", strerror(errno));
     }
 
-    // Don't bother mapping more than the actual file size
-    panic_if(offset > file_stat.st_size,
-             "Tried to mmap with offset greater than file size");
-    _length = std::min((size_t)(file_stat.st_size - offset), _length);
+    // A file mapping beyond EOF still has a target VMA; leave its host
+    // backing empty so the target fault path can report SIGBUS.
+    if (offset >= file_stat.st_size) {
+        _length = 0;
+        return;
+    }
+
+    // Don't map more host bytes than remain in the file.
+    _length =
+        std::min(static_cast<size_t>(file_stat.st_size - offset), _length);
 
     // cannot call mmap with _length == 0
     if (_length) {
@@ -142,8 +148,6 @@ VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length,
             panic("Failed to map file into host address space: %s",
                   strerror(errno));
         }
-    } else {
-        panic("Tried to mmap 0 bytes");
     }
 }
 

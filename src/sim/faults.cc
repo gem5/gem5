@@ -50,6 +50,7 @@
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -99,6 +100,13 @@ GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     if (!FullSystem) {
         Process *p = tc->getProcessPtr();
         handled = p->fixupFault(vaddr);
+        if (!handled) {
+            const int signal = p->memState->faultSignal(vaddr);
+            if (signal) {
+                exitGroupSignaledFunc(nullptr, tc, signal);
+                return;
+            }
+        }
     }
     panic_if(!handled &&
             !tc->getSystemPtr()->trapToGdb(GDBSignal::SEGV, tc->contextId()),
