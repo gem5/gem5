@@ -199,6 +199,8 @@ namespace RiscvISA
             Fault accessFault();
             Fault guestToHostPage(Addr vaddr);
             PacketPtr createReqPacket(Addr paddr, MemCmd cmd, size_t bytes);
+            PacketPtr createPteUpdatePacket(PacketPtr oldRead,
+                                            const uint64_t newPte);
         };
 
         friend class WalkerState;

@@ -389,6 +389,18 @@ Walker::WalkerState::walkGStage(Addr guest_paddr, Addr &host_paddr,
             nextgState = Ready;
             if (write) {
                 walker->port.sendAtomic(write);
+                if (write->isError()) {
+                    fault = accessFault();
+                } else if (write->getLE<uint64_t>() !=
+                           write->req->getExtraData()) {
+                    gresult.vaddr = guest_paddr;
+                    if (walkType == GstageOnly) {
+                        entry.vaddr = guest_paddr;
+                    }
+                    read = createReqPacket(write->getAddr(), MemCmd::ReadReq,
+                                           sizeof(PTE));
+                    gstate = Translate;
+                }
                 delete write;
             }
 
@@ -520,6 +532,15 @@ Walker::WalkerState::walkOneStage(Addr vaddr)
         // not happen so this pointer is ignored after stepWalk
         if (write && !functional) {
             walker->port.sendAtomic(write);
+            if (write->isError()) {
+                fault = accessFault();
+            } else if (write->getLE<uint64_t>() !=
+                       write->req->getExtraData()) {
+                entry.vaddr = vaddr;
+                read = createReqPacket(write->getAddr(), MemCmd::ReadReq,
+                                       sizeof(PTE));
+                state = Translate;
+            }
             delete write;
         }
 
@@ -598,7 +619,6 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
             walker->port.sendAtomic(read);
         }
 
-        const PTE old_pte = read->getLE<uint64_t>();
         PacketPtr write = NULL;
         fault = stepWalk(write);
 
@@ -632,22 +652,16 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
                 return accessFault();
             }
 
-            // Nested G-stage updates may alias this VS PTE.
-            PacketPtr compare =
-                createReqPacket(host_paddr, MemCmd::ReadReq, sizeof(PTE));
-            walker->port.sendAtomic(compare);
-            const PTE current_pte = compare->getLE<uint64_t>();
-            delete compare;
-            if (current_pte != old_pte) {
-                delete write;
+            // Nested G-stage updates may change this VS PTE.
+            walker->port.sendAtomic(write);
+            if (write->isError()) {
+                fault = accessFault();
+            } else if (write->getLE<uint64_t>() !=
+                       write->req->getExtraData()) {
                 pte_addr = guest_paddr;
                 read = createReqPacket(pte_addr, MemCmd::ReadReq, sizeof(PTE));
                 state = Translate;
-                continue;
             }
-
-            // No event interleaves the comparison and write in Atomic RAM.
-            walker->port.sendAtomic(write);
             delete write;
         }
     } while (read);
@@ -954,12 +968,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // during the read do not leak into the write request.
         PacketPtr new_write = nullptr;
         if (!functional && fault == NoFault && stepWalkFlags.doWrite) {
-            new_write = new Packet(oldRead, true, true);
-            if (oldRead->hasSharers()) {
-                new_write->setHasSharers();
-            }
-            new_write->setLE<uint64_t>(pte);
-            new_write->cmd = MemCmd::WriteReq;
+            new_write = createPteUpdatePacket(oldRead, pte);
             read = NULL;
             delete oldRead;
             oldRead = nullptr;
@@ -1116,12 +1125,7 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
         // the read does not carry into the write request.
         PacketPtr new_write = nullptr;
         if (!functional && fault == NoFault && stepWalkFlags.doWrite) {
-            new_write = new Packet(oldRead, true, true);
-            if (oldRead->hasSharers()) {
-                new_write->setHasSharers();
-            }
-            new_write->setLE<uint64_t>(pte);
-            new_write->cmd = MemCmd::WriteReq;
+            new_write = createPteUpdatePacket(oldRead, pte);
             read = NULL;
             delete oldRead;
             oldRead = nullptr;
@@ -1211,7 +1215,19 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
         // this WalkerState will be freed there.
         return (inflight == 0);
     }
-    if (pkt->isRead()) {
+    if (pkt->isError()) {
+        timingFault = accessFault();
+        delete pkt;
+    } else if (pkt->isWrite()) {
+        // The update is failed, restart the current level PTW
+        if (pkt->getLE<uint64_t>() != pkt->req->getExtraData()) {
+            entry.vaddr = req->getVaddr();
+            read =
+                createReqPacket(pkt->getAddr(), MemCmd::ReadReq, sizeof(PTE));
+            nextState = Translate;
+        }
+        delete pkt;
+    } else {
         // should not have a pending read it we also had one outstanding
         assert(!read);
 
@@ -1224,11 +1240,6 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
         timingFault = stepWalk(write);
         state = Waiting;
         assert(timingFault == NoFault || read == NULL);
-    } else {
-        if (pkt->isError()) {
-            timingFault = accessFault();
-        }
-        delete pkt;
     }
 
     if (write) {
@@ -1325,6 +1336,27 @@ Walker::WalkerState::createReqPacket(Addr paddr, MemCmd cmd, size_t bytes)
     PacketPtr pkt = new Packet(request, cmd);
     pkt->allocate();
     return pkt;
+}
+
+PacketPtr
+Walker::WalkerState::createPteUpdatePacket(PacketPtr oldRead,
+                                           const uint64_t newPte)
+{
+    auto request = std::make_shared<Request>(*oldRead->req);
+    const uint64_t oldPte = oldRead->getLE<uint64_t>();
+    request->setFlags(Request::ATOMIC_RETURN_OP);
+    request->setAtomicOpFunctor(std::make_unique<AtomicGeneric3Op<uint64_t>>(
+        oldPte, newPte, [](uint64_t *mem, uint64_t oldPte, uint64_t newPte) {
+            if (letoh(*mem) == oldPte) {
+                *mem = htole(newPte);
+            }
+        }));
+    request->setExtraData(oldPte);
+
+    PacketPtr new_write = new Packet(request, MemCmd::SwapReq);
+    new_write->allocate();
+
+    return new_write;
 }
 
 unsigned
