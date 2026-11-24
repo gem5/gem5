@@ -6,6 +6,11 @@ description: |
 on:
   workflow_dispatch:
 
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_HEADERS: ""
+  GH_AW_OTLP_ENDPOINTS: "[]"
+
 permissions:
   contents: read
   issues: read
@@ -29,7 +34,7 @@ safe-outputs:
   allowed-github-references: []
   create-issue:
     title-prefix: "misc: "
-    labels: [misc]
+    labels: [misc, agentic-workflows]
     close-older-issues: true
   report-failure-as-issue: false
 

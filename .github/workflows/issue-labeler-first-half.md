@@ -10,7 +10,8 @@ on:
         type: string
 
 concurrency:
-  group: "test-failure-doctor-first-half-${{ github.event.inputs.issue_number }}"
+  group: "issue-labeler-first-half-${{ github.event.inputs.issue_number }}"
+  job-discriminator: "issue-labeler-first-half-${{ github.event.inputs.issue_number }}"
 
 permissions:
   issues: read
