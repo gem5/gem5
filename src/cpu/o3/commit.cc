@@ -1245,6 +1245,22 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
             head_inst->traceData = NULL;
         }
 
+        // The trap has been invoked, so the thread's PC is where execution
+        // resumes. If that is not this same micro-op, the macro-op does not
+        // continue here: e.g. after a fault handled by the guest OS it is
+        // restarted from its first micro-op, while any older micro-ops have
+        // already committed. Its pinned dest regs must then be reset rather
+        // than restored when this micro-op is squashed. Faults that resume
+        // at this micro-op (ReExec, an SE-mode page fault fixed up in
+        // place) keep the restore. See DynInst::setSquashed().
+        if (head_inst->isPinnedRegsRenamed()) {
+            const PCStateBase &resume_pc = cpu->pcState(tid);
+            if (resume_pc.instAddr() != head_inst->pcState().instAddr() ||
+                resume_pc.microPC() != head_inst->pcState().microPC()) {
+                head_inst->setPinnedRegsResetOnSquash();
+            }
+        }
+
         // Generate trap squash event.
         generateTrapEvent(tid, inst_fault);
         return false;
