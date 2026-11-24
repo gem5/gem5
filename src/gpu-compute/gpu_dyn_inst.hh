@@ -267,6 +267,19 @@ class GPUDynInst : public GPUExecContext
     TheGpuISA::ScalarRegU32 srcLiteral() const;
 
     bool isALU() const;
+    bool isIntMul() const;
+    bool isIntMul24() const;
+    bool isIntMul32() const;
+    bool isIntDiv() const;
+    bool isFpMul() const;
+    bool isFpDiv() const;
+    bool isDpMul() const;
+    bool isDpDiv() const;
+    bool isFpSqrt() const;
+    bool isFpLg() const;
+    bool isFpSin() const;
+    bool isFpExp() const;
+    bool isTex() const;
     bool isBranch() const;
     bool isCondBranch() const;
     bool isNop() const;

@@ -60,14 +60,15 @@ namespace ruby
 {
 
 SimpleNetwork::SimpleNetwork(const Params &p)
-    : Network(p), m_buffer_size(p.buffer_size),
+    : Network(p),
+      m_buffer_size(p.buffer_size),
       m_endpoint_bandwidth(p.endpoint_bandwidth),
       networkStats(this)
 {
     // record the routers
-    for (std::vector<BasicRouter*>::const_iterator i = p.routers.begin();
+    for (std::vector<BasicRouter *>::const_iterator i = p.routers.begin();
          i != p.routers.end(); ++i) {
-        auto* s = safe_cast<Switch*>(*i);
+        auto *s = safe_cast<Switch *>(*i);
         s->init_net_ptr(this);
         auto id = static_cast<size_t>(s->params().router_id);
         m_switches[id] = s;
@@ -80,15 +81,16 @@ SimpleNetwork::SimpleNetwork(const Params &p)
     bool physical_vnets = physical_vnets_channels.size() > 0;
     int vnets = p.number_of_virtual_networks;
 
-    fatal_if(physical_vnets && (physical_vnets_channels.size() != vnets),
+    fatal_if(
+        physical_vnets && (physical_vnets_channels.size() != vnets),
         "physical_vnets_channels must provide channel count for all vnets");
 
     fatal_if(!physical_vnets && (physical_vnets_bandwidth.size() != 0),
-        "physical_vnets_bandwidth also requires physical_vnets_channels");
+             "physical_vnets_bandwidth also requires physical_vnets_channels");
 
     fatal_if((physical_vnets_bandwidth.size() != vnets) &&
-             (physical_vnets_bandwidth.size() != 0),
-        "physical_vnets_bandwidth must provide BW for all vnets");
+                 (physical_vnets_bandwidth.size() != 0),
+             "physical_vnets_bandwidth must provide BW for all vnets");
 
     if (p.trace_routes) {
         routeProfiler.enable();
@@ -111,14 +113,14 @@ SimpleNetwork::init()
 // From a switch to an endpoint node
 void
 SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
-                              BasicLink* link,
-                              std::vector<NetDest>& routing_table_entry)
+                              BasicLink *link,
+                              std::vector<NetDest> &routing_table_entry)
 {
     NodeID local_dest = getLocalNodeID(global_dest);
     assert(local_dest < m_nodes);
     assert(m_switches[src] != NULL);
 
-    SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
+    SimpleExtLink *simple_link = safe_cast<SimpleExtLink *>(link);
 
     // some destinations don't use all vnets, but Switch requires the size
     // output buffer list to match the number of vnets
@@ -129,15 +131,14 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
 
     m_switches[src]->addOutPort(simple_link->name(),
                                 m_fromNetQueues[local_dest],
-                                routing_table_entry[0],
-                                simple_link->m_latency, 0,
-                                simple_link->m_bw_multiplier, true);
+                                routing_table_entry[0], simple_link->m_latency,
+                                0, simple_link->m_bw_multiplier, true);
 }
 
 // From an endpoint node to a switch
 void
-SimpleNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
-                          std::vector<NetDest>& routing_table_entry)
+SimpleNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink *link,
+                             std::vector<NetDest> &routing_table_entry)
 {
     NodeID local_src = getLocalNodeID(global_src);
     assert(local_src < m_nodes);
@@ -146,22 +147,19 @@ SimpleNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
 
 // From a switch to a switch
 void
-SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                std::vector<NetDest>& routing_table_entry,
+SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
+                                std::vector<NetDest> &routing_table_entry,
                                 PortDirection src_outport,
                                 PortDirection dst_inport)
 {
     // Connect it to the two switches
-    SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
+    SimpleIntLink *simple_link = safe_cast<SimpleIntLink *>(link);
 
     m_switches[dest]->addInPort(simple_link->m_buffers);
-    m_switches[src]->addOutPort(simple_link->name(),
-                                simple_link->m_buffers, routing_table_entry[0],
-                                simple_link->m_latency,
-                                simple_link->m_weight,
-                                simple_link->m_bw_multiplier,
-                                false,
-                                dst_inport);
+    m_switches[src]->addOutPort(
+        simple_link->name(), simple_link->m_buffers, routing_table_entry[0],
+        simple_link->m_latency, simple_link->m_weight,
+        simple_link->m_bw_multiplier, false, dst_inport);
 
     for (auto buffer : simple_link->m_buffers) {
         buffer->setIntLink(simple_link);
@@ -169,11 +167,12 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     // Maitain a global list of buffers (used for functional accesses only)
     m_int_link_buffers.insert(m_int_link_buffers.end(),
-            simple_link->m_buffers.begin(), simple_link->m_buffers.end());
+                              simple_link->m_buffers.begin(),
+                              simple_link->m_buffers.end());
 }
 
 void
-SimpleNetwork::print(std::ostream& out) const
+SimpleNetwork::print(std::ostream &out) const
 {
     out << "[SimpleNetwork]";
 }
@@ -186,13 +185,15 @@ SimpleNetwork::print(std::ostream& out) const
 bool
 SimpleNetwork::functionalRead(Packet *pkt)
 {
-    for (auto& it : m_switches) {
-        if (it.second->functionalRead(pkt))
+    for (auto &it : m_switches) {
+        if (it.second->functionalRead(pkt)) {
             return true;
+        }
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
-        if (m_int_link_buffers[i]->functionalRead(pkt))
+        if (m_int_link_buffers[i]->functionalRead(pkt)) {
             return true;
+        }
     }
 
     return false;
@@ -202,13 +203,15 @@ bool
 SimpleNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    for (auto& it : m_switches) {
-        if (it.second->functionalRead(pkt, mask))
+    for (auto &it : m_switches) {
+        if (it.second->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
-        if (m_int_link_buffers[i]->functionalRead(pkt, mask))
+        if (m_int_link_buffers[i]->functionalRead(pkt, mask)) {
             read = true;
+        }
     }
     return read;
 }
@@ -218,7 +221,7 @@ SimpleNetwork::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
-    for (auto& it : m_switches) {
+    for (auto &it : m_switches) {
         num_functional_writes += it.second->functionalWrite(pkt);
     }
 
@@ -228,29 +231,30 @@ SimpleNetwork::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-SimpleNetwork::NetworkStats::NetworkStats(SimpleNetwork *parent)
-    : statistics::Group(parent), parent(parent)
+SimpleNetwork::NetworkStats::MessageSizeStats::MessageSizeStats(
+    statistics::Group *parent, const char *name,
+    const statistics::units::Base *unit, const char *desc)
+    : statistics::Group(parent, name)
 {
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
-        std::string name_count = csprintf(
-            "msg_count.%s", MessageSizeType_to_string(MessageSizeType(type)));
-        auto msg_count = new statistics::Formula(
-            parent, name_count.c_str(), statistics::units::Count::get(),
-            "Total messages through network");
-        msg_count->flags(statistics::nozero);
-
-        std::string name_bytes = csprintf(
-            "msg_byte.%s", MessageSizeType_to_string(MessageSizeType(type)));
-        auto msg_bytes = new statistics::Formula(
-            parent, name_bytes.c_str(), statistics::units::Byte::get(),
-            "Total bytes through network");
-        msg_bytes->flags(statistics::nozero);
-
-        m_msg_counts.push_back(msg_count);
-        m_msg_bytes.push_back(msg_bytes);
+        std::string stat_name =
+            MessageSizeType_to_string(MessageSizeType(type));
+        auto *stat =
+            new statistics::Formula(this, stat_name.c_str(), unit, desc);
+        stat->flags(statistics::nozero);
+        m_stats.push_back(stat);
     }
 }
+
+SimpleNetwork::NetworkStats::NetworkStats(SimpleNetwork *parent)
+    : statistics::Group(parent),
+      parent(parent),
+      m_msg_counts(this, "msg_count", statistics::units::Count::get(),
+                   "Total messages through network"),
+      m_msg_bytes(this, "msg_byte", statistics::units::Byte::get(),
+                  "Total bytes through network")
+{}
 
 void
 SimpleNetwork::NetworkStats::regStats()
@@ -259,10 +263,10 @@ SimpleNetwork::NetworkStats::regStats()
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
         for (auto &it : parent->m_switches) {
-            *(m_msg_counts[type]) += sum(it.second->getMsgCount(type));
+            *(m_msg_counts.m_stats[type]) += sum(it.second->getMsgCount(type));
         }
-        *(m_msg_bytes[type]) =
-            *(m_msg_counts[type]) *
+        *(m_msg_bytes.m_stats[type]) =
+            *(m_msg_counts.m_stats[type]) *
             statistics::constant(Network::MessageSizeType_to_int(type));
     }
 

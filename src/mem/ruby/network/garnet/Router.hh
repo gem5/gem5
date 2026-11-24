@@ -155,14 +155,22 @@ class Router : public BasicRouter, public Consumer
     std::vector<std::shared_ptr<InputUnit>> m_input_unit;
     std::vector<std::shared_ptr<OutputUnit>> m_output_unit;
 
-    // Statistical variables required for power computations
-    statistics::Scalar m_buffer_reads;
-    statistics::Scalar m_buffer_writes;
+    // Stats used for power computations. Grouped (merged, no name) so
+    // they're resolvable, same idea as GarnetNetwork::GarnetNetworkStats
+    // -- except these are all plain scalars with nothing deferred, so
+    // no regStats() override is needed here.
+    struct RouterStats : public statistics::Group
+    {
+        RouterStats(Router *parent);
 
-    statistics::Scalar m_sw_input_arbiter_activity;
-    statistics::Scalar m_sw_output_arbiter_activity;
+        statistics::Scalar m_buffer_reads;
+        statistics::Scalar m_buffer_writes;
 
-    statistics::Scalar m_crossbar_activity;
+        statistics::Scalar m_sw_input_arbiter_activity;
+        statistics::Scalar m_sw_output_arbiter_activity;
+
+        statistics::Scalar m_crossbar_activity;
+    } m_stats;
 };
 
 } // namespace garnet
