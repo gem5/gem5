@@ -67,6 +67,11 @@ safe-outputs:
                 }
 
 tools:
+  repo-memory:
+    branch-name: memory/test-failure-doctor
+    file-glob: ["*.json"]
+    allowed-extensions: [".json"]
+    max-file-count: 1
   github:
     # `default` expands to context, repos, issues, pull_requests and users;
     # `actions` allows for access to workflow logs and artifacts
@@ -118,17 +123,52 @@ is `failure`, `timed_out`, or `cancelled` and whose `run_attempt` is
 1 or 2.
 
 Additionally, we want to exclude any eligible run that has already been analyzed
-by the Test Failure Doctor. If the last completed run of Test Failure Doctor that was
-triggered by `scheduler.yaml` finished within the last 3 hours, only retain runs
-(run id and corresponding run attempt) that completed since the last run of Test Failure
-Doctor started. Also exclude runs (run id and corresponding run attempt)
-referenced by an existing Test Failure Doctor issue or PR comment.
+by the Test Failure Doctor. The file `test-failure-doctor-runs.json`
+under `/tmp/gh-aw/repo-memory/default` contains a record of which run-and-attempt
+pairs Test Failure Doctor investigated in the last run launched by `scheduler.yaml`,
+as well as any workflows investigated by manually launched runs of Test Failure Doctor
+since the last scheduled run.
 
-After filtering runs, investigate each remaining run independently through
-Phases 1-5.
+If the last completed run of Test Failure Doctor that was triggered by
+`scheduler.yaml` finished within the last 3 hours, exclude any run-and-attempt pairs that
+are listed in `test-failure-doctor-runs.json`, as this means that the run for that
+attempt has already been investigated.
+
+Investigate each remaining run independently through Phases 1-5.
 Use the selected run's details and ID wherever the report templates below refer
 to the failed workflow; do not rely on `github.event.workflow_run`. If no runs
 remain, call the `noop` tool.
+
+### Writing filtered runs to memory
+
+After filtering runs, we want to save the currently selected runs so future runs
+of Test Failure Doctor can see what was already investigated.
+
+We want to write the selected run IDs and their corresponding attempts to
+`test-failure-doctor-runs.json` under `/tmp/gh-aw/repo-memory/default`.
+
+If the current Test Failure Doctor run was triggered by `scheduler.yaml`,
+overwrite the contents of `test-failure-doctor-runs.json`, so it only contains
+the selected run-and-attempt pairs from the current Test Failure Doctor run.
+Otherwise, if the current Test Failure Doctor run was manually triggered,
+keep the contents of `test-failure-doctor-runs.json` and append the currently
+selected runs instead.
+
+Write a JSON object with a `runs` array, containing
+one object per selected run with a string `run_id` and an integer `attempt`,
+for example:
+
+```json
+{
+  "runs": [
+    {"run_id": "123456789", "attempt": 1},
+    {"run_id": "987654321", "attempt": 2}
+  ]
+}
+```
+
+Write `{"runs": []}` if no runs remain (or don't append anything for a manually
+launched Test Failure Doctor run).
 
 ### Phase 1: Initial Triage
 
