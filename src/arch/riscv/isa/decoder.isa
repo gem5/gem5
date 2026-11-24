@@ -5943,14 +5943,16 @@ decode QUADRANT default Unknown::unknown() {
                         HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
 
-                        if (misa.rvh && virtualizationEnabled(xc) &&
-                            (pm == PRV_U || hstatus.vtvm == 1)) {
-                            return std::make_shared<VirtualInstFault>(
-                                    "sfence in VU mode or VTVM enabled",
-                                    machInst);
-                        }
-                        else if (pm == PRV_U ||
-                        (pm == PRV_S && status.tvm == 1)) {
+                        if (misa.rvh && virtualizationEnabled(xc)) {
+                            // V=1: only VTVM applies, mstatus.TVM must
+                            // not be checked
+                            if (pm == PRV_U || hstatus.vtvm == 1) {
+                                return std::make_shared<VirtualInstFault>(
+                                        "sfence in VU mode or VTVM enabled",
+                                        machInst);
+                            }
+                        } else if (pm == PRV_U ||
+                                (pm == PRV_S && status.tvm == 1)) {
                             return std::make_shared<IllegalInstFault>(
                                         "sfence in user mode or TVM enabled",
                                         machInst);
@@ -5961,6 +5963,10 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
 
                     0xb: sinval_vma({{
+                        if (RD != 0) {
+                            return std::make_shared<IllegalInstFault>(
+                                "sinval.vma requires rd = x0", machInst);
+                        }
                         auto isa = dynamic_cast<RiscvISA::ISA*>(
                             xc->tcBase()->getIsaPtr());
                         if (!isa->reportsExtension("Svinval")) {
@@ -5978,14 +5984,16 @@ decode QUADRANT default Unknown::unknown() {
                         HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
 
-                        if (misa.rvh && virtualizationEnabled(xc) &&
-                            (pm == PRV_U || hstatus.vtvm == 1)) {
-                            return std::make_shared<VirtualInstFault>(
-                                    "sinval in VU mode or VTVM enabled",
-                                    machInst);
-                        }
-                        else if (pm == PRV_U ||
-                        (pm == PRV_S && status.tvm == 1)) {
+                        if (misa.rvh && virtualizationEnabled(xc)) {
+                            // V=1: only VTVM applies, mstatus.TVM must
+                            // not be checked
+                            if (pm == PRV_U || hstatus.vtvm == 1) {
+                                return std::make_shared<VirtualInstFault>(
+                                        "sinval in VU mode or VTVM enabled",
+                                        machInst);
+                            }
+                        } else if (pm == PRV_U ||
+                                (pm == PRV_S && status.tvm == 1)) {
                             return std::make_shared<IllegalInstFault>(
                                         "sinval in user mode or TVM enabled",
                                         machInst);
@@ -6087,6 +6095,10 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
 
                     0x13: hinval_vvma({{
+                        if (RD != 0) {
+                            return std::make_shared<IllegalInstFault>(
+                                "hinval.vvma requires rd = x0", machInst);
+                        }
                         auto isa = dynamic_cast<RiscvISA::ISA*>(
                             xc->tcBase()->getIsaPtr());
                         if (!isa->reportsExtension("Svinval")) {
@@ -6211,6 +6223,10 @@ decode QUADRANT default Unknown::unknown() {
 
                     0x33: decode FUNCT3 {
                         0x0: hinval_gvma({{
+                            if (RD != 0) {
+                                return std::make_shared<IllegalInstFault>(
+                                    "hinval.gvma requires rd = x0", machInst);
+                            }
                             auto isa = dynamic_cast<RiscvISA::ISA*>(
                                 xc->tcBase()->getIsaPtr());
                             if (!isa->reportsExtension("Svinval")) {
@@ -6239,9 +6255,12 @@ decode QUADRANT default Unknown::unknown() {
                                             "hinval in U or TVM on",
                                             machInst);
                             }
-                            // Same as hfence.gvma (allowed by Svinval)
+                            // Conservative full flush: the TLB cannot yet
+                            // match guest-stage entries by guest-physical
+                            // address/VMID, so flush everything (same effect
+                            // as hfence.gvma x0, x0) until it supports it.
                             static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
-                                demapPage(xc->tcBase(), Rs1, Rs2, true);
+                                demapPage(xc->tcBase(), 0, 0, true);
                             return NoFault;
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     }
