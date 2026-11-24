@@ -497,7 +497,10 @@ vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
             if (exponent <= (eHalfRange - 15)) {
                 // The result is too small. Denormalize.
                 mantissa |= (1 << 10);
-                while (mantissa && exponent <= (eHalfRange - 15)) {
+                // Keep shifting until the guard bit is also clear, so tiny
+                // values do not round up using a stale guard bit.
+                while ((mantissa || topOne) &&
+                       exponent <= (eHalfRange - 15)) {
                     restZeros = restZeros && !topOne;
                     topOne = bits(mantissa, 0);
                     mantissa = mantissa >> 1;
