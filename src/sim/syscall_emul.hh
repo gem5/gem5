@@ -2420,29 +2420,26 @@ SyscallReturn
 clock_getresFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
                  VPtr<typename OS::timespec> tp)
 {
-    // Linux reserves low-bit pattern 7 for invalid CPU clock types.
-    if (clk_id < 0 && (clk_id & 7) == 7) {
+    // Encoded CPU clock IDs are not supported by clock_gettimeFunc.
+    if (clk_id < 0) {
         return -EINVAL;
     }
 
-    // Negative IDs encode process CPU or FD-backed clocks.
-    if (clk_id >= 0) {
-        switch (clk_id) {
-            case OS::TGT_CLOCK_REALTIME:
-            case OS::TGT_CLOCK_REALTIME_ALARM:
-            case OS::TGT_CLOCK_REALTIME_COARSE:
-            case OS::TGT_CLOCK_TAI:
-            case OS::TGT_CLOCK_MONOTONIC:
-            case OS::TGT_CLOCK_MONOTONIC_COARSE:
-            case OS::TGT_CLOCK_MONOTONIC_RAW:
-            case OS::TGT_CLOCK_BOOTTIME:
-            case OS::TGT_CLOCK_BOOTTIME_ALARM:
-            case OS::TGT_CLOCK_PROCESS_CPUTIME:
-            case OS::TGT_CLOCK_THREAD_CPUTIME:
-                break;
-            default:
-                return -EINVAL;
-        }
+    switch (clk_id) {
+        case OS::TGT_CLOCK_REALTIME:
+        case OS::TGT_CLOCK_REALTIME_ALARM:
+        case OS::TGT_CLOCK_REALTIME_COARSE:
+        case OS::TGT_CLOCK_TAI:
+        case OS::TGT_CLOCK_MONOTONIC:
+        case OS::TGT_CLOCK_MONOTONIC_COARSE:
+        case OS::TGT_CLOCK_MONOTONIC_RAW:
+        case OS::TGT_CLOCK_BOOTTIME:
+        case OS::TGT_CLOCK_BOOTTIME_ALARM:
+        case OS::TGT_CLOCK_PROCESS_CPUTIME:
+        case OS::TGT_CLOCK_THREAD_CPUTIME:
+            break;
+        default:
+            return -EINVAL;
     }
 
     // Set resolution at ns, which is what clock_gettime() returns
