@@ -255,6 +255,7 @@ namespace RiscvISA
         struct PagewalkerStats : public statistics::Group
         {
             PagewalkerStats(statistics::Group *parent);
+            void recordWalk(unsigned logBytes);
 
             statistics::Scalar num_4kb_walks;
             statistics::Scalar num_64kb_walks;

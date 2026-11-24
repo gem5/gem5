@@ -424,6 +424,7 @@ Walker::WalkerState::walkGStage(Addr guest_paddr, Addr &host_paddr,
         Addr vpn = guest_paddr >> PageShift;
         unsigned logBytes =
             walkType == GstageOnly ? entry.logBytes : gresult.logBytes;
+        walker->pagewalkerstats.recordWalk(logBytes);
         Addr vpn_bits = vpn & mask(logBytes - PageShift);
 
         // Update gresult
@@ -553,6 +554,9 @@ Walker::WalkerState::walkOneStage(Addr vaddr)
         }
     } while (read);
 
+    if (fault == NoFault) {
+        walker->pagewalkerstats.recordWalk(entry.logBytes);
+    }
     return fault;
 }
 
@@ -670,6 +674,8 @@ Walker::WalkerState::walkTwoStage(Addr vaddr)
     if (fault != NoFault) {
         return fault;
     }
+
+    walker->pagewalkerstats.recordWalk(entry.logBytes);
 
     // In 2-stage walks the TLB insert is done after an
     // additional g-stage walk
@@ -923,17 +929,6 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                     }
                 }
 
-                // Update statistics for completed page walks
-                if (level == 1) {
-                    walker->pagewalkerstats.num_2mb_walks++;
-                }
-                if (level == 0) {
-                    if (pte.n) {
-                        walker->pagewalkerstats.num_64kb_walks++;
-                    } else {
-                        walker->pagewalkerstats.num_4kb_walks++;
-                    }
-                }
                 DPRINTF(PageTableWalker,
                         "#1 leaf node at level %d, with vpn %#x\n",
                         level, entry.vaddr);
@@ -1079,18 +1074,6 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
                     gresult.pte = pte;
                 }
 
-                // Update statistics for completed page walks
-                if (glevel == 1) {
-                    walker->pagewalkerstats.num_2mb_walks++;
-                }
-                if (glevel == 0) {
-                    if (pte.n) {
-                        walker->pagewalkerstats.num_64kb_walks++;
-                    }
-                    else {
-                        walker->pagewalkerstats.num_4kb_walks++;
-                    }
-                }
                 DPRINTF(PageTableWalker,
                         "[GSTAGE] #1 leaf node at level %d, with vpn %#x\n",
                         glevel, gresult.vaddr);
@@ -1251,6 +1234,7 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
         state = Ready;
         nextState = Waiting;
         if (timingFault == NoFault) {
+            walker->pagewalkerstats.recordWalk(entry.logBytes);
             // Publish only after all PTE writes have completed.
             if (!functional && !memaccess.bypassTLB()) {
                 Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
@@ -1439,6 +1423,18 @@ Walker::PagewalkerStats::PagewalkerStats(statistics::Group *parent)
     ADD_STAT(num_2mb_walks, statistics::units::Count::get(),
              "Completed page walks with 2MB pages")
 {
+}
+
+void
+Walker::PagewalkerStats::recordWalk(unsigned logBytes)
+{
+    if (logBytes == 12) {
+        num_4kb_walks++;
+    } else if (logBytes == 16) {
+        num_64kb_walks++;
+    } else if (logBytes == 21) {
+        num_2mb_walks++;
+    }
 }
 
 } // namespace RiscvISA
