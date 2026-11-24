@@ -1415,7 +1415,8 @@ let {{
                         CR4 cr4 = newVal;
                         // Fault if any unknown bits are set. Also,
                         // PAE can't be disabled in long mode.
-                        if (bits(newVal, 63, 17) ||
+                        if (bits(newVal, 63, 23) ||
+                            bits(newVal, 21, 19) ||
                             bits(newVal, 15, 11) ||
                                 (machInst.mode.mode == LongMode && !cr4.pae))
                             fault = std::make_shared<GeneralProtection>(0);
@@ -1748,4 +1749,80 @@ let {{
             }
             cfofBits = cfofBits & ~(X86ISA::OFBit | X86ISA::CFBit);
         '''
+
+    class Rdpkru(RdRegOp):
+        code = '''
+            CR4 cr4 = CR4Op;
+            if (!cr4.pke) {
+                fault = std::make_shared<InvalidOpcode>();
+            }
+            if (Rcx == 0) {
+                DestReg = PkruOp;
+                Rdx = 0;
+            } else {
+                fault = std::make_shared<GenericISA::M5PanicFault>(
+                        "Segment not present.\\n");
+            }
+        '''
+
+    class Wrpkru(RdRegOp):
+        code = '''
+            CR4 cr4 = CR4Op;
+            if (!cr4.pke) {
+                fault = std::make_shared<InvalidOpcode>();
+            }
+            if (Rcx == 0 && Rdx == 0) {
+                PkruOp = Rax;
+            } else {
+                fault = std::make_shared<GenericISA::M5PanicFault>(
+                        "Segment not present.\\n");
+            }
+        '''
+
+    class Xgetbv(RdRegOp):
+        code = '''
+        CR4 cr4 = CR4Op;
+
+        if (Rcx != 0) {
+            fault = std::make_shared<GeneralProtection>(0);
+        }
+
+        if (!cr4.osxsave) {
+            fault = std::make_shared<InvalidOpcode>();
+        }
+        Rax = Xcr0Op;
+
+        '''
+
+
+
+
+    class Xsetbv(RdRegOp):
+        code = '''
+        HandyM5Reg m5reg = M5Reg;
+        uint64_t edx = Rdx & 0xFFFFFFFFULL;
+        uint64_t eax = Rax & 0xFFFFFFFFULL;
+        CR4 cr4 = CR4Op;
+        if (m5reg.cpl != 0) {
+            fault = std::make_shared<GeneralProtection>(0);
+        }
+        if (Rcx != 0) {
+            fault = std::make_shared<GeneralProtection>(0);
+        }
+        if (bits(eax,0) == 0) {
+            fault = std::make_shared<GeneralProtection>(0);
+        }
+        if (bits(eax,2) == 1 && bits(eax,1) == 0) {
+            fault = std::make_shared<GeneralProtection>(0);
+        }
+        if (!cr4.osxsave) {
+            fault = std::make_shared<InvalidOpcode>();
+        }
+
+        uint64_t edx_eax = (edx << 32) | eax;
+        Xcr0Op = edx_eax
+
+        '''
+
+
 }};
