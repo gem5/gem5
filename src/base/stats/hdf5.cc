@@ -209,6 +209,14 @@ Hdf5::appendVectorInfo(const VectorInfo &info)
     hsize_t fdims[2] = { 0, vr.size() };
     H5::DataSet data_set = appendStat(info, 2, fdims, vr.data());
 
+    // Formula totals evaluate the expression on operand totals. Summing
+    // the result vector would give incorrect totals for rates and ratios.
+    if (info.flags.isSet(total)) {
+        hsize_t total_dims[1] = {0};
+        double total_data[1] = {info.total()};
+        appendStat(info, 1, total_dims, total_data, "::total");
+    }
+
     if (dumpCount == 0) {
         if (!info.subnames.empty() && !emptyStrings(info.subnames))
             addMetaData(data_set, "subnames", info.subnames);
@@ -221,8 +229,10 @@ Hdf5::appendVectorInfo(const VectorInfo &info)
 }
 
 H5::DataSet
-Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
+Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data,
+                 const char *suffix)
 {
+    const std::string dataset_name = info.name + suffix;
     H5::Group group = path.top();
     H5::DataSet data_set;
     H5::DataSpace fspace;
@@ -232,7 +242,7 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
     if (dumpCount > 0) {
         // Get the existing stat if we have already dumped this stat
         // before.
-        data_set = group.openDataSet(info.name);
+        data_set = group.openDataSet(dataset_name);
         data_set.extend(dims);
         fspace = data_set.getSpace();
     } else {
@@ -256,15 +266,16 @@ Hdf5::appendStat(const Info &info, int rank, hsize_t *dims, const double *data)
 
         fspace = H5::DataSpace(rank, dims, max_dims.data());
         try {
-            DPRINTF(Stats, "Creating dataset %s in group %s\n",
-                info.name, group.getObjnameByIdx(group.getId()));
-            data_set = group.createDataSet(info.name,
-                H5::PredType::NATIVE_DOUBLE, fspace, props);
+            DPRINTF(Stats, "Creating dataset %s in group %s\n", dataset_name,
+                    group.getObjnameByIdx(group.getId()));
+            data_set = group.createDataSet(
+                dataset_name, H5::PredType::NATIVE_DOUBLE, fspace, props);
         } catch (const H5::Exception &e) {
-          std::string err = "Failed creating H5::DataSet " +  info.name + "; ";
-          err += e.getDetailMsg() + " in " + e.getFuncName();
-          // Rethrow std exception so that it's passed on to the Python world
-          throw std::runtime_error(err);
+            std::string err =
+                "Failed creating H5::DataSet " + dataset_name + "; ";
+            err += e.getDetailMsg() + " in " + e.getFuncName();
+            // Rethrow std exception so it is passed on to the Python world.
+            throw std::runtime_error(err);
         }
 
         if (enableDescriptions && !info.desc.empty()) {
