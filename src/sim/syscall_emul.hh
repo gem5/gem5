@@ -2590,6 +2590,11 @@ getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
               int who /* THREAD, SELF, or CHILDREN */,
               VPtr<typename OS::rusage> rup)
 {
+    if (who != OS::TGT_RUSAGE_SELF &&
+        who != OS::TGT_RUSAGE_CHILDREN &&
+        who != OS::TGT_RUSAGE_THREAD)
+        return -EINVAL;
+
     rup->ru_utime.tv_sec = 0;
     rup->ru_utime.tv_usec = 0;
     rup->ru_stime.tv_sec = 0;
@@ -2620,11 +2625,12 @@ getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
         // do nothing.  We have no child processes, so they take no time.
         break;
 
+      case OS::TGT_RUSAGE_THREAD:
+        // Thread-specific resource usage is not modeled in SE mode.
+        break;
+
       default:
-        // don't really handle THREAD or CHILDREN, but just warn and
-        // plow ahead
-        warn("getrusage() only supports RUSAGE_SELF.  Parameter %d ignored.",
-             who);
+        warn("getrusage() does not support parameter %d.", who);
     }
 
     return 0;
