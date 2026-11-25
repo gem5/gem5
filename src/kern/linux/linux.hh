@@ -234,7 +234,7 @@ class Linux : public OperatingSystem
     static const int TGT_RUSAGE_SELF     = 0;
     static const int TGT_RUSAGE_CHILDREN = -1;
     static const int TGT_RUSAGE_BOTH     = -2;
-    static const int TGT_RUSAGE_THREAD   = 1;
+    static const int TGT_RUSAGE_THREAD = 1;
 
     struct rusage
     {
