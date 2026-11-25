@@ -1282,9 +1282,18 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     auto process = tc->getProcessPtr();
 
-    sysinfo->uptime = tc->getProcessPtr()->secondsSinceEpoch();
-    sysinfo->totalram = process->system->memSize();
-    sysinfo->mem_unit = 1;
+    auto &info = *sysinfo;
+    memset(&info, 0, sizeof(info));
+
+    info.uptime = tc->getProcessPtr()->secondsSinceEpoch();
+    info.totalram = process->system->memSize();
+    for (auto *thread : process->system->threads) {
+        if (thread->getProcessPtr() &&
+            thread->status() != ThreadContext::Halted) {
+            ++info.procs;
+        }
+    }
+    info.mem_unit = 1;
 
     return 0;
 }
