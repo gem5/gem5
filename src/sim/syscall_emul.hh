@@ -2590,10 +2590,10 @@ getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
               int who /* THREAD, SELF, or CHILDREN */,
               VPtr<typename OS::rusage> rup)
 {
-    if (who != OS::TGT_RUSAGE_SELF &&
-        who != OS::TGT_RUSAGE_CHILDREN &&
-        who != OS::TGT_RUSAGE_THREAD)
+    if (who != OS::TGT_RUSAGE_SELF && who != OS::TGT_RUSAGE_CHILDREN &&
+        who != OS::TGT_RUSAGE_THREAD) {
         return -EINVAL;
+    }
 
     rup->ru_utime.tv_sec = 0;
     rup->ru_utime.tv_usec = 0;
@@ -2626,11 +2626,11 @@ getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
         break;
 
       case OS::TGT_RUSAGE_THREAD:
-        // Thread-specific resource usage is not modeled in SE mode.
-        break;
+          // Thread-specific resource usage is not modeled in SE mode.
+          break;
 
       default:
-        warn("getrusage() does not support parameter %d.", who);
+          warn("getrusage() does not support parameter %d.", who);
     }
 
     return 0;
