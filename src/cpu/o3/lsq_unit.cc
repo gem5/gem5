@@ -1704,7 +1704,12 @@ LSQUnit::write(LSQRequest *request, uint8_t *data, ssize_t store_idx)
     bool store_no_data =
         request->mainReq()->getFlags() & Request::STORE_NO_DATA;
     storeQueue[store_idx].isAllZeros() = store_no_data;
-    assert(size <= SQEntry::DataSize || store_no_data);
+    panic_if(size > SQEntry::DataSize && !store_no_data,
+             "Store [sn:%llu] PC %s of %d bytes does not fit in the %d "
+             "bytes of a store queue entry\n",
+             storeQueue[store_idx].instruction()->seqNum,
+             storeQueue[store_idx].instruction()->pcState(), size,
+             SQEntry::DataSize);
 
     // copy data into the storeQueue only if the store request has valid data
     if (!(request->req()->getFlags() & Request::CACHE_BLOCK_ZERO) &&
