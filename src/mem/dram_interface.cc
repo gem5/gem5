@@ -205,6 +205,8 @@ DRAMInterface::activateBank(Rank& rank_ref, Bank& bank_ref,
             "%d active\n", bank_ref.bank, rank_ref.rank, act_at,
             ranks[rank_ref.rank]->numBanksActive);
 
+    observeCommand(DramCommandInfo::Type::ACT, act_at, rank_ref.rank,
+                   bank_ref.bank, row);
     rank_ref.cmdList.push_back(Command(MemCommand::ACT, bank_ref.bank,
                                act_at));
 
@@ -322,6 +324,8 @@ DRAMInterface::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_tick,
             rank_ref.numBanksActive);
 
     if (trace) {
+        observeCommand(DramCommandInfo::Type::PRE, pre_at, rank_ref.rank,
+                       bank.bank, {}, auto_or_preall);
 
         rank_ref.cmdList.push_back(Command(MemCommand::PRE, bank.bank,
                                    pre_at));
@@ -557,6 +561,9 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
                                                    MemCommand::WR;
 
     rank_ref.cmdList.push_back(Command(command, mem_pkt->bank, cmd_at));
+    observeCommand(mem_pkt->isRead() ? DramCommandInfo::Type::RD
+                                     : DramCommandInfo::Type::WR,
+                   cmd_at, mem_pkt->rank, mem_pkt->bank, mem_pkt->row);
 
     DPRINTF(DRAMPower, "%llu,%s,%d,%d\n", divCeil(cmd_at, tCK) -
             timeStampOffset, mem_cmd, mem_pkt->bank, mem_pkt->rank);
@@ -631,6 +638,25 @@ DRAMInterface::addRankToRankDelay(Tick cmd_at)
             n->banks[i].wrAllowedAt = std::max(cmd_at + rankToRankDelay(),
                                              n->banks[i].wrAllowedAt);
         }
+    }
+}
+
+void
+DRAMInterface::regProbePoints()
+{
+    MemInterface::regProbePoints();
+    commandScheduled = std::make_unique<ProbePointArg<DramCommandInfo>>(
+        getProbeManager(), "CommandScheduled");
+}
+
+void
+DRAMInterface::observeCommand(DramCommandInfo::Type command, Tick command_at,
+                              uint8_t rank, std::optional<uint8_t> bank,
+                              std::optional<uint32_t> row, bool implicit)
+{
+    if (commandScheduled && commandScheduled->hasListeners()) {
+        commandScheduled->notify(DramCommandInfo(
+            command, curTick(), command_at, rank, bank, row, implicit));
     }
 }
 
@@ -1372,6 +1398,7 @@ DRAMInterface::Rank::processRefreshEvent()
 
             // precharge all banks in rank
             cmdList.push_back(Command(MemCommand::PREA, 0, pre_at));
+            dram.observeCommand(DramCommandInfo::Type::PREA, pre_at, rank);
 
             DPRINTF(DRAMPower, "%llu,PREA,0,%d\n",
                     divCeil(pre_at, dram.tCK) -
@@ -1419,6 +1446,7 @@ DRAMInterface::Rank::processRefreshEvent()
 
         // at the moment this affects all ranks
         cmdList.push_back(Command(MemCommand::REF, 0, curTick()));
+        dram.observeCommand(DramCommandInfo::Type::REF, curTick(), rank);
 
         // Update the stats
         updatePowerStats();
