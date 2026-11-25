@@ -184,7 +184,6 @@ static constexpr int EWIDTH = 6;
 static constexpr int LogRBiasSize = 10; // 10: 5.25KiB, 11: 11.5KiB, 12: 23KiB
 
 static constexpr int MaxDistance = 64;
-static constexpr size_t ST_NBuf = 256;
 static constexpr size_t LogicalRegisterCount = MaxDistance + 1;
 
 static constexpr size_t LOGSIZEUPI = 8;
@@ -396,13 +395,98 @@ struct LogicalRegStateEntry
 
 using LogicalRegState = std::array<LogicalRegStateEntry, LogicalRegisterCount>;
 
-struct SeqRegStateEntry
+class SeqRegState
 {
-    bool valid = false;
-    uint64_t payload = 0;
-};
+  public:
+    static constexpr size_t NumEntries = 256;
 
-using SeqRegState = std::array<SeqRegStateEntry, ST_NBuf>;
+    void
+    fetch(InstSeqNum seq_num)
+    {
+        assert(positions.empty() || positions.back().seqNum < seq_num);
+        const uint64_t next =
+            positions.empty() ? 0 : positions.back().position + 1;
+        positions.push_back({seq_num, next});
+    }
+
+    void
+    squash(InstSeqNum cutoff)
+    {
+        while (!positions.empty() && positions.back().seqNum > cutoff) {
+            positions.pop_back();
+        }
+    }
+
+    template <typename DecodeQueue, typename WritebackQueue>
+    void
+    compact(InstSeqNum committed, const DecodeQueue &decodes,
+            const WritebackQueue &writebacks)
+    {
+        InstSeqNum keep_from = committed;
+        for (const auto &event : decodes) {
+            keep_from = std::min(keep_from, event.seqNum);
+        }
+        for (const auto &event : writebacks) {
+            keep_from = std::min(keep_from, event.seqNum);
+        }
+        // Avoid erasing the last committed position needed by squash recovery.
+        while (positions.size() > 1 && positions[1].seqNum <= committed &&
+               positions.front().seqNum < keep_from) {
+            positions.pop_front();
+        }
+    }
+
+    std::optional<uint64_t>
+    position(InstSeqNum seq_num) const
+    {
+        const auto it =
+            std::lower_bound(positions.begin(), positions.end(), seq_num,
+                             [](const SeqPosition &entry, InstSeqNum seq) {
+                                 return entry.seqNum < seq;
+                             });
+        if (it == positions.end() || it->seqNum != seq_num) {
+            return std::nullopt;
+        }
+        return it->position;
+    }
+
+    void
+    decode(InstSeqNum seq_num)
+    {
+        if (const auto pos = position(seq_num)) {
+            entries[*pos % NumEntries].valid = false;
+        }
+    }
+
+    void
+    setValue(uint64_t position, uint64_t digest)
+    {
+        entries[position % NumEntries] = {true, digest};
+    }
+
+    uint64_t
+    value(uint64_t position) const
+    {
+        const auto &entry = entries[position % NumEntries];
+        return entry.valid ? entry.payload : -1;
+    }
+
+  private:
+    struct SeqPosition
+    {
+        InstSeqNum seqNum;
+        uint64_t position;
+    };
+
+    struct Entry
+    {
+        bool valid = false;
+        uint64_t payload = 0;
+    };
+
+    std::deque<SeqPosition> positions;
+    std::array<Entry, NumEntries> entries{};
+};
 
 struct PredVars
 {
@@ -1097,7 +1181,7 @@ class Predictor
             bits += RBias.storage_size();
             bits += WR.storage_size();
             if (!UseLogical) {
-                bits += ST_NBuf * (1 + 14);
+                bits += SeqRegState::NumEntries * (1 + 14);
             } else {
                 bits += LogicalRegisterCount * (1 + 14 + 8);
             }
@@ -1187,34 +1271,16 @@ class Predictor
                 "RUNLTS storage (%d bits) exceeds 192KiB", total_bits);
     }
 
-    uint64_t
-    RP(InstSeqNum seq, uint8_t piece)
-    {
-        return seq_no_to_correct_path_no[seq %
-                                         seq_no_to_correct_path_no.size()]
-            .correctPathNo;
-    }
-
-    bool
-    isSquashedSeq(InstSeqNum seq)
-    {
-        const CorrectPathEntry &entry =
-            seq_no_to_correct_path_no[seq % seq_no_to_correct_path_no.size()];
-        return entry.seqNum != seq || !entry.valid;
-    }
-
     PredictionHistory
     capturePredictionHistory(uint64_t pc, InstSeqNum seq_no)
     {
         PredictionHistory history;
         history.seq_no = seq_no;
+        const auto position = seqRegState.position(seq_no);
         for (size_t i = 0; i < LogicalRegisterCount; ++i) {
             if (!UseLogical) {
-                const uint64_t physical = (RP(seq_no, 0) - i) % ST_NBuf;
                 history.register_values.at(i) =
-                    seqRegState.at(physical).valid
-                        ? seqRegState.at(physical).payload
-                        : -1;
+                    position ? seqRegState.value(*position - i) : -1;
             } else {
                 history.register_values.at(i) =
                     logRegState.at(i).valid ? logRegState.at(i).payload : -1;
@@ -1945,10 +2011,7 @@ class Predictor
     decode(InstSeqNum seq_num, const StaticInstPtr &inst)
     {
         if (!UseLogical) {
-            if (!isSquashedSeq(seq_num)) {
-                seqRegState.at(RP(seq_num, 0) % ST_NBuf).valid = false;
-            }
-            return;
+            return seqRegState.decode(seq_num);
         }
         if (isSquashedDecode(seq_num)) {
             return;
@@ -2051,15 +2114,14 @@ class Predictor
     writeback(const Writeback &writeback)
     {
         const InstSeqNum seq_num = writeback.seqNum;
-        if (!UseLogical && isSquashedSeq(seq_num)) {
+        const auto position = seqRegState.position(seq_num);
+        if (!UseLogical && !position) {
             return;
         }
         auto set_digest = [&](size_t reg, uint64_t value) {
             const uint64_t digest = make_reg_digest(reg, value);
             if (!UseLogical) {
-                const size_t index = RP(seq_num, 0) % ST_NBuf;
-                seqRegState.at(index).valid = true;
-                seqRegState.at(index).payload = digest;
+                seqRegState.setValue(*position, digest);
                 return;
             }
 
@@ -2127,27 +2189,26 @@ class Predictor
     void
     fetch(InstSeqNum seq_num)
     {
-        seq_no_to_correct_path_no[seq_num % seq_no_to_correct_path_no.size()] =
-            {seq_num, correct_path_no++, true};
+        if (!UseLogical) {
+            seqRegState.fetch(seq_num);
+        }
         lastFetchedSeqNum = seq_num;
     }
 
+    template <typename DecodeQueue, typename WritebackQueue>
     void
-    commit(InstSeqNum seq_num)
+    commit(InstSeqNum seq_num, const DecodeQueue &decodes,
+           const WritebackQueue &writebacks)
     {
         lastCommittedSeqNum = std::max(lastCommittedSeqNum, seq_num);
         compactCommittedState();
+        seqRegState.compact(lastCommittedSeqNum, decodes, writebacks);
     }
 
     void
     squashInstructionState(InstSeqNum seq_num)
     {
-        correct_path_no = RP(seq_num, 0) + 1;
-        // Avoid restoring a wrong-path position on a later squash.
-        for (InstSeqNum seq = seq_num + 1; seq <= lastFetchedSeqNum; seq++) {
-            seq_no_to_correct_path_no[seq % seq_no_to_correct_path_no.size()] =
-                {seq, correct_path_no - 1, false};
-        }
+        seqRegState.squash(seq_num);
 
         if (UseLogical) {
             if (lastFetchedSeqNum > seq_num) {
@@ -2262,16 +2323,6 @@ class Predictor
     int updatethreshold = 35;
     std::array<int, (1 << LOGSIZEUP)> Pupdatethreshold{};
     int8_t FirstH = 0, SecondH = 0;
-
-    struct CorrectPathEntry
-    {
-        InstSeqNum seqNum = 0;
-        uint64_t correctPathNo = 0;
-        bool valid = false;
-    };
-
-    std::array<CorrectPathEntry, 2048> seq_no_to_correct_path_no{};
-    uint64_t correct_path_no = 0;
 
     RBias_ RBias;
     WR_ WR;
@@ -2758,7 +2809,8 @@ RUNLTS::writtenBack(const o3::DynInstPtr &inst)
 void
 RUNLTS::committed(const o3::DynInstPtr &inst)
 {
-    threadState(inst->threadNumber).pred.commit(inst->seqNum);
+    threadState(inst->threadNumber)
+        .pred.commit(inst->seqNum, decodedEvents, writtenBackEvents);
 }
 
 void
