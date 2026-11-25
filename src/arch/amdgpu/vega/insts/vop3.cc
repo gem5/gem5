@@ -3856,7 +3856,7 @@ Inst_VOP3__V_RCP_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vdst[lane] = 1.0 / src[lane];
+            vdst[lane] = rcpF32(src[lane]);
         }
     }
 
@@ -6672,23 +6672,7 @@ Inst_VOP3__V_DIV_FIXUP_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            if (std::fpclassify(src1[lane]) == FP_ZERO) {
-                if (std::signbit(src1[lane])) {
-                    vdst[lane] = -INFINITY;
-                } else {
-                    vdst[lane] = +INFINITY;
-                }
-            } else if (std::isnan(src2[lane]) || std::isnan(src1[lane])) {
-                vdst[lane] = NAN;
-            } else if (std::isinf(src1[lane])) {
-                if (std::signbit(src1[lane])) {
-                    vdst[lane] = -INFINITY;
-                } else {
-                    vdst[lane] = +INFINITY;
-                }
-            } else {
-                vdst[lane] = src2[lane] / src1[lane];
-            }
+            vdst[lane] = divFixupF32(src0[lane], src1[lane], src2[lane]);
         }
     }
 
@@ -6828,8 +6812,10 @@ Inst_VOP3__V_DIV_SCALE_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vdst[lane] = src0[lane];
-            vcc.setBit(lane, 0);
+            bool scale_quotient = false;
+            vdst[lane] = divScaleF32(src0[lane], src1[lane], src2[lane],
+                                     scale_quotient);
+            vcc.setBit(lane, scale_quotient ? 1 : 0);
         }
     }
 
@@ -6947,11 +6933,13 @@ Inst_VOP3__V_DIV_FMAS_F32::execute(GPUDynInstPtr gpuDynInst)
     ConstVecOperandF32 src0(gpuDynInst, extData.SRC0);
     ConstVecOperandF32 src1(gpuDynInst, extData.SRC1);
     ConstVecOperandF32 src2(gpuDynInst, extData.SRC2);
-    VecOperandF64 vdst(gpuDynInst, instData.VDST);
+    ConstScalarOperandU64 vcc(gpuDynInst, REG_VCC_LO);
+    VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
     src0.readSrc();
     src1.readSrc();
     src2.readSrc();
+    vcc.read();
 
     if (instData.ABS & 0x1) {
         src0.absModifier();
@@ -6979,11 +6967,12 @@ Inst_VOP3__V_DIV_FMAS_F32::execute(GPUDynInstPtr gpuDynInst)
 
     for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
         if (wf->execMask(lane)) {
-            vdst[lane] = std::fma(src0[lane], src1[lane], src2[lane]);
+            vdst[lane] = divFmasF32(src0[lane], src1[lane], src2[lane],
+                                    bits(vcc.rawData(), lane));
         }
     }
 
-    // vdst.write();
+    vdst.write();
 } // execute
 // --- Inst_VOP3__V_DIV_FMAS_F64 class methods ---
 
