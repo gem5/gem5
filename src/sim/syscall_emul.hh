@@ -2088,6 +2088,9 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
     if (!hbfdp)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
+    constexpr typename OS::size_t linux_uio_max_iov = 1024;
+    if (count > linux_uio_max_iov)
+        return -EINVAL;
 
     SETranslatingPortProxy prox(tc);
     auto hiov = std::make_unique<struct iovec[]>(count);
