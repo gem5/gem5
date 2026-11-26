@@ -10,7 +10,7 @@ on:
 jobs:
 
     get-date:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -19,7 +19,7 @@ jobs:
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     pre-commit:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         steps:
             - uses: actions/checkout@v7
             - uses: actions/setup-python@v7
@@ -108,7 +108,7 @@ jobs:
 
     build-testlib-gem5:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         timeout-minutes: 180
         needs: [get-date, get-testlib-long-dirs]
         strategy:
@@ -123,9 +123,9 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: build/${{ matrix.target }}
-                  key: testlib-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-ubuntu-26.04-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-${{ matrix.target }}
+                      testlib-build-ubuntu-26.04-${{ matrix.target }}
 
             - name: Build the TestLib target
               env:
@@ -159,7 +159,7 @@ jobs:
             matrix:
                 type: [debug]
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v7
@@ -168,8 +168,8 @@ jobs:
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
     get-testlib-long-dirs:
-        runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        runs-on: ubuntu-26.04
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
@@ -203,7 +203,7 @@ jobs:
         name: long-tests
         runs-on: [self-hosted, linux, x64]
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
@@ -292,9 +292,9 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: build/*
-                  key: sst-build-${{ needs.get-date.outputs.date }}
+                  key: sst-build-ubuntu-26.04-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      sst-build
+                      sst-build-ubuntu-26.04-
 
             - name: Build RISCV/libgem5_opt.so with SST
               run: |
@@ -339,7 +339,7 @@ jobs:
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
@@ -356,9 +356,9 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: build/*
-                  key: dramsys-build-${{ needs.get-date.outputs.date }}
+                  key: dramsys-build-ubuntu-26.04-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      dramsys-build
+                      dramsys-build-ubuntu-26.04-
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5

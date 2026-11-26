@@ -14,7 +14,7 @@ concurrency:
 jobs:
     pre-commit:
     # runs on github hosted runner
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v7
@@ -33,7 +33,7 @@ jobs:
     # Checks changed lines against the PR merge base with the same pinned
     # clang-format version used by the local pre-commit hook.
     clang-format-check:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         if: github.event.pull_request.draft == false
         steps:
             - name: Checkout code
@@ -77,7 +77,7 @@ jobs:
     # `src` directory contents and use it as a hash. We found there to be bugs
     # with the hash function where this task would timeout. This approach is
     # simple, works, and still provides some level of caching.
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -91,7 +91,7 @@ jobs:
                 type: [fast, opt]
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         needs: [pre-commit] # only runs if pre-commit passes.
         timeout-minutes: 60
         steps:
@@ -102,11 +102,11 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         needs: [pre-commit]
         steps:
             - uses: actions/checkout@v7
@@ -207,7 +207,7 @@ jobs:
     testlib-quick-gem5-builds:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         needs: [pre-commit, testlib-quick-matrix, get-date]
         strategy:
             matrix:
@@ -220,9 +220,9 @@ jobs:
               if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
               with:
                   path: build/ALL
-                  key: testlib-build-ALL-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-ubuntu-26.04-ALL-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-ALL-
+                      testlib-build-ubuntu-26.04-ALL-
 
             - name: Build gem5
               env:
@@ -260,7 +260,7 @@ jobs:
         name: quick-tests
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         needs: [pre-commit, testlib-quick-matrix, testlib-quick-gem5-builds]
         timeout-minutes: 360 # 6 hours
         strategy:
@@ -308,7 +308,7 @@ jobs:
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         needs:
             - testlib-quick-execution
             - clang-fast-compilation
