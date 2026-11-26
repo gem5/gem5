@@ -29,6 +29,8 @@ This is the ARM equivalent to `simple.py` (which is designed to run using the
 X86 ISA). More detailed documentation can be found in `simple.py`.
 """
 
+import os
+
 import m5
 from m5.objects import *
 

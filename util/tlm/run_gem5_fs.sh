@@ -34,17 +34,12 @@ RCol='\e[0m'; # Text Reset
 BGre='\e[1;31m';
 echo -e "\n${BGre}Create gem5 Configuration${RCol}\n"
 
-../../build/ARM/gem5.opt ../../configs/example/fs.py \
---tlm-memory=transactor                                     \
---cpu-type=TimingSimpleCPU                                  \
---num-cpu=1                                                 \
---mem-type=SimpleMemory                                     \
---mem-size=512MB                                            \
---mem-channels=1                                            \
---caches --l2cache                                          \
---machine-type=VExpress_GEM5_Foundation                     \
---kernel=vmlinux.arm64                                      \
---disk-image=ubuntu-18.04-arm64-docker.img
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <full-system-config.py> [config arguments...]" >&2
+    exit 1
+fi
+
+../../build/ARM/gem5.opt "$@"
 
 echo -e "\n${BGre}Run gem5 ${RCol}\n"
 

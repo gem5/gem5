@@ -137,18 +137,15 @@ To see more information what happens inside the TLM modules use the -v flag:
 V. Full System Setup
 =====================
 
-Apart from the simple examples, there is a full system example that uses
-the gem5-to-TLM bridge.
+A full-system configuration can use the gem5-to-TLM bridge by connecting its
+memory path to an ExternalSlave with port_type="tlm_slave" and
+port_data="transactor". The deprecated fs.py configuration is no longer
+included; supply a configuration for the platform and workload being modeled.
+The simple conf/tlm_slave.py example shows how to wire the external port.
 
-Build gem5 as described in Section III. Then, make a config file for the
-C++-configured gem5 using normal gem5
+Build gem5 as described in Section III, then generate the configuration:
 
-> ../../build/ARM/gem5.opt ../../configs/example/fs.py               \
-  --tlm-memory=transactor --cpu-type=TimingSimpleCPU --num-cpu=1     \
-  --mem-type=SimpleMemory --mem-size=512MB --mem-channels=1 --caches \
-  --l2cache --machine-type=VExpress_GEM5_Foundation                  \
-  --kernel=vmlinux.arm64                                             \
-  --disk-image=ubuntu-18.04-arm64-docker.img
+> ./run_gem5_fs.sh /path/to/full-system-config.py [configuration arguments]
 
 The message "fatal: Can't find port handler type 'tlm_slave'" is okay.
 The configuration will be stored in the m5out/ directory

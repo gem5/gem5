@@ -45,22 +45,16 @@
 # Caveats:
 #
 # - This script relies on the checkpoint options implemented in
-#   configs/common/Simulation.py, so it works with commands based on
-#   the se.py and fs.py scripts in configs/example, but does not work
-#   directly with the existing regression tests.
+#   configs/common/Simulation.py. The supplied configuration must expose
+#   those checkpoint options; standard-library configurations use their
+#   own checkpoint interfaces instead.
 # - Interleaving simulator and program output can cause discrepancies
 #   in the file position checkpoint information since different runs
 #   have different amount of simulator output.
 # - Probably lots more issues we don't even know about yet.
 #
-# Examples:
-#
-# util/checkpoint-tester.py -i 400000 -- build/<ISA>/gem5.opt \
-#      configs/example/se.py -c tests/test-progs/hello/bin/<isa>/linux/hello \
-#      --output=progout --errout=progerr
-#
-# util/checkpoint-tester.py -i 200000000000 -- build/<ISA>/gem5.opt \
-#      configs/example/fs.py --script configs/boot/halt.sh
+# The deprecated se.py and fs.py examples are no longer included. Pass a
+# configuration which implements the checkpoint options described above.
 #
 
 

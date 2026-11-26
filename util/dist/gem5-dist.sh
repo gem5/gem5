@@ -75,7 +75,7 @@ usage_func ()
     echo "     rundir    : run simulation under this path. If not specified, current dir will be used"
     echo "     ckptdir   : dump/restore checkpoints to/from this path. If not specified, current dir will be used"
 
-    echo "     fullsystem: fullsystem config file"
+    echo "     fullsystem: required fullsystem config file"
     echo "     fs_args   : fullsystem config specific argument list: arg1 arg2 ..."
     echo "     port      : switch listen port"
     echo "     switch    : switch config file"
@@ -164,11 +164,10 @@ do
 done
 
 # Default values to use (in case they are not defined as command line options)
-DEFAULT_FS_CONFIG=$M5_PATH/configs/example/fs.py
 DEFAULT_SW_CONFIG=$M5_PATH/configs/dist/sw.py
 DEFAULT_SW_PORT=2200
 
-[ -z "$FS_CONFIG" ] && FS_CONFIG=$DEFAULT_FS_CONFIG
+[ -n "$FS_CONFIG" ] || { echo "Specify a full-system configuration with -fs"; exit 1; }
 [ -z "$SW_CONFIG" ] && SW_CONFIG=$DEFAULT_SW_CONFIG
 [ -z "$SW_PORT" ] && SW_PORT=$DEFAULT_SW_PORT
 [ -z "$NNODES" ] && NNODES=2
