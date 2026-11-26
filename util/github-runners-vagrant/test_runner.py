@@ -192,7 +192,7 @@ class CleanupTest(unittest.TestCase):
         self.images = [
             {
                 "Id": "health",
-                "RepoTags": ["ubuntu:24.04"],
+                "RepoTags": ["ubuntu:26.04"],
                 "Size": 1,
                 "Created": "2026-01-01",
             },

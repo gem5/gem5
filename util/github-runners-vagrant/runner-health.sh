@@ -29,7 +29,7 @@
 # Run as the service user, including Docker access and bind-mount checks.
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")"
-: "${HEALTH_IMAGE:=ubuntu:24.04}"
+: "${HEALTH_IMAGE:=ubuntu:26.04}"
 : "${RUNNER_MIN_FREE_GIB:=20}"
 RUNNER_RESOURCE_CACHE=${RUNNER_RESOURCE_CACHE-/gem5-resource-cache}
 [[ $(id -u) != 0 ]]
