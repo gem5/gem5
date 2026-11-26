@@ -20,6 +20,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
 
             - name: Generate build matrix
               id: generate
@@ -36,6 +38,11 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         timeout-minutes: 1800
         steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
+
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v4
 
@@ -52,7 +59,7 @@ jobs:
             - name: Build and Push
               uses: docker/bake-action@v7
               with:
-                  source: '{{defaultContext}}:util/dockerfiles'
+                  source: ./util/dockerfiles
                   targets: base-images
                   provenance: true
                   push: true
@@ -77,6 +84,11 @@ jobs:
 
         steps:
 
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
+
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v4
 
@@ -93,7 +105,7 @@ jobs:
             - name: Build and Push
               uses: docker/bake-action@v7
               with:
-                  source: '{{defaultContext}}:util/dockerfiles'
+                  source: ./util/dockerfiles
                   targets: ${{ matrix.target }}
                   provenance: true
                   push: true
