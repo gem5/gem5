@@ -107,6 +107,7 @@
 #include "sim/guest_abi.hh"
 #include "sim/process.hh"
 #include "sim/proxy_ptr.hh"
+#include "sim/se_workload.hh"
 #include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul_buf.hh"
@@ -1282,9 +1283,19 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     auto process = tc->getProcessPtr();
 
-    sysinfo->uptime = tc->getProcessPtr()->secondsSinceEpoch();
-    sysinfo->totalram = process->system->memSize();
-    sysinfo->mem_unit = 1;
+    auto &info = *sysinfo;
+    memset(&info, 0, sizeof(info));
+
+    info.uptime = process->secondsSinceEpoch();
+    info.totalram = process->seWorkload->memSize();
+    info.freeram = process->seWorkload->freeMemSize();
+    for (auto *thread : process->system->threads) {
+        if (thread->getProcessPtr() &&
+            thread->status() != ThreadContext::Halted) {
+            ++info.procs;
+        }
+    }
+    info.mem_unit = 1;
 
     return 0;
 }
