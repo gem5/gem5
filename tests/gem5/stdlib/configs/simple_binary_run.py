@@ -54,7 +54,7 @@ from gem5.isas import (
     get_isa_from_str,
     get_isas_str_set,
 )
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 
 cpu_types_string_map = {
@@ -112,7 +112,7 @@ motherboard = SimpleBoard(
 )
 
 # Set the workload
-binary = Resource(args.resource)
+binary = obtain_resource(args.resource)
 motherboard.set_se_binary_workload(binary)
 
 # Run the simulation

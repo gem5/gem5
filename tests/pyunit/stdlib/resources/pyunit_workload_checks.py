@@ -40,10 +40,6 @@ from gem5.resources.resource import (
     WorkloadResource,
     obtain_resource,
 )
-from gem5.resources.workload import (
-    CustomWorkload,
-    Workload,
-)
 
 mock_config_json = {
     "sources": {
@@ -57,7 +53,7 @@ mock_config_json = {
 
 class CustomWorkloadTestSuite(unittest.TestCase):
     """
-    Tests the `gem5.resources.workload.CustomWorkload` class.
+    Tests the `gem5.resources.resource.WorkloadResource` class.
     """
 
     @classmethod
@@ -81,14 +77,14 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         )
 
     def test_get_function_str(self) -> None:
-        # Tests `CustomWorkload.get_function_str`
+        # Tests `WorkloadResource.get_function_str`
 
         self.assertEqual(
             "set_se_binary_workload", self.custom_workload.get_function_str()
         )
 
     def test_get_parameters(self) -> None:
-        # Tests `CustomWorkload.get_parameter`
+        # Tests `WorkloadResource.get_parameter`
 
         parameters = self.custom_workload.get_parameters()
         self.assertTrue(isinstance(parameters, dict))
@@ -104,7 +100,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         self.assertEqual(6, parameters["arguments"][1])
 
     def test_add_parameters(self) -> None:
-        # Tests `CustomWorkload.set_parameter` for the case where we add a new
+        # Tests `WorkloadResource.set_parameter` for the case where we add a new
         # parameter value.
 
         self.custom_workload.set_parameter("test_param", 10)
@@ -118,7 +114,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         del self.custom_workload.get_parameters()["test_param"]
 
     def test_override_parameter(self) -> None:
-        # Tests `CustomWorkload.set_parameter` for the case where we override
+        # Tests `WorkloadResource.set_parameter` for the case where we override
         # a parameter's value.
 
         old_value = self.custom_workload.get_parameters()["binary"]
@@ -135,7 +131,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
 
 class WorkloadTestSuite(unittest.TestCase):
     """
-    Tests the `gem5.resources.workload.Workload` class.
+    Tests the `gem5.resources.resource.WorkloadResource` class.
     """
 
     @classmethod
@@ -151,14 +147,14 @@ class WorkloadTestSuite(unittest.TestCase):
         cls.workload = obtain_resource("simple-boot", gem5_version="develop")
 
     def test_get_function_str(self) -> None:
-        # Tests `Resource.get_function_str`
+        # Tests `WorkloadResource.get_function_str`
 
         self.assertEqual(
             "set_kernel_disk_workload", self.workload.get_function_str()
         )
 
     def test_get_parameters(self) -> None:
-        # Tests `Resource.get_parameters`
+        # Tests `WorkloadResource.get_parameters`
 
         parameters = self.workload.get_parameters()
 
@@ -179,7 +175,7 @@ class WorkloadTestSuite(unittest.TestCase):
         )
 
     def test_add_parameters(self) -> None:
-        # Tests `Resource.set_parameter` for the case where we add a new
+        # Tests `WorkloadResource.set_parameter` for the case where we add a new
         # parameter value.
 
         self.workload.set_parameter("test_param", 10)
@@ -191,7 +187,7 @@ class WorkloadTestSuite(unittest.TestCase):
         del self.workload.get_parameters()["test_param"]
 
     def test_override_parameter(self) -> None:
-        # Tests `Resource.set_parameter` for the case where we override
+        # Tests `WorkloadResource.set_parameter` for the case where we override
         # a parameter's value.
 
         old_value = self.workload.get_parameters()["readfile_contents"]
@@ -208,7 +204,7 @@ class WorkloadTestSuite(unittest.TestCase):
 
 class MultiBinaryWorkloadTestSuite(unittest.TestCase):
     """
-    Tests the `gem5.resources.workload.Workload` class with multiple binary
+    Tests the `gem5.resources.resource.WorkloadResource` class with multiple binary
     resources (list of resources).
     """
 

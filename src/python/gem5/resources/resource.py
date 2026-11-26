@@ -1068,7 +1068,7 @@ def obtain_resource(
                 downloader=downloader,
                 **resource_json,
             )
-        return CustomResource(local_path=to_path, downloader=downloader)
+        return AbstractResource(local_path=to_path, downloader=downloader)
 
     # Once we know what AbstractResource subclass we are using, we create it.
     # The fields in the JSON object are assumed to map like-for-like to the
@@ -1561,118 +1561,6 @@ def _get_default_resource_dir() -> str:
     raise Exception("Cannot find a valid location to download resources")
 
 
-# The following classes exist to preserve backwards functionality between the
-# API for obtaining resources in v21.1.0 and prior.
-
-
-class CustomResource(AbstractResource):
-    """
-    A custom gem5 resource. This can be used to encapsulate a resource provided
-    by a gem5 user as opposed to one available within the gem5 resources
-    repository.
-
-    .. warning::
-
-        This class is deprecated and will be removed in future releases of gem5.
-        Please use the correct AbstractResource subclass instead.
-    """
-
-    def __init__(self, local_path: str, metadata: dict | None = None):
-        """
-        :param local_path: The path of the resource on the host system.
-        :param metadata: Add metadata for the custom resource. **Warning:**
-                         As of v22.1.1, this parameter is not used.
-        """
-        metadata = {} if metadata is None else metadata
-
-        warn(
-            "The `CustomResource` class is deprecated. Please use an "
-            "`AbstractResource` subclass instead."
-        )
-        if bool(metadata):  # Empty dicts cast to False
-            warn(
-                "the `metadata` parameter was set via the `CustomResource` "
-                "constructor. This parameter is not used."
-            )
-        super().__init__(local_path=local_path)
-
-
-class CustomDiskImageResource(DiskImageResource):
-    """
-    A custom disk image gem5 resource. It can be used to specify a custom,
-    local disk image.
-
-    .. warning::
-
-        This class is deprecated and will be removed in future releases of gem5.
-        Please use the DiskImageResource class instead. This class is merely
-        a wrapper for it.
-    """
-
-    def __init__(
-        self,
-        local_path: str,
-        resource_version: str | None = None,
-        root_partition: str | None = None,
-        metadata: dict | None = None,
-    ):
-        """
-        :param local_path: The path of the disk image on the host system.
-        :param root_partition: The root disk partition to use.
-        :param metadata: Metadata for the resource. **Warning:** As of "
-                         "v22.1.1, this parameter is not used.
-        :param resource_version: Version of the resource itself.
-        """
-        metadata = {} if metadata is None else metadata
-
-        warn(
-            "The `CustomDiskImageResource` class is deprecated. Please use "
-            "`DiskImageResource` instead."
-        )
-        if bool(metadata):  # Empty dicts cast to False
-            warn(
-                "the `metadata` parameter was set via the "
-                "`CustomDiskImageResource` constructor. This parameter is not "
-                "used."
-            )
-        super().__init__(
-            local_path=local_path,
-            root_partition=root_partition,
-            resource_version=resource_version,
-        )
-
-
-def Resource(
-    resource_id: str,
-    resource_directory: str | None = None,
-    download_md5_mismatch: bool = True,
-    resource_version: str | None = None,
-    clients: list[str] | None = None,
-) -> AbstractResource:
-    """
-    This function was created to maintain backwards compatibility for v21.1.0
-    and prior releases of gem5 where `Resource` was a class.
-
-    In the interests of gem5-resource specialization, the ``Resource`` class
-    has been dropped. Instead users are advised to use the ``obtain_resource``
-    function which will return the correct AbstractResource implementation.
-    This function (disguised as a class) wraps this function.
-    """
-
-    warn(
-        "`Resource` has been deprecated. Please use the `obtain_resource` "
-        "function instead."
-    )
-
-    return obtain_resource(
-        resource_id=resource_id,
-        resource_directory=resource_directory,
-        download_md5_mismatch=download_md5_mismatch,
-        resource_version=resource_version,
-        clients=clients,
-    )
-
-
 _get_resource_json_type_map = {
     "disk-image": DiskImageResource,
     "binary": BinaryResource,
@@ -1684,7 +1572,7 @@ _get_resource_json_type_map = {
     "directory": DirectoryResource,
     "simpoint": SimpointResource,
     "simpoint-directory": SimpointDirectoryResource,
-    "resource": Resource,
+    "resource": AbstractResource,
     "looppoint-pinpoint-csv": LooppointCsvResource,
     "looppoint-json": LooppointJsonResource,
     "suite": SuiteResource,
