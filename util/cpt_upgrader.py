@@ -230,10 +230,6 @@ def process_file(path, **kwargs):
         change = True
 
         cpt.remove_option("root", "cpt_ver")
-    # @todo The 'Globals' option is deprecated, and should be removed in the
-    # future
-    elif cpt.has_option("Globals", "version_tags"):
-        tags = set(("".join(cpt.get("Globals", "version_tags"))).split())
     elif cpt.has_option("root.globals", "version_tags"):
         tags = set(("".join(cpt.get("root.globals", "version_tags"))).split())
     else:
