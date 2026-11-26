@@ -47,7 +47,7 @@ from common import (
     Options,
     Simulation,
 )
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 # GPU FS related
 from system.system import makeGpuFSSystem
@@ -335,7 +335,7 @@ if __name__ == "__m5_main__":
     parser = argparse.ArgumentParser()
     addRunFSOptions(parser)
     Options.addCommonOptions(parser)
-    Ruby.define_options(parser)
+    Ruby.define_options(parser, protocol=Ruby.parse_protocol())
     AmdGPUOptions.addAmdGPUOptions(parser)
     GPUTLBOptions.tlb_options(parser)
 

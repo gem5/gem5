@@ -38,7 +38,7 @@ from m5.util import addToPath
 addToPath("../")
 
 from common import Options
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -123,7 +123,7 @@ parser.add_argument(
 #
 # Add the ruby specific and protocol specific options
 #
-Ruby.define_options(parser)
+Ruby.define_options(parser, protocol=Ruby.parse_protocol())
 
 args = parser.parse_args()
 
@@ -153,7 +153,7 @@ system.clk_domain = SrcClockDomain(
     clock=args.sys_clock, voltage_domain=system.voltage_domain
 )
 
-Ruby.create_system(args, False, system)
+Ruby.create_system(args, False, system, protocol=args.protocol)
 
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(

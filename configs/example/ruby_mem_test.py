@@ -37,7 +37,7 @@ from m5.util import addToPath
 addToPath("../")
 
 from common import Options
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -93,7 +93,7 @@ parser.add_argument(
 #
 # Add the ruby specific and protocol specific options
 #
-Ruby.define_options(parser)
+Ruby.define_options(parser, protocol=Ruby.parse_protocol())
 
 args = parser.parse_args()
 
@@ -160,7 +160,9 @@ else:
 dma_ports = []
 for i, dma in enumerate(dmas):
     dma_ports.append(dma.test)
-Ruby.create_system(args, False, system, dma_ports=dma_ports)
+Ruby.create_system(
+    args, False, system, dma_ports=dma_ports, protocol=args.protocol
+)
 
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
@@ -206,7 +208,7 @@ m5.ticks.setGlobalFrequency("1ns")
 m5.instantiate()
 
 # Set the stash node IDs for each CPU after C++ objects are constructed.
-if buildEnv["PROTOCOL"] == "CHI":
+if args.protocol == "CHI":
     for cpu in cpus:
         cpu.set_stash_node_ids([_.l2.version for _ in cpus if _ != cpu])
         cpu.set_stash_lp_ids([_.l1d.version for _ in cpus if _ != cpu])

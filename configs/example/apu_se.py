@@ -54,7 +54,7 @@ from common import (
     Options,
     Simulation,
 )
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 # Adding script options
 parser = argparse.ArgumentParser()
@@ -66,7 +66,7 @@ parser.add_argument(
     action="store_true",
     default=False,
     help="APU mode. Used to take care of problems in "
-    "Ruby.py while running APU protocols",
+    "ruby.configuration while running APU protocols",
 )
 parser.add_argument(
     "-u",
@@ -445,7 +445,7 @@ parser.add_argument(
     help="Download resources to this directory",
 )
 
-Ruby.define_options(parser)
+Ruby.define_options(parser, protocol=Ruby.parse_protocol())
 
 # add TLB options to the parser
 GPUTLBOptions.tlb_options(parser)
@@ -477,7 +477,7 @@ else:
 ########################## Sanity Check ########################
 
 # Currently the gpu model requires ruby
-if buildEnv["PROTOCOL"] == "None":
+if args.protocol == "None":
     fatal("GPU model requires ruby")
 
 # Currently the gpu model requires only timing or detailed CPU
@@ -526,7 +526,7 @@ shader = Shader(
 # means pipeline initiates a acquire/release operation at kernel launch/end.
 # VIPER protocol is write-through based, and thus only impl_kern_launch_acq
 # needs to set.
-if buildEnv["PROTOCOL"] == "GPU_VIPER":
+if args.protocol == "GPU_VIPER":
     shader.impl_kern_launch_acq = True
     shader.impl_kern_end_rel = False
 else:
@@ -898,7 +898,9 @@ system.piobus = IOXBar(
     width=32, response_latency=0, frontend_latency=0, forward_latency=0
 )
 dma_list = [gpu_hsapp, gpu_cmd_proc]
-Ruby.create_system(args, None, system, None, dma_list, None)
+Ruby.create_system(
+    args, None, system, None, dma_list, None, protocol=args.protocol
+)
 system.ruby.clk_domain = SrcClockDomain(
     clock=args.ruby_clock, voltage_domain=system.voltage_domain
 )

@@ -311,26 +311,6 @@ class $py_ident(RubyController):
 
         code.dedent()
 
-        # Needed for backwards compatibility. If you have exactly 1 protocol
-        # (i.e., buildEnv["PROTOCOL"] is not MULTIPLE), then for the one
-        # type of machine that matches this (sole) protocol, you can create an
-        # alias to the new name. This is only needed if using script that
-        # reference Ruby.py. When that is deprecated, this code can be removed
-        code("""
-
-from m5.defines import buildEnv
-from m5.util import warn
-
-if buildEnv["PROTOCOL"] == "${protocol}":
-    class ${c_ident}(${py_ident}):
-        def __init__(self, *args, **kwargs):
-            warn(
-                "${c_ident} is deprecated. Use %s_${c_ident} instead",
-                buildEnv['PROTOCOL']
-            )
-            super().__init__(*args, **kwargs)
-""")
-
         code.write(path, f"{gen_filename}.py")
 
     def printControllerHH(self, path):

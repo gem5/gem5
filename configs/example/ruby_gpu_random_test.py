@@ -39,14 +39,14 @@ from m5.util import addToPath
 addToPath("../")
 
 from common import Options
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 #
 # Add the ruby specific and protocol specific options
 #
 parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
-Ruby.define_options(parser)
+Ruby.define_options(parser, protocol=Ruby.parse_protocol())
 
 # GPU Ruby tester options
 parser.add_argument(
@@ -301,6 +301,7 @@ Ruby.create_system(
     system=system,
     dma_ports=system.dma_devices if n_DMAs > 0 else [],
     cpus=cpu_list,
+    protocol=args.protocol,
 )
 
 #
@@ -342,7 +343,7 @@ for i, ruby_port in enumerate(system.ruby._cpu_ports):
     i += 1
 
 #
-# Attach DMA ports. Since Ruby.py doesn't return these they need to be found.
+# Attach DMA ports. Since ruby.configuration doesn't return these they need to be found.
 # Connect tester's request port to each DMA sequencer's in_ports. This assumes
 # the protocol names these system.dma_cntrl<#>.
 #

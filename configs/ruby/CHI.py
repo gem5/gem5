@@ -38,7 +38,7 @@ from m5.defines import buildEnv
 from m5.objects import *
 
 from . import CHI_config
-from .Ruby import create_topology
+from .configuration import create_topology
 
 
 def define_options(parser):
@@ -67,7 +67,7 @@ def read_config_file(file):
 def create_system(
     options, full_system, system, dma_ports, bootmem, ruby_system, cpus
 ):
-    if buildEnv["PROTOCOL"] != "CHI":
+    if not buildEnv.get("RUBY_PROTOCOL_CHI", False):
         m5.panic("This script requires the CHI build")
 
     if options.num_dirs < 1:

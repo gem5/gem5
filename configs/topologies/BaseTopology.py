@@ -38,7 +38,7 @@ class BaseTopology:
         """
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
-        """Called from configs/ruby/Ruby.py
+        """Called from configs/ruby/configuration.py
         The return value is ( list(Router), list(IntLink), list(ExtLink))
         The API of this function cannot change when subclassing!!
         Any additional information needed to create this topology should
@@ -48,7 +48,7 @@ class BaseTopology:
         m5.util.fatal("BaseTopology should have been overridden!!")
 
     def registerTopology(self, options):
-        """Called from configs/ruby/Ruby.py
+        """Called from configs/ruby/configuration.py
         There is no return value. This should only be called in
         SE mode. It is used by some topology objects to populate
         the faux filesystem with accurate file contents.

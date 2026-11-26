@@ -215,6 +215,7 @@ def makeArmSystem(
     ruby=False,
     vio_9p=None,
     bootloader=None,
+    ruby_protocol=None,
 ):
     assert machine_type
 
@@ -396,7 +397,7 @@ def makeArmSystem(
         self.system_port = self.membus.cpu_side_ports
 
     if ruby:
-        if buildEnv["PROTOCOL"] == "MI_example" and num_cpus > 1:
+        if ruby_protocol == "MI_example" and num_cpus > 1:
             fatal(
                 "The MI_example protocol cannot implement Load/Store "
                 "Exclusive operations. Multicore ARM systems configured "

@@ -37,6 +37,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
 import math
 from importlib import import_module
 
@@ -62,7 +63,26 @@ from network import Network
 from topologies import *
 
 
-def define_options(parser):
+def parse_protocol():
+    """Select a compiled protocol without changing gem5's build metadata."""
+    protocols = sorted(
+        key.removeprefix("RUBY_PROTOCOL_")
+        for key, enabled in buildEnv.items()
+        if key.startswith("RUBY_PROTOCOL_") and enabled
+    )
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument(
+        "--protocol",
+        choices=protocols,
+        default=protocols[0] if len(protocols) == 1 else None,
+        required=len(protocols) != 1,
+    )
+    return parser.parse_known_args()[0].protocol
+
+
+def define_options(parser, *, protocol):
+    parser.add_argument("--protocol", choices=[protocol], default=protocol)
+
     # By default, ruby uses the simple timing cpu and the X86 ISA
     parser.set_defaults(cpu_type="X86TimingSimpleCPU")
 
@@ -126,7 +146,7 @@ def define_options(parser):
         help="Recycle latency for ruby controller input buffers",
     )
 
-    import_module(f"ruby.{buildEnv['PROTOCOL']}").define_options(parser)
+    import_module(f"ruby.{protocol}").define_options(parser)
 
     Network.define_options(parser)
 
@@ -228,6 +248,8 @@ def create_system(
     dma_ports=None,
     bootmem=None,
     cpus=None,
+    *,
+    protocol,
 ):
     dma_ports = [] if dma_ports is None else dma_ports
     system.ruby = RubySystem()
@@ -251,15 +273,12 @@ def create_system(
 
     try:
         cpu_sequencers, dir_cntrls, topology = import_module(
-            f"ruby.{buildEnv['PROTOCOL']}"
+            f"ruby.{protocol}"
         ).create_system(
             options, full_system, system, dma_ports, bootmem, ruby, cpus
         )
     except:
-        print(
-            "Error: could not create sytem for ruby protocol "
-            f"{buildEnv['PROTOCOL']}"
-        )
+        print("Error: could not create sytem for ruby protocol " f"{protocol}")
         raise
 
     # Create the network topology
@@ -310,22 +329,10 @@ def create_system(
 def create_directories(options, bootmem, ruby_system, system):
     import importlib
 
-    try:
-        # The supported way to use Ruby is now to use the protocol name as
-        # part of the names for all of the controllers. This is *required*
-        # when using `MULTIPLE` as the protocol and the `ALL` target.
-        Directory_Controller = getattr(
-            importlib.import_module("m5.objects"),
-            f"{options.protocol}_Directory_Controller",
-        )
-    except AttributeError:
-        # This is a fallback for the legacy Ruby protocols. If you can't
-        # find the protocol-specific directory controller, then use the
-        # generic one. This is a hack that only works if you have a single
-        # protocol.
-        Directory_Controller = getattr(
-            importlib.import_module("m5.objects"), "Directory_Controller"
-        )
+    Directory_Controller = getattr(
+        importlib.import_module("m5.objects"),
+        f"{options.protocol}_Directory_Controller",
+    )
 
     dir_cntrl_nodes = []
     for i in range(options.num_dirs):

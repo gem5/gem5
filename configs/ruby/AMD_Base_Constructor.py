@@ -112,7 +112,7 @@ def define_options(parser):
 
 
 def construct(options, system, ruby_system):
-    if buildEnv["PROTOCOL"] != "GPU_VIPER":
+    if not buildEnv.get("RUBY_PROTOCOL_GPU_VIPER", False):
         panic("This script requires VIPER based protocols \
         to be built.")
     cpu_sequencers = []
