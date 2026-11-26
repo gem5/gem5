@@ -33,6 +33,7 @@
 #define __MEM_RUBY_NETWORK_GARNET_0_GARNETNETWORK_HH__
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "mem/ruby/network/Network.hh"
@@ -200,8 +201,20 @@ class GarnetNetwork : public Network
     statistics::Scalar  m_total_hops;
     statistics::Formula m_avg_hops;
 
-    std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
-    std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
+    struct TrafficDistributionStats : public statistics::Group
+    {
+        TrafficDistributionStats(statistics::Group *parent, const char *name)
+            : statistics::Group(parent, name)
+        {}
+
+        void init(unsigned num_routers);
+
+        std::vector<std::unique_ptr<statistics::Group>> sources;
+        std::vector<std::vector<std::unique_ptr<statistics::Scalar>>> counters;
+    };
+
+    TrafficDistributionStats m_data_traffic_distribution;
+    TrafficDistributionStats m_ctrl_traffic_distribution;
 
   private:
     GarnetNetwork(const GarnetNetwork& obj);

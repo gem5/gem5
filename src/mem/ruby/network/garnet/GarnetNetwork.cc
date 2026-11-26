@@ -87,7 +87,9 @@ GarnetNetwork::GarnetNetwork(const Params &p)
       m_average_link_utilization(this, "avg_link_utilization"),
       m_average_vc_load(this, "avg_vc_load"),
       m_total_hops(this),
-      m_avg_hops(this, "average_hops")
+      m_avg_hops(this, "average_hops"),
+      m_data_traffic_distribution(this, "data_traffic_distribution"),
+      m_ctrl_traffic_distribution(this, "ctrl_traffic_distribution")
 {
     m_num_rows = p.num_rows;
     m_ni_flit_size = p.ni_flit_size;
@@ -496,25 +498,25 @@ GarnetNetwork::regStats()
                statistics::oneline);
 
     // Traffic distribution
-    for (int source = 0; source < m_routers.size(); ++source) {
-        m_data_traffic_distribution.push_back(
-            std::vector<statistics::Scalar *>());
-        m_ctrl_traffic_distribution.push_back(
-            std::vector<statistics::Scalar *>());
+    m_data_traffic_distribution.init(m_routers.size());
+    m_ctrl_traffic_distribution.init(m_routers.size());
+}
 
-        for (int dest = 0; dest < m_routers.size(); ++dest) {
-            statistics::Scalar *data_packets = new statistics::Scalar(this);
-            statistics::Scalar *ctrl_packets = new statistics::Scalar(this);
-
-            data_packets->name("data_traffic_distribution.n" +
-                               std::to_string(source) + ".n" +
-                               std::to_string(dest));
-            m_data_traffic_distribution[source].push_back(data_packets);
-
-            ctrl_packets->name("ctrl_traffic_distribution.n" +
-                               std::to_string(source) + ".n" +
-                               std::to_string(dest));
-            m_ctrl_traffic_distribution[source].push_back(ctrl_packets);
+void
+GarnetNetwork::TrafficDistributionStats::init(unsigned num_routers)
+{
+    sources.reserve(num_routers);
+    counters.resize(num_routers);
+    for (unsigned source = 0; source < num_routers; ++source) {
+        const std::string source_name = "n" + std::to_string(source);
+        sources.push_back(
+            std::make_unique<statistics::Group>(this, source_name.c_str()));
+        auto &row = counters[source];
+        row.reserve(num_routers);
+        for (unsigned dest = 0; dest < num_routers; ++dest) {
+            const std::string dest_name = "n" + std::to_string(dest);
+            row.push_back(std::make_unique<statistics::Scalar>(
+                sources.back().get(), dest_name.c_str()));
         }
     }
 }
@@ -571,9 +573,9 @@ GarnetNetwork::update_traffic_distribution(RouteInfo route)
     int vnet = route.vnet;
 
     if (m_vnet_type[vnet] == DATA_VNET_)
-        (*m_data_traffic_distribution[src_node][dest_node])++;
+        (*m_data_traffic_distribution.counters[src_node][dest_node])++;
     else
-        (*m_ctrl_traffic_distribution[src_node][dest_node])++;
+        (*m_ctrl_traffic_distribution.counters[src_node][dest_node])++;
 }
 
 bool

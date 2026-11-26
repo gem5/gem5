@@ -55,8 +55,26 @@ sys.argv = [
 namespace = runpy.run_path(str(script), run_name="__m5_main__")
 network = namespace["system"].ruby.network
 
+distribution_counters = {}
+root_stats = namespace["root"].getCCObject()
+for kind in ("data", "ctrl"):
+    for source in range(len(network.routers)):
+        for destination in range(len(network.routers)):
+            path = (
+                f"{network.path()}.{kind}_traffic_distribution."
+                f"n{source}.n{destination}"
+            )
+            try:
+                stat = root_stats.resolveStat(path)
+            except KeyError as error:
+                raise AssertionError(
+                    f"Cannot resolve statistic {path}"
+                ) from error
+            distribution_counters[path] = stat
+
 # Collate router and link activity as well as directly updated counters.
 m5.stats.dump()
+assert any(stat.value > 0 for stat in distribution_counters.values())
 
 counter_names = {
     "packets_injected",
@@ -94,4 +112,5 @@ m5.stats.prepare()
 after = collect_counters(network.getCCObject())
 assert before.keys() == after.keys()
 assert all(value == 0 for value in after.values()), after
+assert all(stat.value == 0 for stat in distribution_counters.values())
 print("Garnet grouped statistics reset correctly.")
