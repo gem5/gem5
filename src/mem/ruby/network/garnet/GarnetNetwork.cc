@@ -506,13 +506,13 @@ GarnetNetwork::regStats()
             statistics::Scalar *data_packets = new statistics::Scalar(this);
             statistics::Scalar *ctrl_packets = new statistics::Scalar(this);
 
-            data_packets->name("data_traffic_distribution." + "n" +
-                               std::to_string(source) + "." + "n" +
+            data_packets->name("data_traffic_distribution.n" +
+                               std::to_string(source) + ".n" +
                                std::to_string(dest));
             m_data_traffic_distribution[source].push_back(data_packets);
 
-            ctrl_packets->name("ctrl_traffic_distribution." + "n" +
-                               std::to_string(source) + "." + "n" +
+            ctrl_packets->name("ctrl_traffic_distribution.n" +
+                               std::to_string(source) + ".n" +
                                std::to_string(dest));
             m_ctrl_traffic_distribution[source].push_back(ctrl_packets);
         }
