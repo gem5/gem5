@@ -76,12 +76,6 @@ class Plic(PlicBase):
         "'MS,MS'          2 harts, 0-1 with M and S mode"
         "'M,MS,MS,MS,MS'  5 harts, 0 with M mode, 1-5 with M and S mode",
     )
-    n_contexts = Param.Int(
-        0,
-        "Deprecated, use `hart_config` instead. "
-        "Number of interrupt contexts. Usually the number "
-        "of threads * 2. One for M mode, one for S mode",
-    )
     output_latency = Param.Int(
         3,
         "Cycle latency from received interrupt signal to output",
@@ -102,14 +96,7 @@ class Plic(PlicBase):
 
         cpus = self.system.unproxy(self).cpu
         int_extended = list()
-        if self.n_contexts != 0:
-            for cpu in cpus:
-                phandle = int_state.phandle(cpu)
-                int_extended.append(phandle)
-                int_extended.append(0xB)
-                int_extended.append(phandle)
-                int_extended.append(0x9)
-        elif self.hart_config != "":
+        if self.hart_config != "":
             cpu_id = 0
             phandle = int_state.phandle(cpus[cpu_id])
             for c in self.hart_config:
