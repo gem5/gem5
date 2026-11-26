@@ -59,7 +59,7 @@ struct PacketInfo
     MemCmd cmd;
     Addr addr;
     uint32_t size;
-    Request::FlagsType flags;
+    Request::Flags flags;
     Addr pc;
     RequestorID id;
 

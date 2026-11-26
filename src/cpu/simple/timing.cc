@@ -452,8 +452,8 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 
 Fault
 TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
-                                 Request::Flags flags,
-                                 const std::vector<bool>& byte_enable)
+                                 const Request::Flags &flags,
+                                 const std::vector<bool> &byte_enable)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -538,9 +538,9 @@ TimingSimpleCPU::handleWritePacket()
 }
 
 Fault
-TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
-                          Addr addr, Request::Flags flags, uint64_t *res,
-                          const std::vector<bool>& byte_enable)
+TimingSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
+                          const Request::Flags &flags, uint64_t *res,
+                          const std::vector<bool> &byte_enable)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -551,7 +551,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     BaseMMU::Mode mode = BaseMMU::Write;
 
     if (data == NULL) {
-        assert(flags & Request::STORE_NO_DATA);
+        assert(flags.isSet(Request::STORE_NO_DATA));
         // This must be a cache block cleaning request
         memset(newData, 0, size);
     } else {
@@ -603,7 +603,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
 Fault
 TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
-                                Request::Flags flags,
+                                const Request::Flags &flags,
                                 AtomicOpFunctorPtr amo_op)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
@@ -1291,7 +1291,7 @@ TimingSimpleCPU::printAddr(Addr a)
 }
 
 Fault
-TimingSimpleCPU::initiateMemMgmtCmd(Request::Flags flags)
+TimingSimpleCPU::initiateMemMgmtCmd(const Request::Flags &flags)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;

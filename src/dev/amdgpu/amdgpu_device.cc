@@ -286,8 +286,9 @@ AMDGPUDevice::readROM(PacketPtr pkt)
     // every GPU must be the same type. However, this allows for one less
     // input file as the GPU VBIOS is already part of the gem5 resources disk
     // image and loaded at the VGA_ROM_DEFAULT address as part of readfile.
-    RequestPtr request = std::make_shared<Request>(
-        VGA_ROM_DEFAULT + rom_offset, pkt->getSize(), 0, vramRequestorId());
+    RequestPtr request =
+        std::make_shared<Request>(VGA_ROM_DEFAULT + rom_offset, pkt->getSize(),
+                                  Request::Flags(), vramRequestorId());
 
     auto readPkt = new Packet(request, MemCmd::ReadReq);
     readPkt->allocate();
@@ -309,8 +310,9 @@ AMDGPUDevice::writeROM(PacketPtr pkt)
     Addr rom_offset = pkt->getAddr() - romRange.start();
     uint64_t rom_data = pkt->getUintX(ByteOrder::little);
 
-    RequestPtr request = std::make_shared<Request>(
-        VGA_ROM_DEFAULT + rom_offset, pkt->getSize(), 0, vramRequestorId());
+    RequestPtr request =
+        std::make_shared<Request>(VGA_ROM_DEFAULT + rom_offset, pkt->getSize(),
+                                  Request::Flags(), vramRequestorId());
 
     auto writePkt = new Packet(request, MemCmd::WriteReq);
     writePkt->allocate();
@@ -481,8 +483,8 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
      * because this method is called by the PCIEndpoint::read method which
      * is a non-timing read.
      */
-    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
-                                               vramRequestorId());
+    RequestPtr req = std::make_shared<Request>(
+        offset, pkt->getSize(), Request::Flags(), vramRequestorId());
 
     PacketPtr readPkt = new Packet(req, MemCmd::ReadReq);
     uint8_t *dataPtr = new uint8_t[pkt->getSize()];
@@ -493,8 +495,8 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
     if (readPkt->cmd == MemCmd::FunctionalReadError) {
         delete readPkt;
         delete[] dataPtr;
-        RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
-                                                   vramRequestorId());
+        RequestPtr req = std::make_shared<Request>(
+            offset, pkt->getSize(), Request::Flags(), vramRequestorId());
         PacketPtr readPkt = Packet::createRead(req);
         uint8_t *dataPtr = new uint8_t[pkt->getSize()];
         readPkt->dataDynamic(dataPtr);
@@ -573,8 +575,8 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
      * because this method is called by the PCIEndpoint::write method which
      * is a non-timing write.
      */
-    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
-                                               vramRequestorId());
+    RequestPtr req = std::make_shared<Request>(
+        offset, pkt->getSize(), Request::Flags(), vramRequestorId());
     PacketPtr writePkt = Packet::createWrite(req);
     uint8_t *dataPtr = new uint8_t[pkt->getSize()];
     std::memcpy(dataPtr, pkt->getPtr<uint8_t>(),
@@ -816,7 +818,7 @@ AMDGPUDevice::getRegVal(uint64_t addr)
 
     uint32_t pkt_data = 0;
     RequestPtr request = std::make_shared<Request>(
-        fixup_addr, sizeof(uint32_t), 0 /* flags */, vramRequestorId());
+        fixup_addr, sizeof(uint32_t), Request::Flags(), vramRequestorId());
     PacketPtr pkt = Packet::createRead(request);
     pkt->dataStatic((uint8_t *)&pkt_data);
     readMMIO(pkt, addr);
@@ -836,7 +838,7 @@ AMDGPUDevice::setRegVal(uint64_t addr, uint32_t value)
 
     uint32_t pkt_data = value;
     RequestPtr request = std::make_shared<Request>(
-        addr, sizeof(uint32_t), 0 /* flags */, vramRequestorId());
+        addr, sizeof(uint32_t), Request::Flags(), vramRequestorId());
     PacketPtr pkt = Packet::createWrite(request);
     pkt->dataStatic((uint8_t *)&pkt_data);
     writeMMIO(pkt, addr);

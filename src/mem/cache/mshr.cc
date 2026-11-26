@@ -130,7 +130,7 @@ MSHR::TargetList::updateWriteFlags(PacketPtr pkt)
 
         // Avoid merging requests with special flags (e.g.,
         // strictly ordered)
-        const Request::FlagsType no_merge_flags =
+        const Request::Flags no_merge_flags =
             Request::UNCACHEABLE | Request::STRICT_ORDER |
             Request::PRIVILEGED | Request::LLSC | Request::MEM_SWAP |
             Request::MEM_SWAP_COND | Request::SECURE | Request::LOCKED_RMW;

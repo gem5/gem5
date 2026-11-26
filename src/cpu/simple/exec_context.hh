@@ -292,19 +292,16 @@ class SimpleExecContext : public ExecContext
 
     Fault
     readMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags,
-            const std::vector<bool>& byte_enable)
-        override
+            const Request::Flags &flags,
+            const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return cpu->readMem(addr, data, size, flags, byte_enable);
     }
 
     Fault
-    initiateMemRead(Addr addr, unsigned int size,
-                    Request::Flags flags,
-                    const std::vector<bool>& byte_enable)
-        override
+    initiateMemRead(Addr addr, unsigned int size, const Request::Flags &flags,
+                    const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return cpu->initiateMemRead(addr, size, flags, byte_enable);
@@ -312,9 +309,8 @@ class SimpleExecContext : public ExecContext
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
-             Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byte_enable)
-        override
+             const Request::Flags &flags, uint64_t *res,
+             const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return cpu->writeMem(data, size, addr, flags, res,
@@ -323,21 +319,20 @@ class SimpleExecContext : public ExecContext
 
     Fault
     amoMem(Addr addr, uint8_t *data, unsigned int size,
-           Request::Flags flags, AtomicOpFunctorPtr amo_op) override
+           const Request::Flags &flags, AtomicOpFunctorPtr amo_op) override
     {
         return cpu->amoMem(addr, data, size, flags, std::move(amo_op));
     }
 
     Fault
-    initiateMemAMO(Addr addr, unsigned int size,
-                   Request::Flags flags,
+    initiateMemAMO(Addr addr, unsigned int size, const Request::Flags &flags,
                    AtomicOpFunctorPtr amo_op) override
     {
         return cpu->initiateMemAMO(addr, size, flags, std::move(amo_op));
     }
 
     Fault
-    initiateMemMgmtCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(const Request::Flags &flags) override
     {
         return cpu->initiateMemMgmtCmd(flags);
     }

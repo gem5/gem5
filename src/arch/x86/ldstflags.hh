@@ -51,7 +51,7 @@ namespace gem5
 namespace X86ISA
 {
 
-constexpr Request::FlagsType SegmentFlagMask = mask(4);
+constexpr Request::ArchFlagsType SegmentFlagMask = mask(4);
 constexpr auto CPL0FlagShift = 4;
 constexpr auto CPL0FlagBit = 1 << CPL0FlagShift;
 constexpr auto AddrSizeFlagShift = CPL0FlagShift + 1;

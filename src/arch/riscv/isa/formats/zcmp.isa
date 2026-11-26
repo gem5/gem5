@@ -620,7 +620,7 @@ def format CmPush(*flags) {{
         {'ea_code': ea_code, 'memacc_code': memacc_code},
         flags)
 
-    mem_flags = [getAlignFlag(micro32_iop)]
+    mem_flags = ['Request::archFlags(%s)' % getAlignFlag(micro32_iop)]
     s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
     micro32_iop.constructor += s
 
@@ -636,7 +636,7 @@ def format CmPush(*flags) {{
         {'ea_code': ea_code, 'memacc_code': memacc_code},
         flags)
 
-    mem_flags = [getAlignFlag(micro64_iop)]
+    mem_flags = ['Request::archFlags(%s)' % getAlignFlag(micro64_iop)]
     s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
     micro64_iop.constructor += s
 
@@ -691,7 +691,7 @@ def format CmPop(is_ret=False, has_a0=False, *flags) {{
         {'ea_code': ea_code, 'memacc_code': memacc_code},
         flags)
 
-    mem_flags = [getAlignFlag(micro32_iop)]
+    mem_flags = ['Request::archFlags(%s)' % getAlignFlag(micro32_iop)]
     s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
     micro32_iop.constructor += s
 
@@ -707,7 +707,7 @@ def format CmPop(is_ret=False, has_a0=False, *flags) {{
         {'ea_code': ea_code, 'memacc_code': memacc_code},
         flags)
 
-    mem_flags = [getAlignFlag(micro64_iop)]
+    mem_flags = ['Request::archFlags(%s)' % getAlignFlag(micro64_iop)]
     s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
     micro64_iop.constructor += s
 

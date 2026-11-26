@@ -51,7 +51,7 @@ AMDGPUMemoryManager::AMDGPUMemoryManager(const AMDGPUMemoryManagerParams &p)
 
 void
 AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
-                                  Request::Flags flag, Event *callback)
+                                  const Request::Flags &flag, Event *callback)
 {
     assert(data);
 
@@ -94,7 +94,7 @@ AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
 
 void
 AMDGPUMemoryManager::readRequest(Addr addr, uint8_t *data, int size,
-                                 Request::Flags flag, Event *callback)
+                                 const Request::Flags &flag, Event *callback)
 {
     assert(data);
     uint8_t *dataPtr = data;

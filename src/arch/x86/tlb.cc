@@ -327,8 +327,9 @@ TLB::translate(const RequestPtr &req,
         BaseMMU::Mode mode, bool &delayedResponse, bool timing)
 {
     Request::Flags flags = req->getFlags();
-    int seg = flags & SegmentFlagMask;
-    bool storeCheck = flags & Request::READ_MODIFY_WRITE;
+    const auto arch_flags = req->getArchFlags();
+    int seg = arch_flags & SegmentFlagMask;
+    bool storeCheck = flags.isSet(Request::READ_MODIFY_WRITE);
 
     delayedResponse = false;
 
@@ -343,7 +344,8 @@ TLB::translate(const RequestPtr &req,
 
     HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
 
-    const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
+    const Addr logAddrSize =
+        (arch_flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
     const int addrSize = 8 << logAddrSize;
     const Addr addrMask = mask(addrSize);
 
@@ -486,7 +488,7 @@ TLB::translate(const RequestPtr &req,
             DPRINTF(TLB, "Entry found with paddr %#x, "
                     "doing protection checks.\n", entry->paddr);
             // Do paging protection checks.
-            bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
+            bool inUser = m5Reg.cpl == 3 && !(arch_flags & CPL0FlagBit);
             CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
             if ((inUser && !entry->user) ||

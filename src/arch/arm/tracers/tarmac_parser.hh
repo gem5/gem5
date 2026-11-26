@@ -50,6 +50,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "arch/arm/mmu.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
@@ -147,7 +148,7 @@ class TarmacParserRecord : public TarmacBaseRecord
      * (faulty memory access, etc.).
      */
     bool readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
-                         unsigned flags);
+                         Request::ArchFlagsType flags);
 
   private:
     /**

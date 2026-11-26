@@ -96,16 +96,15 @@ def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
         inst_flags)
 
     mem_flags = [
-        'static_cast<Request::FlagsType>(Request::%s)' % flag
+        'Request::Flags(Request::%s)' % flag
         for flag in mem_flags
     ]
     align_flag = getAlignFlag(iop)
     if align_flag:
-        mem_flags.append('static_cast<Request::FlagsType>(%s)' % align_flag)
+        mem_flags.append('Request::archFlags(%s)' % align_flag)
     if xlate_flags:
         xlate_flags_casted = [
-            ('(static_cast<Request::FlagsType>(Request::ARCH_BITS) & '
-             'static_cast<Request::FlagsType>(XlateFlags::%s))') % flag
+            ('Request::archFlags(XlateFlags::%s)') % flag
             for flag in xlate_flags]
         mem_flags.extend(xlate_flags_casted)
     if mem_flags:

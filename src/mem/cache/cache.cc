@@ -977,8 +977,9 @@ Cache::cleanEvictBlk(CacheBlk *blk)
     assert(blk && blk->isValid() && !blk->isSet(CacheBlk::DirtyBit));
 
     // Creating a zero sized write, a message to the snoop filter
-    RequestPtr req = std::make_shared<Request>(
-        regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
+    RequestPtr req =
+        std::make_shared<Request>(regenerateBlkAddr(blk), blkSize,
+                                  Request::Flags(), Request::wbRequestorId);
 
     if (blk->isSecure())
         req->setFlags(Request::SECURE);

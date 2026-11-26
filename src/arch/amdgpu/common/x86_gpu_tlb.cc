@@ -370,8 +370,8 @@ GpuTLB::tlbLookup(const RequestPtr &req, ThreadContext *tc, bool update_stats)
 {
     bool tlb_hit = false;
 #ifndef NDEBUG
-    uint32_t flags = req->getFlags();
-    int seg = flags & SegmentFlagMask;
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
+    int seg = arch_flags & SegmentFlagMask;
 #endif
 
     assert(seg != segment_idx::Ms);
@@ -423,9 +423,10 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
                   Translation *translation, Mode mode, bool &delayedResponse,
                   bool timing, int &latency)
 {
-    uint32_t flags = req->getFlags();
-    int seg = flags & SegmentFlagMask;
-    bool storeCheck = flags & Request::READ_MODIFY_WRITE;
+    Request::Flags flags = req->getFlags();
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
+    int seg = arch_flags & SegmentFlagMask;
+    bool storeCheck = flags.isSet(Request::READ_MODIFY_WRITE);
 
     // If this is true, we're dealing with a request
     // to a non-memory address space.
@@ -471,7 +472,8 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
 
             Addr base = tc->readMiscRegNoEffect(misc_reg::segBase(seg));
             Addr limit = tc->readMiscRegNoEffect(misc_reg::segLimit(seg));
-            Addr logSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
+            Addr logSize =
+                (arch_flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
             int size = 8 << logSize;
 
             Addr offset = (vaddr - base) & mask(size);
@@ -552,7 +554,7 @@ GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
             }
 
             // Do paging protection checks.
-            bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
+            bool inUser = m5Reg.cpl == 3 && !(arch_flags & CPL0FlagBit);
 
             CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
@@ -765,11 +767,12 @@ GpuTLB::pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
                                TlbEntry *tlb_entry, Mode mode)
 {
     HandyM5Reg m5Reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
-    uint32_t flags = pkt->req->getFlags();
-    bool storeCheck = flags & Request::READ_MODIFY_WRITE;
+    Request::Flags flags = pkt->req->getFlags();
+    Request::ArchFlagsType arch_flags = pkt->req->getArchFlags();
+    bool storeCheck = flags.isSet(Request::READ_MODIFY_WRITE);
 
     // Do paging protection checks.
-    bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
+    bool inUser = m5Reg.cpl == 3 && !(arch_flags & CPL0FlagBit);
     CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
 
     bool badWrite = (!tlb_entry->writable && (inUser || cr0.wp));

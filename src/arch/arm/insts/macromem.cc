@@ -505,8 +505,9 @@ BigFpMemLitOp::BigFpMemLitOp(const char *mnem, ExtMachInst machInst,
 
 VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                      unsigned elems, RegIndex rn, RegIndex vd, unsigned regs,
-                     unsigned inc, uint32_t size, uint32_t align, RegIndex rm) :
-    PredMacroOp(mnem, machInst, __opClass)
+                     unsigned inc, uint32_t size, MMU::ArmFlags align,
+                     RegIndex rm)
+    : PredMacroOp(mnem, machInst, __opClass)
 {
     assert(regs > 0 && regs <= 4);
     assert(regs % elems == 0);
@@ -521,30 +522,30 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
 
     RegIndex rMid = deinterleave ? VecSpecialElem : vd * 2;
 
-    uint32_t noAlign = 0;
-
     unsigned uopIdx = 0;
     switch (regs) {
       case 4:
-        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
-                size, machInst, rMid, rn, 0, align);
-        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
-                size, machInst, rMid + 4, rn, 16, noAlign);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+              size, machInst, rMid + 4, rn, 16,
+              Request::archFlags(MMU::AllowUnaligned));
+          break;
       case 3:
-        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
-                size, machInst, rMid, rn, 0, align);
-        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon8Uop>(
-                size, machInst, rMid + 4, rn, 16, noAlign);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon8Uop>(
+              size, machInst, rMid + 4, rn, 16,
+              Request::archFlags(MMU::AllowUnaligned));
+          break;
       case 2:
-        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
-                size, machInst, rMid, rn, 0, align);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          break;
       case 1:
-        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon8Uop>(
-                size, machInst, rMid, rn, 0, align);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon8Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          break;
       default:
         // Unknown number of registers
         microOps[uopIdx++] = new Unknown(machInst);
@@ -600,10 +601,10 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
 
 VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
                          OpClass __opClass, bool all, unsigned elems,
-                         RegIndex rn, RegIndex vd, unsigned regs,
-                         unsigned inc, uint32_t size, uint32_t align,
-                         RegIndex rm, unsigned lane) :
-    PredMacroOp(mnem, machInst, __opClass)
+                         RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+                         uint32_t size, MMU::ArmFlags align, RegIndex rm,
+                         unsigned lane)
+    : PredMacroOp(mnem, machInst, __opClass)
 {
     assert(regs > 0 && regs <= 4);
     assert(regs % elems == 0);
@@ -627,62 +628,62 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
     unsigned uopIdx = 0;
     switch (loadSize) {
       case 1:
-        microOps[uopIdx++] = new MicroLdrNeon1Uop<uint8_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroLdrNeon1Uop<uint8_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 2:
         if (eBytes == 2) {
             microOps[uopIdx++] = new MicroLdrNeon2Uop<uint16_t>(
-                    machInst, ufp0, rn, 0, align);
+                machInst, ufp0, rn, 0, Request::archFlags(align));
         } else {
             microOps[uopIdx++] = new MicroLdrNeon2Uop<uint8_t>(
-                    machInst, ufp0, rn, 0, align);
+                machInst, ufp0, rn, 0, Request::archFlags(align));
         }
         break;
       case 3:
-        microOps[uopIdx++] = new MicroLdrNeon3Uop<uint8_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroLdrNeon3Uop<uint8_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 4:
         switch (eBytes) {
           case 1:
-            microOps[uopIdx++] = new MicroLdrNeon4Uop<uint8_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroLdrNeon4Uop<uint8_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
           case 2:
-            microOps[uopIdx++] = new MicroLdrNeon4Uop<uint16_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroLdrNeon4Uop<uint16_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
           case 4:
-            microOps[uopIdx++] = new MicroLdrNeon4Uop<uint32_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroLdrNeon4Uop<uint32_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
         }
         break;
       case 6:
-        microOps[uopIdx++] = new MicroLdrNeon6Uop<uint16_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroLdrNeon6Uop<uint16_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 8:
         switch (eBytes) {
           case 2:
-            microOps[uopIdx++] = new MicroLdrNeon8Uop<uint16_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroLdrNeon8Uop<uint16_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
           case 4:
-            microOps[uopIdx++] = new MicroLdrNeon8Uop<uint32_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroLdrNeon8Uop<uint32_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
         }
         break;
       case 12:
-        microOps[uopIdx++] = new MicroLdrNeon12Uop<uint32_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroLdrNeon12Uop<uint32_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 16:
-        microOps[uopIdx++] = new MicroLdrNeon16Uop<uint32_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroLdrNeon16Uop<uint32_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       default:
         // Unrecognized load size
         microOps[uopIdx++] = new Unknown(machInst);
@@ -868,8 +869,9 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
 
 VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                      unsigned elems, RegIndex rn, RegIndex vd, unsigned regs,
-                     unsigned inc, uint32_t size, uint32_t align, RegIndex rm) :
-    PredMacroOp(mnem, machInst, __opClass)
+                     unsigned inc, uint32_t size, MMU::ArmFlags align,
+                     RegIndex rm)
+    : PredMacroOp(mnem, machInst, __opClass)
 {
     assert(regs > 0 && regs <= 4);
     assert(regs % elems == 0);
@@ -881,8 +883,6 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
     if (wb) numMicroops++;
     if (interleave) numMicroops += (regs / elems);
     microOps = new StaticInstPtr[numMicroops];
-
-    uint32_t noAlign = 0;
 
     RegIndex rMid = interleave ? VecSpecialElem : vd * 2;
 
@@ -918,25 +918,27 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
     }
     switch (regs) {
       case 4:
-        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
-                size, machInst, rMid, rn, 0, align);
-        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
-                size, machInst, rMid + 4, rn, 16, noAlign);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+              size, machInst, rMid + 4, rn, 16,
+              Request::archFlags(MMU::AllowUnaligned));
+          break;
       case 3:
-        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
-                size, machInst, rMid, rn, 0, align);
-        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon8Uop>(
-                size, machInst, rMid + 4, rn, 16, noAlign);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          microOps[uopIdx++] = newNeonMemInst<MicroStrNeon8Uop>(
+              size, machInst, rMid + 4, rn, 16,
+              Request::archFlags(MMU::AllowUnaligned));
+          break;
       case 2:
-        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
-                size, machInst, rMid, rn, 0, align);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          break;
       case 1:
-        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon8Uop>(
-                size, machInst, rMid, rn, 0, align);
-        break;
+          microOps[uopIdx++] = newNeonMemInst<MicroStrNeon8Uop>(
+              size, machInst, rMid, rn, 0, Request::archFlags(align));
+          break;
       default:
         // Unknown number of registers
         microOps[uopIdx++] = new Unknown(machInst);
@@ -963,10 +965,10 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
 
 VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
                          OpClass __opClass, bool all, unsigned elems,
-                         RegIndex rn, RegIndex vd, unsigned regs,
-                         unsigned inc, uint32_t size, uint32_t align,
-                         RegIndex rm, unsigned lane) :
-    PredMacroOp(mnem, machInst, __opClass)
+                         RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+                         uint32_t size, MMU::ArmFlags align, RegIndex rm,
+                         unsigned lane)
+    : PredMacroOp(mnem, machInst, __opClass)
 {
     assert(!all);
     assert(regs > 0 && regs <= 4);
@@ -1084,62 +1086,62 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
     }
     switch (storeSize) {
       case 1:
-        microOps[uopIdx++] = new MicroStrNeon1Uop<uint8_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroStrNeon1Uop<uint8_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 2:
         if (eBytes == 2) {
             microOps[uopIdx++] = new MicroStrNeon2Uop<uint16_t>(
-                    machInst, ufp0, rn, 0, align);
+                machInst, ufp0, rn, 0, Request::archFlags(align));
         } else {
             microOps[uopIdx++] = new MicroStrNeon2Uop<uint8_t>(
-                    machInst, ufp0, rn, 0, align);
+                machInst, ufp0, rn, 0, Request::archFlags(align));
         }
         break;
       case 3:
-        microOps[uopIdx++] = new MicroStrNeon3Uop<uint8_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroStrNeon3Uop<uint8_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 4:
         switch (eBytes) {
           case 1:
-            microOps[uopIdx++] = new MicroStrNeon4Uop<uint8_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroStrNeon4Uop<uint8_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
           case 2:
-            microOps[uopIdx++] = new MicroStrNeon4Uop<uint16_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroStrNeon4Uop<uint16_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
           case 4:
-            microOps[uopIdx++] = new MicroStrNeon4Uop<uint32_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroStrNeon4Uop<uint32_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
         }
         break;
       case 6:
-        microOps[uopIdx++] = new MicroStrNeon6Uop<uint16_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroStrNeon6Uop<uint16_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 8:
         switch (eBytes) {
           case 2:
-            microOps[uopIdx++] = new MicroStrNeon8Uop<uint16_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroStrNeon8Uop<uint16_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
           case 4:
-            microOps[uopIdx++] = new MicroStrNeon8Uop<uint32_t>(
-                    machInst, ufp0, rn, 0, align);
-            break;
+              microOps[uopIdx++] = new MicroStrNeon8Uop<uint32_t>(
+                  machInst, ufp0, rn, 0, Request::archFlags(align));
+              break;
         }
         break;
       case 12:
-        microOps[uopIdx++] = new MicroStrNeon12Uop<uint32_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroStrNeon12Uop<uint32_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       case 16:
-        microOps[uopIdx++] = new MicroStrNeon16Uop<uint32_t>(
-                machInst, ufp0, rn, 0, align);
-        break;
+          microOps[uopIdx++] = new MicroStrNeon16Uop<uint32_t>(
+              machInst, ufp0, rn, 0, Request::archFlags(align));
+          break;
       default:
         // Bad store size
         microOps[uopIdx++] = new Unknown(machInst);
@@ -1192,7 +1194,8 @@ VldMultOp64::VldMultOp64(const char *mnem, ExtMachInst machInst,
 
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
-    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
+    Request::Flags memaccessFlags =
+        Request::archFlags(MMU::AllowUnaligned | eSize);
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1300,7 +1303,8 @@ VstMultOp64::VstMultOp64(const char *mnem, ExtMachInst machInst,
         }
     }
 
-    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
+    Request::Flags memaccessFlags =
+        Request::archFlags(MMU::AllowUnaligned | eSize);
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1368,7 +1372,8 @@ VldSingleOp64::VldSingleOp64(const char *mnem, ExtMachInst machInst,
     microOps = new StaticInstPtr[numMicroops];
     unsigned uopIdx = 0;
 
-    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
+    Request::Flags memaccessFlags =
+        Request::archFlags(MMU::AllowUnaligned | eSize);
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {
@@ -1447,7 +1452,8 @@ VstSingleOp64::VstSingleOp64(const char *mnem, ExtMachInst machInst,
             numStructElems, index, i /* step */, replicate);
     }
 
-    uint32_t memaccessFlags = (MMU::ArmFlags)eSize | MMU::AllowUnaligned;
+    Request::Flags memaccessFlags =
+        Request::archFlags(MMU::AllowUnaligned | eSize);
 
     int i = 0;
     for (; i < numMemMicroops - 1; ++i) {

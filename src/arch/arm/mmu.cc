@@ -335,14 +335,14 @@ MMU::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
     } else {
         vaddr = vaddr_tainted;
     }
-    Request::Flags flags = req->getFlags();
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
 
     bool is_fetch = (mode == Execute);
     bool is_write = (mode == Write);
 
     if (!is_fetch) {
-        if (state.sctlr.a || !(flags & AllowUnaligned)) {
-            if (vaddr & mask(flags & AlignmentMask)) {
+        if (state.sctlr.a || !(arch_flags & AllowUnaligned)) {
+            if (vaddr & mask(arch_flags & AlignmentMask)) {
                 // LPAE is always disabled in SE mode
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
@@ -398,10 +398,10 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
     }
 
     Addr vaddr = req->getVaddr(); // 32-bit don't have to purify
-    Request::Flags flags = req->getFlags();
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
     bool is_fetch  = (mode == Execute);
     bool is_write  = (mode == Write);
-    bool is_priv   = state.isPriv && !(flags & UserMode);
+    bool is_priv = state.isPriv && !(arch_flags & UserMode);
 
     // Get the translation type from the actual table entry
     TranMethod tran_method = te->longDescFormat ?
@@ -423,7 +423,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
     // strongly ordered memory
     if (!is_fetch) {
         if (te->mtype != TlbEntry::MemoryType::Normal) {
-            if (vaddr & mask(flags & AlignmentMask)) {
+            if (vaddr & mask(arch_flags & AlignmentMask)) {
                 stats.alignFaults++;
                 return std::make_shared<DataAbort>(
                     vaddr, DomainType::NoAccess, is_write,
@@ -590,7 +590,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     }
 
     Addr vaddr_tainted = req->getVaddr();
-    Request::Flags flags = req->getFlags();
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
     bool is_fetch  = (mode == Execute);
     // Cache clean operations require read permissions to the specified VA
     bool is_write = !req->isCacheClean() && mode == Write;
@@ -614,7 +614,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
     // strongly ordered memory
     if (!is_fetch) {
         if (te->mtype != TlbEntry::MemoryType::Normal) {
-            if (vaddr_tainted & mask(flags & AlignmentMask)) {
+            if (vaddr_tainted & mask(arch_flags & AlignmentMask)) {
                 stats.alignFaults++;
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,
@@ -726,7 +726,7 @@ MMU::s1IndirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
                           ThreadContext *tc, CachedState &state,
                           bool r, bool w, bool x)
 {
-    const bool is_priv = state.isPriv && !(req->getFlags() & UserMode);
+    const bool is_priv = state.isPriv && !(req->getArchFlags() & UserMode);
     TranslationRegime regime = !is_priv ? TranslationRegime::EL10 :
                                           state.currRegime;
 
@@ -830,7 +830,7 @@ MMU::s1IndirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
 
         // PAN does not affect CMOs other than DC ZVA
         bool pan_access = !req->isCacheMaintenance() ||
-            req->getFlags() & Request::CACHE_BLOCK_ZERO;
+                          req->getFlags().isSet(Request::CACHE_BLOCK_ZERO);
 
         if (_release->has(ArmExtension::FEAT_PAN) && pan_access) {
             if (state.cpsr.pan && upi != 0) {
@@ -868,7 +868,7 @@ MMU::s1DirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
                         bool r, bool w, bool x)
 {
     const uint8_t ap  = te->ap & 0b11;  // 2-bit access protection field
-    const bool is_priv = state.isPriv && !(req->getFlags() & UserMode);
+    const bool is_priv = state.isPriv && !(req->getArchFlags() & UserMode);
 
     bool wxn = state.sctlr.wxn;
     uint8_t xn =  te->xn;
@@ -913,7 +913,7 @@ MMU::s1DirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
 
         // PAN does not affect CMOs other than DC ZVA
         bool pan_access = !req->isCacheMaintenance() ||
-            req->getFlags() & Request::CACHE_BLOCK_ZERO;
+                          req->getFlags().isSet(Request::CACHE_BLOCK_ZERO);
 
         if (_release->has(ArmExtension::FEAT_PAN) && pan_access) {
             bool pan = state.cpsr.pan && (ur || uw);
@@ -1088,7 +1088,7 @@ MMU::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
     bool is_fetch  = (mode == Execute);
     TlbEntry mergeTe;
 
-    Request::Flags flags = req->getFlags();
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
     Addr vaddr_tainted = req->getVaddr();
 
     Fault fault = getResultTe(&te, req, tc, mode, translation, timing,
@@ -1125,17 +1125,15 @@ MMU::translateMmuOn(ThreadContext* tc, const RequestPtr &req, Mode mode,
             req->clearFlags(Request::SECURE);
         }
         if (!is_fetch && fault == NoFault &&
-            (vaddr & mask(flags & AlignmentMask)) &&
+            (vaddr & mask(arch_flags & AlignmentMask)) &&
             (te->mtype != TlbEntry::MemoryType::Normal)) {
-                // Unaligned accesses to Device memory should always cause an
-                // abort regardless of sctlr.a
-                stats.alignFaults++;
-                bool is_write  = (mode == Write);
-                return std::make_shared<DataAbort>(
-                    vaddr_tainted,
-                    DomainType::NoAccess, is_write,
-                    ArmFault::AlignmentFault, state.isStage2,
-                    tran_method);
+            // Unaligned accesses to Device memory should always cause an
+            // abort regardless of sctlr.a
+            stats.alignFaults++;
+            bool is_write = (mode == Write);
+            return std::make_shared<DataAbort>(
+                vaddr_tainted, DomainType::NoAccess, is_write,
+                ArmFault::AlignmentFault, state.isStage2, tran_method);
         }
 
         if (fault == NoFault)
@@ -1162,7 +1160,7 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     } else {
         vaddr = vaddr_tainted;
     }
-    Request::Flags flags = req->getFlags();
+    Request::ArchFlagsType arch_flags = req->getArchFlags();
 
     bool is_fetch  = (mode == Execute);
     bool is_write  = (mode == Write);
@@ -1170,15 +1168,16 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     TranMethod tran_method = long_desc_format ?
         TranMethod::LpaeTran : TranMethod::VmsaTran;
 
-    DPRINTF(MMU,
-            "CPSR is priv:%d UserMode:%d secure:%d S1S2NsTran:%d\n",
-            state.isPriv, flags & UserMode,
+    DPRINTF(MMU, "CPSR is priv:%d UserMode:%d secure:%d S1S2NsTran:%d\n",
+            state.isPriv, arch_flags & UserMode,
             state.securityState == SecurityState::Secure,
             tran_type & S1S2NsTran);
 
-    DPRINTF(MMU, "translateFs addr %#x, mode %d, st2 %d, scr %#x sctlr %#x "
-                 "flags %#lx tranType 0x%x\n", vaddr_tainted, mode,
-                 state.isStage2, state.scr, state.sctlr, flags, tran_type);
+    DPRINTF(MMU,
+            "translateFs addr %#x, mode %d, st2 %d, scr %#x sctlr %#x "
+            "flags %s tranType 0x%x\n",
+            vaddr_tainted, mode, state.isStage2, state.scr, state.sctlr,
+            req->getFlags().bits(), tran_type);
 
     if (!state.isStage2) {
         if ((req->isInstFetch() && (!state.sctlr.i)) ||
@@ -1190,8 +1189,8 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
         }
     }
     if (!is_fetch) {
-        if (state.sctlr.a || !(flags & AllowUnaligned)) {
-            if (vaddr & mask(flags & AlignmentMask)) {
+        if (state.sctlr.a || !(arch_flags & AllowUnaligned)) {
+            if (vaddr & mask(arch_flags & AlignmentMask)) {
                 stats.alignFaults++;
                 return std::make_shared<DataAbort>(
                     vaddr_tainted,

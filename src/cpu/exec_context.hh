@@ -123,7 +123,7 @@ class ExecContext
      */
     virtual Fault
     readMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags, const std::vector<bool>& byte_enable)
+            const Request::Flags &flags, const std::vector<bool> &byte_enable)
     {
         panic("ExecContext::readMem() should be overridden\n");
     }
@@ -136,8 +136,8 @@ class ExecContext
      * should never be called).
      */
     virtual Fault
-    initiateMemRead(Addr addr, unsigned int size,
-            Request::Flags flags, const std::vector<bool>& byte_enable)
+    initiateMemRead(Addr addr, unsigned int size, const Request::Flags &flags,
+                    const std::vector<bool> &byte_enable)
     {
         panic("ExecContext::initiateMemRead() should be overridden\n");
     }
@@ -149,15 +149,15 @@ class ExecContext
      * e.g. tell Ruby we're starting/stopping a HTM transaction,
      *      or tell Ruby to issue a TLBI operation
      */
-    virtual Fault initiateMemMgmtCmd(Request::Flags flags) = 0;
+    virtual Fault initiateMemMgmtCmd(const Request::Flags &flags) = 0;
 
     /**
      * For atomic-mode contexts, perform an atomic memory write operation.
      * For timing-mode contexts, initiate a timing memory write operation.
      */
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
-                           Request::Flags flags, uint64_t *res,
-                           const std::vector<bool>& byte_enable) = 0;
+                           const Request::Flags &flags, uint64_t *res,
+                           const std::vector<bool> &byte_enable) = 0;
 
     /**
      * For atomic-mode contexts, perform an atomic AMO (a.k.a., Atomic
@@ -165,7 +165,7 @@ class ExecContext
      */
     virtual Fault
     amoMem(Addr addr, uint8_t *data, unsigned int size,
-            Request::Flags flags, AtomicOpFunctorPtr amo_op)
+           const Request::Flags &flags, AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::amoMem() should be overridden\n");
     }
@@ -175,8 +175,8 @@ class ExecContext
      * read-modify-write memory operation)
      */
     virtual Fault
-    initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
-            AtomicOpFunctorPtr amo_op)
+    initiateMemAMO(Addr addr, unsigned int size, const Request::Flags &flags,
+                   AtomicOpFunctorPtr amo_op)
     {
         panic("ExecContext::initiateMemAMO() should be overridden\n");
     }

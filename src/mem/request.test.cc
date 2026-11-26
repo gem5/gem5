@@ -103,4 +103,39 @@ TEST(Request, CopyConstructorPreservesGPUFuncAccess)
 
     EXPECT_TRUE(copied.getGPUFuncAccess());
 }
+
+TEST(Request, FlagsFromBitsAcceptsLegacyEncoding)
+{
+    Request::Flags flags = Request::Flags::LegacyAdaptor::flagsFromBits(
+        0x00000100 | 0x0020000000000000);
+
+    EXPECT_TRUE(flags.isSet(Request::INST_FETCH));
+    EXPECT_TRUE(flags.isSet(Request::READ_MODIFY_WRITE));
+    EXPECT_FALSE(flags.isSet(Request::LLSC));
+}
+
+TEST(Request, FlagsToBitsUsesLegacyEncoding)
+{
+    Request::Flags flags =
+        Request::Flags(Request::INST_FETCH) | Request::READ_MODIFY_WRITE;
+
+    EXPECT_EQ(Request::Flags::LegacyAdaptor::flagsToBits(flags),
+              0x00000100 | 0x0020000000000000);
+}
+
+TEST(Request, FlagsToBitsPreservesLegacyArchBits)
+{
+    Request::Flags flags = Request::archFlags(0x5a) | Request::INST_FETCH;
+
+    EXPECT_EQ(Request::Flags::LegacyAdaptor::flagsToBits(flags), 0x0000015a);
+}
+
+TEST(Request, FlagsFromBitsPreservesLegacyArchBits)
+{
+    Request::Flags flags =
+        Request::Flags::LegacyAdaptor::flagsFromBits(0x0000015a);
+
+    EXPECT_EQ(flags.archFlags, 0x5a);
+    EXPECT_TRUE(flags.isSet(Request::INST_FETCH));
+}
 } // namespace gem5

@@ -50,7 +50,8 @@ output header {{
     newNeonMemInst(const unsigned size,
                    const ExtMachInst &machInst,
                    const RegIndex dest, const RegIndex ra,
-                   const uint32_t imm, const Request::Flags extraMemFlags)
+                   const uint32_t imm,
+                   const Request::Flags &extraMemFlags)
     {
         switch (size) {
           case 0:
@@ -314,10 +315,13 @@ let {{
             // Load instructions.
             if (single) {
                 return new VldSingle(machInst, singleAll, width, rn, vd,
-                                     regs, inc, size, align, rm, lane);
+                                     regs, inc, size,
+                                     static_cast<MMU::ArmFlags>(align),
+                                     rm, lane);
             } else {
                 return new VldMult(machInst, width, rn, vd,
-                                   regs, inc, size, align, rm);
+                                   regs, inc, size,
+                                   static_cast<MMU::ArmFlags>(align), rm);
             }
         } else {
             // Store instructions.
@@ -326,11 +330,14 @@ let {{
                     return new Unknown(machInst);
                 } else {
                     return new VstSingle(machInst, false, width, rn, vd,
-                                         regs, inc, size, align, rm, lane);
+                                         regs, inc, size,
+                                         static_cast<MMU::ArmFlags>(align),
+                                         rm, lane);
                 }
             } else {
                 return new VstMult(machInst, width, rn, vd,
-                                   regs, inc, size, align, rm);
+                                   regs, inc, size,
+                                   static_cast<MMU::ArmFlags>(align), rm);
             }
         }
         return new Unknown(machInst);

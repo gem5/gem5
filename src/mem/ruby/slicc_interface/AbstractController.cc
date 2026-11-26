@@ -286,8 +286,8 @@ AbstractController::serviceMemoryQueue()
         req_size = mem_msg->m_Len;
     }
 
-    RequestPtr req
-        = std::make_shared<Request>(mem_msg->m_addr, req_size, 0, m_id);
+    RequestPtr req = std::make_shared<Request>(mem_msg->m_addr, req_size,
+                                               Request::Flags(), m_id);
     PacketPtr pkt;
     if (mem_msg->getType() == MemoryRequestType_MEMORY_WB) {
         pkt = Packet::createWrite(req);

@@ -1774,8 +1774,9 @@ BaseCache::writebackBlk(CacheBlk *blk)
 
     stats.writebacks[Request::wbRequestorId]++;
 
-    RequestPtr req = std::make_shared<Request>(
-        regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
+    RequestPtr req =
+        std::make_shared<Request>(regenerateBlkAddr(blk), blkSize,
+                                  Request::Flags(), Request::wbRequestorId);
 
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
@@ -1815,10 +1816,12 @@ BaseCache::writebackBlk(CacheBlk *blk)
 }
 
 PacketPtr
-BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
+BaseCache::writecleanBlk(CacheBlk *blk, const Request::Flags &dest,
+                         PacketId id)
 {
-    RequestPtr req = std::make_shared<Request>(
-        regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
+    RequestPtr req =
+        std::make_shared<Request>(regenerateBlkAddr(blk), blkSize,
+                                  Request::Flags(), Request::wbRequestorId);
 
     if (blk->isSecure()) {
         req->setFlags(Request::SECURE);
@@ -1827,7 +1830,7 @@ BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 
     PacketPtr pkt = new Packet(req, MemCmd::WriteClean, blkSize, id);
 
-    if (dest) {
+    if (!dest.noneSet()) {
         req->setFlags(dest);
         pkt->setWriteThrough();
     }
@@ -1892,7 +1895,8 @@ BaseCache::writebackVisitor(CacheBlk &blk)
         assert(blk.isValid());
 
         RequestPtr request = std::make_shared<Request>(
-            regenerateBlkAddr(&blk), blkSize, 0, Request::funcRequestorId);
+            regenerateBlkAddr(&blk), blkSize, Request::Flags(),
+            Request::funcRequestorId);
 
         request->taskId(blk.getTaskId());
         if (blk.isSecure()) {

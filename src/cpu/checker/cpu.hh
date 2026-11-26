@@ -251,7 +251,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     };
 
     Fault
-    initiateMemMgmtCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(const Request::Flags &flags) override
     {
         panic("not yet supported!");
         return NoFault;
@@ -378,21 +378,21 @@ class CheckerCPU : public BaseCPU, public ExecContext
      * mask is all-false for the fragment.
      */
     RequestPtr genMemFragmentRequest(Addr frag_addr, int size,
-                                     Request::Flags flags,
-                                     const std::vector<bool>& byte_enable,
-                                     int& frag_size, int& size_left) const;
+                                     const Request::Flags &flags,
+                                     const std::vector<bool> &byte_enable,
+                                     int &frag_size, int &size_left) const;
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
-                  Request::Flags flags,
-                  const std::vector<bool>& byte_enable) override;
+                  const Request::Flags &flags,
+                  const std::vector<bool> &byte_enable) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-                   Request::Flags flags, uint64_t *res,
-                   const std::vector<bool>& byte_enable) override;
+                   const Request::Flags &flags, uint64_t *res,
+                   const std::vector<bool> &byte_enable) override;
 
     Fault
-    amoMem(Addr addr, uint8_t* data, unsigned size,
-           Request::Flags flags, AtomicOpFunctorPtr amo_op) override
+    amoMem(Addr addr, uint8_t *data, unsigned size,
+           const Request::Flags &flags, AtomicOpFunctorPtr amo_op) override
     {
         panic("AMO is not supported yet in CPU checker\n");
     }
@@ -415,8 +415,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
             dumpAndExit();
     }
 
-    bool checkFlags(const RequestPtr &unverified_req, Addr vAddr,
-                    Addr pAddr, int flags);
+    bool checkFlags(const RequestPtr &unverified_req, Addr vAddr, Addr pAddr,
+                    const Request::Flags &flags);
 
     void dumpAndExit();
 

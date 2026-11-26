@@ -131,7 +131,7 @@ class InstPBTrace : public InstTracer
      * @param s size of the request
      * @param f flags for the request
      */
-    void traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f);
+    void traceMem(StaticInstPtr si, Addr a, Addr s, const Request::Flags &f);
 
     friend class InstPBTraceRecord;
 };

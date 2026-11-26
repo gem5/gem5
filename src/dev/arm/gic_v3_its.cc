@@ -97,8 +97,8 @@ ItsProcess::doRead(Yield &yield, Addr addr, void *ptr, size_t size)
     ItsAction a;
     a.type = ItsActionType::SEND_REQ;
 
-    RequestPtr req = std::make_shared<Request>(
-        addr, size, 0, its.requestorId);
+    RequestPtr req = std::make_shared<Request>(addr, size, Request::Flags(),
+                                               its.requestorId);
 
     req->taskId(context_switch_task_id::DMA);
 
@@ -121,8 +121,8 @@ ItsProcess::doWrite(Yield &yield, Addr addr, void *ptr, size_t size)
     ItsAction a;
     a.type = ItsActionType::SEND_REQ;
 
-    RequestPtr req = std::make_shared<Request>(
-        addr, size, 0, its.requestorId);
+    RequestPtr req = std::make_shared<Request>(addr, size, Request::Flags(),
+                                               its.requestorId);
 
     req->taskId(context_switch_task_id::DMA);
 

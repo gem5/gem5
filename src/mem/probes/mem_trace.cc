@@ -114,7 +114,8 @@ MemTraceProbe::handleRequest(const probing::PacketInfo &pkt_info)
 
     pkt_msg.set_tick(curTick());
     pkt_msg.set_cmd(pkt_info.cmd.toInt());
-    pkt_msg.set_flags(pkt_info.flags);
+    pkt_msg.set_flags(
+        Request::Flags::LegacyAdaptor::flagsToBits(pkt_info.flags));
     pkt_msg.set_addr(pkt_info.addr);
     pkt_msg.set_size(pkt_info.size);
     if (withPC && pkt_info.pc != 0)

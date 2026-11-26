@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2017, 2020, 2023, 2025 Arm Limited
+ * Copyright (c) 2014, 2017, 2020, 2023, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,7 @@
 #include "cpu/inst_res.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
+#include "mem/request.hh"
 #include "params/InstTracer.hh"
 #include "sim/sim_object.hh"
 
@@ -85,7 +86,8 @@ class InstRecord
      */
     Addr addr = 0; ///< The address that was accessed
     Addr size = 0; ///< The size of the memory request
-    unsigned flags = 0; ///< The flags that were assigned to the request.
+    Request::Flags flags =
+        {}; ///< The flags that were assigned to the request.
 
     /** @} */
 
@@ -172,7 +174,7 @@ class InstRecord
 
     void setWhen(Tick new_when) { when = new_when; }
     void
-    setMem(Addr a, Addr s, unsigned f)
+    setMem(Addr a, Addr s, const Request::Flags &f)
     {
         addr = a;
         size = s;
@@ -295,7 +297,11 @@ class InstRecord
 
     Addr getAddr() const { return addr; }
     Addr getSize() const { return size; }
-    unsigned getFlags() const { return flags; }
+    const Request::Flags &
+    getFlags() const
+    {
+        return flags;
+    }
     bool getMemValid() const { return mem_valid; }
 
     uint64_t getIntData() const { return data.asInt; }

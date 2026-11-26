@@ -2551,9 +2551,13 @@ AtOp64::performAt(ExecContext *xc, MiscRegIndex dest_idx, RegVal val) const
 
     switch (dest_idx) {
       case MISCREG_AT_S1E1R_Xt:
-        return addressTranslation64(tc, MMU::S1E1Tran, BaseMMU::Read, 0, val);
+          return addressTranslation64(tc, MMU::S1E1Tran, BaseMMU::Read,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S1E1W_Xt:
-        return addressTranslation64(tc, MMU::S1E1Tran, BaseMMU::Write, 0, val);
+          return addressTranslation64(tc, MMU::S1E1Tran, BaseMMU::Write,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S1E0R_Xt:
         return addressTranslation64(tc, MMU::S1E0Tran, BaseMMU::Read,
             MMU::UserMode, val);
@@ -2561,14 +2565,21 @@ AtOp64::performAt(ExecContext *xc, MiscRegIndex dest_idx, RegVal val) const
         return addressTranslation64(tc, MMU::S1E0Tran, BaseMMU::Write,
             MMU::UserMode, val);
       case MISCREG_AT_S1E2R_Xt:
-        return addressTranslation64(tc, MMU::S1E2Tran, BaseMMU::Read, 0, val);
+          return addressTranslation64(tc, MMU::S1E2Tran, BaseMMU::Read,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S1E2W_Xt:
-        return addressTranslation64(tc, MMU::S1E2Tran, BaseMMU::Write, 0, val);
+          return addressTranslation64(tc, MMU::S1E2Tran, BaseMMU::Write,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S12E1R_Xt:
-        return addressTranslation64(tc, MMU::S12E1Tran, BaseMMU::Read, 0, val);
+          return addressTranslation64(tc, MMU::S12E1Tran, BaseMMU::Read,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S12E1W_Xt:
-        return addressTranslation64(tc, MMU::S12E1Tran, BaseMMU::Write,
-            0, val);
+          return addressTranslation64(tc, MMU::S12E1Tran, BaseMMU::Write,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S12E0R_Xt:
         return addressTranslation64(tc, MMU::S12E0Tran, BaseMMU::Read,
             MMU::UserMode, val);
@@ -2576,9 +2587,13 @@ AtOp64::performAt(ExecContext *xc, MiscRegIndex dest_idx, RegVal val) const
         return addressTranslation64(tc, MMU::S12E0Tran, BaseMMU::Write,
             MMU::UserMode, val);
       case MISCREG_AT_S1E3R_Xt:
-        return addressTranslation64(tc, MMU::S1E3Tran, BaseMMU::Read, 0, val);
+          return addressTranslation64(tc, MMU::S1E3Tran, BaseMMU::Read,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       case MISCREG_AT_S1E3W_Xt:
-        return addressTranslation64(tc, MMU::S1E3Tran, BaseMMU::Write, 0, val);
+          return addressTranslation64(tc, MMU::S1E3Tran, BaseMMU::Write,
+                                      static_cast<ArmISA::MMU::ArmFlags>(0),
+                                      val);
       default:
         return std::make_pair(NoFault, 0);
     }
@@ -2587,9 +2602,10 @@ AtOp64::performAt(ExecContext *xc, MiscRegIndex dest_idx, RegVal val) const
 }
 
 std::pair<Fault, uint64_t>
-AtOp64::addressTranslation64(ThreadContext* tc,
-    ArmISA::MMU::ArmTranslationType tran_type,
-    BaseMMU::Mode mode, Request::Flags flags, RegVal val) const
+AtOp64::addressTranslation64(ThreadContext *tc,
+                             ArmISA::MMU::ArmTranslationType tran_type,
+                             BaseMMU::Mode mode,
+                             ArmISA::MMU::ArmFlags arm_flags, RegVal val) const
 {
     // If we're in timing mode then doing the translation in
     // functional mode then we're slightly distorting performance
@@ -2600,7 +2616,7 @@ AtOp64::addressTranslation64(ThreadContext* tc,
     warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
 
     auto req = std::make_shared<Request>(
-        val, 0, flags,  Request::funcRequestorId,
+        val, 0, Request::archFlags(arm_flags), Request::funcRequestorId,
         tc->pcState().instAddr(), tc->contextId());
 
     Fault fault = getMMUPtr(tc)->translateFunctional(

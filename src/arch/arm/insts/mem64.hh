@@ -128,7 +128,10 @@ class Memory64 : public MightBeMicro64
     Memory64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
              RegIndex _dest, RegIndex _base)
         : MightBeMicro64(mnem, _machInst, __opClass),
-          dest(_dest), base(_base), uops(NULL), memAccessFlags(0)
+          dest(_dest),
+          base(_base),
+          uops(NULL),
+          memAccessFlags()
     {
         baseIsSP = isSP(_base);
     }

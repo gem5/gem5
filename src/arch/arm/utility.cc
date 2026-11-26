@@ -546,28 +546,28 @@ SPAlignmentCheckEnabled(ThreadContext *tc)
 Request::Flags
 addrAlignmentFlags(int memsize, Request::Flags flags)
 {
-    flags.clear(MMU::AlignmentMask);
+    flags.clear(Request::archFlags(MMU::AlignmentMask));
     switch (memsize) {
         case 1:
-            flags.set(MMU::AlignByte);
+            flags.set(Request::archFlags(MMU::AlignByte));
             break;
         case 2:
-            flags.set(MMU::AlignHalfWord);
+            flags.set(Request::archFlags(MMU::AlignHalfWord));
             break;
         case 4:
-            flags.set(MMU::AlignWord);
+            flags.set(Request::archFlags(MMU::AlignWord));
             break;
         case 8:
-            flags.set(MMU::AlignDoubleWord);
+            flags.set(Request::archFlags(MMU::AlignDoubleWord));
             break;
         case 16:
-            flags.set(MMU::AlignQuadWord);
+            flags.set(Request::archFlags(MMU::AlignQuadWord));
             break;
         case 32:
-            flags.set(MMU::AlignOctWord);
+            flags.set(Request::archFlags(MMU::AlignOctWord));
             break;
         default:
-            flags.set(MMU::AllowUnaligned);
+            flags.set(Request::archFlags(MMU::AllowUnaligned));
             break;
     }
     return flags;

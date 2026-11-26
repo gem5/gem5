@@ -448,16 +448,15 @@ def format LoadReserved(memacc_code, postacc_code={{ }},
         {'ea_code': ea_code, 'memacc_code': memacc_code,
         'postacc_code': postacc_code}, inst_flags)
     mem_flags = [
-        'static_cast<Request::FlagsType>(Request::%s)' % flag
+        'Request::Flags(Request::%s)' % flag
         for flag in mem_flags
     ]
     align_flag = getAlignFlag(iop)
     if align_flag:
-        mem_flags.append('static_cast<Request::FlagsType>(%s)' % align_flag)
+        mem_flags.append('Request::archFlags(%s)' % align_flag)
     if xlate_flags:
         xlate_flags_casted = [
-            ('(static_cast<Request::FlagsType>(Request::ARCH_BITS) & '
-             'static_cast<Request::FlagsType>(XlateFlags::%s))') % flag
+            ('Request::archFlags(XlateFlags::%s)') % flag
             for flag in xlate_flags]
         mem_flags.extend(xlate_flags_casted)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
@@ -490,7 +489,7 @@ def format StoreCond(memacc_code, postacc_code={{ }},
     mem_flags = ['(Request::%s)' % flag for flag in mem_flags]
     align_flag = getAlignFlag(iop)
     if align_flag:
-        mem_flags.append(align_flag)
+        mem_flags.append('Request::archFlags(%s)' % align_flag)
     iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
         '|'.join(mem_flags) + ';'
 
@@ -525,7 +524,7 @@ def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
     rmw_mem_flags = ['(Request::%s)' % flag for flag in rmw_mem_flags]
     align_flag = getAlignFlag(rmw_iop)
     if align_flag:
-        rmw_mem_flags.append(align_flag)
+        rmw_mem_flags.append('Request::archFlags(%s)' % align_flag)
     rmw_iop.constructor += '\n\tmemAccessFlags = memAccessFlags | ' + \
           '|'.join(rmw_mem_flags) + ';'
 

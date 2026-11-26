@@ -65,8 +65,8 @@ class SETranslatingPortProxy : public TranslatingPortProxy
             BaseMMU::Mode mode) const override;
 
   public:
-    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc=NextPage,
-                           Request::Flags _flags=0);
+    SETranslatingPortProxy(ThreadContext *tc, AllocType alloc = NextPage,
+                           const Request::Flags &_flags = {});
 };
 
 } // namespace gem5

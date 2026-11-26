@@ -74,9 +74,9 @@ GpuWavefront::issueLoadOps()
             // for now, assert address is 4-byte aligned
             assert(address % load_size == 0);
 
-            auto req = std::make_shared<Request>(address, load_size,
-                                                 0, tester->requestorId(),
-                                                 0, threadId, nullptr);
+            auto req = std::make_shared<Request>(
+                address, load_size, Request::Flags(), tester->requestorId(), 0,
+                threadId, nullptr);
             req->setPaddr(address);
             req->setReqInstSeqNum(tester->getActionSeqNum());
             // set protocol-specific flags
@@ -127,9 +127,9 @@ GpuWavefront::issueStoreOps()
                     curEpisode->getEpisodeId(), printAddress(address),
                     new_value);
 
-            auto req = std::make_shared<Request>(address, sizeof(Value),
-                                                 0, tester->requestorId(), 0,
-                                                 threadId, nullptr);
+            auto req = std::make_shared<Request>(
+                address, sizeof(Value), Request::Flags(),
+                tester->requestorId(), 0, threadId, nullptr);
             req->setPaddr(address);
             req->setReqInstSeqNum(tester->getActionSeqNum());
             // set protocol-specific flags
@@ -222,9 +222,8 @@ GpuWavefront::issueAcquireOp()
     assert(pendingLdStCount == 0);
     assert(pendingAtomicCount == 0);
 
-    auto acq_req = std::make_shared<Request>(0, 0, 0,
-                                             tester->requestorId(), 0,
-                                             threadId, nullptr);
+    auto acq_req = std::make_shared<Request>(
+        0, 0, Request::Flags(), tester->requestorId(), 0, threadId, nullptr);
     acq_req->setPaddr(0);
     acq_req->setReqInstSeqNum(tester->getActionSeqNum());
     acq_req->setCacheCoherenceFlags(Request::INV_L1);

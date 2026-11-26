@@ -82,7 +82,7 @@ class TraceGen : public BaseGen
         Tick tick;
 
         /** Potential request flags to use */
-        Request::FlagsType flags;
+        Request::Flags flags;
 
         /**
          * Check validity of this element.

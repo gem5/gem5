@@ -284,17 +284,16 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void activateContext(ThreadID thread_num) override;
     void suspendContext(ThreadID thread_num) override;
 
-    Fault initiateMemRead(Addr addr, unsigned size,
-            Request::Flags flags,
-            const std::vector<bool>& byte_enable =std::vector<bool>())
-        override;
+    Fault initiateMemRead(
+        Addr addr, unsigned size, const Request::Flags &flags,
+        const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
-    Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, Request::Flags flags, uint64_t *res,
-                   const std::vector<bool>& byte_enable = std::vector<bool>())
-        override;
+    Fault writeMem(
+        uint8_t *data, unsigned size, Addr addr, const Request::Flags &flags,
+        uint64_t *res,
+        const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
-    Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
+    Fault initiateMemAMO(Addr addr, unsigned size, const Request::Flags &flags,
                          AtomicOpFunctorPtr amo_op) override;
 
     void fetch();
@@ -325,7 +324,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void finishTranslation(WholeTranslationState *state);
 
     /** hardware transactional memory & TLBI operations **/
-    Fault initiateMemMgmtCmd(Request::Flags flags) override;
+    Fault initiateMemMgmtCmd(const Request::Flags &flags) override;
 
     void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
                             HtmFailureFaultCause) override;

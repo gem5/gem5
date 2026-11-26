@@ -1532,8 +1532,8 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelMemSync,
     // Fences will never be issued to system memory, so we can mark the
     // requestor as a device memory ID here.
     if (!req) {
-        req = std::make_shared<Request>(0, 0, 0, vramRequestorId(), 0,
-                                        gpuDynInst->wfDynId);
+        req = std::make_shared<Request>(
+            0, 0, Request::Flags(), vramRequestorId(), 0, gpuDynInst->wfDynId);
     } else {
         req->requestorId(vramRequestorId());
     }
@@ -1610,7 +1610,8 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelMemSync,
 void
 ComputeUnit::sendInvL2(Addr paddr)
 {
-    auto req = std::make_shared<Request>(paddr, 64, 0, vramRequestorId());
+    auto req = std::make_shared<Request>(paddr, 64, Request::Flags(),
+                                         vramRequestorId());
     req->setCacheCoherenceFlags(Request::GL2_CACHE_INV);
 
     auto pkt = new Packet(req, MemCmd::MemSyncReq);
@@ -1826,8 +1827,8 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
             }
 
             RequestPtr prefetch_req = std::make_shared<Request>(
-                vaddr + stride * pf * X86ISA::PageBytes, sizeof(uint8_t), 0,
-                computeUnit->requestorId(), 0, 0, nullptr);
+                vaddr + stride * pf * X86ISA::PageBytes, sizeof(uint8_t),
+                Request::Flags(), computeUnit->requestorId(), 0, 0, nullptr);
 
             PacketPtr prefetch_pkt = new Packet(prefetch_req, requestCmd);
             uint8_t foo = 0;

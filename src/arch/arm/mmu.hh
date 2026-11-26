@@ -82,8 +82,8 @@ class MMU : public BaseMMU
 
   public:
     TranslationGenPtr
-    translateFunctional(Addr start, Addr size, ThreadContext *tc,
-            Mode mode, Request::Flags flags) override
+    translateFunctional(Addr start, Addr size, ThreadContext *tc, Mode mode,
+                        const Request::Flags &flags) override
     {
         return TranslationGenPtr(new MMUTranslationGen(
                 PageBytes, start, size, tc, this, mode, flags));

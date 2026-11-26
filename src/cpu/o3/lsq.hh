@@ -299,7 +299,7 @@ class LSQRequest : public BaseMMU::Translation, public Packet::SenderState
      * For a previously allocated Request objects.
      */
     void
-    setVirt(Addr vaddr, unsigned size, Request::Flags flags_,
+    setVirt(Addr vaddr, unsigned size, const Request::Flags &flags_,
             RequestorID requestor_id, Addr pc)
     { req()->setVirt(vaddr, size, flags_, requestor_id, pc); }
 
@@ -885,10 +885,11 @@ class LSQ
 
     void recvTimingSnoopReq(PacketPtr pkt);
 
-    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
-                      unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctorPtr amo_op,
-                      const std::vector<bool>& byte_enable);
+    Fault pushRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                      unsigned int size, Addr addr,
+                      const Request::Flags &flags, uint64_t *res,
+                      AtomicOpFunctorPtr amo_op,
+                      const std::vector<bool> &byte_enable);
 
     /** The CPU pointer. */
     CPU *cpu;

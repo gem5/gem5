@@ -132,7 +132,7 @@ def template MicroNeonMemDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                        RegIndex _ura, uint32_t _imm,
-                       Request::Flags extraMemFlags) :
+                       const Request::Flags &extraMemFlags) :
             %(base_class)s("%(mnemonic)s", machInst,
                               %(op_class)s, _dest, _ura, _imm)
         {
@@ -597,14 +597,14 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, unsigned width,
             RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-            uint32_t size, uint32_t align, RegIndex rm);
+            uint32_t size, MMU::ArmFlags align, RegIndex rm);
 };
 }};
 
 def template VMemMultConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst, unsigned width,
         RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-        uint32_t size, uint32_t align, RegIndex rm) :
+        uint32_t size, MMU::ArmFlags align, RegIndex rm) :
     %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, width,
                    rn, vd, regs, inc, size, align, rm)
 {
@@ -628,14 +628,14 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, bool all, unsigned width,
             RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-            uint32_t size, uint32_t align, RegIndex rm, unsigned lane=0);
+            uint32_t size, MMU::ArmFlags align, RegIndex rm, unsigned lane=0);
 };
 }};
 
 def template VMemSingleConstructor {{
 %(class_name)s::%(class_name)s(ExtMachInst machInst, bool all, unsigned width,
         RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
-        uint32_t size, uint32_t align, RegIndex rm, unsigned lane) :
+        uint32_t size, MMU::ArmFlags align, RegIndex rm, unsigned lane) :
     %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, all, width,
                    rn, vd, regs, inc, size, align, rm, lane)
 {

@@ -582,7 +582,7 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         }
 
         if (fault == NoFault) {
-            if (req->getFlags() & Request::PHYSICAL) {
+            if (req->getFlags().isSet(Request::PHYSICAL)) {
                 /**
                  * we simply set the virtual address to physical address.
                  */

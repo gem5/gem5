@@ -527,7 +527,7 @@ PM4PacketProcessor::mapDeviceQueue(PM4Queue *q, PM4MapQueues *pkt)
                     gen.addr(), chunk_addr);
 
             gpuDevice->getMemMgr()->readRequest(chunk_addr, buffer_ptr,
-                                                gen.size(), 0,
+                                                gen.size(), Request::Flags(),
                                                 gen.last() ? cb : nullptr);
             buffer_ptr += gen.size();
             chunk_addr += gen.size();
@@ -558,7 +558,7 @@ PM4PacketProcessor::mapDeviceQueue(PM4Queue *q, PM4MapQueues *pkt)
                     gen.addr(), chunk_addr);
 
             gpuDevice->getMemMgr()->readRequest(chunk_addr, buffer_ptr,
-                                                gen.size(), 0,
+                                                gen.size(), Request::Flags(),
                                                 gen.last() ? cb : nullptr);
             buffer_ptr += gen.size();
             chunk_addr += gen.size();
@@ -745,7 +745,7 @@ PM4PacketProcessor::unmapAllQueues(bool unmap_static)
                 Addr chunk_addr = addr;
                 for (; !gen.done(); gen.next()) {
                     gpuDevice->getMemMgr()->writeRequest(
-                        chunk_addr, buf, gen.size(), 0,
+                        chunk_addr, buf, gen.size(), Request::Flags(),
                         gen.last() ? cb : nullptr);
                     buf += gen.size();
                     chunk_addr += gen.size();

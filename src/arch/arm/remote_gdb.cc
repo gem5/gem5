@@ -1,7 +1,7 @@
 /*
  * Copyright 2015 LabWare
  * Copyright 2014 Google Inc.
- * Copyright (c) 2010, 2013, 2016, 2018-2019, 2025 ARM Limited
+ * Copyright (c) 2010, 2013, 2016, 2018-2019, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -187,7 +187,7 @@ tryTranslate(ThreadContext *tc, Addr addr)
 {
     // Set up a functional memory Request to pass to the TLB
     // to get it to translate the vaddr to a paddr
-    auto req = std::make_shared<Request>(addr, 64, 0x40, -1, 0, 0);
+    auto req = std::make_shared<Request>(addr, 64, Request::Flags(), -1, 0, 0);
 
     // Check the TLBs for a translation
     // It's possible that there is a valid translation in the tlb

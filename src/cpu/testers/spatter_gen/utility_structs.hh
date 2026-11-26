@@ -137,7 +137,9 @@ struct SpatterAccess : public Packet::SenderState
 
     PacketPtr createPacket(Addr addr, size_t size, MemCmd cmd) const
     {
-        RequestPtr req = std::make_shared<Request>(addr, size, 0, requestorId);
+        Request::Flags flags = {};
+        RequestPtr req =
+            std::make_shared<Request>(addr, size, flags, requestorId);
 
         // Dummy PC to have PC-based prefetchers latch on;
         // get entropy into higher bits

@@ -138,7 +138,7 @@ class ISA : public BaseISA
 
   protected:
     void addressTranslation(MMU::ArmTranslationType tran_type,
-                            BaseMMU::Mode mode, Request::Flags flags,
+                            BaseMMU::Mode mode, MMU::ArmFlags flags,
                             RegVal val);
 
   public:

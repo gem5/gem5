@@ -231,7 +231,7 @@ Shader::prepareInvalidate(HSAQueueEntry *task)
         // create a request to hold INV info; the request's fields will
         // be updated in cu before use
         auto tcc_req = std::make_shared<Request>(
-            0, 0, 0, cuList[i_cu]->requestorId(), 0, -1);
+            0, 0, Request::Flags(), cuList[i_cu]->requestorId(), 0, -1);
 
         _dispatcher.updateInvCounter(kernId, +1);
         // all necessary INV flags are all set now, call cu to execute
@@ -240,7 +240,7 @@ Shader::prepareInvalidate(HSAQueueEntry *task)
         // A set of CUs share a single SQC cache. Send a single invalidate
         // request to each SQC
         auto sqc_req = std::make_shared<Request>(
-            0, 0, 0, cuList[i_cu]->requestorId(), 0, -1);
+            0, 0, Request::Flags(), cuList[i_cu]->requestorId(), 0, -1);
 
         if ((i_cu % n_cu_per_sqc) == 0) {
             cuList[i_cu]->doSQCInvalidate(sqc_req, task->dispatchId());
@@ -424,7 +424,7 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
          !gen.done(); gen.next()) {
 
         RequestPtr req =
-            std::make_shared<Request>(gen.addr(), gen.size(), 0,
+            std::make_shared<Request>(gen.addr(), gen.size(), Request::Flags(),
                                       cuList[0]->requestorId(), 0, 0, nullptr);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);

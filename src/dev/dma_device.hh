@@ -126,12 +126,21 @@ class DmaPort : public RequestPort, public Drainable
         const Packet::Command cmd;
 
         DmaReqState(Packet::Command _cmd, Addr addr, Addr chunk_sz, Addr tb,
-                    uint8_t *_data, Request::Flags _flags, RequestorID _id,
-                    std::optional<uint32_t> _sid, std::optional<uint32_t> _ssid,
-                    Event *ce, Tick _delay, Event *ae=nullptr)
-            : completionEvent(ce), abortEvent(ae), totBytes(tb), delay(_delay),
-              gen(addr, tb, chunk_sz), data(_data), flags(_flags), id(_id),
-              sid(_sid), ssid(_ssid), cmd(_cmd)
+                    uint8_t *_data, const Request::Flags &_flags,
+                    RequestorID _id, std::optional<uint32_t> _sid,
+                    std::optional<uint32_t> _ssid, Event *ce, Tick _delay,
+                    Event *ae = nullptr)
+            : completionEvent(ce),
+              abortEvent(ae),
+              totBytes(tb),
+              delay(_delay),
+              gen(addr, tb, chunk_sz),
+              data(_data),
+              flags(_flags),
+              id(_id),
+              sid(_sid),
+              ssid(_ssid),
+              cmd(_cmd)
         {}
 
         /**
@@ -209,14 +218,13 @@ class DmaPort : public RequestPort, public Drainable
     DmaPort(ClockedObject *dev, System *s, std::optional<uint32_t> sid=0,
             std::optional<uint32_t> ssid=0);
 
-    void
-    dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-              uint8_t *data, Tick delay, Request::Flags flag=0);
+    void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+                   uint8_t *data, Tick delay, const Request::Flags &flag = {});
 
-    void
-    dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-              uint8_t *data, std::optional<uint32_t> sid,
-              std::optional<uint32_t> ssid, Tick delay, Request::Flags flag=0);
+    void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
+                   uint8_t *data, std::optional<uint32_t> sid,
+                   std::optional<uint32_t> ssid, Tick delay,
+                   const Request::Flags &flag = {});
 
     // Abort and remove any pending DMA transmissions.
     void abortPending();
@@ -392,10 +400,8 @@ class DmaCallback : public Drainable
 class DmaReadFifo : public Drainable, public Serializable
 {
   public:
-    DmaReadFifo(DmaPort &port, size_t size,
-                unsigned max_req_size,
-                unsigned max_pending,
-                Request::Flags flags=0);
+    DmaReadFifo(DmaPort &port, size_t size, unsigned max_req_size,
+                unsigned max_pending, const Request::Flags &flags = {});
 
     ~DmaReadFifo();
 

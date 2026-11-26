@@ -349,7 +349,7 @@ class DynInst : public ExecContext, public RefCounted
     Addr physEffAddr = 0;
 
     /** The memory request flags (from translation). */
-    Request::Flags memReqFlags = 0;
+    Request::Flags memReqFlags = {};
 
     /** The size of the request */
     unsigned effSize;
@@ -400,16 +400,17 @@ class DynInst : public ExecContext, public RefCounted
 
     void demapPage(Addr vaddr, uint64_t asn) override;
 
-    Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-            const std::vector<bool> &byte_enable) override;
+    Fault initiateMemRead(Addr addr, unsigned size,
+                          const Request::Flags &flags,
+                          const std::vector<bool> &byte_enable) override;
 
-    Fault initiateMemMgmtCmd(Request::Flags flags) override;
+    Fault initiateMemMgmtCmd(const Request::Flags &flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-                   Request::Flags flags, uint64_t *res,
+                   const Request::Flags &flags, uint64_t *res,
                    const std::vector<bool> &byte_enable) override;
 
-    Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
+    Fault initiateMemAMO(Addr addr, unsigned size, const Request::Flags &flags,
                          AtomicOpFunctorPtr amo_op) override;
 
     /** True if the DTB address translation has started. */

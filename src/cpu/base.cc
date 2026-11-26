@@ -319,8 +319,9 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
     if (secondAddr > addr)
         size = secondAddr - addr;
 
-    req->setVirt(addr, size, 0x0, dataRequestorId(),
-            tc->pcState().instAddr());
+    Request::Flags flags = {};
+    req->setVirt(addr, size, flags, dataRequestorId(),
+                 tc->pcState().instAddr());
 
     // translate to physical address
     Fault fault = mmu->translateAtomic(req, tc, BaseMMU::Read);

@@ -77,9 +77,9 @@ DmaThread::issueLoadOps()
         // for now, assert address is 4-byte aligned
         assert(address % load_size == 0);
 
-        auto req = std::make_shared<Request>(address, load_size,
-                                             0, tester->requestorId(),
-                                             0, threadId, nullptr);
+        auto req = std::make_shared<Request>(
+            address, load_size, Request::Flags(), tester->requestorId(), 0,
+            threadId, nullptr);
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
 
@@ -130,9 +130,9 @@ DmaThread::issueStoreOps()
                 curEpisode->getEpisodeId(), printAddress(address),
                 new_value);
 
-        auto req = std::make_shared<Request>(address, sizeof(Value),
-                                             0, tester->requestorId(), 0,
-                                             threadId, nullptr);
+        auto req = std::make_shared<Request>(
+            address, sizeof(Value), Request::Flags(), tester->requestorId(), 0,
+            threadId, nullptr);
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
 

@@ -56,9 +56,12 @@ let {{
 
             # This shouldn't be part of the eaCode, but until the exec templates
             # are converted over it's the easiest place to put it.
-            memFlagsCasted = map(
-                lambda x: f'static_cast<unsigned>({x})', memFlags
-            )
+            def requestFlag(flag):
+                if "Request::" in flag:
+                    return f"Request::Flags({flag})"
+                return f"Request::archFlags({flag})"
+
+            memFlagsCasted = map(requestFlag, memFlags)
             eaCode += '\n    Request::Flags memAccessFlags = '
             eaCode += ('|'.join(memFlagsCasted) + ';')
 

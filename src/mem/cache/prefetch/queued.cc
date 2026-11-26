@@ -61,7 +61,7 @@ Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
                                             Tick t) {
     /* Create a prefetch memory request */
     RequestPtr req = std::make_shared<Request>(paddr, blk_size,
-                                                0, requestor_id);
+                                               Request::Flags(), requestor_id);
 
     if (pfInfo.isSecure()) {
         req->setFlags(Request::SECURE);

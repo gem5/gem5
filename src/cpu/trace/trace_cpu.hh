@@ -333,7 +333,7 @@ class TraceCPU : public ClockedObject
             Tick tick;
 
             /** Potential request flags to use */
-            Request::FlagsType flags;
+            Request::Flags flags;
 
             /** Instruction PC */
             Addr pc;
@@ -435,8 +435,8 @@ class TraceCPU : public ClockedObject
          *
          * @return true if packet was sent successfully
          */
-        bool send(Addr addr, unsigned size, const MemCmd& cmd,
-              Request::FlagsType flags, Addr pc);
+        bool send(Addr addr, unsigned size, const MemCmd &cmd,
+                  const Request::Flags &flags, Addr pc);
 
         /** Exit the FixedRetryGen. */
         void exit();
