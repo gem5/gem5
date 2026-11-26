@@ -90,6 +90,8 @@ class SimpleExecContext : public ExecContext
                        "Number of matrix alu accesses"),
               ADD_STAT(numMatInsts, statistics::units::Count::get(),
                        "Number of matrix instructions"),
+              numMatRegReads(this),
+              numMatRegWrites(this),
               ADD_STAT(numIdleCycles, statistics::units::Cycle::get(),
                        "Number of idle cycles"),
               ADD_STAT(numBusyCycles, statistics::units::Cycle::get(),
