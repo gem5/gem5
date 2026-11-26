@@ -9,6 +9,9 @@ on:
             - util/dockerfiles/**
     workflow_dispatch:
 
+concurrency:
+    group: gem5-docker-publish-${{ github.ref }}
+    cancel-in-progress: false
 
 jobs:
 
