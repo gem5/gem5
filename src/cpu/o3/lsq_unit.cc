@@ -306,7 +306,7 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "LSQ fragments for those accesses")
 {
     loadToUse
-        .init(0, 299, 10)
+        .init(0, 299, 1)
         .flags(statistics::nozero);
 
     lqAvgOccupancy.precision(2);
