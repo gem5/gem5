@@ -7,12 +7,20 @@ on:
             - develop
         paths:
             - util/dockerfiles/**
+            - .github/workflows/docker-build.yaml
     workflow_dispatch:
 
+concurrency:
+    group: gem5-docker-publish-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: read
 
 jobs:
 
     obtain-targets:
+        if: github.ref == 'refs/heads/develop'
         runs-on: ubuntu-24.04
         outputs:
             matrix: ${{ steps.generate.outputs.matrix }}
@@ -20,6 +28,8 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
 
             - name: Generate build matrix
               id: generate
@@ -29,6 +39,10 @@ jobs:
                   workdir: util/dockerfiles
 
     docker-buildx-bake-base-images:
+        if: github.ref == 'refs/heads/develop'
+        permissions:
+            contents: read
+            packages: write
         # This job is used to build the base images -- the images which other
         # images use as a base (usually an Ubuntu release).
         # We do this prior to building the other images to ensure that the base
@@ -36,8 +50,15 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         timeout-minutes: 1800
         steps:
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
+
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v4
+              with:
+                  platforms: amd64,arm64
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
@@ -52,7 +73,7 @@ jobs:
             - name: Build and Push
               uses: docker/bake-action@v7
               with:
-                  source: '{{defaultContext}}:util/dockerfiles'
+                  source: ./util/dockerfiles
                   targets: base-images
                   provenance: true
                   push: true
@@ -77,8 +98,15 @@ jobs:
 
         steps:
 
+            - name: Checkout
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
+
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v4
+              with:
+                  platforms: amd64,arm64
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
@@ -93,7 +121,7 @@ jobs:
             - name: Build and Push
               uses: docker/bake-action@v7
               with:
-                  source: '{{defaultContext}}:util/dockerfiles'
+                  source: ./util/dockerfiles
                   targets: ${{ matrix.target }}
                   provenance: true
                   push: true
