@@ -128,8 +128,8 @@ class MemState : public Serializable
      * @param offset Offset in file in which region starts.
      */
     void mapRegion(Addr start_addr, Addr length,
-                   const std::string& name="anon", int sim_fd=-1,
-                   Addr offset=0);
+                   const std::string &name = "anon", int sim_fd = -1,
+                   Addr offset = 0, int bus_signal = 0);
 
     /**
      * Unmap a pre-existing region. Depending on the range being unmapped
@@ -172,6 +172,9 @@ class MemState : public Serializable
      */
     bool fixupFault(Addr vaddr);
 
+    /** Return the target signal for a fault that cannot be fixed up. */
+    int faultSignal(Addr vaddr) const;
+
     /**
      * Given the vaddr and size, this method will chunk the allocation into
      * page granularity and then request physical pages (frames) from the
@@ -205,6 +208,7 @@ class MemState : public Serializable
             if (vma.hasHostBuf()) {
                 paramOut(cp, "fileOffset", vma.getFileMappingOffset());
             }
+            paramOut(cp, "busSignal", vma.getBusSignal());
             paramOut(cp, "addrRangeStart", vma.start());
             paramOut(cp, "addrRangeEnd", vma.end());
         }
@@ -231,6 +235,7 @@ class MemState : public Serializable
             Addr end;
             off_t offset = 0;
             int host_fd = -1;
+            int bus_signal = 0;
             paramIn(cp, "name", name);
             if (optParamIn(cp, "fileOffset", offset, false)) {
                 host_fd = open(name.c_str(), O_RDONLY);
@@ -238,10 +243,11 @@ class MemState : public Serializable
                          "Failed to open %s file "
                          "while unserializing file-backed VMA\n", name);
             }
+            optParamIn(cp, "busSignal", bus_signal, false);
             paramIn(cp, "addrRangeStart", start);
             paramIn(cp, "addrRangeEnd", end);
             _vmaList.emplace_back(AddrRange(start, end), _pageBytes, name,
-                                  host_fd, offset);
+                                  host_fd, offset, bus_signal);
             close(host_fd);
         }
     }
