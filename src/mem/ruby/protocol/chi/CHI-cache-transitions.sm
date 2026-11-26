@@ -468,7 +468,16 @@ transition({SD, SD_RSD, SD_RSC, SC, SC_RSC},
   ProcessNextState;
 }
 
-transition({RSD,RUSD,RUSC,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+transition({RSD,RUSD,RU},
+           {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_Writeback;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(RUSC, WriteUniqueFull_PoC, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_Writeback;
   Profile_Miss;
@@ -477,6 +486,17 @@ transition({RSD,RUSD,RUSC,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_B
 }
 
 transition({RSC,I}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_PartialWrite;
+  Profile_Miss;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+// In RUSC no upstream copy can be dirty and this node has no data, so a
+// SnpUnique without RetToSrc returns no data and the line can't be
+// completed for a full-line writeback. Handle a partial write as in RSC.
+transition(RUSC, WriteUniquePtl_PoC, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_PartialWrite;
   Profile_Miss;
