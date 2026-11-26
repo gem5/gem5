@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All rights reserved.
 #
@@ -43,8 +55,10 @@ from m5.objects import (
 )
 from m5.params import (
     AddrRange,
+    ModuloAddrRange,
     Port,
     SparseMaskedAddrRange,
+    SparseModuloAddrRange,
 )
 from m5.util.convert import toMemorySize
 
@@ -87,21 +101,23 @@ class ChanneledMemory(AbstractMemorySystem):
         interleaving_size: int | str,
         size: str | None = None,
         addr_mapping: str | None = None,
+        modulo_interleaving: bool | None = False,
     ) -> None:
         """
         :param dram_interface_class: The DRAM interface type to create with
                                      this memory controller.
         :param num_channels: The number of channels that needs to be
                              simulated.
+        :param interleaving_size: Defines the interleaving size of the multi-
+                                  channel memory system. By default, it is
+                                  equivalent to the atom size, i.e., 64.
         :param size: Optionally specify the size of the DRAM controller's
                      address space. By default, it starts at 0 and ends at
                      the size of the DRAM device specified.
         :param addr_mapping: Defines the address mapping scheme to be used.
                              If ``None``, it is defaulted to ``addr_mapping`` from
                              ``dram_interface_class``.
-        :param interleaving_size: Defines the interleaving size of the multi-
-                                  channel memory system. By default, it is
-                                  equivalent to the atom size, i.e., 64.
+        :param modulo_interleaving: True if modulo interleaving should be used
         """
         num_channels = _try_convert(num_channels, int)
         interleaving_size = _try_convert(interleaving_size, int)
@@ -115,6 +131,7 @@ class ChanneledMemory(AbstractMemorySystem):
         super().__init__()
         self._dram_class = dram_interface_class
         self._num_channels = num_channels
+        self._use_modulo_interleaving = modulo_interleaving
 
         if not _isPow2(interleaving_size):
             raise ValueError("Memory interleaving size should be a power of 2")
@@ -166,24 +183,42 @@ class ChanneledMemory(AbstractMemorySystem):
                 "RoRaBaChCo, RoRaBaCoCh, RoCoRaBaCh"
             )
 
-        intlv_bits = int(log(self._num_channels, 2))
-        masks = []
-        for i in range(intlv_bits):
-            masks.append(1 << (intlv_low_bit + i))
-        for i, ctrl in enumerate(self.mem_ctrl):
-            if len(self._mem_ranges) == 1:
-                ctrl.dram.range = AddrRange(
-                    start=self._mem_ranges[0].start,
-                    size=self._mem_ranges[0].size(),
-                    masks=masks,
-                    intlvMatch=i,
-                )
-            else:
-                ctrl.dram.range = SparseMaskedAddrRange(
-                    self._mem_ranges,
-                    masks=masks,
-                    intlvMatch=i,
-                )
+        if self._use_modulo_interleaving:
+            for i, ctrl in enumerate(self.mem_ctrl):
+                if len(self._mem_ranges) == 1:
+                    ctrl.dram.range = ModuloAddrRange(
+                        start=self._mem_ranges[0].start,
+                        size=self._mem_ranges[0].size(),
+                        stripes=self._num_channels,
+                        stripeMatch=i,
+                        intlvLowBit=intlv_low_bit,
+                    )
+                else:
+                    ctrl.dram.range = SparseModuloAddrRange(
+                        self._mem_ranges,
+                        stripes=self._num_channels,
+                        stripeMatch=i,
+                        intlvLowBit=intlv_low_bit,
+                    )
+        else:
+            intlv_bits = int(log(self._num_channels, 2))
+            masks = []
+            for i in range(intlv_bits):
+                masks.append(1 << (intlv_low_bit + i))
+            for i, ctrl in enumerate(self.mem_ctrl):
+                if len(self._mem_ranges) == 1:
+                    ctrl.dram.range = AddrRange(
+                        start=self._mem_ranges[0].start,
+                        size=self._mem_ranges[0].size(),
+                        masks=masks,
+                        intlvMatch=i,
+                    )
+                else:
+                    ctrl.dram.range = SparseMaskedAddrRange(
+                        self._mem_ranges,
+                        masks=masks,
+                        intlvMatch=i,
+                    )
 
     @overrides(AbstractMemorySystem)
     def incorporate_memory(self, board: AbstractBoard) -> None:

@@ -705,13 +705,6 @@ class ModuloAddrRange(AddrRange):
                     range_size, granularity
                 )
             )
-        num_blocks = range_size // granularity
-        if num_blocks % stripes != 0:
-            raise ValueError(
-                "Modulo range size {} (in blocks) must be a multiple of stripes {}".format(
-                    num_blocks, stripes
-                )
-            )
 
         super().__init__(start=start, end=end, **kwargs)
 
@@ -761,13 +754,6 @@ class SparseModuloAddrRange(ModuloAddrRange):
                 raise ValueError(
                     "Modulo chunk size {} must be a multiple of granularity {}".format(
                         chunk_size, granularity
-                    )
-                )
-            num_blocks = chunk_size // granularity
-            if num_blocks % self.stripes != 0:
-                raise ValueError(
-                    "Modulo chunk size {} (in blocks) must be a multiple of stripes {}".format(
-                        num_blocks, self.stripes
                     )
                 )
 
