@@ -40,11 +40,11 @@ dependencies = [
     "mypy==2.4.1",
     "pre-commit==4.6.2",
 ]
-requires-python = ">= 3.10"
+requires-python = ">= 3.12"
 [tool.black]
 line-length = 79
 include = '\.pyi?$'
-target-version = ["py310"]
+target-version = ["py312"]
 [tool.isort]
 profile = "black"
 multi_line_output = 3

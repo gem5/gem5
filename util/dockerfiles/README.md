@@ -3,6 +3,12 @@
 This directory contains the Dockerfiles used to build the gem5 Docker images.
 The Docker images are used to run gem5 in a containerized environment.
 
+The supported Ubuntu environments are 24.04 and 26.04. Ubuntu 22.04 and
+compiler images below GCC 13 and Clang 18 are no longer built here. Existing
+published release tags remain available. See the
+[build environment policy](../../docs/building-dependencies.md) for dependency
+minimums and supported compiler ranges.
+
 ## The Docker Registry
 
 We use the Github Container Registry to host the gem5 Docker images.

@@ -542,8 +542,8 @@ def config_embedded_python(env):
     # Found a working Python installation. Check if it meets minimum
     # requirements.
     ver_string = '.'.join(map(str, py_version))
-    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 10):
-        error('Embedded python library 3.10 or newer required, found '
+    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 12):
+        error('Embedded python library 3.12 or newer required, found '
               f'{ver_string}.')
     elif py_version[0] > 3:
         warning('Embedded python library too new. '
@@ -698,14 +698,8 @@ for variant_path in variant_paths:
     def compiler_major_version(version):
         return version.split(".")[0]
 
-    # Clang versions before 17 require this extension to accept C23-style
-    # attributes such as [[fallthrough]] in older C language modes.
-    if env['CC_CLANG'] and \
-            compareVersions(env['CCVERSION'], "17") < 0:
-        env.Append(CFLAGS=['-fdouble-square-bracket-attributes'])
-
     if env['GCC']:
-        gcc_min_version = "11"
+        gcc_min_version = "13"
         gcc_max_version = "16"
         gcc_version = env['CXXVERSION']
         gcc_major_version = compiler_major_version(gcc_version)
@@ -716,10 +710,6 @@ for variant_path in variant_paths:
                 f'supported.\n'f'gem5 supports GCC major versions '
                 f'{gcc_min_version} through {gcc_max_version}.\n'
             )
-
-        # Workaround https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
-        if compareVersions(gcc_version, "13") < 0:
-            env.Append(CXXFLAGS=['-Wno-restrict'])
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
@@ -752,7 +742,7 @@ for variant_path in variant_paths:
                         )
 
     elif env['CLANG']:
-        clang_min_version = "14"
+        clang_min_version = "18"
         clang_max_version = "22"
         clang_version = env['CXXVERSION']
         clang_major_version = compiler_major_version(clang_version)
@@ -913,7 +903,7 @@ for variant_path in variant_paths:
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')
         if not conf.CheckZlibVersion():
-            error('zlib 1.2 or newer is required.')
+            error('zlib 1.3 or newer is required.')
         if not conf.CheckM4Version():
             error('GNU m4 1.4 or newer is required.')
 

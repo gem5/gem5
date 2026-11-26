@@ -44,7 +44,7 @@ Please put the terminal output in code blocks. I.e.:
 A clear and concise description of what you expected to happen.
 
 **Host Operating System**
-Ubuntu 22.04, Mac OS X, etc.
+Ubuntu 24.04, Mac OS X, etc.
 
 **Host ISA**
 ARM, X86, RISC-V, etc.
