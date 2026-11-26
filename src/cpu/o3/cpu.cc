@@ -336,6 +336,7 @@ CPU::regProbePoints()
     ftq.regProbePoints();
     bac.regProbePoints();
     fetch.regProbePoints();
+    decode.regProbePoints();
     rename.regProbePoints();
     iew.regProbePoints();
     commit.regProbePoints();
@@ -1021,6 +1022,18 @@ CPU::getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid)
       default:
         break;
     }
+    regFile.getReg(phys_reg, val);
+}
+
+RegVal
+CPU::getRegNoEffect(PhysRegIdPtr phys_reg) const
+{
+    return regFile.getReg(phys_reg);
+}
+
+void
+CPU::getRegNoEffect(PhysRegIdPtr phys_reg, void *val) const
+{
     regFile.getReg(phys_reg, val);
 }
 
