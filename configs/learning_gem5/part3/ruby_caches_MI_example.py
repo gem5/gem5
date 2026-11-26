@@ -187,7 +187,7 @@ class DirController(MI_example_Directory_Controller):
             block_size=ruby_system.block_size_bytes
         )
         # Connect this directory to the memory side.
-        self.memory = mem_ctrls[0].port
+        self.memory_out_port = mem_ctrls[0].port
         self.connectQueues(ruby_system)
 
     def connectQueues(self, ruby_system):

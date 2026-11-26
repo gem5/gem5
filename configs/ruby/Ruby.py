@@ -346,7 +346,7 @@ def create_directories(options, bootmem, ruby_system, system):
         )
         rom_dir_cntrl.ruby_system = ruby_system
         rom_dir_cntrl.version = i + 1
-        rom_dir_cntrl.memory = bootmem.port
+        rom_dir_cntrl.memory_out_port = bootmem.port
         rom_dir_cntrl.addr_ranges = bootmem.range
         return (dir_cntrl_nodes, rom_dir_cntrl)
 

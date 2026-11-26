@@ -393,13 +393,6 @@ class VectorResponsePort(VectorPort):
         super().__init__("GEM5 RESPONDER", desc)
 
 
-# Old names, maintained for compatibility.
-MasterPort = RequestPort
-SlavePort = ResponsePort
-VectorMasterPort = VectorRequestPort
-VectorSlavePort = VectorResponsePort
-
-
 # 'Fake' ParamDesc for Port references to assign to the _pdesc slot of
 # proxy objects (via set_param_desc()) so that proxy error messages
 # make sense.

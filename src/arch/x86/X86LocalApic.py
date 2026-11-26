@@ -49,14 +49,8 @@ class X86LocalApic(BaseInterrupts):
     cxx_header = "arch/x86/interrupts.hh"
 
     int_requestor = RequestPort("Port for sending interrupt messages")
-    int_master = DeprecatedParam(
-        int_requestor, "`int_master` is now called `int_requestor`"
-    )
 
     int_responder = ResponsePort("Port for receiving interrupt messages")
-    int_slave = DeprecatedParam(
-        int_responder, "`int_slave` is now called `int_responder`"
-    )
 
     lint0 = IntSinkPin("Local interrupt pin 0")
     lint1 = IntSinkPin("Local interrupt pin 1")
