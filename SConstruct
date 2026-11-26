@@ -109,8 +109,6 @@ AddOption('--ignore-style', action='store_true',
           help='Disable style checking hooks')
 AddOption('--linker', action='store', default=None, choices=linker_options,
           help=f'Select which linker to use ({", ".join(linker_options)})')
-AddOption('--gold-linker', action='store_const', const='gold', dest='linker',
-          help='Use the gold linker. Deprecated: Use --linker=gold')
 AddOption('--no-compress-debug', action='store_true',
           help="Don't compress debug info in build files")
 AddOption('--with-lto', action='store_true',

@@ -78,8 +78,6 @@ def write_cc_file(sim_object: type, use_python: bool, param_cc: str):
         code("""#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include <type_traits>
-
 #include "base/compiler.hh"
 #include "params/$sim_object.hh"
 #include "sim/init.hh"
@@ -90,8 +88,6 @@ def write_cc_file(sim_object: type, use_python: bool, param_cc: str):
 """)
     else:
         code("""
-#include <type_traits>
-
 #include "base/compiler.hh"
 #include "params/$sim_object.hh"
 
@@ -200,114 +196,18 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
         code()
         code("} // namespace gem5")
 
-    # include the create() methods whether or not python is enabled.
-    if not hasattr(sim_object, "abstract") or not sim_object.abstract:
-        sim_object._unique_namespace = sim_object.cxx_class.replace("::", "_")
-        sim_object._unique_namespace = sim_object._unique_namespace.replace(
-            "<", "_"
-        ).replace(">", "_")
-        sim_object._unique_namespace += "_create"
-        if "type" in sim_object.__dict__:
-            code("""
+    # A custom creator must be explicitly requested by the SimObject.
+    if not sim_object.abstract and not sim_object.override_create:
+        code("""
 namespace gem5
 {
 
-namespace
+${{sim_object.cxx_class}} *
+${sim_object}Params::create() const
 {
-
-/*
- * If we can't define a default create() method for this params
- * struct because the SimObject doesn't have the right
- * constructor, use template magic to make it so we're actually
- * defining a create method for this class instead.
- */
-class Dummy${sim_object}ParamsClass
-{
-  public:
-    ${{sim_object.cxx_class}} *create() const;
-};
-
-template <class CxxClass, class Enable=void>
-class Dummy${sim_object}Shunt;
-
-/*
- * This version directs to the real Params struct and the
- * default behavior of create if there's an appropriate
- * constructor.
- */
-template <class CxxClass>
-class Dummy${sim_object}Shunt<CxxClass, std::enable_if_t<
-    std::is_constructible_v<CxxClass, const ${sim_object}Params &>>>
-{
-  public:
-    using Params = ${sim_object}Params;
-    static ${{sim_object.cxx_class}} *
-    create(const Params &p)
-    {
-        return new CxxClass(p);
-    }
-};
-
-/*
- * This version diverts to the DummyParamsClass and a dummy
- * implementation of create if the appropriate constructor does
- * not exist.
- */
-template <class CxxClass>
-class Dummy${sim_object}Shunt<CxxClass, std::enable_if_t<
-    !std::is_constructible_v<CxxClass, const ${sim_object}Params &>>>
-{
-  public:
-    using Params = Dummy${sim_object}ParamsClass;
-    static ${{sim_object.cxx_class}} *
-    create(const Params &p)
-    {
-        return nullptr;
-    }
-};
-
-} // anonymous namespace
-
-/*
- * An implementation of either the real Params struct's create
- * method, or the Dummy one. Either an implementation is
- * mandantory since this was shunted off to the dummy class, or
- * one is optional which will override this weak version.
- */
-[[maybe_unused]] ${{sim_object.cxx_class}} *
-Dummy${sim_object}Shunt<${{sim_object.cxx_class}}>::Params::create() const
-{
-    return Dummy${sim_object}Shunt<${{sim_object.cxx_class}}>::create(*this);
+    return new ${{sim_object.cxx_class}}(*this);
 }
 
-} // namespace gem5
-""")
-
-        if not sim_object.override_create:
-            code("""
-
-namespace gem5
-{
-namespace ${{sim_object._unique_namespace}}
-{
-
-// Base case (no warning)
-template<bool>
-struct NonDefaultCreate {};
-
-// Specialization with warning for true case
-template<>
-struct [[deprecated(
-        "Warning: ${sim_object} is not constructible from ${sim_object}Params. "
-        "It is deprecated to use non-standard `create()` methods. "
-        "If you see this warning followed by a linking error, "
-        "the most likely problem is ${sim_object} has a parent class with "
-        "pure virtual functions.")]] NonDefaultCreate<true> {};
-
-[[maybe_unused]] NonDefaultCreate<
-    !std::is_constructible_v<${{sim_object.cxx_class}},
-                             const ${sim_object}Params &>> warning_instance;
-} // namespace ${{sim_object._unique_namespace}}
 } // namespace gem5
 """)
 
