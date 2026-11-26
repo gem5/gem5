@@ -83,14 +83,13 @@ repos:
           - id: black
             exclude: ^util/gem5art/
     - repo: https://github.com/asottile/pyupgrade
-      # v3.22.0 requires Python 3.11; keep hooks usable with Python 3.10.
       rev: v3.21.2
       hooks:
           - id: pyupgrade
             exclude: ^util/gem5art/
-            # Python 3.10 is the earliest version supported.
-            # We therefore conform to the standards compatible with 3.10+.
-            args: [--py310-plus]
+            # Python 3.12 is the earliest version supported.
+            # We therefore conform to the standards compatible with 3.12+.
+            args: [--py312-plus]
     - repo: local
       hooks:
           - id: gem5-style-checker

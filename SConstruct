@@ -542,8 +542,8 @@ def config_embedded_python(env):
     # Found a working Python installation. Check if it meets minimum
     # requirements.
     ver_string = '.'.join(map(str, py_version))
-    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 10):
-        error('Embedded python library 3.10 or newer required, found '
+    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 12):
+        error('Embedded python library 3.12 or newer required, found '
               f'{ver_string}.')
     elif py_version[0] > 3:
         warning('Embedded python library too new. '
