@@ -116,10 +116,8 @@ def build_system(options):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Simple system using HMC as\
-                                     main memory"
-    )
+    parser = argparse.ArgumentParser(description="Simple system using HMC as\
+                                     main memory")
     HMC.add_options(parser)
     add_options(parser)
     options = parser.parse_args()

@@ -81,11 +81,17 @@ memory = SingleChannelDDR3_1600(size="128MiB")
 # Setup a single core Processor.
 if args.cpu_type == "atomic":
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.ATOMIC, num_cores=args.num_cpus, isa=ISA.RISCV
+        cpu_type=CPUTypes.ATOMIC,
+        num_cores=args.num_cpus,
+        isa=ISA.RISCV,
+        clk_freq="1GHz",
     )
 elif args.cpu_type == "timing":
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.TIMING, num_cores=args.num_cpus, isa=ISA.RISCV
+        cpu_type=CPUTypes.TIMING,
+        num_cores=args.num_cpus,
+        isa=ISA.RISCV,
+        clk_freq="1GHz",
     )
 
 # Setup the board.

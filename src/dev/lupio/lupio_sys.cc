@@ -54,11 +54,13 @@ LupioSYS::lupioSYSWrite(uint8_t addr, uint64_t val64)
     switch (addr >> 2) {
         case LUPIO_SYS_HALT:
             DPRINTF(LupioSYS, "Trying to halt\n");
-            exitSimLoopNow("LUPIO_SYS_HALT called, exiting", val64, 0, false);
+            exitSimulationLoopClassicNow("LUPIO_SYS_HALT called, exiting",
+                                         static_cast<int>(val64));
             break;
         case LUPIO_SYS_REBT:
             DPRINTF(LupioSYS, "Trying to reboot\n");
-            exitSimLoopNow("LUPIO_SYS_REBT called, exiting", val64, 0, false);
+            exitSimulationLoopClassicNow("LUPIO_SYS_REBT called, exiting",
+                                         static_cast<int>(val64));
             break;
 
         default:

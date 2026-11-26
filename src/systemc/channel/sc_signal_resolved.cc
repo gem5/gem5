@@ -48,7 +48,7 @@ void sc_signal_resolved::register_port(sc_port_base &, const char *) {}
 void
 sc_signal_resolved::write(const sc_dt::sc_logic &l)
 {
-    ::sc_gem5::Process *p = ::sc_gem5::scheduler.current();
+    ::sc_gem5::Process *p = ::sc_gem5::scheduler().current();
 
     auto it = inputs.find(p);
     if (it == inputs.end()) {

@@ -153,10 +153,37 @@ RoutingUnit::addInDirection(PortDirection inport_dirn, int inport_idx)
 }
 
 void
-RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx)
+RoutingUnit::addOutDirection(PortDirection outport_dirn, int outport_idx,
+                             const std::vector<int> &supported_vnets)
 {
-    m_outports_dirn2idx[outport_dirn] = outport_idx;
-    m_outports_idx2dirn[outport_idx]  = outport_dirn;
+    if (m_outports_dirn2idx.empty()) {
+        m_outports_dirn2idx.resize(m_router->get_num_vnets());
+    }
+
+    if (supported_vnets.empty()) {
+        // Shared link: register this port for all vnets
+        for (int v = 0; v < (int)m_outports_dirn2idx.size(); v++) {
+            m_outports_dirn2idx[v][outport_dirn] = outport_idx;
+            DPRINTF(RubyNetwork,
+                    "Router %d: addOutDirection vnet=%d"
+                    " dirn=%s port=%d\n",
+                    m_router->get_id(), v, outport_dirn, outport_idx);
+        }
+    } else {
+        // Dedicated link: register only for the specified vnets
+        for (int v : supported_vnets) {
+            fatal_if(
+                v < 0 || v >= (int)m_outports_dirn2idx.size(),
+                "Router %d: supported_vnets entry %d out of range [0,%d)\n",
+                m_router->get_id(), v, (int)m_outports_dirn2idx.size());
+            m_outports_dirn2idx[v][outport_dirn] = outport_idx;
+            DPRINTF(RubyNetwork,
+                    "Router %d: addOutDirection vnet=%d"
+                    " dirn=%s port=%d\n",
+                    m_router->get_id(), v, outport_dirn, outport_idx);
+        }
+    }
+    m_outports_idx2dirn[outport_idx] = outport_dirn;
 }
 
 // outportCompute() is called by the InputUnit
@@ -257,7 +284,14 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         panic("x_hops == y_hops == 0");
     }
 
-    return m_outports_dirn2idx[outport_dirn];
+    fatal_if(route.vnet < 0 || route.vnet >= (int)m_outports_dirn2idx.size(),
+             "Router %d: vnet %d out of range [0,%d) in outportComputeXY\n",
+             m_router->get_id(), route.vnet, (int)m_outports_dirn2idx.size());
+    fatal_if(m_outports_dirn2idx[route.vnet].count(outport_dirn) == 0,
+             "Router %d: no outport for vnet %d dirn %s - "
+             "topology misconfiguration\n",
+             m_router->get_id(), route.vnet, outport_dirn);
+    return m_outports_dirn2idx[route.vnet][outport_dirn];
 }
 
 // Template for implementing custom routing algorithm

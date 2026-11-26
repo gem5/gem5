@@ -61,7 +61,7 @@ class ClockedObject;
 
 class DmaPort : public RequestPort, public Drainable
 {
-  private:
+  protected:
     AddrRangeMap<MemBackdoorPtr, 1> memBackdoors;
 
     /**
@@ -80,6 +80,11 @@ class DmaPort : public RequestPort, public Drainable
      */
     void sendDma();
 
+    /**
+     * DmaReqState contains data of a DMA request and is responsible for
+     * creating gem5 requests accordingly. The class can be extended to
+     * generate different kinds of DMA traffic.
+     */
     struct DmaReqState : public Packet::SenderState
     {
         /** Event to call on the device when this transaction (all packets)
@@ -129,7 +134,11 @@ class DmaPort : public RequestPort, public Drainable
               sid(_sid), ssid(_ssid), cmd(_cmd)
         {}
 
-        PacketPtr createPacket();
+        /**
+         * Create a gem5 packet according to DmaReqState. The function can be
+         * overrided for different kinds of DMA traffic.
+         */
+        virtual PacketPtr createPacket();
     };
 
     /** Send the next packet from a DMA request in atomic mode. */

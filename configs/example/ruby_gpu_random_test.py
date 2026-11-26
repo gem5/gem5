@@ -274,7 +274,13 @@ args.num_cp = 0
 # Make generic DMA sequencer for Ruby to use
 #
 if n_DMAs > 0:
-    dma_devices = [TesterDma()] * n_DMAs
+    # One object per engine, each with its own slice of the PIO window
+    # (a shared object or overlapping ranges cannot all attach to the piobus).
+    dma_pio_size = 0xC0000000 // n_DMAs
+    dma_devices = [
+        TesterDma(pio_addr=i * dma_pio_size, pio_size=dma_pio_size)
+        for i in range(n_DMAs)
+    ]
     system.piobus = IOXBar()
     for _, dma_device in enumerate(dma_devices):
         dma_device.pio = system.piobus.mem_side_ports

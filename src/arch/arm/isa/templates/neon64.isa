@@ -288,14 +288,14 @@ def template MicroNeonMemDeclare64 {{
 
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _ura,
-                       uint32_t _imm, unsigned extraMemFlags, bool _baseIsSP,
-                       uint8_t _accSize, uint8_t _eSize) :
+                       uint32_t _imm, Request::Flags extraMemFlags,
+                       bool _baseIsSP, uint8_t _accSize, uint8_t _eSize) :
             %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest,
                              _ura, _imm),
             baseIsSP(_baseIsSP), accSize(_accSize), eSize(_eSize)
         {
             %(set_reg_idx_arr)s;
-            memAccessFlags |= extraMemFlags;
+            memAccessFlags.set(extraMemFlags);
             %(constructor)s;
         }
 

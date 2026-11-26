@@ -132,11 +132,11 @@ uint32_t
 genInvalidVector(uint32_t fcsr_bits)
 {
     //Set FCSR invalid in "flag" field
-    int invalid_offset = Invalid + Flag_Field;
+    int invalid_offset = (int)Invalid + (int)Flag_Field;
     fcsr_bits = fcsr_bits | (1 << invalid_offset);
 
     //Set FCSR invalid in "cause" flag
-    int cause_offset = Invalid + Cause_Field;
+    int cause_offset = (int)Invalid + (int)Cause_Field;
     fcsr_bits = fcsr_bits | (1 << cause_offset);
 
     return fcsr_bits;

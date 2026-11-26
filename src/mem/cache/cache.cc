@@ -1333,9 +1333,14 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
         // this cache, so the behaviour is modelled after handleSnoop,
         // the difference being that instead of querying the block
         // state to determine if it is dirty and writable, we use the
-        // command and fields of the writeback packet
-        bool respond = wb_pkt->cmd == MemCmd::WritebackDirty &&
-            pkt->needsResponse();
+        // command and fields of the writeback packet.
+
+        // Note: WriteClean packets also carry dirty data that must be
+        // supplied to snooping requests, otherwise the requestor will
+        // fetch stale data from memory below.
+        bool respond = (wb_pkt->cmd == MemCmd::WritebackDirty ||
+                        wb_pkt->cmd == MemCmd::WriteClean) &&
+                       pkt->needsResponse();
         bool have_writable = !wb_pkt->hasSharers();
         bool invalidate = pkt->isInvalidate();
 

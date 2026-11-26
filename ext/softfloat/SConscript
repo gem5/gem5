@@ -40,7 +40,6 @@ sf_env = env.Clone()
 if sf_env['GCC']:
     sf_env.Append(CCFLAGS=['-Wno-unused-variable',
                            '-Wno-unused-label',
-                           '-Wno-implicit-fallthrough',
                            '-Wno-implicit-function-declaration',
                            '-g'])
 

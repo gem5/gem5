@@ -41,8 +41,7 @@
 namespace gem5
 {
 
-IsaFake::IsaFake(const Params &p)
-    : BasicPioDevice(p, p.ret_bad_addr ? 0 : p.pio_size)
+IsaFake::IsaFake(const Params &p) : BasicPioDevice(p, p.pio_size)
 {
     retData8 = p.ret_data8;
     retData16 = p.ret_data16;

@@ -144,8 +144,8 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
 
     // ---- Internal functions ----- //
-    bool lookup(ThreadID tid, Addr br_addr,
-                PCStateBase * &target, IndirectHistory * &history);
+    bool lookup(ThreadID tid, Addr br_addr, const PCStateBase *&target,
+                IndirectHistory *&history);
     void recordTarget(ThreadID tid, InstSeqNum sn,
                       const PCStateBase& target, IndirectHistory * &history);
 

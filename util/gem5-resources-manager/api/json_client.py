@@ -40,7 +40,7 @@ class JSONClient(Client):
         self.file_path = Path("database/") / file_path
         self.resources = self._get_resources(self.file_path)
 
-    def _get_resources(self, path: Path) -> List[Dict]:
+    def _get_resources(self, path: Path) -> list[dict]:
         """
         Retrieves the resources from the JSON file.
         :param path: The path to the JSON file.
@@ -49,7 +49,7 @@ class JSONClient(Client):
         with open(path) as f:
             return json.load(f)
 
-    def find_resource(self, query: Dict) -> Dict:
+    def find_resource(self, query: dict) -> dict:
         """
         Finds a resource within a list of resources based on the
         provided query.
@@ -81,7 +81,7 @@ class JSONClient(Client):
             ),
         )
 
-    def get_versions(self, query: Dict) -> List[Dict]:
+    def get_versions(self, query: dict) -> list[dict]:
         """
         Retrieves all versions of a resource with the given ID from the
         list of resources.
@@ -102,7 +102,7 @@ class JSONClient(Client):
         )
         return versions
 
-    def update_resource(self, query: Dict) -> Dict:
+    def update_resource(self, query: dict) -> dict:
         """
         Updates a resource within a list of resources based on the
         provided query.
@@ -139,7 +139,7 @@ class JSONClient(Client):
         self.write_to_file()
         return {"status": "Updated"}
 
-    def check_resource_exists(self, query: Dict) -> Dict:
+    def check_resource_exists(self, query: dict) -> dict:
         """
         Checks if a resource exists within a list of resources based on the
         provided query.
@@ -163,7 +163,7 @@ class JSONClient(Client):
                 return {"exists": True}
         return {"exists": False}
 
-    def insert_resource(self, query: Dict) -> Dict:
+    def insert_resource(self, query: dict) -> dict:
         """
         Inserts a new resource into a list of resources.
 
@@ -181,7 +181,7 @@ class JSONClient(Client):
         self.write_to_file()
         return {"status": "Inserted"}
 
-    def delete_resource(self, query: Dict) -> Dict:
+    def delete_resource(self, query: dict) -> dict:
         """
         This function deletes a resource from the list of resources based on
         the provided query.
@@ -209,7 +209,7 @@ class JSONClient(Client):
         with Path(self.file_path).open("w") as outfile:
             json.dump(self.resources, outfile, indent=4)
 
-    def save_session(self) -> Dict:
+    def save_session(self) -> dict:
         """
         This function saves the client session to a dictionary.
         :return: A dictionary containing the client session.

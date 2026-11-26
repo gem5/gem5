@@ -45,6 +45,7 @@
 
 #include "sim/global_event.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_exit.hh"
 
 namespace gem5
 {
@@ -63,33 +64,31 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     std::map<std::string, std::string> payload;
 
   public:
-
     /**
-     * The "old style" constructor for GlobalSimLoopExitEvent.
-     * Not the `type_id` parameter is set to 0. Zero is reserved for the "old
-     * style" exitSimLoop handling via generators in the Simulator module.
-     * The payload is unused.
+     * Constructor for exits that must preserve the legacy cause/code fields
+     * while still dispatching through a hypercall-aware ExitHandler.
+     *
+     * CLASSIC_GENERATOR callers should supply the matching cause/code payload.
+     * If they pass an empty payload, it is synthesized from the legacy fields.
      */
     GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
-        Tick repeat = 0, uint64_t hypercall_id = 0,
-        std::map<std::string, std::string> payload =
-            std::map<std::string, std::string>());
+                           Tick repeat, uint64_t hypercall_id,
+                           std::map<std::string, std::string> payload);
 
-    GlobalSimLoopExitEvent(const std::string &_cause, int c,
-         Tick repeat = 0, uint64_t hypercall_id = 0,
-        std::map<std::string, std::string> payload =
-            std::map<std::string, std::string>());
+    GlobalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat,
+                           uint64_t hypercall_id,
+                           std::map<std::string, std::string> payload);
 
     /**
-     * The "new style" constructor for GlobalSimLoopExitEvent.
-     * Here the "type_id" parameter is used to specify the type of the exit
-     * and the payload is used to pass additional information about the exit.
+     * Constructor for exits that only dispatch through the hypercall-aware
+     * ExitHandler path. Legacy cause/code fields are left empty/zero.
      *
      * These are used to construct Exit Handlers on the Python side.
      */
     GlobalSimLoopExitEvent(Tick when, uint64_t hypercall_id,
-        std::map<std::string, std::string> payload =
-            std::map<std::string, std::string>());
+                           std::map<std::string, std::string> payload =
+                               std::map<std::string, std::string>(),
+                           Tick repeat = 0);
 
     GlobalSimLoopExitEvent(uint64_t hypercall_id,
         std::map<std::string, std::string> payload =

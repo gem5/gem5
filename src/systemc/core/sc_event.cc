@@ -402,7 +402,7 @@ sc_event::sc_event(bool, const char *_name) :
 const std::vector<sc_event *> &
 sc_get_top_level_events()
 {
-    return ::sc_gem5::topLevelEvents;
+    return ::sc_gem5::topLevelEvents();
 }
 
 sc_event *

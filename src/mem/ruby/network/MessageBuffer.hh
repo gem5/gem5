@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 ARM Limited
+ * Copyright (c) 2019-2021, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -71,6 +71,8 @@ namespace gem5
 namespace ruby
 {
 
+class BasicIntLink;
+
 class MessageBuffer : public SimObject
 {
   public:
@@ -103,7 +105,8 @@ class MessageBuffer : public SimObject
     bool areNSlotsAvailable(unsigned int n, Tick curTime);
     int getPriority() { return m_priority_rank; }
     void setPriority(int rank) { m_priority_rank = rank; }
-    void setConsumer(Consumer* consumer)
+    void
+    setConsumer(Consumer *consumer, bool is_inport = false)
     {
         DPRINTF(RubyQueue, "Setting consumer: %s\n", *consumer);
         if (m_consumer != NULL) {
@@ -112,6 +115,7 @@ class MessageBuffer : public SimObject
                   *consumer, *this, *m_consumer);
         }
         m_consumer = consumer;
+        m_is_inport = is_inport;
     }
 
     Consumer* getConsumer() { return m_consumer; }
@@ -195,6 +199,25 @@ class MessageBuffer : public SimObject
     }
 
     int routingPriority() const { return m_routing_priority; }
+
+    bool
+    isInport()
+    {
+        return m_is_inport;
+    }
+
+    BasicIntLink *
+    getIntLink()
+    {
+        return m_int_link;
+    }
+
+    void
+    setIntLink(BasicIntLink *int_link)
+    {
+        assert(m_int_link == nullptr);
+        m_int_link = int_link;
+    }
 
   private:
     void reanalyzeList(std::list<MsgPtr> &, Tick);
@@ -284,8 +307,12 @@ class MessageBuffer : public SimObject
 
     const int m_routing_priority;
 
+    bool m_is_inport;
+
     int m_input_link_id;
     int m_vnet_id;
+
+    BasicIntLink *m_int_link;
 
     // Count the # of times I didn't have N slots available
     statistics::Scalar m_not_avail_count;

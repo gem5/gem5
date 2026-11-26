@@ -55,6 +55,7 @@
 #include "base/callback.hh"
 #include "base/statistics.hh"
 #include "enums/MemSched.hh"
+#include "mem/mem_interface.hh"
 #include "mem/qos/mem_ctrl.hh"
 #include "mem/qport.hh"
 #include "params/MemCtrl.hh"
@@ -641,6 +642,16 @@ class MemCtrl : public qos::MemCtrl
     virtual bool respQEmpty()
     {
         return respQueue.empty();
+    }
+
+    /**
+     * Number of read bursts occupying the read buffer: those still in
+     * the read queues plus those waiting in the response queue(s).
+     */
+    virtual uint64_t
+    readOccupancy() const
+    {
+        return totalReadQueueSize + respQueue.size();
     }
 
     /**

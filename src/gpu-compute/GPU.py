@@ -380,6 +380,7 @@ class GPUCommandProcessor(DmaVirtDevice):
         0,
         "Skip kernels until reaching this kernel (counting only non-blit kernels)",
     )
+    emulate_blits = Param.Bool(False, "Emulate detected BLIT kernels")
 
 
 class StorageClassType(Enum):

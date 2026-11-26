@@ -1,8 +1,9 @@
 # Overview
 
 This utility contains various scripts that are helpful when maintaining the gem5 resources MongoDB database.
-The scripts in this directory use external libraries. Please install the required libraries mentioned in the
-`requirements.txt` by running the following command:
+Use Python 3.11 or newer and install the requirements in a fresh virtual
+environment. PyMongo provides the `bson` module that these scripts import.
+The scripts support MongoDB Server 4.4 or newer.
 
 ```
  pip3 install -r requirements.txt

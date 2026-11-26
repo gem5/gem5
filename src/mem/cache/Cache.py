@@ -115,7 +115,14 @@ class BaseCache(ClockedObject):
         NULL, "Cache partitioning manager"
     )
 
-    compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
+    # Compressed data is only updated on writebacks. Writes and atomics
+    # satisfied directly by this cache (e.g., stores in a first-level cache)
+    # are not recompressed, so do not attach a compressor to such caches.
+    compressor = Param.BaseCacheCompressor(
+        NULL,
+        "Cache compressor. Only supported in caches whose data is updated "
+        "through writebacks (e.g., not first-level caches).",
+    )
     replace_expansions = Param.Bool(
         True,
         "Apply replacement policy to "

@@ -56,7 +56,7 @@ from m5.SimObject import *
 class BaseO3CPU(BaseCPU):
     type = "BaseO3CPU"
     cxx_class = "gem5::o3::CPU"
-    cxx_header = "cpu/o3/dyn_inst.hh"
+    cxx_header = "cpu/o3/cpu.hh"
 
     @classmethod
     def memory_mode(cls):
@@ -141,6 +141,10 @@ class BaseO3CPU(BaseCPU):
 
     LQEntries = Param.Unsigned(32, "Number of load queue entries")
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
+    vecMemPackWidth = OptionalParam.Unsigned(
+        "Unit-stride vector LSU split grain in bytes. "
+        "If unspecified, use the cache-line size.",
+    )
     LSQDepCheckShift = Param.Unsigned(
         4, "Number of places to shift addr before check"
     )
@@ -185,6 +189,9 @@ class BaseO3CPU(BaseCPU):
     # most ISAs don't use condition-code regs, so default is 0
     numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
     instQueues = VectorParam.IQUnit(IQUnit(), "Vector of IQs")
+    iqInsertionPolicy = Param.IQInsertionPolicy(
+        "FirstMatch", "Policy for inserting instructions to IQs"
+    )
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")

@@ -52,7 +52,7 @@ root.system.mem_ranges = [AddrRange("512MiB")]
 
 if args.cpu_type == "DerivO3CPU":
     root.system.cpu = [
-        SparcDerivO3CPU(cpu_id=i) for i in range(int(args.num_cores))
+        SparcO3CPU(cpu_id=i) for i in range(int(args.num_cores))
     ]
 elif args.cpu_type == "TimingSimpleCPU":
     root.system.cpu = [
@@ -97,9 +97,16 @@ for cpu in root.system.cpu:
     # Connect the L2 cache to the L3 bus
     cpu.l2cache.connectMemSideBus(root.system.membus)
 
-root.system.mem_ctrl = DDR3_1600_8x8()
-root.system.mem_ctrl.range = root.system.mem_ranges[0]
+root.system.mem_ctrl = MemCtrl()
+root.system.mem_ctrl.dram = DDR3_1600_8x8()
+root.system.mem_ctrl.dram.range = root.system.mem_ranges[0]
 root.system.mem_ctrl.port = root.system.membus.mem_side_ports
 
 m5.instantiate()
 exit_event = m5.simulate()
+
+if exit_event.getCause() != "exiting with last active thread context":
+    sys.exit(1)
+
+# The pthread atomic workload reports correctness through its exit status.
+sys.exit(exit_event.getCode())

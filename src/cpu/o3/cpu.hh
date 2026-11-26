@@ -44,10 +44,8 @@
 #ifndef __CPU_O3_CPU_HH__
 #define __CPU_O3_CPU_HH__
 
-#include <iostream>
 #include <list>
 #include <queue>
-#include <set>
 #include <vector>
 
 #include "arch/generic/pcstate.hh"
@@ -63,7 +61,6 @@
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/ftq.hh"
 #include "cpu/o3/iew.hh"
-#include "cpu/o3/limits.hh"
 #include "cpu/o3/rename.hh"
 #include "cpu/o3/rob.hh"
 #include "cpu/o3/scoreboard.hh"
@@ -111,7 +108,7 @@ class CPU : public BaseCPU
     };
 
     BaseMMU *mmu;
-    using LSQRequest = LSQ::LSQRequest;
+    using LSQRequest = gem5::o3::LSQRequest;
 
     using PerThreadUnifiedRenameMap =
         UnifiedRenameMap::PerThreadUnifiedRenameMap;

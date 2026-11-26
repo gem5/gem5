@@ -499,7 +499,7 @@ def connectX86RubySystem(x86_sys):
 
     # add the PCI host bridge to the list of dma devices that later
     # need to attach to dma controllers
-    x86_sys._dma_ports = [x86_sys.pc.pci_host.up_request_port()]
+    x86_sys._dma_ports = [x86_sys.pc.pci_host.dma_port()]
     x86_sys.pc.attachIO(x86_sys.iobus, x86_sys._dma_ports)
 
 

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2004 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -32,11 +44,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <zlib.h>
 
-#include <cstdio>
-#include <vector>
-
+#include "base/loader/compression_file_format.hh"
 #include "base/logging.hh"
 
 namespace gem5
@@ -44,57 +53,6 @@ namespace gem5
 
 namespace loader
 {
-
-static bool
-hasGzipMagic(int fd)
-{
-    uint8_t buf[2] = {0};
-    size_t sz = pread(fd, buf, 2, 0);
-    panic_if(sz != 2, "Couldn't read magic bytes from object file");
-    return ((buf[0] == 0x1f) && (buf[1] == 0x8b));
-}
-
-static int
-doGzipLoad(int fd)
-{
-    const size_t blk_sz = 4096;
-
-    gzFile fdz = gzdopen(fd, "rb");
-    if (!fdz) {
-        return -1;
-    }
-
-    std::string tmpnam_str = std::string(P_tmpdir) + "/gem5-gz-obj-XXXXXX";
-    char *tmpnam = const_cast<char*>(tmpnam_str.c_str());
-    fd = mkstemp(tmpnam); // repurposing fd variable for output
-    if (fd < 0) {
-        gzclose(fdz);
-        return fd;
-    }
-
-    if (unlink(tmpnam) != 0)
-        warn("couldn't remove temporary file %s\n", tmpnam);
-
-    auto buf = new uint8_t[blk_sz];
-    int r; // size of (r)emaining uncopied data in (buf)fer
-    while ((r = gzread(fdz, buf, blk_sz)) > 0) {
-        auto p = buf; // pointer into buffer
-        while (r > 0) {
-            auto sz = write(fd, p, r);
-            assert(sz <= r);
-            r -= sz;
-            p += sz;
-        }
-    }
-    delete[] buf;
-    gzclose(fdz);
-    if (r < 0) { // error
-        close(fd);
-        return -1;
-    }
-    assert(r == 0); // finished successfully
-    return fd; // return fd to decompressed temporary file for mmap()'ing
-}
 
 ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
 {
@@ -106,10 +64,8 @@ ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
         "This error typically occurs when the file path specified is "
         "incorrect.\n", fname);
 
-    // Decompress GZ files.
-    if (try_decompress && hasGzipMagic(fd)) {
-        fd = doGzipLoad(fd);
-        panic_if(fd < 0, "Failed to unzip file %s.\n", fname);
+    if (try_decompress) {
+        fd = decompressImageFile(fd, fname);
     }
 
     // Find the length of the file by seeking to the end.

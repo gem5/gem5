@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013, 2017-2018, 2020, 2024-2025 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2017-2018, 2020, 2024-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -88,6 +88,7 @@ Source("insts/sve_macromem.cc", tags=['arm isa'])
 Source("insts/vfp.cc", tags=['arm isa'])
 Source("insts/crypto.cc", tags=['arm isa'])
 Source("insts/tme64.cc", tags=['arm isa'])
+Source('insts/wfx.cc', tags='arm isa')
 if env["CONF"]["RUBY_PROTOCOL_MESI_Three_Level_HTM"]:
     Source("insts/tme64ruby.cc", tags=['arm isa'])
 else:

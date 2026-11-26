@@ -69,6 +69,12 @@ inline Cycles zero_time() { return Cycles(0); }
 
 inline Cycles intToCycles(int c) { return Cycles(c); }
 
+inline int
+cyclesToInt(Cycles c)
+{
+    return (int)c;
+}
+
 inline Tick intToTick(int c) { return c; }
 
 inline NodeID

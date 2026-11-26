@@ -38,6 +38,10 @@ import testlib.result as result
 import testlib.runner as runner
 import testlib.terminal as terminal
 import testlib.uid as uid
+from testlib.helper import (
+    isas_in_build_dir,
+    run_gcovr,
+)
 
 
 def entry_message():
@@ -317,8 +321,19 @@ def run_schedule(test_schedule, log_handler):
 
     # Build global fixtures and exectute scheduled test suites.
     if configuration.config.test_threads > 1:
-        library_runner = runner.LibraryParallelRunner(test_schedule)
-        library_runner.set_threads(configuration.config.test_threads)
+        if configuration.config.gcov == "ind-test-and-gcov":
+            log.test_log.message(
+                "WARNING: When running with --gcov=ind-test-and-gcov, tests "
+                "will not be run in parallel, as running multiple tests at "
+                "once will cause their coverage results to become mixed "
+                "together. "
+                "Instead, the value passed into --test-threads will be used "
+                "in the gcovr command."
+            )
+            library_runner = runner.LibraryRunner(test_schedule)
+        else:
+            library_runner = runner.LibraryParallelRunner(test_schedule)
+            library_runner.set_threads(configuration.config.test_threads)
     else:
         library_runner = runner.LibraryRunner(test_schedule)
     library_runner.run()
@@ -326,6 +341,23 @@ def run_schedule(test_schedule, log_handler):
     failed = log_handler.unsuccessful()
 
     log_handler.finish_testing()
+
+    if configuration.config.gcov == "all-test-and-gcov":
+        cfg = configuration.config
+        # Run gcovr on each ISA in the build directory
+        built_isas = isas_in_build_dir(cfg.build_dir)
+
+        for isa_dir in built_isas:
+            run_gcovr(
+                cfg.base_dir,
+                os.path.join(cfg.build_dir, isa_dir),
+                cfg.result_path,
+                cfg.test_threads,
+                isa_dir,
+                log.test_log,
+                None,
+                configuration.config.gcov,
+            )
 
     return 1 if failed else 0
 

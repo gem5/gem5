@@ -1,4 +1,4 @@
-# Copyright (c) 2023 ARM Limited
+# Copyright (c) 2023, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -54,3 +54,24 @@ class CHIGenericController(RubyController):
     snpIn = Param.MessageBuffer("")
     rspIn = Param.MessageBuffer("")
     datIn = Param.MessageBuffer("")
+
+    def connectQueues(self, network):
+        """Connect all of the queues for this controller.
+        This may be extended in subclasses.
+        """
+        self.reqOut = MessageBuffer()
+        self.rspOut = MessageBuffer()
+        self.snpOut = MessageBuffer()
+        self.datOut = MessageBuffer()
+        self.reqIn = MessageBuffer()
+        self.rspIn = MessageBuffer()
+        self.snpIn = MessageBuffer()
+        self.datIn = MessageBuffer()
+        self.reqOut.out_port = network.in_port
+        self.rspOut.out_port = network.in_port
+        self.snpOut.out_port = network.in_port
+        self.datOut.out_port = network.in_port
+        self.reqIn.in_port = network.out_port
+        self.rspIn.in_port = network.out_port
+        self.snpIn.in_port = network.out_port
+        self.datIn.in_port = network.out_port

@@ -63,8 +63,8 @@ from .point import Point
 def centre_size_to_sides(centre, size):
     """Returns a 4-tuple of the relevant ordinates of the left,
     right, top and bottom sides of the described rectangle"""
-    (x, y) = centre.to_pair()
-    (half_width, half_height) = (size.scale(0.5)).to_pair()
+    x, y = centre.to_pair()
+    half_width, half_height = (size.scale(0.5)).to_pair()
     left = x - half_width
     right = x + half_width
     top = y - half_height
@@ -74,7 +74,7 @@ def centre_size_to_sides(centre, size):
 
 def box(cr, centre, size):
     """Draw a simple box"""
-    (left, right, top, bottom) = centre_size_to_sides(centre, size)
+    left, right, top, bottom = centre_size_to_sides(centre, size)
     cr.move_to(left, top)
     cr.line_to(right, top)
     cr.line_to(right, bottom)
@@ -106,8 +106,8 @@ def striped_box(cr, centre, size, colours):
         box(cr, centre, size)
         stroke_and_fill(cr, colours[0])
     else:
-        (left, right, top, bottom) = centre_size_to_sides(centre, size)
-        (width, height) = size.to_pair()
+        left, right, top, bottom = centre_size_to_sides(centre, size)
+        width, height = size.to_pair()
         x_stripe_width = width / num_colours
         half_x_stripe_width = x_stripe_width / 2.0
         # Left triangle
@@ -161,7 +161,7 @@ def speech_bubble(cr, top_left, size, unit):
 
 def open_bottom(cr, centre, size):
     """Draw a box with left, top and right sides"""
-    (left, right, top, bottom) = centre_size_to_sides(centre, size)
+    left, right, top, bottom = centre_size_to_sides(centre, size)
     cr.move_to(left, bottom)
     cr.line_to(left, top)
     cr.line_to(right, top)
@@ -170,7 +170,7 @@ def open_bottom(cr, centre, size):
 
 def fifo(cr, centre, size):
     """Draw just the vertical sides of a box"""
-    (left, right, top, bottom) = centre_size_to_sides(centre, size)
+    left, right, top, bottom = centre_size_to_sides(centre, size)
     cr.move_to(left, bottom)
     cr.line_to(left, top)
     cr.move_to(right, bottom)
@@ -179,8 +179,8 @@ def fifo(cr, centre, size):
 
 def cross(cr, centre, size):
     """Draw a cross parallel with the axes"""
-    (left, right, top, bottom) = centre_size_to_sides(centre, size)
-    (x, y) = centre.to_pair()
+    left, right, top, bottom = centre_size_to_sides(centre, size)
+    x, y = centre.to_pair()
     cr.move_to(left, y)
     cr.line_to(right, y)
     cr.move_to(x, top)
@@ -479,7 +479,7 @@ class Arrow(Blob):
         cr.translate(*self.topLeft.to_pair())
         cr.translate(*(self.size - Point(1, 1)).scale(0.5).to_pair())
         cr.scale(*self.size.to_pair())
-        (blob_indent_x, blob_indent_y) = (
+        blob_indent_x, blob_indent_y = (
             view.blobIndentFactor / self.size
         ).to_pair()
         left = -0.5 - blob_indent_x

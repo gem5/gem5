@@ -44,8 +44,7 @@ class CheckProbeStatementAST(StatementAST):
 
         in_port_code = self.in_port.var.code
         address_code = self.address.var.code
-        code(
-            """
+        code("""
     if (m_is_blocking &&
         (m_block_map.count($address_code) == 1) &&
         (m_block_map[$address_code] == &$in_port_code)) {
@@ -53,5 +52,4 @@ class CheckProbeStatementAST(StatementAST):
                 m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
             continue;
         }
-        """
-        )
+        """)

@@ -24,7 +24,7 @@ jobs:
             # and needs to be used inside a the same repository where the
             # workflows are defined.
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: Install gh-aw extension
               run: gh extension install github/gh-aw

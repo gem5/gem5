@@ -174,8 +174,9 @@ class Base : public SimObject
 
     /**
      * Apply the compression process to the cache line.
-     * Returns the number of cycles used by the compressor, however it is
-     * usually covered by a good pipelined execution, and is currently ignored.
+     * Returns the number of cycles used by the compressor. Compression is
+     * usually done off the critical path, so the caller may not account
+     * for this latency.
      * The decompression latency is also returned, in order to avoid
      * increasing simulation time and memory consumption.
      *
@@ -206,8 +207,9 @@ class Base : public SimObject
     virtual void setCache(BaseCache *_cache);
 
     /**
-     * Apply the compression process to the cache line. Ignores compression
-     * cycles.
+     * Apply the compression process to the cache line. Compression is
+     * usually done off the critical path, so the caller may not account
+     * for the compression latency.
      *
      * @param data The cache line to be compressed.
      * @param comp_lat Compression latency in number of cycles.

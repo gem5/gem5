@@ -43,6 +43,8 @@ Import('*')
 if not env['CONF']['RUBY']:
     Return()
 
+SimObject('BackpressureGen.py', sim_objects=['BackpressureGen'])
+SimObject('BackpressureTracker.py', sim_objects=['BackpressureTracker'])
 SimObject('RubyCache.py', sim_objects=['RubyCache'])
 SimObject('DirectoryMemory.py', sim_objects=['RubyDirectoryMemory'])
 SimObject('RubyPrefetcher.py', sim_objects=['RubyPrefetcher'])
@@ -57,6 +59,8 @@ Source('RubyPrefetcherProxy.cc')
 Source('TimerTable.cc')
 Source('BankedArray.cc')
 Source('ALUFreeListArray.cc')
+Source('BackpressureGen.cc')
+Source('BackpressureTracker.cc')
 Source('TBEStorage.cc')
 if env['CONF']['RUBY_PROTOCOL_CHI']:
     Source('MN_TBETable.cc')

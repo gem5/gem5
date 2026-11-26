@@ -118,7 +118,7 @@ class MESIThreeLevelCacheHierarchy(
                 core=core,
                 cache_line_size=cache_line_size,
                 target_isa=board.processor.get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             l1_cache.sequencer = RubySequencer(
@@ -162,7 +162,7 @@ class MESIThreeLevelCacheHierarchy(
                 cache_line_size=cache_line_size,
                 cluster_id=0,
                 target_isa=board.processor.get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             l2_cache.ruby_system = self.ruby_system

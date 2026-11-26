@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2025 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -658,7 +658,7 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
         }
     }
 
-    // Check that the requested register is accessable from the current mode
+    // Check that the requested register is accessible from the current mode
     if (ok && checkSecurity && mode != cpsr.mode) {
         switch (cpsr.mode) {
             case MODE_USER:
@@ -1531,6 +1531,7 @@ std::unordered_map<MiscRegIndex, MiscRegNum64> idxToMiscRegNum;
 
 // The map is translating AArch64 system register numbers
 // (op0, op1, crn, crm, op2) into a MiscRegIndex
+// clang-format off
 std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 0, 7, 1, 0), MISCREG_IC_IALLUIS },
     { MiscRegNum64(1, 0, 7, 5, 0), MISCREG_IC_IALLU },
@@ -1839,7 +1840,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 0, 5, 7), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 6, 0), MISCREG_ID_AA64ISAR0_EL1 },
     { MiscRegNum64(3, 0, 0, 6, 1), MISCREG_ID_AA64ISAR1_EL1 },
-    { MiscRegNum64(3, 0, 0, 6, 2), MISCREG_RAZ },
+    { MiscRegNum64(3, 0, 0, 6, 2), MISCREG_ID_AA64ISAR2_EL1 },
     { MiscRegNum64(3, 0, 0, 6, 3), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 6, 4), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 6, 5), MISCREG_RAZ },
@@ -2179,6 +2180,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 7, 14, 2, 1), MISCREG_CNTPS_CTL_EL1 },
     { MiscRegNum64(3, 7, 14, 2, 2), MISCREG_CNTPS_CVAL_EL1 }
 };
+// clang-format on
 
 template <bool read>
 HFGTR
@@ -3557,6 +3559,9 @@ Fault
 faultIdst(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
+    if (!FullSystem) {
+        return NoFault;
+    }
     if (HaveExt(tc, ArmExtension::FEAT_IDST)) {
         const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (EL2Enabled(tc) && hcr.tge) {
@@ -4241,7 +4246,7 @@ ISA::initializeMiscRegMetadata()
           }
 
           CTR ctr = 0;
-          //log2 of minimun i-cache line size (words)
+          //log2 of minimum i-cache line size (words)
           ctr.iCacheLineSize = log2_line_size_words;
           //b11 - gem5 uses pipt
           ctr.l1IndexPolicy = 0x3;
@@ -5704,7 +5709,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64PFR1_EL1)
       .reset([release=release](){
           AA64PFR1 pfr1_el1 = 0;
-          pfr1_el1.sme = release->has(ArmExtension::FEAT_SME) ? 0x1 : 0x0;
+          pfr1_el1.sme = release->has(ArmExtension::FEAT_SME2p1) ? 0x2:
+                        release->has(ArmExtension::FEAT_SME2) ? 0x2:
+                        release->has(ArmExtension::FEAT_SME) ? 0x1 : 0x0;
           pfr1_el1.mpamFrac = release->has(ArmExtension::FEAT_MPAM) ?
               0x1 : 0x0;
           return pfr1_el1;
@@ -5764,6 +5771,11 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.rndr = release->has(ArmExtension::FEAT_RNG) ? 0x1 : 0x0;
           isar0_el1.fhm = release->has(ArmExtension::FEAT_FP16) ? 0x1 :
                           (release->has(ArmExtension::FEAT_FHM) ? 0x1 : 0x0);
+          isar0_el1.sm3 = release->has(ArmExtension::FEAT_SM3) ? 0x1 : 0x0;
+          isar0_el1.sm4 = release->has(ArmExtension::FEAT_SM4) ? 0x1 : 0x0;
+          isar0_el1.sha3 = release->has(ArmExtension::FEAT_SHA3) ? 0x1 : 0x0;
+          isar0_el1.sha2 = release->has(ArmExtension::FEAT_SHA512) ? 0x2 :
+                        release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
           return isar0_el1;
       }())
       .serializing(false)
@@ -5789,6 +5801,15 @@ ISA::initializeMiscRegMetadata()
           return isar1_el1;
       }())
       .serializing(false)
+      .faultRead(EL0, faultIdst)
+      .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
+      .allPrivileges().writes(0);
+    InitReg(MISCREG_ID_AA64ISAR2_EL1)
+      .reset([p,release=release](){
+          AA64ISAR2 isar2_el1 = 0;
+          isar2_el1.wfxt = release->has(ArmExtension::FEAT_WFxT) ? 0x1 : 0x0;
+          return isar2_el1;
+      }())
       .faultRead(EL0, faultIdst)
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
       .allPrivileges().writes(0);
@@ -7573,19 +7594,36 @@ ISA::initializeMiscRegMetadata()
 
     // SME
     InitReg(MISCREG_ID_AA64SMFR0_EL1)
-        .reset([](){
+        .reset([this](){
             AA64SMFR0 smfr0_el1 = 0;
-            smfr0_el1.f32f32 = 0x1;
-            // The following BF16F32 is actually not implemented due to a
-            // lack of BF16 support in gem5's fplib. However, as per the
-            // SME spec the _only_ allowed value is 0x1.
-            smfr0_el1.b16f32 = 0x1;
-            smfr0_el1.f16f32 = 0x1;
-            smfr0_el1.i8i32 = 0xF;
-            smfr0_el1.f64f64 = 0x1;
-            smfr0_el1.i16i64 = 0xF;
-            smfr0_el1.smEver = 0;
-            smfr0_el1.fa64 = 0x1;
+            smfr0_el1.fa64 = 0;
+            smfr0_el1.lutv2 = 0;
+            smfr0_el1.smeVer = release->has(ArmExtension::FEAT_SME2p1) ? 0x2 :
+                          (release->has(ArmExtension::FEAT_SME2) ? 0x1 : 0x0);
+            smfr0_el1.i16i64 = release->has(ArmExtension::FEAT_SME_I16I64) ?
+                               0xf : 0x0;
+            smfr0_el1.f64f64 = release->has(ArmExtension::FEAT_SME_F64F64) ?
+                               0x1 : 0x0;
+            smfr0_el1.i16i32 = release->has(ArmExtension::FEAT_SME2) ? 0x5: 0;
+            smfr0_el1.b16b16 = release->has(ArmExtension::FEAT_SME_B16B16) ?
+                               0x1 : 0x0;
+            smfr0_el1.f16f16 = release->has(ArmExtension::FEAT_SME_F16F16) ?
+                               0x1 : 0x0;
+            smfr0_el1.f8f16 = 0;
+            smfr0_el1.f8f32 = 0;
+            smfr0_el1.i8i32 = release->has(ArmExtension::FEAT_SME) ? 0xf: 0x0;
+            smfr0_el1.f16f32 = release->has(ArmExtension::FEAT_SME) ? 0x1: 0x0;
+            smfr0_el1.b16f32 = release->has(ArmExtension::FEAT_SME) ? 0x1: 0x0;
+            smfr0_el1.bi32i32 = release->has(ArmExtension::FEAT_SME2) ? 0x1: 0;
+            smfr0_el1.f32f32 = release->has(ArmExtension::FEAT_SME) ? 0x1: 0x0;
+            smfr0_el1.sf8Fma = 0;
+            smfr0_el1.sf8Dp4 = 0;
+            smfr0_el1.sf8Dp2 = 0;
+            smfr0_el1.sbitPerm = 0;
+            smfr0_el1.aes = 0;
+            smfr0_el1.sfexpa = 0;
+            smfr0_el1.stmop = 0;
+            smfr0_el1.smop4 = 0;
             return smfr0_el1;
         }())
         .faultRead(EL0, faultIdst)

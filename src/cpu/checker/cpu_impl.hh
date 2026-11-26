@@ -43,20 +43,17 @@
 #define __CPU_CHECKER_CPU_IMPL_HH__
 
 #include <list>
-#include <string>
 
+#include "arch/generic/decoder.hh"
 #include "base/refcnt.hh"
-#include "cpu/exetrace.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/null_static_inst.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-#include "cpu/checker/cpu.hh"
 #include "debug/Checker.hh"
 #include "sim/full_system.hh"
-#include "sim/sim_object.hh"
-#include "sim/stats.hh"
 
 namespace gem5
 {

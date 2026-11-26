@@ -140,9 +140,9 @@ AtomicMemOpMicro::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
-            << registerName(srcRegIdx(1)) << ", ("
-            << registerName(srcRegIdx(0)) << ')';
+    ss << mnemonic << ' ' << registerName(intRegClass[machInst.rd]) << ", "
+       << registerName(intRegClass[machInst.rs2]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
     return ss.str();
 }
 

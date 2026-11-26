@@ -44,7 +44,6 @@
 #include "dev/pci/device.hh"
 #include "dev/pci/types.hh"
 #include "params/PciConfigError.hh"
-#include "params/PciUpstream.hh"
 
 namespace gem5
 {
@@ -66,33 +65,52 @@ PciConfigError::setAddrRange(AddrRange range)
     pioPort.sendRangeChange();
 }
 
-PciUpstream::PciUpstream(const Params &p)
-    : ClockedObject(p),
-      upToDown(p.up_to_down),
-      configErrorDevice(p.config_error)
-{}
+AddrRangeList
+PciConfigError::getAddrRanges() const
+{
+    // Avoid triggering assertion error with zero size range, which is the case
+    // when a PCI-to-PCI bridge isn't configured yet.
+    if (pioSize == 0) {
+        return AddrRangeList();
+    }
+
+    return IsaFake::getAddrRanges();
+}
+
+PciUpstream::PciUpstream(PciUpDownBridge *up_to_down,
+                         PciConfigError *config_error_dev,
+                         const std::vector<PciDevice *> &pci_devices,
+                         std::string upstream_name)
+    : upToDown(up_to_down),
+      configErrorDevice(config_error_dev),
+      upstreamName(upstream_name)
+{
+    for (PciDevice *device : pci_devices) {
+        PciDevAddr dev_addr = device->devAddr();
+        DPRINTF(PciUpstream, "%02x.%i: Registering device\n", dev_addr.dev,
+                dev_addr.func);
+
+        auto map_entry = devices.emplace(dev_addr, device);
+        fatal_if(!map_entry.second, "%s - %02x.%i: PCI bus ID collision\n",
+                 upstreamName, dev_addr.dev, dev_addr.func);
+
+        // Manually allocate instead of using make_unique due to
+        // DeviceInterface constructor being protected.
+        device->setUpstreamInterface(std::unique_ptr<DeviceInterface>(
+            new DeviceInterface(*this, *device)));
+    }
+}
 
 void
 PciUpstream::init()
 {
-    upToDown->setConfigRange(getConfigAddrRange());
-    configErrorDevice->setAddrRange(getConfigAddrRange());
     sendBusChange();
 }
 
-PciUpstream::DeviceInterface
-PciUpstream::registerDevice(PciDevice *device, PciDevAddr dev_addr,
-                            PciIntPin pin)
+std::string
+PciUpstream::name() const
 {
-    auto map_entry = devices.emplace(dev_addr, device);
-
-    DPRINTF(PciUpstream, "%02x:%02x.%i: Registering device\n", getBusNum(),
-            dev_addr.dev, dev_addr.func);
-
-    fatal_if(!map_entry.second, "%02x:%02x.%i: PCI bus ID collision\n",
-             getBusNum(), dev_addr.dev, dev_addr.func);
-
-    return DeviceInterface(*this, dev_addr, pin);
+    return upstreamName;
 }
 
 PciDevice *
@@ -110,16 +128,22 @@ PciUpstream::getDevice(const PciDevAddr &addr) const
 }
 
 PciUpstream::DeviceInterface::DeviceInterface(PciUpstream &upstream,
-                                              const PciDevAddr &dev_addr,
-                                              PciIntPin pin)
-    : upstream(upstream), devAddr(dev_addr), interruptPin(pin)
+                                              PciDevice &device)
+    : upstream(upstream), device(device)
 {}
 
 const std::string
 PciUpstream::DeviceInterface::name() const
 {
+    PciDevAddr dev_addr = device.devAddr();
     return csprintf("%s.interface[%02x:%02x.%i]", upstream.name(),
-                    upstream.getBusNum(), devAddr.dev, devAddr.func);
+                    upstream.getBusNum(), dev_addr.dev, dev_addr.func);
+}
+
+PciBusNum
+PciUpstream::DeviceInterface::getBusNum() const
+{
+    return upstream.getBusNum();
 }
 
 void
@@ -127,7 +151,15 @@ PciUpstream::DeviceInterface::postInt()
 {
     DPRINTF(PciUpstream, "postInt\n");
 
-    upstream.interfacePostInt(devAddr, interruptPin);
+    upstream.interfacePostInt(device);
+}
+
+void
+PciUpstream::DeviceInterface::postInt(const PciDevice &device)
+{
+    DPRINTF(PciUpstream, "postInt\n");
+
+    upstream.interfacePostInt(device);
 }
 
 void
@@ -135,12 +167,79 @@ PciUpstream::DeviceInterface::clearInt()
 {
     DPRINTF(PciUpstream, "clearInt\n");
 
-    upstream.interfaceClearInt(devAddr, interruptPin);
+    upstream.interfaceClearInt(device);
+}
+
+void
+PciUpstream::DeviceInterface::clearInt(const PciDevice &device)
+{
+    DPRINTF(PciUpstream, "clearInt\n");
+
+    upstream.interfaceClearInt(device);
+}
+
+AddrRange
+PciUpstream::DeviceInterface::configRange() const
+{
+    return upstream.interfaceConfigRange(device);
+}
+
+AddrRange
+PciUpstream::DeviceInterface::configRange(const PciDevice &device) const
+{
+    return upstream.interfaceConfigRange(device);
+}
+
+Addr
+PciUpstream::DeviceInterface::pioAddr(Addr addr) const
+{
+    return upstream.interfacePioAddr(device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::pioAddr(const PciDevice &device, Addr addr) const
+{
+    return upstream.interfacePioAddr(device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::memAddr(Addr addr) const
+{
+    return upstream.interfaceMemAddr(device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::memAddr(const PciDevice &device, Addr addr) const
+{
+    return upstream.interfaceMemAddr(device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::dmaAddr(Addr addr) const
+{
+    return upstream.interfaceDmaAddr(device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::dmaAddr(const PciDevice &device, Addr addr) const
+{
+    return upstream.interfaceDmaAddr(device, addr);
+}
+
+AddrRange
+PciUpstream::DeviceInterface::busConfigRange(PciBusNum start_bus,
+                                             PciBusNum end_bus) const
+{
+    return upstream.interfaceBusConfigRange(start_bus, end_bus);
 }
 
 void
 PciUpstream::sendBusChange()
 {
+    // Update bridge and error device configuration range
+    upToDown->setConfigRange(getConfigAddrRange());
+    configErrorDevice->setAddrRange(getConfigAddrRange());
+
     for (std::pair<PciDevAddr, PciDevice *> device : devices) {
         device.second->recvBusChange();
     }

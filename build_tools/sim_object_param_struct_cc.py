@@ -45,7 +45,7 @@ from typing import Type
 from code_formatter import code_formatter
 
 
-def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
+def write_cc_file(sim_object: type, use_python: bool, param_cc: str):
     """Write the parameter C++ source file for a SimObject.
 
     This function generates a C++ source file that defines the
@@ -58,7 +58,7 @@ def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
     """
 
     # Need to import after the importer is installed
-    from m5.objects.SimObject import PyBindProperty
+    from m5.SimObject import PyBindProperty
 
     code = code_formatter()
 
@@ -75,8 +75,7 @@ def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
 
     # only include pybind if python is enabled in the build
     if use_python:
-        code(
-            """#include "pybind11/pybind11.h"
+        code("""#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <type_traits>
@@ -88,11 +87,9 @@ def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
 
 #include "${{sim_object.cxx_header}}"
 
-"""
-        )
+""")
     else:
-        code(
-            """
+        code("""
 #include <type_traits>
 
 #include "base/compiler.hh"
@@ -100,15 +97,13 @@ def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
 
 #include "${{sim_object.cxx_header}}"
 
-"""
-        )
+""")
     # only include the python params code if python is enabled.
     if use_python:
         for param in params:
             param.pybind_predecls(code)
 
-        code(
-            """namespace py = pybind11;
+        code("""namespace py = pybind11;
 
 namespace gem5
 {
@@ -117,8 +112,7 @@ static void
 module_init(py::module_ &m_internal)
 {
 py::module_ m = m_internal.def_submodule("param_${sim_object}");
-"""
-        )
+""")
         code.indent()
         if sim_object._base:
             code(
@@ -184,6 +178,12 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
                 'm, "${py_class_name}")'
             )
         code.indent()
+        if getattr(sim_object, "cxx_base", True) is not None:
+            code(
+                '.def("getCapsule", [](${{sim_object.cxx_class}} *obj) '
+                "-> py::capsule { return py::capsule("
+                'static_cast<gem5::SimObject*>(obj), "gem5::SimObject"); })'
+            )
         for exp in sim_object.cxx_exports:
             exp.export(code, sim_object.cxx_class)
         code(";")
@@ -208,8 +208,7 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
         ).replace(">", "_")
         sim_object._unique_namespace += "_create"
         if "type" in sim_object.__dict__:
-            code(
-                """
+            code("""
 namespace gem5
 {
 
@@ -282,12 +281,10 @@ Dummy${sim_object}Shunt<${{sim_object.cxx_class}}>::Params::create() const
 }
 
 } // namespace gem5
-"""
-            )
+""")
 
         if not sim_object.override_create:
-            code(
-                """
+            code("""
 
 namespace gem5
 {
@@ -312,8 +309,7 @@ struct [[deprecated(
                              const ${sim_object}Params &>> warning_instance;
 } // namespace ${{sim_object._unique_namespace}}
 } // namespace gem5
-"""
-            )
+""")
 
     code.write(param_cc)
 

@@ -172,7 +172,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {72, "setreuid32"},
     {73, "munmap", munmapFunc<Sparc32Linux>},
     {74, "mprotect", ignoreFunc},
-    {75, "madvise"},
+    {75, "madvise", ignoreFunc},
     {76, "vhangup"},
     {77, "truncate64"}, // 32 bit
     {78, "mincore"},
@@ -239,7 +239,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {139, "stat64"},
     {140, "sendfile64"}, // 32 bit
     {141, "getpeername"},
-    {142, "futex"}, // 32 bit
+    {142, "futex", futexFunc<Sparc32Linux>}, // 32 bit
     {143, "gettid"},
     {144, "getrlimit"},
     {145, "setrlimit"},
@@ -263,7 +263,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {163, "setdomainname"}, // 32 bit
     {164, "ni_syscall"},
     {165, "quotactl"},
-    {166, "set_tid_address"},
+    {166, "set_tid_address", setTidAddressFunc},
     {167, "mount"},
     {168, "ustat"},
     {169, "setxattr"},  // 32 bit
@@ -314,7 +314,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {214, "sysinfo", sysinfoFunc<Sparc32Linux>}, // 32 bit
     {215, "ipc"},                                // 32 bit
     {216, "sigreturn"},                          // 32 bit
-    {217, "clone", cloneFunc<Sparc32Linux>},
+    {217, "clone", cloneBackwardsFunc<Sparc32Linux>},
     {218, "ioprio_get"},  // 32 bit
     {219, "adjtimex"},    // 32 bit
     {220, "sigprocmask"}, // 32 bit
@@ -396,7 +396,9 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {296, "faccessat"},
     {297, "pselect6"},
     {298, "ppoll"},
-    {299, "unshare"}};
+    {299, "unshare"},
+    {300, "set_robust_list", ignoreWarnOnceFunc},
+    {331, "prlimit64", prlimitFunc<Sparc32Linux>}};
 
 SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {0, "restart_syscall"},
@@ -474,7 +476,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {72, "setreuid32"},
     {73, "munmap", munmapFunc<SparcLinux>},
     {74, "mprotect", ignoreFunc},
-    {75, "madvise"},
+    {75, "madvise", ignoreFunc},
     {76, "vhangup"},
     {77, "truncate64"},
     {78, "mincore"},
@@ -541,7 +543,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {139, "stat64"},
     {140, "sendfile64"},
     {141, "getpeername"},
-    {142, "futex"},
+    {142, "futex", futexFunc<SparcLinux>},
     {143, "gettid"},
     {144, "getrlimit"},
     {145, "setrlimit"},
@@ -565,7 +567,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {163, "setdomainname"},
     {164, "utrap_install"},
     {165, "quotactl"},
-    {166, "set_tid_address"},
+    {166, "set_tid_address", setTidAddressFunc},
     {167, "mount"},
     {168, "ustat"},
     {169, "setxattr"},
@@ -616,7 +618,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {214, "sysinfo", sysinfoFunc<SparcLinux>},
     {215, "ipc"},
     {216, "sigreturn"},
-    {217, "clone", cloneFunc<SparcLinux>},
+    {217, "clone", cloneBackwardsFunc<SparcLinux>},
     {218, "ioprio_get"},
     {219, "adjtimex"},
     {220, "sigprocmask"},
@@ -682,7 +684,9 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {280, "sys_setaltroot"},
     {281, "add_key"},
     {282, "request_key"},
-    {283, "keyctl"}};
+    {283, "keyctl"},
+    {300, "set_robust_list", ignoreWarnOnceFunc},
+    {331, "prlimit64", prlimitFunc<SparcLinux>}};
 
 } // namespace SparcISA
 } // namespace gem5

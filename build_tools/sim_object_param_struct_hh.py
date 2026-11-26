@@ -53,7 +53,7 @@ def parse_args():
     return args
 
 
-def write_header_file(sim_object: Type, param_hh: str):
+def write_header_file(sim_object: type, param_hh: str):
     """Write the parameter header file for a SimObject.
 
     This function generates a C++ header file that declares the
@@ -67,8 +67,8 @@ def write_header_file(sim_object: Type, param_hh: str):
     """
 
     # Need to import after the importer is installed
-    from m5.objects.SimObject import SimObject
     from m5.params import Enum
+    from m5.SimObject import SimObject
 
     code = code_formatter()
 
@@ -90,7 +90,10 @@ def write_header_file(sim_object: Type, param_hh: str):
     warned_about_nested_templates = False
 
     class CxxClass:
-        def __init__(self, sig, template_params=[]):
+        def __init__(self, sig, template_params=None):
+            template_params = (
+                [] if template_params is None else template_params
+            )
             # Split the signature into its constituent parts. This could
             # potentially be done with regular expressions, but
             # it's simple enough to pick appart a class signature
@@ -162,13 +165,11 @@ def write_header_file(sim_object: Type, param_hh: str):
             for ns in reversed(self.namespaces):
                 code("} // namespace $ns")
 
-    code(
-        """\
+    code("""\
     #ifndef __PARAMS__${sim_object}__
     #define __PARAMS__${sim_object}__
 
-    """
-    )
+    """)
 
     # The base SimObject has a couple of params that get
     # automatically set from Python without being declared through
@@ -216,13 +217,11 @@ def write_header_file(sim_object: Type, param_hh: str):
 
     code.indent()
     if sim_object == SimObject:
-        code(
-            """
+        code("""
     virtual ~SimObjectParams() = default;
 
     std::string name;
-        """
-        )
+        """)
 
     for param in params:
         param.cxx_decl(code)

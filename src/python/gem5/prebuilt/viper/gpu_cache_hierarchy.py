@@ -40,6 +40,7 @@ from m5.objects import (
     SrcClockDomain,
     TreePLRURP,
     VIPERCoalescer,
+    VIPERSequencer,
     VoltageDomain,
 )
 
@@ -121,7 +122,10 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
         # There is a single local list of all of the controllers to make it
         # easier to connect everything to the GPU network. This can be
         # customized depending on the topology/network requirements.
-        self._controllers = []
+        self._tcp_controllers = []
+        self._sqc_controllers = []
+        self._scalar_controllers = []
+        self._tcc_controllers = []
         self._directory_controllers = []
         self._dma_controllers = []
         self._mem_ctrls = []
@@ -178,7 +182,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             tcp.WB = False
             tcp.disableL1 = False
 
-            self._controllers.append(tcp)
+            self._tcp_controllers.append(tcp)
 
         # This check ensures there are a same number of CUs with shared SQC
         # and Scalar caches.
@@ -196,7 +200,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
 
             sqc.version = idx
 
-            sqc.sequencer = RubySequencer(
+            sqc.sequencer = VIPERSequencer(
                 version=self.seqCount(),
                 dcache=sqc.L1cache,
                 ruby_system=self.ruby_gpu,
@@ -216,7 +220,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             sqc.clk_domain = self.clk_domain
             sqc.recycle_latency = 10
 
-            self._controllers.append(sqc)
+            self._sqc_controllers.append(sqc)
 
         num_scalars = num_sqcs
         for idx in range(num_scalars):
@@ -230,7 +234,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             # Scalar uses same controller as SQC, so add SQC count
             scalar.version = idx + num_sqcs
 
-            scalar.sequencer = RubySequencer(
+            scalar.sequencer = VIPERSequencer(
                 version=self.seqCount(),
                 dcache=scalar.L1cache,
                 ruby_system=self.ruby_gpu,
@@ -250,7 +254,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             scalar.clk_domain = self.clk_domain
             scalar.recycle_latency = 10
 
-            self._controllers.append(scalar)
+            self._scalar_controllers.append(scalar)
 
         # Create TCCs (GPU L2 cache)
         for idx in range(tcc_count):
@@ -268,7 +272,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             tcc.clk_domain = self.clk_domain
             tcc.recycle_latency = 10
 
-            self._controllers.append(tcc)
+            self._tcc_controllers.append(tcc)
 
         # Create DMA controllers
         for i, port in enumerate(shader.get_gpu_dma_ports()):
@@ -311,17 +315,27 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             )
 
         # Number of sequencers = one per TCP, SQC, and Scalar + one per DMA.
-        self.ruby_gpu.num_of_sequencers = len(self._controllers) + len(
-            self._dma_controllers
+        self.ruby_gpu.num_of_sequencers = (
+            len(self._tcp_controllers)
+            + len(self._sqc_controllers)
+            + len(self._scalar_controllers)
+            + len(self._tcc_controllers)
+            + len(self._dma_controllers)
         )
 
-        # Assign the controllers to their parent objects.
-        self.ruby_gpu.controllers = self._controllers
+        # Assign the controllers to their parent objects. Give nice names.
+        self.ruby_gpu.tcp_controllers = self._tcp_controllers
+        self.ruby_gpu.sqc_controllers = self._sqc_controllers
+        self.ruby_gpu.scalar_controllers = self._scalar_controllers
+        self.ruby_gpu.tcc_controllers = self._tcc_controllers
         self.ruby_gpu.directory_controllers = self._directory_controllers
 
         # Connect the controllers using the network topology
         self.ruby_gpu.network.connect(
-            self._controllers
+            self._tcp_controllers
+            + self._sqc_controllers
+            + self._scalar_controllers
+            + self._tcc_controllers
             + self._directory_controllers
             + self._dma_controllers
         )

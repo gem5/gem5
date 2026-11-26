@@ -71,6 +71,16 @@ class HBMCtrl : public MemCtrl
         return (respQueue.empty() && respQueuePC1.empty());
     }
 
+    uint64_t
+    readOccupancy() const override
+    {
+        return totalReadQueueSize + respQueue.size() + respQueuePC1.size();
+    }
+
+    bool allIntfDrained() const override;
+
+    DrainState drain() override;
+
   private:
 
     /**

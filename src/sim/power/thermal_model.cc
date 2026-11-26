@@ -205,6 +205,23 @@ ThermalModel::startup()
     for (unsigned i = 0; i < eq_nodes.size(); i++)
         eq_nodes[i]->id = i;
 
+    // Initialize intermediate nodes (not ThermalDomain or ThermalReference)
+    // to the ambient reference temperature. Without this, these nodes retain
+    // the 0 K (absolute zero) default from ThermalNode's constructor.
+    // ThermalCapacitor::getEquation() uses n->temp as T_prev in the Backward
+    // Euler discretization; a 0 K intermediate node acts as an absolute-zero
+    // heat sink in the first solver step, causing physically impossible
+    // junction cooling (observed: die temp drops from 25 C to ~12 C despite
+    // positive power input in a 2-node Cauer RC network).
+    if (!references.empty()) {
+        const Temperature ambient = references[0]->_temperature;
+        for (auto *n : eq_nodes) {
+            if (n->temp.toKelvin() < 1.0) {
+                n->temp = ambient;
+            }
+        }
+    }
+
     // Schedule first thermal update
     schedule(stepEvent, curTick() + sim_clock::as_int::s * _step);
 }

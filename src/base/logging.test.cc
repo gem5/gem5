@@ -29,6 +29,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+
 #include "base/gtest/logging.hh"
 #include "base/logging.hh"
 
@@ -38,12 +40,28 @@ using namespace gem5;
 class LoggingFixture : public ::testing::Test
 {
   public:
-    void SetUp() override { old = std::cerr.rdbuf(gtestLogOutput.rdbuf()); }
-    void TearDown() override { std::cerr.rdbuf(old); }
+    void
+    SetUp() override
+    {
+        old = std::cerr.rdbuf(gtestLogOutput.rdbuf());
+        oldTerm = getenv("TERM");
+        setenv("TERM", "dumb", /* overwrite */ true);
+    }
+    void
+    TearDown() override
+    {
+        std::cerr.rdbuf(old);
+        if (oldTerm == nullptr) {
+            unsetenv("TERM");
+        } else {
+            setenv("TERM", oldTerm, true);
+        }
+    }
 
   private:
     /** Used to restore cerr's streambuf. */
     std::streambuf *old;
+    const char *oldTerm;
 };
 
 /** Test the most basic print. */

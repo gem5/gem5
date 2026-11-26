@@ -67,7 +67,7 @@ PcCountTrackerManager::checkCount(Addr pc)
             DPRINTF(PcCountTracker,
                 "pc:%s encountered\n", currentPair.to_string());
 
-            exitSimLoopNow("simpoint starting point found");
+            exitSimulationLoopClassicNow("simpoint starting point found");
             // raise the SIMPOINT_BEGIN exit event
 
             targetPair.erase(currentPair);

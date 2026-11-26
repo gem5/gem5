@@ -161,6 +161,11 @@ class sc_process_handle
     // actually tracks the process within gem5. By making them operators, we
     // can minimize the symbols added to the class namespace.
     operator ::sc_gem5::Process * () const { return _gem5_process; }
+    operator sc_process_b *()
+    {
+        return reinterpret_cast<sc_process_b *>(_gem5_process);
+    }
+
     sc_process_handle &
     operator = (::sc_gem5::Process *p)
     {

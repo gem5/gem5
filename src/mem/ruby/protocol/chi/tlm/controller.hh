@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Arm Limited
+ * Copyright (c) 2023,2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,7 +38,8 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
@@ -92,6 +93,9 @@ namespace tlm::chi {
 class CacheController : public ruby::CHIGenericController
 {
   public:
+    /** We mainly use this when we flatten MachineID into src_id/tgt_id */
+    static constexpr uint64_t MAX_NODES = 1024;
+
     PARAMS(TlmController);
     CacheController(const Params &p);
 
@@ -106,10 +110,16 @@ class CacheController : public ruby::CHIGenericController
 
     Port &getPort(const std::string &if_name, PortID idx) override;
 
+    void init() override;
+
     bool recvRequestMsg(const CHIRequestMsg *msg) override;
     bool recvSnoopMsg(const CHIRequestMsg *msg) override;
     bool recvResponseMsg(const CHIResponseMsg *msg) override;
     bool recvDataMsg(const CHIDataMsg *msg) override;
+
+    void functionalRead(const Addr &param_addr, Packet *param_pkt,
+                        ruby::WriteMask &param_mask) override;
+    int functionalWrite(const Addr &param_addr, Packet *param_pkt) override;
 
     void sendMsg(ARM::CHI::Payload &payload, ARM::CHI::Phase &phase);
     using CHIGenericController::sendRequestMsg;
@@ -137,7 +147,7 @@ class CacheController : public ruby::CHIGenericController
         Transaction(CacheController *parent,
             ARM::CHI::Payload &_payload,
             ARM::CHI::Phase &_phase);
-        ~Transaction();
+        virtual ~Transaction();
 
         static std::unique_ptr<Transaction> gen(CacheController *parent,
             ARM::CHI::Payload &_payload,
@@ -154,6 +164,8 @@ class CacheController : public ruby::CHIGenericController
         CacheController *controller;
         ARM::CHI::Payload *payload;
         ARM::CHI::Phase phase;
+        // Original phase of the REQ. Unmutable
+        const ARM::CHI::Phase orig;
     };
     struct ReadTransaction : public Transaction
     {
@@ -162,6 +174,11 @@ class CacheController : public ruby::CHIGenericController
         bool handle(const CHIResponseMsg *msg) override;
         bool forward(const CHIDataMsg *msg);
 
+        bool handleCompletion();
+        bool retryAckResp(const ARM::CHI::Phase &resp);
+        bool compRespToMakeReadUnique(const ARM::CHI::Phase &resp);
+
+        uint8_t rspMsgCnt = 0;
         uint8_t dataMsgCnt = 0;
     };
     struct DatalessTransaction : public Transaction

@@ -60,7 +60,8 @@ SimObject('ExternalMaster.py', sim_objects=['ExternalMaster'])
 SimObject('ExternalSlave.py', sim_objects=['ExternalSlave'])
 SimObject('CfiMemory.py', sim_objects=['CfiMemory'])
 SimObject('SharedMemoryServer.py', sim_objects=['SharedMemoryServer'])
-SimObject('SimpleMemory.py', sim_objects=['SimpleMemory'])
+SimObject('SimpleMemory.py', sim_objects=['SimpleMemory'],
+        enums=['LatencyDistribution'])
 SimObject('XBar.py', sim_objects=[
     'BaseXBar', 'NoncoherentXBar', 'CoherentXBar', 'SnoopFilter'])
 SimObject('HMCController.py', sim_objects=['HMCController'])
@@ -109,6 +110,7 @@ Source('port_terminator.cc')
 GTest('backdoor_manager.test', 'backdoor_manager.test.cc',
       'backdoor_manager.cc', with_tag('gem5_trace'))
 GTest('translation_gen.test', 'translation_gen.test.cc')
+GTest('request.test', 'request.test.cc')
 
 Source('translating_port_proxy.cc')
 Source('se_translating_port_proxy.cc')

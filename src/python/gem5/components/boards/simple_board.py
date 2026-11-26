@@ -28,7 +28,7 @@ from typing import List
 
 from m5.objects import (
     IOXBar,
-    PciBus,
+    PciHost,
 )
 from m5.params import (
     AddrRange,
@@ -84,14 +84,14 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
         )
 
     @overrides(AbstractSystemBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return False
 
     @overrides(AbstractSystemBoard)
-    def get_pci_bus(self) -> PciBus:
+    def get_pci_host(self) -> PciHost:
         raise NotImplementedError(
-            "SimpleBoard does not have an PCI Bus. "
-            "Use `has_pci_bus()` to check this."
+            "SimpleBoard does not have a PCI host. "
+            "Use `has_pci_host()` to check this."
         )
 
     @overrides(AbstractSystemBoard)
@@ -99,7 +99,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
         return False
 
     @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "SimpleBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."

@@ -62,6 +62,7 @@
 namespace gem5
 {
 
+// clang-format off
 const MemCmd::CommandInfo
 MemCmd::commandInfo[] =
 {
@@ -99,6 +100,18 @@ MemCmd::commandInfo[] =
     /* WriteClean - This allows a cache to write a dirty block to a memory
        below without evicting its copy. */
     { {IsWrite, IsRequest, HasData, FromCache}, InvalidCmd, "WriteClean" },
+    /* StashOnceUniqueReq */
+    { {IsStashOnceUnique, IsRequest, NeedsResponse},
+            StashOnceUniqueResp, "StashOnceUniqueReq" },
+    /* StashOnceUniqueResp */
+    { {IsStashOnceUnique, IsResponse},
+            InvalidCmd, "StashOnceUniqueResp" },
+    /* StashOnceSharedReq */
+    { {IsStashOnceShared, IsRequest, NeedsResponse},
+            StashOnceSharedResp, "StashOnceSharedReq" },
+    /* StashOnceSharedResp */
+    { {IsStashOnceShared, IsResponse},
+            InvalidCmd, "StashOnceSharedResp" },
     /* CleanEvict */
     { {IsRequest, IsEviction, FromCache}, InvalidCmd, "CleanEvict" },
     /* SoftPFReq */
@@ -238,6 +251,7 @@ MemCmd::commandInfo[] =
     { {IsRead, IsRequest}, InvalidCmd, "HTMAbort" },
     { {IsRequest}, InvalidCmd, "TlbiExtSync" },
 };
+// clang-format on
 
 AddrRange
 Packet::getAddrRange() const

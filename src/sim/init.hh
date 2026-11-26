@@ -71,8 +71,8 @@ class EmbeddedPyBind
     const std::string name;
     const std::string base;
 
-    // The _m5 module.
-    static pybind11::module_ *mod;
+    // A non-owning handle to _m5, which is owned by the interpreter.
+    static pybind11::handle mod;
 
     // A map from initialized module names to their descriptors.
     static std::map<std::string, EmbeddedPyBind *> &getReady();

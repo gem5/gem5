@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 ARM Limited
+ * Copyright (c) 2020-2021, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -201,6 +201,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
         net_msg_ptr = msg_ptr.get();
         DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));
 
+        m_switch->profFrontEndRdy(net_msg_ptr, buffer, vnet);
 
         output_links.clear();
         m_switch->getRoutingUnit().route(*net_msg_ptr, vnet,
@@ -255,11 +256,17 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
             if (i > 0) {
                 // create a private copy of the unmodified message
                 msg_ptr = unmodified_msg_ptr->clone();
+
+                m_switch->profFrontEndRdyClone(msg_ptr.get(), buffer, vnet,
+                                               net_msg_ptr);
             }
 
             // Change the internal destination set of the message so it
             // knows which destinations this link is responsible for.
             net_msg_ptr = msg_ptr.get();
+
+            m_switch->profFrontEndFwd(net_msg_ptr, vnet);
+
             net_msg_ptr->getDestination() = output_links[i].m_destinations;
 
             // Enqeue msg

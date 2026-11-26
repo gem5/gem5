@@ -37,6 +37,8 @@ from gem5.resources.client import _create_clients
 from gem5.resources.resource import (
     SuiteResource,
     WorkloadResource,
+    _get_resource_json_type_map,
+    _resources_schema_validator,
     obtain_resource,
 )
 
@@ -48,6 +50,34 @@ mock_config_json = {
         }
     },
 }
+
+
+class _Pep604Resource:
+    def __init__(self, values: list[str] | None = None):
+        pass
+
+
+class ResourceSchemaValidatorTestSuite(unittest.TestCase):
+    def test_pep604_optional_generic(self):
+        resource_json = {
+            "id": "pep604-test",
+            "resource_version": "1.0.0",
+            "category": "pep604-test",
+            "values": [],
+        }
+
+        with patch.dict(
+            _get_resource_json_type_map,
+            {"pep604-test": _Pep604Resource},
+        ):
+            _resources_schema_validator(resource_json)
+
+            resource_json["values"] = None
+            _resources_schema_validator(resource_json)
+
+            resource_json["values"] = "not-a-list"
+            with self.assertRaises(Exception):
+                _resources_schema_validator(resource_json)
 
 
 class CustomSuiteResourceTestSuite(unittest.TestCase):

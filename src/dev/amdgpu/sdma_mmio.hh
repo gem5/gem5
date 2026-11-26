@@ -41,21 +41,21 @@
  * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *     drivers/gpu/drm/amd/include/asic_reg/sdma1/sdma1_4_0_offset.h
  */
-#define mmSDMA_GFX_RB_CNTL                                0x0080
-#define mmSDMA_GFX_RB_BASE                                0x0081
-#define mmSDMA_GFX_RB_BASE_HI                             0x0082
-#define mmSDMA_GFX_RB_RPTR_ADDR_HI                        0x0088
-#define mmSDMA_GFX_RB_RPTR_ADDR_LO                        0x0089
-#define mmSDMA_GFX_DOORBELL                               0x0092
-#define mmSDMA_GFX_DOORBELL_OFFSET                        0x00ab
-#define mmSDMA_GFX_RB_WPTR_POLL_ADDR_HI                   0x00b2
-#define mmSDMA_GFX_RB_WPTR_POLL_ADDR_LO                   0x00b3
-#define mmSDMA_PAGE_RB_CNTL                               0x00e0
-#define mmSDMA_PAGE_RB_BASE                               0x00e1
-#define mmSDMA_PAGE_RB_RPTR_ADDR_HI                       0x00e8
-#define mmSDMA_PAGE_RB_RPTR_ADDR_LO                       0x00e9
-#define mmSDMA_PAGE_DOORBELL                              0x00f2
-#define mmSDMA_PAGE_DOORBELL_OFFSET                       0x010b
-#define mmSDMA_PAGE_RB_WPTR_POLL_ADDR_LO                  0x0113
+#define mmSDMA_GFX_RB_CNTL 0x0080
+#define mmSDMA_GFX_RB_BASE 0x0081
+#define mmSDMA_GFX_RB_BASE_HI 0x0082
+#define mmSDMA_GFX_RB_RPTR_ADDR_HI 0x0088
+#define mmSDMA_GFX_RB_RPTR_ADDR_LO 0x0089
+#define mmSDMA_GFX_DOORBELL 0x0092
+#define mmSDMA_GFX_DOORBELL_OFFSET 0x00ab
+#define mmSDMA_GFX_RB_WPTR_POLL_ADDR_HI 0x00b2
+#define mmSDMA_GFX_RB_WPTR_POLL_ADDR_LO 0x00b3
+#define mmSDMA_PAGE_RB_CNTL 0x00e0
+#define mmSDMA_PAGE_RB_BASE 0x00e1
+#define mmSDMA_PAGE_RB_RPTR_ADDR_HI 0x00e8
+#define mmSDMA_PAGE_RB_RPTR_ADDR_LO 0x00e9
+#define mmSDMA_PAGE_DOORBELL 0x00f2
+#define mmSDMA_PAGE_DOORBELL_OFFSET 0x010b
+#define mmSDMA_PAGE_RB_WPTR_POLL_ADDR_LO 0x0113
 
 #endif // __DEV_AMDGPU_SDMA_MMIO_HH__

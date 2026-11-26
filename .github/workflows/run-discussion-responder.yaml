@@ -1,6 +1,6 @@
 ---
 
-name: Run discussion responder when a Q&A discussion is opened
+name: Run discussion responder when a Q&A or gem5-dev discussion is opened
 
 on:
     discussion:
@@ -13,7 +13,7 @@ env:
 
 jobs:
     run_workflows:
-        if: github.event.discussion.category.name == 'Q&A'
+        if: github.event.discussion.category.name == 'Q&A' || github.event.discussion.category.name == 'gem5-dev'
         permissions:
             actions: write
             contents: read
@@ -24,12 +24,12 @@ jobs:
             # and needs to be used inside the same repository where the
             # workflows are defined.
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: Install gh-aw extension
               run: gh extension install github/gh-aw
 
             - name: Run Discussion Responder
               run: |
-                  gh aw run discussion-responder --ref develop --raw-field discussion_number=${{ github.event.discussion.number }}
+                  gh aw run discussion-responder --ref develop --raw-field "discussion_number=${{ github.event.discussion.number }}" --raw-field "discussion_category=${{ github.event.discussion.category.name }}"
                   echo "Discussion responder scheduled to run on develop branch"

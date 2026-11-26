@@ -88,7 +88,7 @@ CPU::CPU(const BaseO3CPUParams &params)
       iew(this, params),
       commit(this, params),
 
-      regFile(params.numPhysIntRegs, params.numPhysFloatRegs,
+      regFile(this, params.numPhysIntRegs, params.numPhysFloatRegs,
               params.numPhysVecRegs, params.numPhysVecPredRegs,
               params.numPhysMatRegs, params.numPhysCCRegs,
               params.isa[0]->regClasses()),
@@ -446,6 +446,13 @@ void
 CPU::startup()
 {
     BaseCPU::startup();
+
+    // After a checkpoint restore, curCycle() is the restored cycle but
+    // lastRunningCycle still holds the cycle at construction (0). A core
+    // that is halted at the restore would then add every cycle since cycle
+    // 0 to quiesceCycles when activateContext() first wakes it. Count from
+    // the restore instead. Statistics only; no timing effect.
+    lastRunningCycle = curCycle();
 
     bac.startupStage();
     fetch.startupStage();

@@ -93,6 +93,11 @@ class BaseXBar(ClockedObject):
     use_default_range = Param.Bool(
         False, "Perform address mapping for the default port"
     )
+    enable_backdoor = Param.Bool(
+        True,
+        "If true, allow receiving and forwarding of backdoor requests. "
+        "If false, the XBar will send packets without a backdoor.",
+    )
 
 
 class NoncoherentXBar(BaseXBar):

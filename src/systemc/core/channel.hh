@@ -30,6 +30,7 @@
 
 #include <set>
 
+#include "systemc/core/channel_ops.hh"
 #include "systemc/core/list.hh"
 #include "systemc/ext/core/sc_prim.hh"
 
@@ -45,7 +46,12 @@ class Channel : public ListNode
 
     void requestUpdate();
     void asyncRequestUpdate();
-    void update() { _sc_chan->update(); }
+    void update();
+
+    void beforeEndOfElaboration();
+    void endOfElaboration();
+    void startOfSimulation();
+    void endOfSimulation();
 
     sc_core::sc_prim_channel *sc_chan() { return _sc_chan; }
 

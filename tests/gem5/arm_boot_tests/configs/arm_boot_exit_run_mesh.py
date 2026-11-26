@@ -1,0 +1,225 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Copyright (c) 2022 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+This example runs a simple linux boot on the ArmBoard.
+
+Characteristics
+---------------
+
+* Runs exclusively on the ARM ISA with the custom mesh
+"""
+
+import argparse
+import importlib.util
+from pathlib import Path
+
+from m5.objects import (
+    ArmDefaultRelease,
+    VExpress_GEM5_Foundation,
+)
+
+from gem5.coherence_protocol import CoherenceProtocol
+from gem5.components.boards.arm_board import ArmBoard
+from gem5.components.memory.dram_interfaces.ddr4 import DDR4_2400_16x4
+from gem5.components.memory.memory import ChanneledMemory
+from gem5.components.processors.cpu_types import (
+    CPUTypes,
+    get_cpu_type_from_str,
+    get_cpu_types_str_set,
+)
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
+
+requires(coherence_protocol_required=CoherenceProtocol.CHI)
+from gem5.components.cachehierarchies.chi.nodes.abstract_node import (
+    CHI_NodeType,
+)
+from gem5.components.cachehierarchies.ruby.topologies.custom_mesh import (
+    load_topology_config,
+)
+
+parser = argparse.ArgumentParser(
+    description="A script to run the ARM boot exit tests."
+)
+
+parser.add_argument(
+    "-n",
+    "--num-cpus",
+    type=int,
+    required=True,
+    help="The number of CPUs.",
+)
+
+parser.add_argument(
+    "-c",
+    "--cpu",
+    type=str,
+    choices=get_cpu_types_str_set(),
+    required=True,
+    help="The CPU type.",
+)
+
+systemd_group = parser.add_mutually_exclusive_group(required=True)
+systemd_group.add_argument(
+    "--systemd",
+    action="store_true",
+    help="Enable systemd on boot.",
+)
+systemd_group.add_argument(
+    "--no-systemd",
+    action="store_true",
+    help="Disable systemd on boot.",
+)
+
+parser.add_argument(
+    "-t",
+    "--tick-exit",
+    type=int,
+    required=False,
+    help="The tick to exit the simulation.",
+)
+
+parser.add_argument(
+    "-r",
+    "--resource-directory",
+    type=str,
+    required=False,
+    help="The directory in which resources will be downloaded or exist.",
+)
+parser.add_argument(
+    "--topology-config",
+    type=str,
+    required=True,
+    help=(
+        "Path to a Python topology config module that defines NoC_Params and "
+        "get_node_params(node_type: CHI_NodeType) -> Node_Params."
+    ),
+)
+
+args = parser.parse_args()
+
+
+# Run a check to ensure the right version of gem5 is being used.
+requires(isa_required=ISA.ARM)
+
+topology_config = load_topology_config(args.topology_config)
+get_node_params = topology_config.get_node_params
+rnf_in_mesh = get_node_params(CHI_NodeType.CHI_RNF)
+snf_mainmem_in_mesh = get_node_params(CHI_NodeType.CHI_SNF_MainMem)
+
+if args.num_cpus != rnf_in_mesh.num_nodes():
+    raise ValueError(
+        f"--num-cpus ({args.num_cpus}) must match "
+        f"topology-config RNF node count ({rnf_in_mesh.num_nodes()})."
+    )
+
+noc_params = topology_config.NoC_Params
+cache_hierarchy = topology_config.cache_hierarchy_type()
+cache_hierarchy.add_default_nodes()
+
+# Setup the system memory.
+num_channels = snf_mainmem_in_mesh.num_nodes()
+
+memory = ChanneledMemory(
+    dram_interface_class=DDR4_2400_16x4,
+    num_channels=num_channels,
+    interleaving_size=64,
+    size="4GiB",
+)
+
+# Setup a processor.
+
+cpu_type = get_cpu_type_from_str(args.cpu)
+
+processor = SimpleProcessor(
+    cpu_type=cpu_type,
+    num_cores=args.num_cpus,
+    isa=ISA.ARM,
+    clk_freq="1GHz",
+)
+
+
+# The ArmBoard requires a `release` to be specified.
+
+release = ArmDefaultRelease()
+
+# The platform sets up the memory ranges of all the on-chip and off-chip
+# devices present on the ARM system.
+
+platform = VExpress_GEM5_Foundation()
+
+# Setup the board.
+board = ArmBoard(
+    clk_freq="1GHz",
+    processor=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+    release=release,
+    platform=platform,
+)
+
+# Set the Full System workload.
+board.set_workload(
+    obtain_resource(
+        (
+            "arm-ubuntu-24.04-boot-with-systemd"
+            if args.systemd
+            else "arm-ubuntu-24.04-boot-no-systemd"
+        ),
+        resource_directory=args.resource_directory,
+        resource_version=("3.0.0" if args.systemd else "2.0.0"),
+    ),
+)
+
+simulator = Simulator(board=board)
+
+if args.tick_exit:
+    simulator.set_max_ticks(args.tick_exit)
+
+simulator.run()
+
+print(
+    "Exiting @ tick {} because {}.".format(
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    )
+)

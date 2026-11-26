@@ -77,7 +77,6 @@ def template VleConstructor {{
     }
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vl, i, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsLoad);
         this->microops.push_back(microop);
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -91,6 +90,7 @@ def template VleConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -286,7 +286,6 @@ def template VseConstructor {{
     }
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vl, i, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsStore);
         this->microops.push_back(microop);
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -294,6 +293,7 @@ def template VseConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -461,13 +461,13 @@ def template VlmConstructor {{
         microop = new VectorNopMicroInst(_machInst);
     } else {
         microop = new Vle8_vMicro(_machInst, micro_vl, 0, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsLoad);
     }
     this->microops.push_back(microop);
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -488,13 +488,13 @@ def template VsmConstructor {{
         microop = new VectorNopMicroInst(_machInst);
     } else {
         microop = new Vse8_vMicro(_machInst, micro_vl, 0, elen, vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsStore);
     }
     this->microops.push_back(microop);
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -515,13 +515,13 @@ def template VsWholeConstructor {{
     for (int i = 0; i < NFIELDS; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, elen,
                                           vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsStore);
         this->microops.push_back(microop);
     }
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -652,13 +652,13 @@ def template VlWholeConstructor {{
     for (int i = 0; i < NFIELDS; ++i) {
         microop = new %(class_name)sMicro(_machInst, micro_vlmax, i, elen,
                                           vlen);
-        microop->setDelayedCommit();
         microop->setFlag(IsLoad);
         this->microops.push_back(microop);
     }
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    this->setDelayedCommitExceptLast();
 }
 
 }};
@@ -826,20 +826,19 @@ def template VlStrideConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
 
                 microop = new VPinVdMicroInst(machInst, segIdx + i,
                     micro_vl, elen, vlen);
-                microop->setFlag(IsDelayedCommit);
                 this->microops.push_back(microop);
 
                 for (int j = 0; j < micro_vl; ++j) {
                     microop = new %(class_name)sMicro(machInst, i, segIdx, j,
                                                       micro_vl, offset, true,
                                                       elen, vlen);
-                    microop->setFlag(IsDelayedCommit);
                     microop->setFlag(IsLoad);
                     this->microops.push_back(microop);
                 }
@@ -851,6 +850,7 @@ def template VlStrideConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -892,6 +892,7 @@ def template VsStrideConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -900,7 +901,6 @@ def template VsStrideConstructor {{
                     microop = new %(class_name)sMicro(machInst, i, segIdx, j,
                                                       micro_vl, offset, true,
                                                       elen, _vlen);
-                    microop->setFlag(IsDelayedCommit);
                     microop->setFlag(IsStore);
                     this->microops.push_back(microop);
                 }
@@ -912,6 +912,7 @@ def template VsStrideConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -946,7 +947,6 @@ template<typename ElemType>
     const uint8_t num_cpyvs_microops = ceil((float) this->vl/vs2_vlmax);
     for (uint32_t i = 0; i < num_cpyvs_microops; i++) {
         microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen, vlen);
-        microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
 
@@ -956,7 +956,6 @@ template<typename ElemType>
         uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
 
         microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
-        microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
 
@@ -970,7 +969,6 @@ template<typename ElemType>
                                                         vdElemIdx, vs2RegIdx,
                                                         vs2ElemIdx, elen,
                                                         vlen);
-            microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsLoad);
             this->microops.push_back(microop);
         }
@@ -980,6 +978,7 @@ template<typename ElemType>
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -1196,7 +1195,6 @@ template<typename ElemType>
                                                         vs3ElemIdx, vs2RegIdx,
                                                         vs2ElemIdx, elen,
                                                         vlen);
-            microop->setFlag(IsDelayedCommit);
             microop->setFlag(IsStore);
             this->microops.push_back(microop);
         }
@@ -1206,6 +1204,7 @@ template<typename ElemType>
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 
@@ -1380,14 +1379,29 @@ def template VlSegConstructor {{
     StaticInstPtr microop;
     uint32_t size_per_elem = width_EEW(_machInst.width) / 8;
 
+    float vflmul = getVflmul(_machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(_machInst.width),
+                             getSew(_machInst.vtype8.vsew), vflmul, false);
+    if (emul * NFIELDS > NumVecInternalRegs) {
+        microop = new VectorNopMicroInst(_machInst,
+            std::make_shared<IllegalInstFault>(
+                "vlseg nf*EMUL > 8: reserved encoding", _machInst));
+        this->microops.push_back(microop);
+        this->microops.front()->setFlag(IsFirstMicroop);
+        this->microops.back()->setFlag(IsLastMicroop);
+        this->setDelayedCommitExceptLast();
+        this->flags[IsVector] = true;
+        return;
+    }
+
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     } else {
-        for (int f = 0; f < NFIELDS; ++f) {
-            remaining_vl = this->vl;
-            micro_vl = std::min(remaining_vl, micro_vlmax);
-            for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        // Generate raw blocks in address order to match the deinterleave
+        // source-register groups.
+        for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+            for (int f = 0; f < NFIELDS; ++f) {
                 bool illegal = (_machInst.vd + i + (f * num_microops)) >= 32;
                 if (illegal) {
                     microop = new VectorNopMicroInst(_machInst,
@@ -1396,6 +1410,7 @@ def template VlSegConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -1403,11 +1418,10 @@ def template VlSegConstructor {{
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
                                                   num_microops, f, NFIELDS,
                                                   elen, vlen);
-                microop->setDelayedCommit();
                 microop->setFlag(IsLoad);
                 this->microops.push_back(microop);
-                micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
             }
+            micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
         }
         for (int f = 0; f < NFIELDS; ++f) {
             remaining_vl = this->vl;
@@ -1421,8 +1435,9 @@ def template VlSegConstructor {{
             }
         }
 
-        if (microop->opClass() == SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
-            microop = new VlFFTrimVlMicroOp(_machInst, this->vl, num_microops,
+        if (_opClass == SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+            microop = new VlFFTrimVlMicroOp(_machInst, this->vl,
+                                            num_microops * NFIELDS,
                                             elen, vlen, microops);
             this->microops.push_back(microop);
         }
@@ -1430,6 +1445,7 @@ def template VlSegConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 }};
@@ -1443,7 +1459,6 @@ private:
     RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     uint32_t field;
-    uint32_t numFields;
     uint32_t numMicroops;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
@@ -1473,10 +1488,9 @@ def template VlSegMicroConstructor {{
     _numSrcRegs = 0;
     _numDestRegs = 0;
     field = _field;
-    numFields = _numFields;
     numMicroops = _numMicroops;
-    setDestRegIdx(_numDestRegs++, vecRegClass[VecMemInternalReg0 + _microIdx +
-        (field * numMicroops)]);
+    setDestRegIdx(_numDestRegs++, vecRegClass[VecMemInternalReg0 +
+        (_microIdx * numFields) + field]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
     if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)) {
@@ -1510,12 +1524,6 @@ Fault
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
-
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
-
-
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -1530,13 +1538,13 @@ Fault
     if (fault != NoFault)
         return fault;
 
-    const size_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-    const size_t micro_elems = vlen / width_EEW(machInst.width);
+    const size_t micro_vlmax = vlen / width_EEW(machInst.width);
+    const size_t micro_elems = microVl;
 
     size_t ei;
 
-    for (size_t i = 0; i < micro_elems; i++) {
-        ei = i + micro_vlmax * microIdx;
+    for (size_t i = 0; i < micro_elems && i < faultIdx; i++) {
+        ei = i + micro_vlmax * microIdx * numFields;
         %(memacc_code)s;
     }
 
@@ -1564,10 +1572,6 @@ Fault
     bool check_vill = true;
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
-
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
 
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
@@ -1604,14 +1608,18 @@ Fault
         v0 = tmp_v0.as<uint8_t>();
     }
 
-    memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+    // A fully suppressed access has no packet, as in the unit-stride
+    // fault-only-first completion path.
+    if (xc->readMemAccPredicate()) {
+        memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+    }
 
-    const size_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-    const size_t micro_elems = vlen / width_EEW(machInst.width);
+    const size_t micro_vlmax = vlen / width_EEW(machInst.width);
+    const size_t micro_elems = microVl;
 
     size_t ei;
-    for (size_t i = 0; i < micro_elems; i++) {
-        ei = i + micro_vlmax * microIdx;
+    for (size_t i = 0; i < micro_elems && i < faultIdx; i++) {
+        ei = i + micro_vlmax * microIdx * numFields;
         %(memacc_code)s;
     }
 
@@ -1638,6 +1646,21 @@ def template VsSegConstructor {{
     StaticInstPtr microop;
     uint32_t size_per_elem = width_EEW(_machInst.width) / 8;
 
+    float vflmul = getVflmul(_machInst.vtype8.vlmul);
+    uint32_t emul = get_emul(width_EEW(_machInst.width),
+                             getSew(_machInst.vtype8.vsew), vflmul, false);
+    if (emul * NFIELDS > NumVecInternalRegs) {
+        microop = new VectorNopMicroInst(_machInst,
+            std::make_shared<IllegalInstFault>(
+                "vsseg nf*EMUL > 8: reserved encoding", _machInst));
+        this->microops.push_back(microop);
+        this->microops.front()->setFlag(IsFirstMicroop);
+        this->microops.back()->setFlag(IsLastMicroop);
+        this->setDelayedCommitExceptLast();
+        this->flags[IsVector] = true;
+        return;
+    }
+
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
@@ -1654,6 +1677,7 @@ def template VsSegConstructor {{
                     this->microops.push_back(microop);
                     this->microops.front()->setFlag(IsFirstMicroop);
                     this->microops.back()->setFlag(IsLastMicroop);
+                    this->setDelayedCommitExceptLast();
                     this->flags[IsVector] = true;
                     return;
                 }
@@ -1672,7 +1696,6 @@ def template VsSegConstructor {{
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
                                                   num_microops, f, NFIELDS,
                                                   elen, vlen);
-                microop->setDelayedCommit();
                 microop->setFlag(IsStore);
                 this->microops.push_back(microop);
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
@@ -1682,6 +1705,7 @@ def template VsSegConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+    this->setDelayedCommitExceptLast();
     this->flags[IsVector] = true;
 }
 }};
@@ -1767,10 +1791,6 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vsseg inst", machInst);
-
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 
     std::vector<bool> byte_enable(mem_size, false);
@@ -1821,10 +1841,6 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(ea_code)s;
-
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vsseg inst", machInst);
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 
@@ -1900,6 +1916,7 @@ def template VlElementMicroConstructor {{
     if (_has_rs2) {
         setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
     }
+    SET_VM_SRC();
     this->flags[IsLoad] = true;
 }
 

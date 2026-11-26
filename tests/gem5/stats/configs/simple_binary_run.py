@@ -92,6 +92,7 @@ processor = SimpleProcessor(
     cpu_type=CPUTypes.ATOMIC,
     isa=ISA.ARM,
     num_cores=1,
+    clk_freq="3GHz",
 )
 
 motherboard = SimpleBoard(

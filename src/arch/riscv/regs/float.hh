@@ -54,6 +54,7 @@
 #include <vector>
 
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "cpu/reg_class.hh"
 #include "debug/FloatRegs.hh"
 
@@ -93,23 +94,153 @@ unboxF32(uint64_t v)
 static constexpr uint64_t boxF16(uint16_t v) { return mask(63, 16) | v; }
 static constexpr uint64_t boxF32(uint32_t v) { return mask(63, 32) | v; }
 
+struct bfloat16_t
+{
+    uint16_t v;
+};
+
+static constexpr uint16_t defaultNaNBF16UI = 0x7fc0;
+
+static constexpr uint16_t
+unboxBF16(uint64_t v)
+{
+    // The upper 48 bits should all be ones.
+    if (bits(v, 63, 16) == mask(48)) {
+        return bits(v, 15, 0);
+    } else {
+        return defaultNaNBF16UI;
+    }
+}
+
+static constexpr uint64_t
+boxBF16(uint16_t v)
+{
+    return mask(63, 16) | v;
+}
+
 // Create fixed size floats from raw bytes or generic floating point values.
 static constexpr float16_t f16(uint16_t v) { return {v}; }
 static constexpr float32_t f32(uint32_t v) { return {v}; }
 static constexpr float64_t f64(uint64_t v) { return {v}; }
+static constexpr bfloat16_t
+bf16(uint16_t v)
+{
+    return {v};
+}
 static constexpr float16_t f16(freg_t r) { return {unboxF16(r.v)}; }
 static constexpr float32_t f32(freg_t r) { return {unboxF32(r.v)}; }
 static constexpr float64_t f64(freg_t r) { return r; }
+static constexpr bfloat16_t
+bf16(freg_t r)
+{
+    return {unboxBF16(r.v)};
+}
 
 // Create generic floating point values from fixed size floats.
 static constexpr freg_t freg(float16_t f) { return {boxF16(f.v)}; }
 static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
 static constexpr freg_t freg(float64_t f) { return f; }
+static constexpr freg_t
+freg(bfloat16_t f)
+{
+    return {boxBF16(f.v)};
+}
 static constexpr freg_t freg(uint_fast64_t f) { return {f}; }
 
 #define F16_SIGN ((uint16_t)1 << 15)
+#define BF16_SIGN ((uint16_t)1 << 15)
 #define F32_SIGN ((uint32_t)1 << 31)
 #define F64_SIGN ((uint64_t)1 << 63)
+
+static inline bool
+isNaNBF16UI(uint16_t ui)
+{
+    return ((ui & 0x7f80) == 0x7f80) && (ui & 0x007f);
+}
+
+static inline bool
+isSigNaNBF16UI(uint16_t ui)
+{
+    return ((ui & 0x7fc0) == 0x7f80) && (ui & 0x003f);
+}
+
+static inline float32_t
+bf16_to_f32(bfloat16_t a)
+{
+    if (isNaNBF16UI(a.v)) {
+        if (isSigNaNBF16UI(a.v)) {
+            softfloat_exceptionFlags |= softfloat_flag_invalid;
+        }
+        return f32(defaultNaNF32UI);
+    }
+
+    return f32(static_cast<uint32_t>(a.v) << 16);
+}
+
+static inline bfloat16_t
+f32_to_bf16(float32_t a)
+{
+    const uint32_t ui = a.v;
+    const uint32_t exp = bits(ui, 30, 23);
+    const uint32_t frac = bits(ui, 22, 0);
+    const bool sign = bits(ui, 31);
+
+    if (exp == 0xff) {
+        if (frac != 0) {
+            if (softfloat_isSigNaNF32UI(ui)) {
+                softfloat_exceptionFlags |= softfloat_flag_invalid;
+            }
+            return bf16(defaultNaNBF16UI);
+        }
+        return bf16(bits(ui, 31, 16));
+    }
+
+    const uint32_t discarded = ui & 0xffff;
+    uint16_t result = bits(ui, 31, 16);
+    bool increment = false;
+
+    switch (softfloat_roundingMode) {
+        case softfloat_round_near_even:
+            increment =
+                discarded > 0x8000 || (discarded == 0x8000 && (result & 1));
+            break;
+        case softfloat_round_minMag:
+            increment = false;
+            break;
+        case softfloat_round_min:
+            increment = sign && discarded != 0;
+            break;
+        case softfloat_round_max:
+            increment = !sign && discarded != 0;
+            break;
+        case softfloat_round_near_maxMag:
+            increment = discarded >= 0x8000;
+            break;
+        default:
+            GEM5_UNREACHABLE;
+    }
+
+    if (discarded != 0) {
+        softfloat_exceptionFlags |= softfloat_flag_inexact;
+    }
+
+    if (increment) {
+        result++;
+    }
+
+    const bool overflow = exp != 0xff && bits(result, 14, 7) == 0xff;
+    if (overflow) {
+        softfloat_exceptionFlags |=
+            softfloat_flag_overflow | softfloat_flag_inexact;
+    }
+
+    const bool underflow = discarded != 0 && bits(result, 14, 7) == 0;
+    if (underflow) {
+        softfloat_exceptionFlags |= softfloat_flag_underflow;
+    }
+
+    return bf16(result);
+}
 
 namespace float_reg
 {

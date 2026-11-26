@@ -1,5 +1,6 @@
 ---
-# This workflow runs all of the very-long tests within main.py
+# This workflow runs all of the very-long tests within main.py and uploads gcov
+# code coverage information to Codecov
 
 name: Weekly Tests
 
@@ -9,111 +10,84 @@ on:
 
 jobs:
 
-    get-date:
-        runs-on: ubuntu-24.04
-        outputs:
-            date: ${{ steps.date.outputs.date }}
-        steps:
-            - name: Get the current date
-              id: date
-              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
     get-testlib-very-long-dirs:
         runs-on: ubuntu-24.04
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Get directories for testlib-very-long
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  unset PREV
-                  echo "test-dirs-matrix=$(\
-                    ./main.py list gem5 \
-                    --suites \
-                    --length very-long \
-                    --exclude-tags gcn_gpu | \
-                    grep "$SUITEUID:" | \
-                    cut -d: -f2 | \
-                    cut -d/ -f 2- | \
-                    xargs dirname | \
-                    sort -u  | \
-                    while read x; do \
-                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
-                        PREV=$x; \
-                        echo $x; \
-                      fi; \
-                    done  | \
-                    jq -ncR '[inputs]'\
-                  )" >>$GITHUB_OUTPUT
+                  ./main.py list gem5 --suites -q --length=very-long --gcov=test-only > "$RUNNER_TEMP/test-suites"
+                  test_dirs=$(jq -Rsc '
+                    split("\n") |
+                    map(select(startswith("SuiteUID:")) |
+                        split(":")[1] | split("/")[1:-1] | join("/")) |
+                    unique |
+                    if length == 0 then error("No TestLib suites found") else . end
+                  ' "$RUNNER_TEMP/test-suites")
+                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
     # start running the very-long tests
     testlib-very-long-tests:
         name: very-long-tests
         strategy:
             fail-fast: false
+            max-parallel: 5
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container:
+            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 4320 # 3 days
-        needs: [get-date, get-testlib-very-long-dirs]
+        needs: [get-testlib-very-long-dirs]
         steps:
-            - uses: actions/checkout@v4
-
-            - name: Cache build/ALL
-              uses: actions/cache@v4
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-all
+            - uses: actions/checkout@v7
 
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
+              timeout-minutes: 4290
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run ${{ matrix.test-type }} --length very-long -j$(nproc) -vv --exclude-tags gcn_gpu
+              # The o3-cpu_8-cores_classic_DualChannelDDR4_2400_init test in the
+              # very-long x86_boot_tests fails with a segmentation fault when
+              # run with the --gcov=test-only flag, so run x86_boot_tests
+              # very-long without that flag.
+              run: |
+                  extra_gcov_args="--gcov=test-only"
+                  resource_dir="$GEM5_RESOURCE_DIR"
+                  if [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
+                    extra_gcov_args=""
+                  fi
+                  # These legacy fixtures do not checksum or lock downloads.
+                  case "${{ matrix.test-type }}" in
+                    gem5/cpu_tests|gem5/fdp_tests|gem5/m5threads_test_atomic)
+                      resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
+                      ;;
+                  esac
+                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
-              if: success() || failure()
+              if: always()
               run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
             - name: Upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
+              if: always()
+              uses: actions/upload-artifact@v7
               with:
                   name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
 
-    gpu-tests:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 1440 # 24 hours
-        needs: get-date
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
               with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
-
-            - name: Run Testlib GPU Tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu
-
-            - name: Upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-very-long,${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-very-long
