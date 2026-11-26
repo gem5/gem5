@@ -32,10 +32,13 @@ from pathlib import Path
 
 import m5
 
+from _m5.stats import processDumpQueue
+
 script = (
     Path(__file__).resolve().parents[4]
     / "configs/example/garnet_synth_traffic.py"
 )
+sys.path.insert(0, str(script.parent))
 sys.argv = [
     str(script),
     "--protocol=Garnet_standalone",
@@ -44,7 +47,8 @@ sys.argv = [
     "--mesh-rows=2",
     "--num-cpus=4",
     "--num-dirs=4",
-    "--sim-cycles=1000",
+    # The traffic generator compares this limit to curTick().
+    "--sim-cycles=1000000",
     "--injectionrate=0.1",
     "--inj-vnet=0",
 ]
@@ -84,6 +88,8 @@ for name in counter_names:
     ), f"No traffic exercised {name}: {before}"
 
 m5.stats.reset()
+# Re-collate raw router activity to check its reset as well as the stats.
+processDumpQueue()
 m5.stats.prepare()
 after = collect_counters(network.getCCObject())
 assert before.keys() == after.keys()
