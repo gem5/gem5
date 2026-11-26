@@ -45,16 +45,18 @@
 #include <queue>
 #include <unordered_map>
 
-#include "mem/ruby/protocol/chi/tlm/port.hh"
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/protocol/CHI/tlm/port.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
 #include "mem/ruby/structures/BackpressureTracker.hh"
 #include "params/TlmGenerator.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace tlm::chi {
+namespace tlm::chi
+{
 
 class CacheController;
 class SnoopHandler;
@@ -136,9 +138,7 @@ class TlmGenerator : public ClockedObject
         class Action
         {
           public:
-            using Callback = std::function<
-                bool(Transaction *tran)
-            >;
+            using Callback = std::function<bool(Transaction *tran)>;
 
             Action(Callback _cb, bool waiting)
                 : cb(_cb), _wait(waiting), _waitCycles(0)
@@ -165,7 +165,11 @@ class TlmGenerator : public ClockedObject
              * Returns true if the action dispatcher should break
              * the dispatching loop once the action has been executed
              */
-            bool wait() const { return _wait; }
+            bool
+            wait() const
+            {
+                return _wait;
+            }
 
             /**
              * Returning a value != 0 means we are waiting and
@@ -192,12 +196,16 @@ class TlmGenerator : public ClockedObject
         {
           public:
             Expectation(std::string exp_name, Callback _cb)
-              : Action(_cb, false), _name(exp_name)
+                : Action(_cb, false), _name(exp_name)
             {}
 
             bool run(Transaction *tran) override;
 
-            std::string name() const { return _name; }
+            std::string
+            name() const
+            {
+                return _name;
+            }
 
           private:
             std::string _name;
@@ -213,7 +221,7 @@ class TlmGenerator : public ClockedObject
         {
           public:
             Assertion(std::string exp_name, Callback _cb)
-              : Expectation(exp_name, _cb)
+                : Expectation(exp_name, _cb)
             {}
 
             bool run(Transaction *tran) override;
@@ -274,7 +282,11 @@ class TlmGenerator : public ClockedObject
 
         EventFunctionWrapper runCallbacksEvent;
 
-        ARM::CHI::Payload* payload() const { return _payload; }
+        ARM::CHI::Payload *
+        payload() const
+        {
+            return _payload;
+        }
         void
         setPayload(ARM::CHI::Payload *payload)
         {
@@ -282,7 +294,11 @@ class TlmGenerator : public ClockedObject
             _payload = payload;
             _payload->ref();
         }
-        ARM::CHI::Phase& phase() { return _phase; }
+        ARM::CHI::Phase &
+        phase()
+        {
+            return _phase;
+        }
         Tick
         start() const
         {
@@ -337,14 +353,13 @@ class TlmGenerator : public ClockedObject
             }
         };
 
-        TransactionEvent(Transaction *_transaction,
-                         Tick _when)
-          : Event(), transaction(_transaction), when(_when)
+        TransactionEvent(Transaction *_transaction, Tick _when)
+            : Event(), transaction(_transaction), when(_when)
         {}
 
         void process() override;
 
-        const char*
+        const char *
         description() const override
         {
             return "CHI Transaction event";
@@ -470,7 +485,7 @@ class TlmGenerator : public ClockedObject
     } pCreditQueues;
 
     /** Map of pending (injected) transactions indexed by the txn_id */
-    std::unordered_map<uint16_t, Transaction*> pendingTransactions;
+    std::unordered_map<uint16_t, Transaction *> pendingTransactions;
 
     /** request output port */
     SourcePort<TlmGenerator> outPort;

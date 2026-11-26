@@ -1,4 +1,3 @@
-# -*- mode:python -*-
 # Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
@@ -34,61 +33,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
+from m5.objects.BackpressureGen import BackpressureGen
+from m5.objects.BackpressureTracker import BackpressureTracker
 from m5.params import *
-from m5.SimObject import (
-    PyBindMethod,
-    SimObject,
-)
 
 
-class SnoopHandler(SimObject):
+class BaseCBusy(BackpressureGen):
+    type = "BaseCBusy"
+    cxx_header = "mem/ruby/protocol/CHI/generic/CBusy.hh"
+    cxx_class = "gem5::ruby::CHI::BaseCBusy"
     abstract = True
-    type = "SnoopHandler"
-    cxx_header = "mem/ruby/protocol/chi/tlm/snp_handler.hh"
-    cxx_class = "gem5::tlm::chi::SnoopHandler"
+
+    # 0 = Less than 50% full
+    # 1 = Greater than 50% full
+    # 2 = Greater than 75% full
+    # 3 = Greater than 90% full
+    threshold_0 = Param.Unsigned(50, "Threshold for cbusy level 0")
+    threshold_1 = Param.Unsigned(75, "Threshold for cbusy level 1")
+    threshold_2 = Param.Unsigned(90, "Threshold for cbusy level 2")
 
 
-class PySnoopHandler(SnoopHandler):
-    type = "PySnoopHandler"
-    cxx_header = "mem/ruby/protocol/chi/tlm/py_snoop_handler.hh"
-    cxx_class = "gem5::tlm::chi::PySnoopHandler"
+class CBusy(BaseCBusy):
+    type = "CBusy"
+    cxx_header = "mem/ruby/protocol/CHI/generic/CBusy.hh"
+    cxx_class = "gem5::ruby::CHI::CBusy"
 
-    cxx_exports = [PyBindMethod("addSnoop")]
 
-    discard_after_snoop = Param.Bool(
-        True,
-        "Discard a programmed transaction once callbacks have run for a "
-        "matching snoop",
-    )
+class SnfCBusy(BaseCBusy):
+    type = "SnfCBusy"
+    cxx_header = "mem/ruby/protocol/CHI/generic/CBusy.hh"
+    cxx_class = "gem5::ruby::CHI::SnfCBusy"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._snoop_transactions = []
-        self._cc_initialized = False
 
-    def add_snoop(self, address):
-        from m5.tlm_chi.utils import (
-            Channel,
-            Resp,
-            RspOpcode,
-            SnoopResponse,
-            TlmPhase,
-        )
-
-        phase = TlmPhase()
-        phase.channel = Channel.RSP
-        phase.opcode = RspOpcode.SNP_RESP
-        phase.resp = Resp.RESP_I
-
-        transaction = SnoopResponse(phase)
-        self._snoop_transactions.append((address, transaction))
-        if self._cc_initialized:
-            self.getCCObject().addSnoop(address, transaction)
-        return transaction
-
-    def createCCObject(self):
-        super().createCCObject()
-        for address, transaction in self._snoop_transactions:
-            self.getCCObject().addSnoop(address, transaction)
-        self._cc_initialized = True
+class CBusyTracker(BackpressureTracker):
+    type = "CBusyTracker"
+    cxx_header = "mem/ruby/protocol/CHI/generic/CBusy.hh"
+    cxx_class = "gem5::ruby::CHI::CBusyTracker"

@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
+#include "mem/ruby/protocol/CHI/generic/CHIGenericController.hh"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -88,23 +88,23 @@ CHIGenericController::initNetQueues()
 
     assert(m_net_ptr != nullptr);
 
-    m_net_ptr->setToNetQueue(m_version + base, reqOut->getOrdered(),
-                             CHI_REQ, "none", reqOut);
-    m_net_ptr->setToNetQueue(m_version + base, snpOut->getOrdered(),
-                             CHI_SNP, "none", snpOut);
-    m_net_ptr->setToNetQueue(m_version + base, rspOut->getOrdered(),
-                             CHI_RSP, "none", rspOut);
-    m_net_ptr->setToNetQueue(m_version + base, datOut->getOrdered(),
-                             CHI_DAT, "response", datOut);
+    m_net_ptr->setToNetQueue(m_version + base, reqOut->getOrdered(), CHI_REQ,
+                             "none", reqOut);
+    m_net_ptr->setToNetQueue(m_version + base, snpOut->getOrdered(), CHI_SNP,
+                             "none", snpOut);
+    m_net_ptr->setToNetQueue(m_version + base, rspOut->getOrdered(), CHI_RSP,
+                             "none", rspOut);
+    m_net_ptr->setToNetQueue(m_version + base, datOut->getOrdered(), CHI_DAT,
+                             "response", datOut);
 
-    m_net_ptr->setFromNetQueue(m_version + base, reqIn->getOrdered(),
-                               CHI_REQ, "none", reqIn);
-    m_net_ptr->setFromNetQueue(m_version + base, snpIn->getOrdered(),
-                               CHI_SNP, "none", snpIn);
-    m_net_ptr->setFromNetQueue(m_version + base, rspIn->getOrdered(),
-                               CHI_RSP, "none", rspIn);
-    m_net_ptr->setFromNetQueue(m_version + base, datIn->getOrdered(),
-                               CHI_DAT, "response", datIn);
+    m_net_ptr->setFromNetQueue(m_version + base, reqIn->getOrdered(), CHI_REQ,
+                               "none", reqIn);
+    m_net_ptr->setFromNetQueue(m_version + base, snpIn->getOrdered(), CHI_SNP,
+                               "none", snpIn);
+    m_net_ptr->setFromNetQueue(m_version + base, rspIn->getOrdered(), CHI_RSP,
+                               "none", rspIn);
+    m_net_ptr->setFromNetQueue(m_version + base, datIn->getOrdered(), CHI_DAT,
+                               "response", datIn);
 }
 
 void
@@ -128,47 +128,47 @@ CHIGenericController::addSequencer(RubyPort *seq)
 }
 
 void
-CHIGenericController::print(std::ostream& out) const
+CHIGenericController::print(std::ostream &out) const
 {
     out << "[CHIGenericController " << m_version << "]";
 }
 
-Sequencer*
+Sequencer *
 CHIGenericController::getCPUSequencer() const
 {
     // CHIGenericController doesn't have a CPUSequencer
     return nullptr;
 }
 
-DMASequencer*
+DMASequencer *
 CHIGenericController::getDMASequencer() const
 {
     // CHIGenericController doesn't have a DMASequencer
     return nullptr;
 }
 
-GPUCoalescer*
+GPUCoalescer *
 CHIGenericController::getGPUCoalescer() const
 {
     // CHIGenericController doesn't have a GPUCoalescer
     return nullptr;
 }
 
-MessageBuffer*
+MessageBuffer *
 CHIGenericController::getMandatoryQueue() const
 {
     // CHIGenericController doesn't have a MandatoryQueue
     return nullptr;
 }
 
-MessageBuffer*
+MessageBuffer *
 CHIGenericController::getMemReqQueue() const
 {
     // CHIGenericController doesn't have a MemReqQueue
     return nullptr;
 }
 
-MessageBuffer*
+MessageBuffer *
 CHIGenericController::getMemRespQueue() const
 {
     // CHIGenericController doesn't have a MemRespQueue
@@ -183,9 +183,7 @@ CHIGenericController::regStats()
 
 void
 CHIGenericController::collateStats()
-{
-
-}
+{}
 
 void
 CHIGenericController::resetStats()
@@ -193,27 +191,34 @@ CHIGenericController::resetStats()
     AbstractController::resetStats();
 }
 
-
 void
 CHIGenericController::wakeup()
 {
     bool pending = false;
 
     DPRINTF(RubyCHIGeneric, "wakeup: checking incoming rsp messages\n");
-    pending = pending || receiveAllRdyMessages<CHIResponseMsg>(rspIn,
-         [this](const CHIResponseMsg* msg){ return recvResponseMsg(msg); });
+    pending = pending || receiveAllRdyMessages<CHIResponseMsg>(
+                             rspIn, [this](const CHIResponseMsg *msg) {
+                                 return recvResponseMsg(msg);
+                             });
 
     DPRINTF(RubyCHIGeneric, "wakeup: checking incoming dat messages\n");
-    pending = pending || receiveAllRdyMessages<CHIDataMsg>(datIn,
-         [this](const CHIDataMsg* msg){ return recvDataMsg(msg); });
+    pending = pending || receiveAllRdyMessages<CHIDataMsg>(
+                             datIn, [this](const CHIDataMsg *msg) {
+                                 return recvDataMsg(msg);
+                             });
 
     DPRINTF(RubyCHIGeneric, "wakeup: checking incoming snp messages\n");
-    pending = pending || receiveAllRdyMessages<CHIRequestMsg>(snpIn,
-         [this](const CHIRequestMsg* msg){ return recvSnoopMsg(msg); });
+    pending = pending || receiveAllRdyMessages<CHIRequestMsg>(
+                             snpIn, [this](const CHIRequestMsg *msg) {
+                                 return recvSnoopMsg(msg);
+                             });
 
     DPRINTF(RubyCHIGeneric, "wakeup: checking incoming req messages\n");
-    pending = pending || receiveAllRdyMessages<CHIRequestMsg>(reqIn,
-         [this](const CHIRequestMsg* msg){ return recvRequestMsg(msg); });
+    pending = pending || receiveAllRdyMessages<CHIRequestMsg>(
+                             reqIn, [this](const CHIRequestMsg *msg) {
+                                 return recvRequestMsg(msg);
+                             });
 
     if (pending) {
         DPRINTF(RubyCHIGeneric, "wakeup: messages pending\n");
@@ -222,34 +227,34 @@ CHIGenericController::wakeup()
 }
 
 void
-CHIGenericController::recordCacheTrace(int cntrl, CacheRecorder* tr)
+CHIGenericController::recordCacheTrace(int cntrl, CacheRecorder *tr)
 {
     panic("CHIGenericController doesn't implement recordCacheTrace");
 }
 
 AccessPermission
-CHIGenericController::getAccessPermission(const Addr& param_addr)
+CHIGenericController::getAccessPermission(const Addr &param_addr)
 {
     return AccessPermission_NotPresent;
 }
 
 void
-CHIGenericController::functionalRead(
-    const Addr& param_addr, Packet* param_pkt, WriteMask& param_mask)
+CHIGenericController::functionalRead(const Addr &param_addr, Packet *param_pkt,
+                                     WriteMask &param_mask)
 {
     panic("CHIGenericController doesn't expect functionalRead");
 }
 
 int
-CHIGenericController::functionalWrite(
-    const Addr& param_addr, Packet* param_pkt)
+CHIGenericController::functionalWrite(const Addr &param_addr,
+                                      Packet *param_pkt)
 {
     panic("CHIGenericController doesn't expect functionalRead");
     return 0;
 }
 
 int
-CHIGenericController::functionalWriteBuffers(PacketPtr& pkt)
+CHIGenericController::functionalWriteBuffers(PacketPtr &pkt)
 {
     int num_functional_writes = 0;
     num_functional_writes += reqOut->functionalWrite(pkt);
@@ -264,31 +269,63 @@ CHIGenericController::functionalWriteBuffers(PacketPtr& pkt)
 }
 
 bool
-CHIGenericController::functionalReadBuffers(PacketPtr& pkt)
+CHIGenericController::functionalReadBuffers(PacketPtr &pkt)
 {
-    if (reqOut->functionalRead(pkt)) return true;
-    if (snpOut->functionalRead(pkt)) return true;
-    if (rspOut->functionalRead(pkt)) return true;
-    if (datOut->functionalRead(pkt)) return true;
-    if (reqIn->functionalRead(pkt)) return true;
-    if (snpIn->functionalRead(pkt)) return true;
-    if (rspIn->functionalRead(pkt)) return true;
-    if (datIn->functionalRead(pkt)) return true;
+    if (reqOut->functionalRead(pkt)) {
+        return true;
+    }
+    if (snpOut->functionalRead(pkt)) {
+        return true;
+    }
+    if (rspOut->functionalRead(pkt)) {
+        return true;
+    }
+    if (datOut->functionalRead(pkt)) {
+        return true;
+    }
+    if (reqIn->functionalRead(pkt)) {
+        return true;
+    }
+    if (snpIn->functionalRead(pkt)) {
+        return true;
+    }
+    if (rspIn->functionalRead(pkt)) {
+        return true;
+    }
+    if (datIn->functionalRead(pkt)) {
+        return true;
+    }
     return false;
 }
 
 bool
-CHIGenericController::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
+CHIGenericController::functionalReadBuffers(PacketPtr &pkt, WriteMask &mask)
 {
     bool read = false;
-    if (reqOut->functionalRead(pkt, mask)) read = true;
-    if (snpOut->functionalRead(pkt, mask)) read = true;
-    if (rspOut->functionalRead(pkt, mask)) read = true;
-    if (datOut->functionalRead(pkt, mask)) read = true;
-    if (reqIn->functionalRead(pkt, mask)) read = true;
-    if (snpIn->functionalRead(pkt, mask)) read = true;
-    if (rspIn->functionalRead(pkt, mask)) read = true;
-    if (datIn->functionalRead(pkt, mask)) read = true;
+    if (reqOut->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (snpOut->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (rspOut->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (datOut->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (reqIn->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (snpIn->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (rspIn->functionalRead(pkt, mask)) {
+        read = true;
+    }
+    if (datIn->functionalRead(pkt, mask)) {
+        read = true;
+    }
     return read;
 }
 

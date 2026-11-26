@@ -56,4 +56,4 @@ config RUBY_PROTOCOL_Garnet_standalone
     bool "Garnet standalone"
     default n
 
-rsource "chi/Kconfig"
+rsource "CHI/Kconfig"

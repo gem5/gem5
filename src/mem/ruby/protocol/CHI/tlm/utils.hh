@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Arm Limited
+ * Copyright (c) 2023, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,14 +35,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_PY_SNOOP_HANDLER_HH__
-#define __MEM_RUBY_PROTOCOL_CHI_TLM_PY_SNOOP_HANDLER_HH__
+#ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
+#define __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
 
-#include <list>
-#include <unordered_map>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
-#include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
-#include "params/PySnoopHandler.hh"
+#include "arch/arm/mpam.hh"
+#include "base/types.hh"
+#include "mem/ruby/common/MachineID.hh"
+#include "mem/ruby/protocol/CHI/CHIDataType.hh"
+#include "mem/ruby/protocol/CHI/CHIRequestType.hh"
+#include "mem/ruby/protocol/CHI/CHIResponseType.hh"
 
 namespace gem5
 {
@@ -50,44 +54,40 @@ namespace gem5
 namespace tlm::chi
 {
 
-/**
- * The PySnoopHandler is following the same principle behind the TlmGenerator;
- * similar to Transactions which are defined and injected from python, we
- * define SnoopResponses whose handling logic resides purely in python.  There
- * is no internal state inside the PySnoopHandler.  We use the following API
- * to generate SnoopResponse objects and return a handle to the response.
- *
- * snoop = snoop_handler.add_snoop(address)
- *
- * This will inform the SnoopHandler it is expected to receive a
- * SNP request at the provided address. A user should then attach
- * Transaction::Actions to the SnoopResponse which will entirely
- * dictate how the handler will react to such snoop.
- */
-class PySnoopHandler : public SnoopHandler
+std::string transactionToString(const ARM::CHI::Payload &payload,
+                                const ARM::CHI::Phase &phase);
+
+namespace tlm_to_ruby
 {
-  public:
-    PARAMS(PySnoopHandler);
-    PySnoopHandler(const Params &p);
 
-    void addSnoop(Addr address, SnoopResponse *transaction);
+ruby::CHI::CHIRequestType reqOpcode(ARM::CHI::ReqOpcode req);
+ruby::CHI::CHIDataType datOpcode(ARM::CHI::DatOpcode dat, ARM::CHI::Resp resp);
+ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res,
+                                     ARM::CHI::Resp resp,
+                                     ARM::CHI::Resp fwd_state);
+ruby::MachineID srcId(uint16_t src_id);
+} // namespace tlm_to_ruby
 
-  protected:
-    bool handleSnoop(ARM::CHI::Payload *payload,
-                     ARM::CHI::Phase *phase) override;
+namespace ruby_to_tlm
+{
 
-    /**
-     * True if the SnoopResponse transaction has to be discarded
-     * when all its actions/callbacks have been called or whether
-     * it will remain allocated to the matching address.
-     **/
-    const bool discardAfterSnoop;
+uint8_t datOpcode(ruby::CHI::CHIDataType dat);
+uint8_t rspOpcode(ruby::CHI::CHIResponseType res);
+uint8_t snpOpcode(ruby::CHI::CHIRequestType snp);
 
-    std::unordered_map<Addr, std::list<SnoopResponse *>> snoopTransactions;
-};
+ARM::CHI::Resp datResp(ruby::CHI::CHIDataType dat);
+ARM::CHI::Resp rspResp(ruby::CHI::CHIResponseType rsp);
+uint16_t srcId(ruby::MachineID src_id);
+} // namespace ruby_to_tlm
+
+::gem5::ArmISA::mpam::MpamBundle getMpam(const ARM::CHI::Payload &payload);
+
+Addr transactionSize(ARM::CHI::Size sz);
+
+uint8_t dataId(Addr address);
 
 } // namespace tlm::chi
 
 } // namespace gem5
 
-#endif // __MEM_RUBY_PROTOCOL_CHI_TLM_PY_SNOOP_HANDLER_HH__
+#endif // __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__

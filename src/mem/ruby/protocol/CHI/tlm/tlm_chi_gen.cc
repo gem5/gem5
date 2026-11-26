@@ -38,10 +38,12 @@
 #include <ARM/TLM/arm_chi_payload.h>
 #include <ARM/TLM/arm_chi_phase.h>
 
-#include "mem/ruby/protocol/chi/tlm/generator.hh"
-#include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
+#include "mem/ruby/protocol/CHI/tlm/generator.hh"
+#include "mem/ruby/protocol/CHI/tlm/snp_handler.hh"
+
 // This is required by Transaction::expect
 #include "pybind11/functional.h"
+
 #include "python/pybind11/pybind.hh"
 #include "sim/init.hh"
 
@@ -49,9 +51,11 @@ namespace py = pybind11;
 
 using namespace ARM::CHI;
 
-namespace gem5 {
+namespace gem5
+{
 
-namespace {
+namespace
+{
 
 void
 tlm_chi_generator_pybind(pybind11::module_ &m_tlm_chi)
@@ -69,13 +73,12 @@ tlm_chi_generator_pybind(pybind11::module_ &m_tlm_chi)
                 Callback cb) {
                  self.addCallback(std::make_unique<Expectation>(name, cb));
              })
-        .def(
-            "EXPECT",
-            [](tlm::chi::TlmGenerator::Transaction &self, py::function cb) {
-                self.addCallback(std::make_unique<Expectation>(
-                    cb.attr("__name__").cast<std::string>(),
-                    cb.cast<Callback>()));
-            })
+        .def("EXPECT",
+             [](tlm::chi::TlmGenerator::Transaction &self, py::function cb) {
+                 self.addCallback(std::make_unique<Expectation>(
+                     cb.attr("__name__").cast<std::string>(),
+                     cb.cast<Callback>()));
+             })
         .def("ASSERT_STR",
              [](tlm::chi::TlmGenerator::Transaction &self, std::string name,
                 Callback cb) {

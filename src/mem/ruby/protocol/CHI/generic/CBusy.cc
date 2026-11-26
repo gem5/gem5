@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/generic/CBusy.hh"
+#include "mem/ruby/protocol/CHI/generic/CBusy.hh"
 
 #include "mem/ruby/protocol/CHI/Cache_Controller.hh"
 #include "mem/ruby/protocol/CHI/Memory_Controller.hh"

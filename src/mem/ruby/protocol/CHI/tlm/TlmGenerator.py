@@ -51,7 +51,7 @@ from m5.tlm_chi.port import (
 
 class TlmGenerator(ClockedObject):
     type = "TlmGenerator"
-    cxx_header = "mem/ruby/protocol/chi/tlm/generator.hh"
+    cxx_header = "mem/ruby/protocol/CHI/tlm/generator.hh"
     cxx_class = "gem5::tlm::chi::TlmGenerator"
 
     cxx_exports = [
