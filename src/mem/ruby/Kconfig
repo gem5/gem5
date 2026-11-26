@@ -38,12 +38,11 @@ menu "Ruby"
             string "The 'main' protocol"
             default "MULTIPLE" if USE_MULTIPLE_PROTOCOLS
             help
-                This shows up as `buildEnv["PROTOCOL"]`` for backwards
-                compatibility, mostly in the Ruby.py config scripts.
-                Otherwise, this is ignored.
-                If this is set to anything when build with MULTIPLE,
-                it will be ignored unless using Ruby.py, in which case
-                the protocol specified here will appear as the only protocol.
+                The protocol selected for a single-protocol build. This is
+                exposed as buildEnv["PROTOCOL"] for build metadata and
+                validation. Multiple-protocol builds use "MULTIPLE";
+                configuration scripts select among the compiled protocols
+                using ruby.configuration or the gem5 standard library.
                 Note: This is case sensitive.
 
         rsource "protocol/Kconfig"
