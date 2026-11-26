@@ -40,9 +40,11 @@
  */
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 
 #include "base/inet.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/EthernetAll.hh"
@@ -180,7 +182,14 @@ IGbE::readDevice(PacketPtr pkt)
     assert(bar == 0);
 
     // Only 32bit accesses allowed
-    assert(pkt->getSize() == 4);
+    if (pkt->getSize() != 4) {
+        warn("IGbE::readDevice: Access size %d not supported (expected 4) to "
+             "register %#x\n",
+             pkt->getSize(), daddr);
+        memset(pkt->getPtr<uint8_t>(), 0, pkt->getSize());
+        pkt->makeAtomicResponse();
+        return pioDelay;
+    }
 
     DPRINTF(Ethernet, "Read device register %#X\n", daddr);
 
@@ -369,7 +378,13 @@ IGbE::writeDevice(PacketPtr pkt)
     assert(bar == 0);
 
     // Only 32bit accesses allowed
-    assert(pkt->getSize() == sizeof(uint32_t));
+    if (pkt->getSize() != sizeof(uint32_t)) {
+        warn("IGbE::writeDevice: Access size %d not supported (expected 4) to "
+             "register %#x\n",
+             pkt->getSize(), daddr);
+        pkt->makeAtomicResponse();
+        return pioDelay;
+    }
 
     DPRINTF(Ethernet, "Wrote device register %#X value %#X\n",
             daddr, pkt->getLE<uint32_t>());
@@ -463,8 +478,14 @@ IGbE::writeDevice(PacketPtr pkt)
         regs.mdic = val;
         if (regs.mdic.i())
             panic("No support for interrupt on mdic complete\n");
-        if (regs.mdic.phyadd() != 1)
-            panic("No support for reading anything but phy\n");
+        if (regs.mdic.phyadd() != 1) {
+            warn(
+                "i8254xGBe: MDIC access to invalid PHY %d. Signaling error.\n",
+                regs.mdic.phyadd());
+            regs.mdic.r(1); // Transaction complete
+            regs.mdic.e(1); // Transaction error
+            break;
+        }
         DPRINTF(Ethernet, "%s phy address %x\n",
                 regs.mdic.op() == 1 ? "Writing" : "Reading",
                 regs.mdic.regadd());
