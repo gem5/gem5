@@ -141,6 +141,8 @@ BitUnion8(Vex2Of2)
 EndBitUnion(Vex2Of2)
 
 BitUnion8(VexInfo)
+    // Preserve actual legacy prefixes before merging VEX.pp.
+    Bitfield<7> invalidLegacyPrefix;
     // Extra register index.
     Bitfield<6, 3> v;
     // Vector length specifier.

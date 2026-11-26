@@ -57,6 +57,10 @@ class X86ISA(BaseISA):
         "Fake gem5 x86_64 CPU", "Processor name for CPUID instruction"
     )
 
+    enable_amx = Param.Bool(
+        False, "Enable AMX tile configuration instructions in SE"
+    )
+
     # For the functions that return numerical values we use a vector of ints.
     # The order of the values is: EAX, EBX, EDX, ECX.
     #

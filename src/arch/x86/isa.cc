@@ -142,6 +142,8 @@ ISA::clear()
     // The "bsp" bit will be set when this register is read, since then we'll
     // have a ThreadContext to check the contextId from.
     regVal[misc_reg::ApicBase] = lApicBase;
+
+    amxState.reset();
 }
 
 namespace
@@ -181,6 +183,7 @@ ISA::ISA(const X86ISAParams &p)
     _regClasses.push_back(&miscRegClass);
 
     clear();
+    amxState.seEnabled = p.enable_amx;
 }
 
 static void
@@ -217,6 +220,7 @@ ISA::copyRegsFrom(ThreadContext *src)
         tc->setReg(id, src->getReg(id));
     copyMiscRegs(src, tc);
     tc->pcState(src->pcState());
+    amxState.copyArchStateFrom(getAmxState(src));
 }
 
 RegVal
@@ -508,12 +512,14 @@ ISA::serialize(CheckpointOut &cp) const
     BaseISA::serialize(cp);
 
     SERIALIZE_ARRAY(regVal, misc_reg::NumRegs);
+    amxState.serialize(cp);
 }
 
 void
 ISA::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(regVal, misc_reg::NumRegs);
+    amxState.unserialize(cp);
     updateHandyM5Reg(regVal[misc_reg::Efer],
                      regVal[misc_reg::Cr0],
                      regVal[misc_reg::CsAttr],

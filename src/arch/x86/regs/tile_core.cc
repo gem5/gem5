@@ -1,0 +1,245 @@
+/*
+ * Copyright (c) 2026 Jiaqi Wang
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <algorithm>
+
+#include "arch/x86/regs/tile.hh"
+#include "base/logging.hh"
+#include "base/trace.hh"
+#include "debug/AMX.hh"
+#include "sim/serialize.hh"
+
+namespace gem5
+{
+namespace X86ISA
+{
+namespace
+{
+
+bool
+allZero(const uint8_t *bytes, size_t size)
+{
+    return std::all_of(bytes, bytes + size,
+                       [](uint8_t byte) { return byte == 0; });
+}
+
+} // anonymous namespace
+
+void
+AmxTileState::reset()
+{
+    const bool keep_enable = seEnabled;
+    *this = AmxTileState{};
+    seEnabled = keep_enable;
+}
+
+void
+AmxTileState::copyArchStateFrom(const AmxTileState &other)
+{
+    const bool keep_enable = seEnabled;
+    *this = other;
+    seEnabled = keep_enable;
+}
+
+void
+AmxTileState::serialize(CheckpointOut &cp) const
+{
+    if (!seEnabled && !configured) {
+        return;
+    }
+
+    bool amx_configured = configured;
+    SERIALIZE_SCALAR(amx_configured);
+    arrayParamOut(cp, "amxConfig", reinterpret_cast<const uint8_t *>(&config),
+                  AmxTileConfigBytes);
+    arrayParamOut(cp, "amxTmm", reinterpret_cast<const uint8_t *>(tmm.data()),
+                  sizeof(tmm));
+}
+
+void
+AmxTileState::unserialize(CheckpointIn &cp)
+{
+    bool amx_configured = false;
+    if (UNSERIALIZE_OPT_SCALAR(amx_configured)) {
+        configured = amx_configured;
+        arrayParamIn(cp, "amxConfig", reinterpret_cast<uint8_t *>(&config),
+                     AmxTileConfigBytes);
+        arrayParamIn(cp, "amxTmm", reinterpret_cast<uint8_t *>(tmm.data()),
+                     sizeof(tmm));
+    } else {
+        reset();
+    }
+}
+
+RegVal
+amxSeXcr0(RegVal xcr0, bool enable_amx)
+{
+    if (!enable_amx) {
+        return xcr0;
+    }
+    return xcr0 | AmxLegacyXcr0Mask | AmxTileXcr0Mask;
+}
+
+bool
+amxControlsEnabled(RegVal cr4, RegVal xcr0)
+{
+    constexpr RegVal osxsave = 1ULL << 18;
+    return (cr4 & osxsave) && (xcr0 & AmxTileXcr0Mask) == AmxTileXcr0Mask;
+}
+
+bool
+amxConfigAddressValid(Addr address)
+{
+    // The x86 SE model uses a four-level, 48-bit linear address space.
+    // Check all 64 bytes. Wrapping from the upper canonical region to zero
+    // does not enter the canonical hole.
+    constexpr Addr low_max = (1ULL << 47) - 1;
+    constexpr Addr high_min = ~low_max;
+    constexpr Addr last_offset = AmxTileConfigBytes - 1;
+    return address <= low_max - last_offset || address >= high_min;
+}
+
+bool
+amxEncodingValid(const ExtMachInst &machInst, bool tile_dest)
+{
+    // Only TILEZERO uses ModRM.reg as a tile destination. R extends that
+    // destination; X/B do not name operands in the register-only forms.
+    // F3 is not a valid VEX.pp value for these four instructions.
+    return machInst.mode.submode == SixtyFourBitMode && !machInst.rex.w &&
+           (!tile_dest || !machInst.rex.r) && !machInst.vex.l &&
+           !machInst.vex.invalidLegacyPrefix && !machInst.legacy.lock &&
+           !machInst.legacy.rep && machInst.vex.v == 0;
+}
+
+AmxTileConfig
+decodeAmxTileConfig(const AmxRawTileConfig &raw)
+{
+    AmxTileConfig config = {};
+    config.paletteId = raw[0];
+    config.startRow = raw[1];
+    std::copy_n(raw.begin() + 2, sizeof(config.reserved0), config.reserved0);
+
+    for (int tile = 0; tile < AmxNumTiles; ++tile) {
+        const size_t offset = 16 + tile * 2;
+        config.columnBytes[tile] =
+            static_cast<uint16_t>(raw[offset]) |
+            (static_cast<uint16_t>(raw[offset + 1]) << 8);
+    }
+
+    std::copy_n(raw.begin() + 32, sizeof(config.reserved1), config.reserved1);
+    std::copy_n(raw.begin() + 48, AmxNumTiles, config.rows);
+    std::copy_n(raw.begin() + 56, sizeof(config.reserved2), config.reserved2);
+    return config;
+}
+
+bool
+validateAmxTileConfig(const AmxTileConfig &config, std::string &reason)
+{
+    const auto reject = [&reason](const std::string &message) {
+        reason = message;
+        return false;
+    };
+
+    // Palette zero releases the tiles; bytes 1-63 are ignored.
+    if (config.paletteId == 0) {
+        return true;
+    }
+    if (config.paletteId != 1) {
+        return reject("unsupported palette " +
+                      std::to_string(config.paletteId));
+    }
+    if (!allZero(config.reserved0, sizeof(config.reserved0))) {
+        return reject("reserved bytes 2-15 must be zero");
+    }
+    if (!allZero(config.reserved1, sizeof(config.reserved1))) {
+        return reject("reserved bytes 32-47 must be zero");
+    }
+    if (!allZero(config.reserved2, sizeof(config.reserved2))) {
+        return reject("reserved bytes 56-63 must be zero");
+    }
+
+    for (int tile = 0; tile < AmxNumTiles; ++tile) {
+        const uint16_t rows = config.rows[tile];
+        const uint16_t columns = config.columnBytes[tile];
+
+        if (rows > AmxMaxRows) {
+            return reject("tile " + std::to_string(tile) +
+                          " has more than 16 rows");
+        }
+        if (columns > AmxMaxColumnBytes) {
+            return reject("tile " + std::to_string(tile) +
+                          " has more than 64 column bytes");
+        }
+        if ((rows == 0) != (columns == 0)) {
+            return reject("tile " + std::to_string(tile) +
+                          " has mismatched row and column dimensions");
+        }
+    }
+    return true;
+}
+
+bool
+AmxTileState::loadConfig(const AmxRawTileConfig &raw, std::string &reason)
+{
+    const auto decoded = decodeAmxTileConfig(raw);
+    if (!validateAmxTileConfig(decoded, reason)) {
+        return false;
+    }
+    config = decoded.paletteId == 0 ? AmxTileConfig{} : decoded;
+    tmm = {};
+    configured = (decoded.paletteId != 0);
+    return true;
+}
+
+Addr
+amxAddressOffset(const ExtMachInst &machInst, Addr next_rip, RegVal base,
+                 RegVal index, unsigned scale)
+{
+    const bool rip_relative = machInst.modRM.mod == 0 &&
+                              machInst.modRM.rm == 5 &&
+                              machInst.mode.submode == SixtyFourBitMode;
+    Addr offset = (rip_relative ? next_rip : 0) + base + index * scale +
+                  machInst.displacement;
+    // The address-size override truncates after adding RIP (SDM 2.2.1.6).
+    if (machInst.addrSize == 4) {
+        offset &= 0xffffffffULL;
+    }
+    return offset;
+}
+
+void
+amxTileZeroState(AmxTileState &state, unsigned tmm_idx)
+{
+    panic_if(tmm_idx >= AmxNumTiles, "TILEZERO: bad tmm %u", tmm_idx);
+    state.tmm[tmm_idx] = {};
+    state.config.startRow = 0;
+    DPRINTF(AMX, "TILEZERO tmm%u\n", tmm_idx);
+}
+
+} // namespace X86ISA
+} // namespace gem5
