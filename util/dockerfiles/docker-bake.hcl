@@ -86,7 +86,8 @@ group "clang-compilers" {
     "clang-version-19",
     "clang-version-20",
     "clang-version-21",
-    "clang-version-22"
+    "clang-version-22",
+    "clang-version-23"
   ]
 }
 
@@ -202,6 +203,21 @@ target "clang-version-22" {
   cache-from = ["${CACHE_PREFIX}/clang-version-22:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/clang-version-22:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/clang-version-22:${TAG}"]
+}
+
+target "clang-version-23" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v23 compiler."]
+  args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
+    version = "23"
+    libstdcxx_version = "16"
+    llvm_repository = "resolute"
+  }
+  context = "clang-compiler"
+  cache-from = ["${CACHE_PREFIX}/clang-version-23:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/clang-version-23:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/clang-version-23:${TAG}"]
 }
 
 group "gcc-compilers" {

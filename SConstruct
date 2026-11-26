@@ -753,7 +753,7 @@ for variant_path in variant_paths:
 
     elif env['CLANG']:
         clang_min_version = "14"
-        clang_max_version = "22"
+        clang_max_version = "23"
         clang_version = env['CXXVERSION']
         clang_major_version = compiler_major_version(clang_version)
         if compareVersions(clang_major_version, clang_min_version) < 0 or \
