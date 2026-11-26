@@ -57,6 +57,11 @@ SimObject(
     sim_objects=['TlmGenerator'],
     tags=['arm isa']
 )
+SimObject(
+    'TlmSource.py',
+    sim_objects=['TlmSource', 'PySource'],
+    tags=['arm isa']
+)
 Source("utils.cc", tags=['arm isa'])
 Source("controller.cc", tags=['arm isa'])
 Source('snp_handler.cc', tags=['arm isa'])
@@ -64,5 +69,6 @@ Source('py_snoop_handler.cc', tags=['arm isa'])
 Source('tlm_chi.cc', tags=['arm isa', 'python'])
 Source('tlm_chi_gen.cc', tags=['arm isa', 'python'])
 Source('generator.cc', tags=['arm isa'])
+Source('source.cc', tags=['arm isa'])
 DebugFlag("TLM", tags=['arm isa'])
 DebugFlag("TLMPort", tags=['arm isa'])
