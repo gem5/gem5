@@ -642,8 +642,11 @@ Rename::renameInsts(ThreadID tid)
         //For store instruction, check SQ size and take into account the
         //inflight stores
 
+        const int lsq_entries =
+            inst->isMemRef() ? iew_ptr->ldstQueue.reservedEntries(inst) : 0;
+
         if (inst->isLoad()) {
-            if (calcFreeLQEntries(tid) <= 0) {
+            if (calcFreeLQEntries(tid) < lsq_entries) {
                 DPRINTF(Rename, "[tid:%i] Cannot rename due to no free LQ\n",
                         tid);
                 source = LQ;
@@ -653,7 +656,7 @@ Rename::renameInsts(ThreadID tid)
         }
 
         if (inst->isStore() || inst->isAtomic()) {
-            if (calcFreeSQEntries(tid) <= 0) {
+            if (calcFreeSQEntries(tid) < lsq_entries) {
                 DPRINTF(Rename, "[tid:%i] Cannot rename due to no free SQ\n",
                         tid);
                 source = SQ;
@@ -754,9 +757,9 @@ Rename::renameInsts(ThreadID tid)
         renameDestRegs(inst, inst->threadNumber);
 
         if (inst->isAtomic() || inst->isStore()) {
-            storesInProgress[tid]++;
+            storesInProgress[tid] += lsq_entries;
         } else if (inst->isLoad()) {
-            loadsInProgress[tid]++;
+            loadsInProgress[tid] += lsq_entries;
         }
 
         ++renamed_insts;
