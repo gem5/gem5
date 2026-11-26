@@ -3,6 +3,17 @@
 This directory contains the Dockerfiles used to build the gem5 Docker images.
 The Docker images are used to run gem5 in a containerized environment.
 
+Ubuntu 26.04 is the default environment for development and CI. The
+`ubuntu-26.04_all-dependencies` image includes optional dependencies, while
+`ubuntu-26.04_min-dependencies` checks that gem5 builds with a minimal package
+set. The minimal image does not define the minimum supported dependency
+versions; those continue to follow the oldest supported Ubuntu LTS release.
+
+The Ubuntu 22.04 and 24.04 all-dependencies images remain available for distro
+compatibility checks. Clang 14 through 16 also retain Ubuntu 24.04 bases because
+Ubuntu 26.04 does not package those compilers. The GPU application image uses
+Ubuntu 24.04 for its ROCm 7.0 repositories.
+
 ## The Docker Registry
 
 We use the Github Container Registry to host the gem5 Docker images.
@@ -13,8 +24,8 @@ The images are available at the [ghcr.io/gem5] URI.
 You can pull the gem5 Docker images using the following command:
 
 ```sh
-# Example: Pulling the gem5 Ubuntu 24.04 image with all dependencies
-docker pull ghcr.io/gem5/gem5/ubuntu-24.04_all-dependencies:latest
+# Example: Pulling the gem5 Ubuntu 26.04 image with all dependencies
+docker pull ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
 ```
 
 ## Building the Docker Images
@@ -51,10 +62,10 @@ This specifies how our docker images are built and what platforms they are built
 It is worth consulting these files and noting the "targets" and "groups".
 These can be passed to the buildx command to build that target image or group of images.
 
-For example, the following will build the "ubuntu-24.04_all-dependencies" image:
+For example, the following will build the "ubuntu-26.04_all-dependencies" image:
 
 ```sh
-docker buildx bake ubuntu-24-04_all-dependencies
+docker buildx bake ubuntu-26-04_all-dependencies
 ```
 
 And the following will build all the gcc-compiler images:
@@ -93,4 +104,7 @@ echo $GITHUB_PAT | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 
 As is standard with Docker images, latest image created for each Dockerfile is tagged as `latest`.
 
-When a new major release of gem5 is created the Docker images compatible with that release are tagged with the gem5 version. For example, the images compatible with gem5 v23.1.0.0 are tagged as `v23-0`: `ghcr.io/gem5/gem5/ubuntu-24.04_all-dependencies:v23-0`.
+Images compatible with a gem5 release series are tagged with that series. For
+example, `ghcr.io/gem5/ubuntu-26.04_all-dependencies:v26-0` is an image for gem5
+v26.0. Use the matching release tag when reproducing an older build; the
+`latest` tag follows the current development environment.

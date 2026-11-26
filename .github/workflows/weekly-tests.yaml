@@ -11,8 +11,8 @@ on:
 jobs:
 
     get-testlib-very-long-dirs:
-        runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        runs-on: ubuntu-26.04
+        container: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
@@ -41,7 +41,7 @@ jobs:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
         runs-on: [self-hosted, linux, x64]
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:

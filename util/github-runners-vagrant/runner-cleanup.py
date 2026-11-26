@@ -61,7 +61,7 @@ def cleanup():
         "inspect",
         "--format",
         "{{.Id}}",
-        os.environ.get("HEALTH_IMAGE", "ubuntu:24.04"),
+        os.environ.get("HEALTH_IMAGE", "ubuntu:26.04"),
     )
     retained = []
     for image in images:

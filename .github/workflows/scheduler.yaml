@@ -34,7 +34,7 @@ env:
 
 jobs:
     schedule-workflows:
-        runs-on: ubuntu-24.04
+        runs-on: ubuntu-26.04
         steps:
             # This step is necessary to allow the `gh` CLI to be used in the
             # following steps. The `gh` CLI is used to trigger the workflows.

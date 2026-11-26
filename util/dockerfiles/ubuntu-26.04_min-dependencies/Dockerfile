@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024-2026 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,10 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
-LABEL org.opencontainers.image.description="An Ubuntu 24.04 docker image with minimal dependencies required for building and using gem5."
+LABEL org.opencontainers.image.description="An Ubuntu 26.04 docker image with minimal dependencies required for building and using gem5."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive

@@ -35,7 +35,7 @@
 
 import os
 import sys
-from multiprocessing import Process
+from multiprocessing import get_context
 
 import m5
 
@@ -92,7 +92,7 @@ def run_test(root, interval=0.5, max_checkpoints=5):
         # Create a checkpoint from a separate child process. This enables
         # us to get back to a (mostly) pristine state and restart
         # simulation from the checkpoint.
-        p = Process(
+        p = get_context("fork").Process(
             target=_run_step,
             args=(cpt_name,),
             kwargs={"restore": restore, "interval": interval},

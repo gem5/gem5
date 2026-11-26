@@ -27,6 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# ROCm 7.0 repositories below target Ubuntu 24.04 (noble).
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5

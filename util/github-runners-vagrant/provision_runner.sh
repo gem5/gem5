@@ -42,4 +42,4 @@ if [[ ! -x ./run.sh || ! -x ./config.sh ]]; then
 fi
 # This small image is required by health checks; normal jobs cannot trigger a
 # network pull while the health gate is deciding whether to register.
-docker pull ubuntu:24.04
+docker pull ubuntu:26.04
