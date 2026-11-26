@@ -85,8 +85,11 @@
                     0x3: decode MODRM_RM {
                         0x0: MonitorInst::monitor({{
                            xc->armMonitor(Rax);
-                        }});
+                        }}, IsNonSpeculative);
                         0x1: MwaitInst::mwait({{
+                           if (!xc->getAddrMonitor()->armed) {
+                               return NoFault;
+                           }
                            uint64_t m = 0;          //mem
                            unsigned s = 0x8;        //size
                            unsigned f = 0;          //flags

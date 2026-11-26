@@ -65,6 +65,9 @@ def template MwaitInitiateAcc {{
         unsigned s = 0x8;        //size
         unsigned f = 0;          //flags
         if (!xc->getAddrMonitor()->armed) {
+            // An unarmed MWAIT does not issue a memory request.
+            // Complete it without waiting for a response packet.
+            xc->setMemAccPredicate(false);
             return NoFault;
         }
         initiateMemRead(xc, traceData, xc->getAddrMonitor()->vAddr, s, f);
@@ -76,6 +79,9 @@ def template MwaitCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
             trace::InstRecord *traceData) const
     {
+        if (!pkt) {
+            return NoFault;
+        }
         MicroHalt hltObj(machInst, mnemonic, 0x0);
         if(xc->mwait(pkt)) {
             hltObj.execute(xc, traceData);
@@ -95,6 +101,7 @@ output header {{
             X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
         {
             flags[IsLoad] = 1;
+            flags[IsSerializeBefore] = 1;
         }
 
         std::string generateDisassembly(Addr pc,
