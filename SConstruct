@@ -903,7 +903,7 @@ for variant_path in variant_paths:
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')
         if not conf.CheckZlibVersion():
-            error('zlib 1.2 or newer is required.')
+            error('zlib 1.3 or newer is required.')
         if not conf.CheckM4Version():
             error('GNU m4 1.4 or newer is required.')
 
