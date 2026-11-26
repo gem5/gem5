@@ -29,9 +29,13 @@ please see <http://www.gem5.org/documentation> and
 
 ## Building gem5
 
-To build gem5, you will need the following software: g++ or clang,
-Python (gem5 links in the Python interpreter), SCons, zlib 1.3+, GNU m4
-1.4+, and lastly protobuf if you want trace capture and playback support.
+Supported Ubuntu build environments are Ubuntu 24.04 and 26.04. The oldest
+supported LTS sets the dependency minimums described in
+[Supported build environments](docs/building-dependencies.md).
+
+To build gem5, you will need GCC 13 through 16 or Clang 18 through 22,
+Python 3.12+ (gem5 links in the Python interpreter), SCons 4.5+, zlib 1.3+,
+GNU m4 1.4+, and protobuf 3.21+ for optional trace capture and playback.
 Please see
 <http://www.gem5.org/documentation/general_docs/building> for more details
 concerning the minimum versions of these tools.

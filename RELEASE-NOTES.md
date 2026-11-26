@@ -1,3 +1,14 @@
+# Unreleased
+
+## Build environment support
+
+* Ubuntu 22.04 build support is retired after its standard support period
+  ends in May 2027. The oldest supported Ubuntu LTS is now 24.04.
+* Supported compiler ranges are GCC 13 through 16 and Clang 18 through 22.
+  Compiler images and compilation checks below those ranges are removed.
+* Dependency minimums move to the Ubuntu 24.04 baseline, including Python
+  3.12+, SCons 4.5+, zlib 1.3+, and optional protobuf 3.21+.
+
 # Version 26.0
 
 gem5 Version 26.0 is the first major release of 2026.
