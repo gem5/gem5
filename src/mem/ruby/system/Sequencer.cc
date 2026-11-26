@@ -64,8 +64,13 @@ namespace ruby
 {
 
 Sequencer::Sequencer(const Params &p)
-    : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
-      deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
+    : RubyPort(p),
+      m_outstandReqHist(this),
+      m_latencyHist(this),
+      m_hitLatencyHist(this),
+      m_missLatencyHist(this),
+      m_IncompleteTimes(MachineType_NUM),
+      deadlockCheckEvent([this] { wakeup(); }, "Sequencer deadlock check")
 {
     m_outstanding_count = 0;
 
@@ -93,35 +98,35 @@ Sequencer::Sequencer(const Params &p)
     m_missLatencyHist.init(10);
 
     for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHist.push_back(new statistics::Histogram());
+        m_typeLatencyHist.push_back(new statistics::Histogram(this));
         m_typeLatencyHist[i]->init(10);
 
-        m_hitTypeLatencyHist.push_back(new statistics::Histogram());
+        m_hitTypeLatencyHist.push_back(new statistics::Histogram(this));
         m_hitTypeLatencyHist[i]->init(10);
 
-        m_missTypeLatencyHist.push_back(new statistics::Histogram());
+        m_missTypeLatencyHist.push_back(new statistics::Histogram(this));
         m_missTypeLatencyHist[i]->init(10);
     }
 
     for (int i = 0; i < MachineType_NUM; i++) {
-        m_hitMachLatencyHist.push_back(new statistics::Histogram());
+        m_hitMachLatencyHist.push_back(new statistics::Histogram(this));
         m_hitMachLatencyHist[i]->init(10);
 
-        m_missMachLatencyHist.push_back(new statistics::Histogram());
+        m_missMachLatencyHist.push_back(new statistics::Histogram(this));
         m_missMachLatencyHist[i]->init(10);
 
-        m_IssueToInitialDelayHist.push_back(new statistics::Histogram());
+        m_IssueToInitialDelayHist.push_back(new statistics::Histogram(this));
         m_IssueToInitialDelayHist[i]->init(10);
 
-        m_InitialToForwardDelayHist.push_back(new statistics::Histogram());
+        m_InitialToForwardDelayHist.push_back(new statistics::Histogram(this));
         m_InitialToForwardDelayHist[i]->init(10);
 
         m_ForwardToFirstResponseDelayHist.push_back(
-            new statistics::Histogram());
+            new statistics::Histogram(this));
         m_ForwardToFirstResponseDelayHist[i]->init(10);
 
         m_FirstResponseToCompletionDelayHist.push_back(
-            new statistics::Histogram());
+            new statistics::Histogram(this));
         m_FirstResponseToCompletionDelayHist[i]->init(10);
     }
 
@@ -132,11 +137,12 @@ Sequencer::Sequencer(const Params &p)
             std::vector<statistics::Histogram *>());
 
         for (int j = 0; j < MachineType_NUM; j++) {
-            m_hitTypeMachLatencyHist[i].push_back(new statistics::Histogram());
+            m_hitTypeMachLatencyHist[i].push_back(
+                new statistics::Histogram(this));
             m_hitTypeMachLatencyHist[i][j]->init(10);
 
             m_missTypeMachLatencyHist[i].push_back(
-                new statistics::Histogram());
+                new statistics::Histogram(this));
             m_missTypeMachLatencyHist[i][j]->init(10);
         }
     }

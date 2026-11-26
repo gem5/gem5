@@ -43,76 +43,84 @@
  *  Register with: gem5::statistics::registerHandlers(statsReset, statsDump)
  */
 
+#include <functional>
 #include <iostream>
-#include <list>
+#include <string>
 
 #include "base/statistics.hh"
+#include "sim/root.hh"
 #include "stats.hh"
 
 namespace CxxConfig
 {
 
-void statsPrepare()
+namespace
 {
-    std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
 
-    /* gather_stats -> prepare */
-    for (auto i = stats.begin(); i != stats.end(); ++i)
-        (*i)->prepare();
-}
-
-void statsDump()
+void
+visitStats(gem5::statistics::Group &group, const std::string &prefix,
+           const std::function<void(gem5::statistics::Info *,
+                                    const std::string &)> &visit)
 {
-    std::cerr << "Stats dump\n";
-
-    gem5::statistics::processDumpQueue();
-
-    std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
-
-    statsPrepare();
-
-    /* gather_stats -> convert_value */
-    for (auto i = stats.begin(); i != stats.end(); ++i) {
-        gem5::statistics::Info *stat = *i;
-
-        gem5::statistics::ScalarInfo *scalar =
-            dynamic_cast<gem5::statistics::ScalarInfo *>(stat);
-        gem5::statistics::VectorInfo *vector =
-            dynamic_cast<gem5::statistics::VectorInfo *>(stat);
-
-        if (scalar) {
-            std::cerr << "SCALAR " << stat->name << ' '
-                << scalar->value() << '\n';
-        } else if (vector) {
-            gem5::statistics::VResult results = vector->value();
-
-            unsigned int index = 0;
-            for (auto e = results.begin(); e != results.end(); ++e) {
-                std::cerr << "VECTOR " << stat->name << '[' << index
-                    << "] " << (*e) << '\n';
-                index++;
-            }
-            std::cerr << "VTOTAL " << stat->name << ' '
-                << vector->total() << '\n';
-        } else {
-            std::cerr << "?????? " << stat->name << '\n';
-        }
+    for (auto *stat : group.getStats()) {
+        visit(stat, prefix + stat->name);
+    }
+    for (const auto &[name, child] : group.getStatGroups()) {
+        visitStats(*child, prefix + name + ".", visit);
     }
 }
 
-void statsReset()
+} // anonymous namespace
+
+void
+statsPrepare()
+{
+    visitStats(*gem5::Root::root(), "",
+               [](auto *stat, const auto &) { stat->prepare(); });
+}
+
+void
+statsDump()
+{
+    std::cerr << "Stats dump\n";
+    gem5::statistics::processDumpQueue();
+    gem5::Root::root()->preDumpStats();
+    statsPrepare();
+
+    visitStats(*gem5::Root::root(), "", [](auto *stat, const auto &name) {
+        if (!stat->flags.isSet(gem5::statistics::display)) {
+            return;
+        }
+        if (auto *scalar =
+                dynamic_cast<gem5::statistics::ScalarInfo *>(stat)) {
+            std::cerr << "SCALAR " << name << ' ' << scalar->value() << '\n';
+        } else if (auto *vector =
+                       dynamic_cast<gem5::statistics::VectorInfo *>(stat)) {
+            const auto results = vector->value();
+            for (size_t index = 0; index < results.size(); ++index) {
+                std::cerr << "VECTOR " << name << '[' << index << "] "
+                          << results[index] << '\n';
+            }
+            std::cerr << "VTOTAL " << name << ' ' << vector->total() << '\n';
+        } else {
+            std::cerr << "?????? " << name << '\n';
+        }
+    });
+}
+
+void
+statsReset()
 {
     std::cerr << "Stats reset\n";
-
+    gem5::Root::root()->resetStats();
     gem5::statistics::processResetQueue();
 }
 
-void statsEnable()
+void
+statsEnable()
 {
-    std::list<gem5::statistics::Info *> stats = gem5::statistics::statsList();
-
-    for (auto i = stats.begin(); i != stats.end(); ++i)
-        (*i)->enable();
+    visitStats(*gem5::Root::root(), "",
+               [](auto *stat, const auto &) { stat->enable(); });
 }
 
-}
+} // namespace CxxConfig

@@ -49,11 +49,22 @@ namespace garnet
 {
 
 Router::Router(const Params &p)
-  : BasicRouter(p), Consumer(this), m_latency(p.latency),
-    m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
-    m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
-    m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
-    crossbarSwitch(this)
+    : BasicRouter(p),
+      Consumer(this),
+      m_latency(p.latency),
+      m_virtual_networks(p.virt_nets),
+      m_vc_per_vnet(p.vcs_per_vnet),
+      m_num_vcs(m_virtual_networks * m_vc_per_vnet),
+      m_bit_width(p.width),
+      m_network_ptr(nullptr),
+      routingUnit(this),
+      switchAllocator(this),
+      crossbarSwitch(this),
+      m_buffer_reads(this, "buffer_reads"),
+      m_buffer_writes(this, "buffer_writes"),
+      m_sw_input_arbiter_activity(this, "sw_input_arbiter_activity"),
+      m_sw_output_arbiter_activity(this, "sw_output_arbiter_activity"),
+      m_crossbar_activity(this, "crossbar_activity")
 {
     m_input_unit.clear();
     m_output_unit.clear();
@@ -192,30 +203,15 @@ Router::regStats()
 {
     BasicRouter::regStats();
 
-    m_buffer_reads
-        .name(name() + ".buffer_reads")
-        .flags(statistics::nozero)
-    ;
+    m_buffer_reads.flags(statistics::nozero);
 
-    m_buffer_writes
-        .name(name() + ".buffer_writes")
-        .flags(statistics::nozero)
-    ;
+    m_buffer_writes.flags(statistics::nozero);
 
-    m_crossbar_activity
-        .name(name() + ".crossbar_activity")
-        .flags(statistics::nozero)
-    ;
+    m_crossbar_activity.flags(statistics::nozero);
 
-    m_sw_input_arbiter_activity
-        .name(name() + ".sw_input_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
+    m_sw_input_arbiter_activity.flags(statistics::nozero);
 
-    m_sw_output_arbiter_activity
-        .name(name() + ".sw_output_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
+    m_sw_output_arbiter_activity.flags(statistics::nozero);
 }
 
 void

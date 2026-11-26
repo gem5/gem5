@@ -207,11 +207,11 @@ main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    CxxConfig::statsEnable();
     getEventQueue(0)->dump();
 
     try {
         config_manager->instantiate();
+        CxxConfig::statsEnable();
         if (!checkpoint_restore) {
             config_manager->initState();
             config_manager->startup();

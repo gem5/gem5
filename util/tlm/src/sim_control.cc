@@ -121,11 +121,11 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
         }
     }
 
-    CxxConfig::statsEnable();
     gem5::getEventQueue(0)->dump();
 
     try {
         config_manager->instantiate();
+        CxxConfig::statsEnable();
     } catch (gem5::CxxConfigManager::Exception &e) {
         std::cerr << "Config problem in sim object "
                   << e.name << ": " << e.message << "\n";

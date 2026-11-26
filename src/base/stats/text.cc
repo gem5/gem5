@@ -70,8 +70,6 @@ constexpr auto Nan = std::numeric_limits<float>::quiet_NaN();
 namespace statistics
 {
 
-std::list<Info *> &statsList();
-
 Text::Text()
     : mystream(false), stream(NULL), descriptions(false), spaces(false)
 {

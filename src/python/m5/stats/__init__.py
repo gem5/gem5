@@ -312,11 +312,6 @@ def _bindStatHierarchy(root):
         _bind_obj(name, obj)
 
 
-names = []
-stats_dict = {}
-stats_list = []
-
-
 def enable():
     """Enable the statistics package.  Before the statistics package is
     enabled, all statistics must be created and initialized and once
@@ -334,18 +329,6 @@ def enable():
         if not (stat.flags & flags.display):
             stat.name = "__Stat%06d" % stat.id
 
-    # Legacy stat
-    global stats_list
-    stats_list = list(_m5_stats.statsList())
-
-    for stat in stats_list:
-        check_stat(None, stat)
-
-    stats_list.sort(key=lambda s: s.name.split("."))
-    for stat in stats_list:
-        stats_dict[stat.name] = stat
-        stat.enable()
-
     # New stats
     _visit_stats(check_stat)
     _visit_stats(lambda g, s: s.enable())
@@ -356,10 +339,6 @@ def enable():
 def prepare():
     """Prepare all stats for data access.  This must be done before
     dumping and serialization."""
-
-    # Legacy stats
-    for stat in stats_list:
-        stat.prepare()
 
     # New stats
     _visit_stats(lambda g, s: s.prepare())
@@ -386,10 +365,6 @@ def _dump_to_visitor(visitor, roots=None):
     else:
         # New stats starting from root.
         dump_group(Root.getInstance())
-
-        # Legacy stats
-        for stat in stats_list:
-            stat.visit(visitor)
 
 
 lastDump = 0
@@ -451,10 +426,6 @@ def reset():
     root = Root.getInstance()
     if root:
         root.resetStats()
-
-    # call any other registered legacy stats reset callbacks
-    for stat in stats_list:
-        stat.reset()
 
     _m5_stats.processResetQueue()
 

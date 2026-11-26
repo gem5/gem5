@@ -186,7 +186,7 @@ class InfoAccess
 
   protected:
     /** Set up an info class for this statistic */
-    void setInfo(Group *parent, Info *info);
+    void setInfo(Info *info);
     /** Save Storage class parameters if any */
     void setParams(const StorageParams *params);
     /** Save Storage class parameters if any */
@@ -196,9 +196,6 @@ class InfoAccess
     Info *info();
     /** Grab the information class for this statistic */
     const Info *info() const;
-
-    /** Check if the info is new style stats */
-    bool newStyleStats() const;
 
   public:
     InfoAccess()
@@ -254,14 +251,15 @@ class DataWrap : public InfoAccess
     DataWrap(Group *parent, const char *name, const units::Base *unit,
              const char *desc)
     {
+        panic_if(!parent, "Statistic '%s' requires a statistics::Group parent",
+                 name ? name : "<unnamed>");
         auto info = new Info(self());
-        this->setInfo(parent, info);
+        this->setInfo(info);
 
-        if (parent)
-            parent->addStat(info);
+        parent->addStat(info);
 
         if (name) {
-            info->setName(name, !newStyleStats());
+            info->setName(name);
             info->flags.set(display);
         }
 
@@ -269,14 +267,6 @@ class DataWrap : public InfoAccess
 
         if (desc)
             info->desc = desc;
-
-        // Stat that does not belong to any statistics::Group is a legacy stat
-        std::string common_message = "Legacy stat is a stat that does not "
-            "belong to any statistics::Group. Legacy stat is deprecated.";
-        if (parent == nullptr && name != nullptr)
-            warn(csprintf("`%s` is a legacy stat. %s", name, common_message));
-        else if (parent == nullptr)
-            warn_once("One of the stats is a legacy stat. " + common_message);
     }
 
     virtual ~DataWrap() { delete info(); }
@@ -290,7 +280,7 @@ class DataWrap : public InfoAccess
     name(const std::string &name)
     {
         Info *info = this->info();
-        info->setName(name, !newStyleStats());
+        info->setName(name);
         info->flags.set(display);
         return this->self();
     }
@@ -383,8 +373,8 @@ class DataWrapVec : public DataWrap<Derived, InfoProxyType>
   public:
     typedef InfoProxyType<Derived> Info;
 
-    DataWrapVec(Group *parent = nullptr, const char *name = nullptr,
-                const units::Base *unit=units::Unspecified::get(),
+    DataWrapVec(Group *parent, const char *name = nullptr,
+                const units::Base *unit = units::Unspecified::get(),
                 const char *desc = nullptr)
         : DataWrap<Derived, InfoProxyType>(parent, name, unit, desc)
     {}
@@ -560,8 +550,8 @@ class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
     }
 
   public:
-    ScalarBase(Group *parent = nullptr, const char *name = nullptr,
-               const units::Base *unit=units::Unspecified::get(),
+    ScalarBase(Group *parent, const char *name = nullptr,
+               const units::Base *unit = units::Unspecified::get(),
                const char *desc = nullptr)
         : DataWrap<Derived, ScalarInfoProxy>(parent, name, unit, desc)
     {
@@ -1942,9 +1932,9 @@ class Scalar : public ScalarBase<Scalar, StatStor>
   public:
     using ScalarBase<Scalar, StatStor>::operator=;
 
-    Scalar(Group *parent = nullptr)
-        : ScalarBase<Scalar, StatStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+    Scalar(Group *parent)
+        : ScalarBase<Scalar, StatStor>(parent, nullptr,
+                                       units::Unspecified::get(), nullptr)
     {
     }
 
@@ -1970,9 +1960,9 @@ class Average : public ScalarBase<Average, AvgStor>
   public:
     using ScalarBase<Average, AvgStor>::operator=;
 
-    Average(Group *parent = nullptr)
-        : ScalarBase<Average, AvgStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+    Average(Group *parent)
+        : ScalarBase<Average, AvgStor>(parent, nullptr,
+                                       units::Unspecified::get(), nullptr)
     {
     }
 
@@ -1992,7 +1982,7 @@ class Average : public ScalarBase<Average, AvgStor>
 class Value : public ValueBase<Value>
 {
   public:
-    Value(Group *parent = nullptr)
+    Value(Group *parent)
         : ValueBase<Value>(parent, nullptr, units::Unspecified::get(), nullptr)
     {
     }
@@ -2016,9 +2006,9 @@ class Value : public ValueBase<Value>
 class Vector : public VectorBase<Vector, StatStor>
 {
   public:
-    Vector(Group *parent = nullptr)
-        : VectorBase<Vector, StatStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+    Vector(Group *parent)
+        : VectorBase<Vector, StatStor>(parent, nullptr,
+                                       units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2042,9 +2032,9 @@ class Vector : public VectorBase<Vector, StatStor>
 class AverageVector : public VectorBase<AverageVector, AvgStor>
 {
   public:
-    AverageVector(Group *parent = nullptr)
+    AverageVector(Group *parent)
         : VectorBase<AverageVector, AvgStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2068,9 +2058,9 @@ class AverageVector : public VectorBase<AverageVector, AvgStor>
 class Vector2d : public Vector2dBase<Vector2d, StatStor>
 {
   public:
-    Vector2d(Group *parent = nullptr)
-        : Vector2dBase<Vector2d, StatStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+    Vector2d(Group *parent)
+        : Vector2dBase<Vector2d, StatStor>(parent, nullptr,
+                                           units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2094,9 +2084,9 @@ class Vector2d : public Vector2dBase<Vector2d, StatStor>
 class Distribution : public DistBase<Distribution, DistStor>
 {
   public:
-    Distribution(Group *parent = nullptr)
-        : DistBase<Distribution, DistStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+    Distribution(Group *parent)
+        : DistBase<Distribution, DistStor>(parent, nullptr,
+                                           units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2136,9 +2126,9 @@ class Distribution : public DistBase<Distribution, DistStor>
 class Histogram : public DistBase<Histogram, HistStor>
 {
   public:
-    Histogram(Group *parent = nullptr)
-        : DistBase<Histogram, HistStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+    Histogram(Group *parent)
+        : DistBase<Histogram, HistStor>(parent, nullptr,
+                                        units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2180,9 +2170,9 @@ class StandardDeviation : public DistBase<StandardDeviation, SampleStor>
     /**
      * Construct and initialize this distribution.
      */
-    StandardDeviation(Group *parent = nullptr)
+    StandardDeviation(Group *parent)
         : DistBase<StandardDeviation, SampleStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
         SampleStor::Params *params = new SampleStor::Params;
         this->doInit();
@@ -2219,9 +2209,9 @@ class AverageDeviation : public DistBase<AverageDeviation, AvgSampleStor>
     /**
      * Construct and initialize this distribution.
      */
-    AverageDeviation(Group *parent = nullptr)
+    AverageDeviation(Group *parent)
         : DistBase<AverageDeviation, AvgSampleStor>(
-                parent, nullptr, units::Unspecified::get(), nullptr)
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
         AvgSampleStor::Params *params = new AvgSampleStor::Params;
         this->doInit();
@@ -2255,9 +2245,9 @@ class AverageDeviation : public DistBase<AverageDeviation, AvgSampleStor>
 class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
 {
   public:
-    VectorDistribution(Group *parent = nullptr)
-        : VectorDistBase<VectorDistribution, DistStor>(parent, nullptr,
-            units::Unspecified::get(), nullptr)
+    VectorDistribution(Group *parent)
+        : VectorDistBase<VectorDistribution, DistStor>(
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2302,9 +2292,9 @@ class VectorStandardDeviation
     : public VectorDistBase<VectorStandardDeviation, SampleStor>
 {
   public:
-    VectorStandardDeviation(Group *parent = nullptr)
-        : VectorDistBase<VectorStandardDeviation, SampleStor>(parent, nullptr,
-            units::Unspecified::get(), nullptr)
+    VectorStandardDeviation(Group *parent)
+        : VectorDistBase<VectorStandardDeviation, SampleStor>(
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2346,9 +2336,9 @@ class VectorAverageDeviation
     : public VectorDistBase<VectorAverageDeviation, AvgSampleStor>
 {
   public:
-    VectorAverageDeviation(Group *parent = nullptr)
-        : VectorDistBase<VectorAverageDeviation, AvgSampleStor>(parent,
-            nullptr, units::Unspecified::get(), nullptr)
+    VectorAverageDeviation(Group *parent)
+        : VectorDistBase<VectorAverageDeviation, AvgSampleStor>(
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2505,9 +2495,9 @@ class SparseHistBase : public DataWrap<Derived, SparseHistInfoProxy>
 class SparseHistogram : public SparseHistBase<SparseHistogram, SparseHistStor>
 {
   public:
-    SparseHistogram(Group *parent = nullptr)
-        : SparseHistBase<SparseHistogram, SparseHistStor>(parent, nullptr,
-            units::Unspecified::get(), nullptr)
+    SparseHistogram(Group *parent)
+        : SparseHistBase<SparseHistogram, SparseHistStor>(
+              parent, nullptr, units::Unspecified::get(), nullptr)
     {
     }
 
@@ -2557,7 +2547,7 @@ class Formula : public DataWrapVec<Formula, FormulaInfoProxy>
     /**
      * Create and initialize thie formula, and register it with the database.
      */
-    Formula(Group *parent = nullptr, const char *name = nullptr,
+    Formula(Group *parent, const char *name = nullptr,
             const char *desc = nullptr);
 
     Formula(Group *parent, const char *name, const units::Base *unit,
@@ -2927,11 +2917,6 @@ void processResetQueue();
  * Process all the callbacks in the dump callbacks queue
  */
 void processDumpQueue();
-
-std::list<Info *> &statsList();
-
-typedef std::map<const void *, Info *> MapType;
-MapType &statsMap();
 
 } // namespace statistics
 

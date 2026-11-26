@@ -662,14 +662,12 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
     vectorInstSrcOperand.init(4);
     vectorInstDstOperand.init(4);
 
-    cacheBlockRoundTrip = new statistics::Distribution[wf_size];
     for (int idx = 0; idx < wf_size; ++idx) {
-        std::stringstream namestr;
-        ccprintf(namestr, "%s.cacheBlockRoundTrip%d",
-                 static_cast<Shader *>(parent)->name(), idx);
+        cacheBlockRoundTrip.emplace_back(this);
+        const auto stat_name = csprintf("cacheBlockRoundTrip%d", idx);
         cacheBlockRoundTrip[idx]
             .init(0, 1600000 - 1, 10000)
-            .name(namestr.str())
+            .name(stat_name)
             .desc("Coalsr-to-coalsr time for the Nth cache block in an inst")
             .flags(statistics::pdf | statistics::oneline);
     }

@@ -47,6 +47,7 @@
 #include "sim/cxx_manager.hh"
 #include "sim/debug.hh"
 #include "sim/init_signals.hh"
+#include "sim/root.hh"
 #include "sim/stat_control.hh"
 #include "stats.hh"
 
@@ -140,6 +141,7 @@ Gem5System::instantiate()
 
         /* gem5 startup sequence */
         manager->instantiate(false);
+        gem5::Root::root()->addStatGroup(instanceName.c_str(), obj);
         manager->initState();
         manager->startup();
     } catch (gem5::CxxConfigManager::Exception &e) {
@@ -243,8 +245,6 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
 
     root_manager = new gem5::CxxConfigManager(*config_file);
 
-    CxxConfig::statsEnable();
-
     /* Make the root object */
     try {
         gem5::SimObject *root = root_manager->findObject("root", false);
@@ -288,6 +288,7 @@ Gem5TopLevelModule::end_of_elaboration()
     {
         (*i)();
     }
+    CxxConfig::statsEnable();
 }
 
 }
