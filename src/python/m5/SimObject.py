@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020, 2025 Arm Limited
+# Copyright (c) 2017-2020, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -801,6 +801,7 @@ class SimObject(metaclass=MetaSimObject):
         self._ccParams = None
         self._instantiated = False  # really "cloned"
         self._init_called = True  # Checked so subclasses don't forget __init__
+        self._ini_tags = set(getattr(ancestor, "_ini_tags", ()))
 
         # Clone children specified at class level.  No need for a
         # multidict here since we will be cloning everything.
@@ -1088,6 +1089,24 @@ class SimObject(metaclass=MetaSimObject):
     def ini_str(self):
         return self.path()
 
+    def add_ini_tags(self, tags):
+        """
+        Insert a list of tags (strings) to the SimObject _ini_tags set.
+        A tag with a whitespace is indistinguishable from having two
+        separate tags when printed to the ini file so tags should be
+        restricted to the following grammar:
+
+            [A-Za-z0-9_.-]+
+
+        Args:
+            tags (list): A list of tags
+        """
+        for tag in tags:
+            if not re.fullmatch("[A-Za-z0-9_.-]+", tag):
+                raise AttributeError(f"Wrong format for {tag}")
+
+        self._ini_tags.update(tags)
+
     def find_any(self, ptype):
         if isinstance(self, ptype):
             return self, True
@@ -1193,6 +1212,12 @@ class SimObject(metaclass=MetaSimObject):
 
         if hasattr(self, "type"):
             print(f"type={self.type}", file=ini_file)
+
+        if len(self._ini_tags):
+            print(
+                "ini_tags=%s" % " ".join(sorted(self._ini_tags)),
+                file=ini_file,
+            )
 
         if len(self._children.keys()):
             print(

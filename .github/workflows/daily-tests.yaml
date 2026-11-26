@@ -87,7 +87,7 @@ jobs:
         # Builds gem5.fast using the latest supported clang
         # version. This is cached and used in the CI tests.
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/clang-version-22:latest
+        container: ghcr.io/gem5/clang-version-23:latest
         timeout-minutes: 180
         needs: get-date
 
@@ -99,9 +99,9 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: build/ALL
-                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  key: clang-23-build-ALL-fast-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      clang-build-ALL-fast
+                      clang-23-build-ALL-fast
 
             - name: Clang compilation
               run: scons build/ALL/gem5.fast -j $(nproc)
