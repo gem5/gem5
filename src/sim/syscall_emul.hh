@@ -2380,6 +2380,38 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
+enum class TargetClockKind
+{
+    Realtime,
+    Monotonic,
+    Cpu,
+    Unsupported
+};
+
+template <class OS>
+TargetClockKind
+classifyTargetClock(int clk_id)
+{
+    switch (clk_id) {
+        case OS::TGT_CLOCK_REALTIME:
+        case OS::TGT_CLOCK_REALTIME_ALARM:
+        case OS::TGT_CLOCK_REALTIME_COARSE:
+        case OS::TGT_CLOCK_TAI:
+            return TargetClockKind::Realtime;
+        case OS::TGT_CLOCK_MONOTONIC:
+        case OS::TGT_CLOCK_MONOTONIC_COARSE:
+        case OS::TGT_CLOCK_MONOTONIC_RAW:
+        case OS::TGT_CLOCK_BOOTTIME:
+        case OS::TGT_CLOCK_BOOTTIME_ALARM:
+            return TargetClockKind::Monotonic;
+        case OS::TGT_CLOCK_PROCESS_CPUTIME:
+        case OS::TGT_CLOCK_THREAD_CPUTIME:
+            return TargetClockKind::Cpu;
+        default:
+            return TargetClockKind::Unsupported;
+    }
+}
+
 /// Target clock_gettime() function.
 template <class OS, typename TS = typename OS::timespec>
 SyscallReturn
@@ -2387,26 +2419,15 @@ clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
                   VPtr<TS> tp)
 {
     getElapsedTimeNano(tp->tv_sec, tp->tv_nsec);
-    switch (clk_id) {
-        case OS::TGT_CLOCK_REALTIME:
-        case OS::TGT_CLOCK_REALTIME_ALARM:
-        case OS::TGT_CLOCK_REALTIME_COARSE:
-        case OS::TGT_CLOCK_TAI:
-            tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
-            break;
-        case OS::TGT_CLOCK_MONOTONIC:
-        case OS::TGT_CLOCK_MONOTONIC_COARSE:
-        case OS::TGT_CLOCK_MONOTONIC_RAW:
-        case OS::TGT_CLOCK_BOOTTIME:
-        case OS::TGT_CLOCK_BOOTTIME_ALARM:
-            break;
-        case OS::TGT_CLOCK_PROCESS_CPUTIME:
-        case OS::TGT_CLOCK_THREAD_CPUTIME:
-            // In SE mode, simulated processes run without OS preemption,
-            // so CPU execution time is approximated by elapsed simulated time.
-            break;
-        default:
-            return -EINVAL;
+    const auto clock_kind = classifyTargetClock<OS>(clk_id);
+    if (clock_kind == TargetClockKind::Unsupported) {
+        return -EINVAL;
+    }
+    if (clock_kind == TargetClockKind::Realtime) {
+        tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
+    } else if (clock_kind == TargetClockKind::Cpu) {
+        // In SE mode, simulated processes run without OS preemption, so CPU
+        // execution time is approximated by elapsed simulated time.
     }
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_nsec = htog(tp->tv_nsec, OS::byteOrder);
@@ -2420,6 +2441,10 @@ SyscallReturn
 clock_getresFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
                  VPtr<typename OS::timespec> tp)
 {
+    if (classifyTargetClock<OS>(clk_id) == TargetClockKind::Unsupported) {
+        return -EINVAL;
+    }
+
     // Set resolution at ns, which is what clock_gettime() returns
     tp->tv_sec = 0;
     tp->tv_nsec = 1;
