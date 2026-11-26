@@ -558,7 +558,7 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::activateContext(ThreadID thread_num)
 {
-    if (modelResetPort.state()) {
+    if (resetHolding()) {
         DPRINTF(Thread, "CPU in reset, not activating context %d\n",
                 threadContexts[thread_num]->contextId());
         return;

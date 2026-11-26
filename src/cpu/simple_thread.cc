@@ -49,6 +49,7 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Thread.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
 #include "params/BaseCPU.hh"
@@ -132,6 +133,14 @@ SimpleThread::activate()
 {
     if (status() == ThreadContext::Active)
         return;
+
+    // Keep the thread inactive while the CPU is held in reset. Releasing
+    // reset will activate it again.
+    if (baseCpu->resetHolding()) {
+        DPRINTFS(Thread, baseCpu, "CPU in reset, not activating context %d\n",
+                 _contextId);
+        return;
+    }
 
     lastActivate = curTick();
     _status = ThreadContext::Active;
