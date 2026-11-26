@@ -310,7 +310,7 @@ group "ubuntu-releases" {
     "ubuntu-26-04_all-dependencies",
     "ubuntu-24-04_all-dependencies",
     "ubuntu-22-04_all-dependencies",
-    "ubuntu-24-04_min-dependencies"
+    "ubuntu-26-04_min-dependencies"
   ]
 }
 
@@ -341,13 +341,13 @@ target "ubuntu-22-04_all-dependencies" {
   tags = ["${IMAGE_URI}/ubuntu-22.04_all-dependencies:${TAG}"]
 }
 
-target "ubuntu-24-04_min-dependencies" {
+target "ubuntu-26-04_min-dependencies" {
   inherits = ["common"]
-  annotations = ["index,manifest:org.opencontainers.image.description=An Ubuntu 24.04 image with the minimum dependencies required for building and running gem5."]
-  context = "ubuntu-24.04_min-dependencies"
-  cache-from = ["${CACHE_PREFIX}/ubuntu-24.04_min-dependencies:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/ubuntu-24.04_min-dependencies:${CACHE_TAG}"]
-  tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An Ubuntu 26.04 image with the minimum dependencies required for building and running gem5."]
+  context = "ubuntu-26.04_min-dependencies"
+  cache-from = ["${CACHE_PREFIX}/ubuntu-26.04_min-dependencies:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/ubuntu-26.04_min-dependencies:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/ubuntu-26.04_min-dependencies:${TAG}"]
 }
 
 target "gpu-fs" {
