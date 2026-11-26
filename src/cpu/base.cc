@@ -431,16 +431,19 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
         ppRetiredBranches->notify(1);
 }
 
-BaseCPU::
-BaseCPUStats::BaseCPUStats(statistics::Group *parent)
+BaseCPU::BaseCPUStats::BaseCPUStats(statistics::Group *parent)
     : statistics::Group(parent),
+      numInsts(this),
+      numOps(this),
       ADD_STAT(numCycles, statistics::units::Cycle::get(),
                "Number of cpu cycles simulated"),
-      ADD_STAT(cpi, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
+      ADD_STAT(cpi,
+               statistics::units::Rate<statistics::units::Cycle,
+                                       statistics::units::Count>::get(),
                "CPI: cycles per instruction (core level)"),
-      ADD_STAT(ipc, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
+      ADD_STAT(ipc,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
                "IPC: instructions per cycle (core level)"),
       ADD_STAT(numWorkItemsStarted, statistics::units::Count::get(),
                "Number of work items this cpu started"),
