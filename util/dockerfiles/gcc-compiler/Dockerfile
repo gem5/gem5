@@ -1,4 +1,4 @@
-ARG base=ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+ARG base=ghcr.io/gem5/ubuntu-26.04_all-dependencies:latest
 FROM ${base}
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5

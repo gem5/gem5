@@ -101,10 +101,12 @@ group "clang-compilers" {
   ]
 }
 
+# Ubuntu 26.04 does not provide Clang 14 through 16 packages.
 target "clang-version-14" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v14 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"
     version = "14"
   }
   context = "clang-compiler"
@@ -117,6 +119,7 @@ target "clang-version-15" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v15 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"
     version = "15"
   }
   context = "clang-compiler"
@@ -129,6 +132,7 @@ target "clang-version-16" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v16 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"
     version = "16"
   }
   context = "clang-compiler"
@@ -141,6 +145,7 @@ target "clang-version-17" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v17 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "17"
   }
   context = "clang-compiler"
@@ -153,6 +158,7 @@ target "clang-version-18" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v18 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "18"
   }
   context = "clang-compiler"
@@ -165,6 +171,7 @@ target "clang-version-19" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v19 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "19"
   }
   context = "clang-compiler"
@@ -229,6 +236,7 @@ target "gcc-version-11" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v11 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "11"
   }
   context = "gcc-compiler"
@@ -241,6 +249,7 @@ target "gcc-version-12" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v12 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "12"
   }
   context = "gcc-compiler"
@@ -253,6 +262,7 @@ target "gcc-version-13" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v13 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "13"
   }
   context = "gcc-compiler"
@@ -265,6 +275,7 @@ target "gcc-version-14" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v14 compiler."]
   args = {
+    base = "${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"
     version = "14"
   }
   context = "gcc-compiler"
