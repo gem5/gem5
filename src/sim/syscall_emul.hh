@@ -1285,7 +1285,7 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
     auto &info = *sysinfo;
     memset(&info, 0, sizeof(info));
 
-    info.uptime = tc->getProcessPtr()->secondsSinceEpoch();
+    info.uptime = process->secondsSinceEpoch();
     info.totalram = process->system->memSize();
     for (auto *thread : process->system->threads) {
         if (thread->getProcessPtr() &&
