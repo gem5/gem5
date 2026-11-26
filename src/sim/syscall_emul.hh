@@ -2626,11 +2626,8 @@ getrusageFunc(SyscallDesc *desc, ThreadContext *tc,
         break;
 
       case OS::TGT_RUSAGE_THREAD:
-          // Thread-specific resource usage is not modeled in SE mode.
-          break;
-
-      default:
-          warn("getrusage() does not support parameter %d.", who);
+        // Thread-specific resource usage is not modeled in SE mode.
+        break;
     }
 
     return 0;
