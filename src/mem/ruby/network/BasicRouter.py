@@ -28,6 +28,10 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 
 
+class RubyRouterType(ScopedEnum):
+    vals = ["mesh", "node"]
+
+
 class BasicRouter(ClockedObject):
     type = "BasicRouter"
     cxx_header = "mem/ruby/network/BasicRouter.hh"
@@ -37,3 +41,16 @@ class BasicRouter(ClockedObject):
 
     # only used by garnet
     latency = Param.Cycles(1, "number of cycles inside router")
+
+    # Router type, used only by Garnet's mesh-only stats (no timing effect):
+    #   mesh: a router of the network topology itself, e.g. one grid point
+    #         of a mesh, connected to other mesh routers.
+    #   node: a helper router that only joins the controllers of one node
+    #         (e.g. a core's L1I, L1D and L2) to a single mesh router, like
+    #         the node routers CustomMesh creates. Traffic between those
+    #         controllers turns around in the node router and never enters
+    #         the mesh: the mesh_* stats count mesh routers only and report
+    #         such traffic as core_internal_flits.
+    router_type = Param.RubyRouterType(
+        "mesh", "mesh router or node router (see above)"
+    )

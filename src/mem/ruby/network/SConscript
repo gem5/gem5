@@ -47,7 +47,8 @@ DebugFlag('TraceRoutesDebug')
 
 SimObject('BasicLink.py', sim_objects=[
     'BasicLink', 'BasicExtLink', 'BasicIntLink'])
-SimObject('BasicRouter.py', sim_objects=['BasicRouter'])
+SimObject('BasicRouter.py', sim_objects=['BasicRouter'],
+    enums=['RubyRouterType'])
 SimObject('MessageBuffer.py', sim_objects=['MessageBuffer'],
         enums=['MessageRandomization'])
 SimObject('MessageBufferTest.py', sim_objects=['MessageBufferProducerTest',

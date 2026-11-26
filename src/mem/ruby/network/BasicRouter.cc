@@ -39,6 +39,7 @@ BasicRouter::BasicRouter(const Params &p)
 {
     m_id = p.router_id;
     m_latency = p.latency;
+    m_router_type = p.router_type;
 }
 
 void

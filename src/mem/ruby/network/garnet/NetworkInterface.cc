@@ -176,6 +176,7 @@ NetworkInterface::incrementStats(flit *t_flit)
 
     // Hops
     m_net_ptr->increment_total_hops(t_flit->get_route().hops_traversed);
+    m_net_ptr->record_mesh_stats(vnet, t_flit->get_route());
 }
 
 /*
