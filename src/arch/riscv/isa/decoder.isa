@@ -3333,7 +3333,7 @@ decode QUADRANT default Unknown::unknown() {
                             fd = f16(defaultNaNF16UI);
                         Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
-                    0x3: fminm_h({{
+                    0x2: fminm_h({{
                         float16_t fs1 = f16(freg(Fs1_bits));
                         float16_t fs2 = f16(freg(Fs2_bits));
                         bool less = f16_lt_quiet(fs1, fs2) ||
@@ -3345,7 +3345,7 @@ decode QUADRANT default Unknown::unknown() {
                             Fd_bits = less ? fs1.v : fs2.v;
                         }
                         }}, FloatCmpOp);
-                    0x4: fmaxm_h({{
+                    0x3: fmaxm_h({{
                         float16_t fs1 = f16(freg(Fs1_bits));
                         float16_t fs2 = f16(freg(Fs2_bits));
                         bool greater = f16_lt_quiet(fs2, fs1) ||
