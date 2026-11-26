@@ -1,0 +1,63 @@
+---
+# Copyright (c) 2026 Akanksha Chaudhari, Matt Sinclair
+# (University of Wisconsin-Madison)
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Single-accelerator workload for SALAM kernel tests. The host writes
+# inputs to IN, starts Kernel, and prints OUT after its interrupt.
+# The DMA is unused; a cluster needs a device on its coherency bus.
+# MEM is a scratchpad, whose bandwidth limit can delay one access
+# behind another.
+acc_cluster:
+    - Name: harness_clstr
+    - DMA:
+          - Name: dma
+            MaxReqSize: 128
+            BufferSize: 256
+            PIOMaster: LocalBus
+            Type: NonCoherent
+            InterruptNum: 95
+    - Accelerator:
+          - Name: Kernel
+            IrPath: hw/kernel.ll
+            Profile: kernel
+            PIOSize: 37
+            InterruptNum: 68
+            PIOMaster: LocalBus
+          - Var:
+                - Name: IN
+                  Type: RegisterBank
+                  Size: 64
+          - Var:
+                - Name: OUT
+                  Type: RegisterBank
+                  Size: 64
+          - Var:
+                - Name: MEM
+                  Type: SPM
+                  Size: 64
+hw_config:
+    kernel:
