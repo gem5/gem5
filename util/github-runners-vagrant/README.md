@@ -122,6 +122,30 @@ listener based on a potentially stale GitHub busy flag. After draining, perform
 maintenance, remove the marker and start the service. `systemctl stop` itself is
 not a safe drain: it can terminate a running job.
 
+## Updating the health image to Ubuntu 26.04
+
+Existing VMs need `ubuntu:26.04` before installing the updated health and
+cleanup scripts. The health gate uses `--pull=never`, so a workflow cannot
+download the missing image to recover registration. New VM provisioning pulls
+the image through `provision_runner.sh`.
+
+For each existing runner, use the drain procedure above and wait for the
+service to become inactive. Then, as the runner user inside the guest:
+
+```sh
+cd /home/vagrant
+docker pull ubuntu:26.04
+docker image inspect ubuntu:26.04 >/dev/null
+```
+
+Install the updated runner scripts while the service remains drained. Run
+`./runner-health.sh` as the runner user and require it to pass before removing
+`~/runner-state/drain` and starting `gem5-runner.service`. If `HEALTH_IMAGE` is
+overridden in the service environment, use that same value for the pull,
+inspection, and manual health check. Complete this preparation on each runner
+before switching workflows to the new default. Pulling before the drain is
+insufficient: the old cleanup script can remove the new image after a job.
+
 ## Cleanup and image retention
 
 After a job, the controller deletes `_work`, removes the dedicated VM's
