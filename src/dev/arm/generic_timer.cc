@@ -65,6 +65,20 @@ namespace gem5
 
 using namespace ArmISA;
 
+namespace
+{
+
+// Round to nearest (half away from zero) to match m5.ticks.fromSeconds()
+// (ROUND_HALF_UP) used by Frequency/Clock params and SrcClockDomain.
+Tick
+calcPeriod(uint32_t freq)
+{
+    return static_cast<Tick>(
+        std::round(static_cast<double>(sim_clock::Frequency) / freq));
+}
+
+} // anonymous namespace
+
 SystemCounter::SystemCounter(const SystemCounterParams &p)
     : SimObject(p),
       _enabled(true),
@@ -85,7 +99,7 @@ SystemCounter::SystemCounter(const SystemCounterParams &p)
         "frequency table entries, limit surpassed\n");
     // Set the active frequency to be the base
     _freq = _freqTable.front();
-    _period = (1.0 / _freq) * sim_clock::Frequency;
+    _period = calcPeriod(_freq);
 }
 
 void
@@ -198,7 +212,7 @@ SystemCounter::freqUpdateCallback()
     _activeFreqEntry = _nextFreqEntry;
     _freq = _freqTable[_activeFreqEntry];
     _increment = _freqTable[0] / _freq;
-    _period = (1.0 / _freq) * sim_clock::Frequency;
+    _period = calcPeriod(_freq);
     notifyListeners();
 }
 
@@ -255,7 +269,7 @@ SystemCounter::unserialize(CheckpointIn &cp)
     }
     UNSERIALIZE_SCALAR(_nextFreqEntry);
 
-    _period = (1.0 / _freq) * sim_clock::Frequency;
+    _period = calcPeriod(_freq);
 }
 
 ArchTimer::ArchTimer(const std::string &name,
