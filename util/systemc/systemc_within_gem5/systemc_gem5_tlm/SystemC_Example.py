@@ -36,5 +36,6 @@ class TLM_Target(SystemC_ScModule):
     type = "TLM_Target"
     cxx_class = "Target"
     cxx_header = "systemc_gem5_tlm/sc_tlm_target.hh"
+    override_create = True
     tlm = TlmTargetSocket(32, "TLM target socket")
     system = Param.System(Parent.any, "system")

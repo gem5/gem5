@@ -34,6 +34,7 @@ class SystemC_Printer(SystemC_ScModule):
     type = "SystemC_Printer"
     cxx_class = "Printer"
     cxx_header = "systemc_simple_object/printer.hh"
+    override_create = True
     # This parameter will be available in the SystemC_PrinterParams::create
     # function and can be passed to the c++ object's constructor, used to set
     # one of its member variables, as a parameter to one of its methods, etc.
