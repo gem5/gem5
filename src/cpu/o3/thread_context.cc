@@ -73,6 +73,14 @@ ThreadContext::activate()
     if (thread->status() == gem5::ThreadContext::Active)
         return;
 
+    // Keep the thread inactive while the CPU is held in reset. Releasing
+    // reset will activate it again.
+    if (cpu->resetHolding()) {
+        DPRINTF(O3CPU, "CPU in reset, not activating Thread Context %d\n",
+                threadId());
+        return;
+    }
+
     thread->lastActivate = curTick();
     thread->setStatus(gem5::ThreadContext::Active);
 

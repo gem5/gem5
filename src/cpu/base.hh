@@ -394,6 +394,20 @@ class BaseCPU : public ClockedObject
     virtual void setReset(bool state);
 
     /**
+     * Check whether the reset signal of the CPU is being held.
+     *
+     * Thread contexts must not become active while this is true. Releasing
+     * reset activates them again through setReset().
+     *
+     * @return True if the model reset signal is asserted.
+     */
+    bool
+    resetHolding() const
+    {
+        return modelResetPort.state();
+    }
+
+    /**
      * Flush all TLBs in the CPU.
      *
      * This method is mainly used to flush stale translations when
