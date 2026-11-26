@@ -13,6 +13,9 @@ concurrency:
     group: gem5-docker-publish-${{ github.ref }}
     cancel-in-progress: false
 
+permissions:
+    contents: read
+
 jobs:
 
     obtain-targets:
@@ -36,6 +39,9 @@ jobs:
 
     docker-buildx-bake-base-images:
         if: github.ref == 'refs/heads/develop'
+        permissions:
+            contents: read
+            packages: write
         # This job is used to build the base images -- the images which other
         # images use as a base (usually an Ubuntu release).
         # We do this prior to building the other images to ensure that the base
