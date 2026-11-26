@@ -146,7 +146,7 @@ jobs:
         # for compilation error to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-22:latest
+        container: ghcr.io/gem5/clang-version-23:latest
         needs: [pre-commit, get-date]
         timeout-minutes: 90
         steps:
@@ -157,9 +157,9 @@ jobs:
               uses: actions/cache/restore@v6
               with:
                   path: build/ALL
-                  key: clang-build-ALL-fast-${{ needs.get-date.outputs.date }}
+                  key: clang-23-build-ALL-fast-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      clang-build-ALL-fast
+                      clang-23-build-ALL-fast
 
             - name: Clang compilation
               working-directory: ${{ github.workspace }}
