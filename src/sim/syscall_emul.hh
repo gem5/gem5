@@ -2061,6 +2061,9 @@ readvFunc(SyscallDesc *desc, ThreadContext *tc,
     if (!ffdp)
         return -EBADF;
     int sim_fd = ffdp->getSimFD();
+    if (count > OS::TGT_UIO_MAXIOV) {
+        return -EINVAL;
+    }
 
     SETranslatingPortProxy prox(tc);
     auto tiov = std::make_unique<typename OS::tgt_iovec[]>(count);
@@ -2099,6 +2102,9 @@ writevFunc(SyscallDesc *desc, ThreadContext *tc,
     if (!hbfdp)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
+    if (count > OS::TGT_UIO_MAXIOV) {
+        return -EINVAL;
+    }
 
     SETranslatingPortProxy prox(tc);
     auto hiov = std::make_unique<struct iovec[]>(count);

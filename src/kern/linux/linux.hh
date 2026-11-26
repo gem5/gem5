@@ -73,6 +73,9 @@ class Linux : public OperatingSystem
     typedef uint32_t gid_t;
     //@}
 
+    /// Linux limit for the number of iovecs in readv() and writev().
+    static const int TGT_UIO_MAXIOV = 1024;
+
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems. This type
     /// can be specialized by architecture specific "Linux" classes
