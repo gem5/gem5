@@ -554,15 +554,7 @@ GarnetNetwork::collateStats()
 void
 GarnetNetwork::resetStats()
 {
-    for (int i = 0; i < m_routers.size(); i++) {
-        m_routers[i]->resetStats();
-    }
-    for (int i = 0; i < m_networklinks.size(); i++) {
-        m_networklinks[i]->resetStats();
-    }
-    for (int i = 0; i < m_creditlinks.size(); i++) {
-        m_creditlinks[i]->resetStats();
-    }
+    Network::resetStats();
 }
 
 void

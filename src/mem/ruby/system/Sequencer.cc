@@ -41,6 +41,8 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
+#include <algorithm>
+
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
@@ -280,31 +282,8 @@ Sequencer::functionalWrite(Packet *func_pkt)
 
 void Sequencer::resetStats()
 {
-    m_outstandReqHist.reset();
-    m_latencyHist.reset();
-    m_hitLatencyHist.reset();
-    m_missLatencyHist.reset();
-    for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHist[i]->reset();
-        m_hitTypeLatencyHist[i]->reset();
-        m_missTypeLatencyHist[i]->reset();
-        for (int j = 0; j < MachineType_NUM; j++) {
-            m_hitTypeMachLatencyHist[i][j]->reset();
-            m_missTypeMachLatencyHist[i][j]->reset();
-        }
-    }
-
-    for (int i = 0; i < MachineType_NUM; i++) {
-        m_missMachLatencyHist[i]->reset();
-        m_hitMachLatencyHist[i]->reset();
-
-        m_IssueToInitialDelayHist[i]->reset();
-        m_InitialToForwardDelayHist[i]->reset();
-        m_ForwardToFirstResponseDelayHist[i]->reset();
-        m_FirstResponseToCompletionDelayHist[i]->reset();
-
-        m_IncompleteTimes[i] = 0;
-    }
+    RubyPort::resetStats();
+    std::fill(m_IncompleteTimes.begin(), m_IncompleteTimes.end(), 0);
 }
 
 // Insert the request in the request table. Return RequestStatus_Aliased

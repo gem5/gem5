@@ -233,6 +233,7 @@ Router::collateStats()
 void
 Router::resetStats()
 {
+    BasicRouter::resetStats();
     for (int i = 0; i < m_input_unit.size(); i++) {
             m_input_unit[i]->resetStats();
     }

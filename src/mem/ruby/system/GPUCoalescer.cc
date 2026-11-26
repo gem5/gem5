@@ -361,24 +361,7 @@ GPUCoalescer::printRequestTable(std::stringstream& ss)
 void
 GPUCoalescer::resetStats()
 {
-    m_latencyHist.reset();
-    m_missLatencyHist.reset();
-    for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHist[i]->reset();
-        m_missTypeLatencyHist[i]->reset();
-        for (int j = 0; j < MachineType_NUM; j++) {
-            m_missTypeMachLatencyHist[i][j]->reset();
-        }
-    }
-
-    for (int i = 0; i < MachineType_NUM; i++) {
-        m_missMachLatencyHist[i]->reset();
-
-        m_IssueToInitialDelayHist[i]->reset();
-        m_InitialToForwardDelayHist[i]->reset();
-        m_ForwardToFirstResponseDelayHist[i]->reset();
-        m_FirstResponseToCompletionDelayHist[i]->reset();
-    }
+    RubyPort::resetStats();
 }
 
 void

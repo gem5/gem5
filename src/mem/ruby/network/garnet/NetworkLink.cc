@@ -132,11 +132,9 @@ NetworkLink::wakeup()
 void
 NetworkLink::resetStats()
 {
+    ClockedObject::resetStats();
     for (int i = 0; i < m_vc_load.size(); i++) {
         m_vc_load[i] = 0;
-    }
-    for (int v = 0; v < (int)m_virt_nets; v++) {
-        m_flits_per_vnet[v] = 0;
     }
     m_link_utilized = 0;
 }
