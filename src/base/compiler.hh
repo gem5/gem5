@@ -161,46 +161,9 @@
 // variables, and g++ will actually warn if you use this attribute since it
 // won't do anything there.
 #if defined(__clang__) // clang only.
-#define GEM5_CLASS_VAR_USED GEM5_VAR_USED
+#define GEM5_CLASS_VAR_USED [[maybe_unused]]
 #else
 #define GEM5_CLASS_VAR_USED
 #endif
-
-// Aliases for macros using the deprecated M5 prefix.
-#define M5_VAR_USED GEM5_VAR_USED
-#define M5_NODISCARD GEM5_NO_DISCARD
-#define M5_FALLTHROUGH GEM5_FALLTHROUGH
-#define M5_ATTR_PACKED GEM5_PACKED
-#define M5_NO_INLINE GEM5_NO_INLINE
-#define M5_PUBLIC GEM5_PUBLIC
-#define M5_LOCAL GEM5_LOCAL
-#define M5_WEAK GEM5_WEAK
-#define M5_ALIGNED(x) GEM5_ALIGNED(x)
-#define M5_UNREACHABLE GEM5_UNREACHABLE
-#define M5_LIKELY(x) GEM5_LIKELY(x)
-#define M5_UNLIKELY(x) GEM5_UNLIKELY(x)
-#define M5_FOR_EACH_IN_PACK(...) GEM5_FOR_EACH_IN_PACK(__VA_ARGS__)
-#define M5_CLASS_VAR_USED GEM5_CLASS_VAR_USED
-
-// Deprecated attributes which warn.
-#define GEM5_FALLTHROUGH                                                      \
-    GEM5_DEPRECATED_MACRO_STMT(                                               \
-        GEM5_FALLTHROUGH, ,                                                   \
-        "Please use the [[fallthrough]] attribute directly.");                \
-    [[fallthrough]]
-#define GEM5_DEPRECATED(message)                                              \
-    [[deprecated(message                                                      \
-                 " The GEM5_DEPRECATED macro is also deprecated, "            \
-                 "please use the [[deprecated()]] attribute directly.")]]
-#define GEM5_DEPRECATED_ENUM_VAL(message)                                     \
-    [[deprecated(message                                                      \
-                 " The GEM5_DEPRECATED_ENUM_VAL macro is also "               \
-                 "deprecated, please use the [[deprecated()]] attribute "     \
-                 "directly.")]]
-
-// Deprecated attributes which can't be made to warn without possibly breaking
-// existing code.
-#define GEM5_NO_DISCARD [[nodiscard]]
-#define GEM5_VAR_USED [[maybe_unused]]
 
 #endif // __BASE_COMPILER_HH__

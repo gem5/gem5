@@ -48,9 +48,9 @@
  * port which is to be bound to.  A port handler will usually construct a
  * bridge object in the external system to accomodate the port-to-port
  * mapping but this bridge is not exposed to gem5 other than be the
- * presentation of the SlavePort which can be bound.
+ * presentation of the ResponsePort which can be bound.
  *
- * The external port must provide a gem5 SlavePort interface (with the
+ * The external port must provide a gem5 ResponsePort interface (with the
  * exception of getAddrRanges which is provided by the ExternalSlave
  * object).
  */

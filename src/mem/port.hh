@@ -67,8 +67,6 @@ namespace gem5
 class SimObject;
 
 /** Forward declaration */
-class MasterPort;
-class SlavePort;
 
 class ResponsePort;
 class RequestPort;
@@ -324,12 +322,6 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     void removeTrace(PacketPtr pkt) const;
 };
 
-class [[deprecated]] MasterPort : public RequestPort
-{
-  public:
-    using RequestPort::RequestPort;
-};
-
 /**
  * A ResponsePort is a specialization of a port. In addition to the
  * basic functionality of sending packets to its requestor peer, it also
@@ -527,12 +519,6 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
     {
         panic("%s was not expecting a timing snoop response\n", name());
     }
-};
-
-class [[deprecated]] SlavePort : public ResponsePort
-{
-  public:
-    using ResponsePort::ResponsePort;
 };
 
 inline Tick

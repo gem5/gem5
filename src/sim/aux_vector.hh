@@ -93,47 +93,6 @@ enum Type
 
 } // namespace auxv
 
-#define GEM5_DEPRECATE_AT(NAME, name) M5_AT_##NAME \
-    [[deprecated("Replace M5_AT_" #NAME " with gem5::auxv::" #name)]] = \
-    gem5::auxv::name
-
-enum AuxiliaryVectorType
-{
-    GEM5_DEPRECATE_AT(NULL, Null),
-    GEM5_DEPRECATE_AT(IGNORE, Ignore),
-    GEM5_DEPRECATE_AT(EXECFD, Execfd),
-    GEM5_DEPRECATE_AT(PHDR, Phdr),
-    GEM5_DEPRECATE_AT(PHENT, Phent),
-    GEM5_DEPRECATE_AT(PHNUM, Phnum),
-    GEM5_DEPRECATE_AT(PAGESZ, Pagesz),
-    GEM5_DEPRECATE_AT(BASE, Base),
-    GEM5_DEPRECATE_AT(FLAGS, Flags),
-    GEM5_DEPRECATE_AT(ENTRY, Entry),
-    GEM5_DEPRECATE_AT(NOTELF, Notelf),
-    GEM5_DEPRECATE_AT(UID, Uid),
-    GEM5_DEPRECATE_AT(EUID, Euid),
-    GEM5_DEPRECATE_AT(GID, Gid),
-    GEM5_DEPRECATE_AT(EGID, Egid),
-    GEM5_DEPRECATE_AT(PLATFORM, Platform),
-    GEM5_DEPRECATE_AT(HWCAP, Hwcap),
-    GEM5_DEPRECATE_AT(CLKTCK, Clktck),
-    GEM5_DEPRECATE_AT(SECURE, Secure),
-    M5_BASE_PLATFORM [[deprecated(
-            "Replace M5_BASE_PLATFORM with gem5::auxv::BasePlatform")]] =
-        gem5::auxv::BasePlatform,
-    GEM5_DEPRECATE_AT(RANDOM, Random),
-    GEM5_DEPRECATE_AT(HWCAP2, Hwcap2),
-    GEM5_DEPRECATE_AT(EXECFN, Execfn),
-    GEM5_DEPRECATE_AT(VECTOR_SIZE, VectorSize)
-};
-
-#undef GEM5_DEPRECATE_AT
-
-template <class IntType>
-using AuxVector [[deprecated(
-        "The AuxVector template is now in the gem5::auxv namespace.")]] =
-        gem5::auxv::AuxVector<IntType>;
-
 } // namespace gem5
 
 #endif // __AUX_VECTOR_HH__

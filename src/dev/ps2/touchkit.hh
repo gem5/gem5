@@ -99,6 +99,4 @@ class TouchKit : public Device, public VncMouse
 } // namespace ps2
 } // namespace gem5
 
-GEM5_DEPRECATED_CLASS(PS2TouchKit, gem5::ps2::TouchKit);
-
 #endif // __DEV_PS2_TOUCHKIT_HH__

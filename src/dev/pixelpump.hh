@@ -294,7 +294,7 @@ class BasePixelPump
     /**
      * Callback helper class with suspend support.
      *
-     * Unlike a normal EventWrapper, this class suspends an event on
+     * Unlike a normal MemberEventWrapper, this class suspends an event on
      * drain() and restarts it at drainResume(). The suspend operation
      * stores the tick relative to curTick() and then deschedules the
      * event. The resume operation schedules the event at curTick()
