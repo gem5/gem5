@@ -86,10 +86,10 @@ nameIsUnique(Objects *objects, Events *events, const std::string &name)
 std::shared_mutex globalObjectLock;
 std::stack<sc_core::sc_object *> objParentStack;
 
-} // anonymous namespace
-
 Objects topLevelObjects;
 Objects allObjects;
+
+} // anonymous namespace
 
 Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, nullptr) {}
 
@@ -103,7 +103,7 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
 
     parent = pickParentObj();
 
-    Module *n = newModule();
+    Module *n = getUnfinishedModule();
     if (n) {
         // We are a module in the process of being constructed.
         n->finish(this);
@@ -330,5 +330,137 @@ pickParentObj()
 
 void pushParentObj(sc_core::sc_object *obj) { objParentStack.push(obj); }
 void popParentObj() { objParentStack.pop(); }
+
+Object *
+newObject(sc_core::sc_object *sc_obj)
+{
+    return new Object(sc_obj);
+}
+
+Object *
+newObject(sc_core::sc_object *sc_obj, const char *name)
+{
+    return new Object(sc_obj, name);
+}
+
+Object *
+copyObject(sc_core::sc_object *sc_obj, const Object *other)
+{
+    return new Object(sc_obj, *other);
+}
+
+void
+destroyObject(Object *obj)
+{
+    delete obj;
+}
+
+void
+assignObject(Object *obj, const Object *other)
+{
+    *obj = *other;
+}
+
+const char *
+getObjectName(const Object *obj)
+{
+    return obj->name();
+}
+
+const char *
+getObjectBasename(const Object *obj)
+{
+    return obj->basename();
+}
+
+void
+printObject(const Object *obj, std::ostream &out)
+{
+    obj->print(out);
+}
+
+void
+dumpObject(const Object *obj, std::ostream &out)
+{
+    obj->dump(out);
+}
+
+const std::vector<sc_core::sc_object *> &
+getChildObjects(const Object *obj)
+{
+    return obj->get_child_objects();
+}
+
+const std::vector<sc_core::sc_event *> &
+getChildEvents(const Object *obj)
+{
+    return obj->get_child_events();
+}
+
+sc_core::sc_object *
+getParentObject(const Object *obj)
+{
+    return obj->get_parent_object();
+}
+
+bool
+addObjectAttribute(Object *obj, sc_core::sc_attr_base &attr)
+{
+    return obj->add_attribute(attr);
+}
+
+sc_core::sc_attr_base *
+getObjectAttribute(Object *obj, const std::string &name)
+{
+    return obj->get_attribute(name);
+}
+
+sc_core::sc_attr_base *
+removeObjectAttribute(Object *obj, const std::string &name)
+{
+    return obj->remove_attribute(name);
+}
+
+void
+removeAllObjectAttributes(Object *obj)
+{
+    obj->remove_all_attributes();
+}
+
+int
+getNumObjectAttributes(const Object *obj)
+{
+    return obj->num_attributes();
+}
+
+sc_core::sc_attr_cltn &
+getObjectAttrCltn(Object *obj)
+{
+    return obj->attr_cltn();
+}
+
+const sc_core::sc_attr_cltn &
+getObjectAttrCltn(const Object *obj)
+{
+    return obj->attr_cltn();
+}
+
+sc_core::sc_simcontext *
+getObjectSimcontext(const Object *obj)
+{
+    return obj->simcontext();
+}
+
+const std::vector<sc_core::sc_object *> &
+getTopLevelObjects()
+{
+    return topLevelObjects;
+}
+
+const std::vector<sc_core::sc_object *> &
+getAllObjects()
+{
+    return allObjects;
+}
 
 } // namespace sc_gem5

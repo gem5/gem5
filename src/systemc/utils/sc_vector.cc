@@ -46,8 +46,7 @@
 
 #include <sstream>
 
-#include "base/cprintf.hh"
-#include "systemc/core/object.hh"
+#include "systemc/core/object_ops.hh"
 #include "systemc/ext/utils/messages.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/ext/utils/sc_vector.hh"
@@ -74,7 +73,7 @@ sc_vector_base::checkIndex(size_type index) const
 {
     if (index >= size()) {
         std::ostringstream ss;
-        gem5::ccprintf(ss, "%s[%d] >= size() = %d", name(), index, size());
+        ss << name() << "[" << index << "] >= size() = " << size();
         SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, ss.str().c_str());
         sc_abort();
     }

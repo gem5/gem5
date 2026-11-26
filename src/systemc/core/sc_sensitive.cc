@@ -25,14 +25,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "systemc/core/process.hh"
+#include "systemc/ext/core/sc_sensitive.hh"
+#include "systemc/core/sensitivity_ops.hh"
 #include "systemc/ext/channel/sc_in.hh"
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_main.hh"
-#include "systemc/ext/core/sc_sensitive.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core

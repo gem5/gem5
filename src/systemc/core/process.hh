@@ -36,6 +36,7 @@
 #include "systemc/core/list.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/object.hh"
+#include "systemc/core/process_ops.hh"
 #include "systemc/core/sched_event.hh"
 #include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
@@ -236,10 +237,6 @@ class Reset
     bool _sync;
     bool _value;
 };
-
-void newReset(const sc_core::sc_port_base *pb, Process *p, bool s, bool v);
-void newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p,
-        bool s, bool v);
 
 } // namespace sc_gem5
 

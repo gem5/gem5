@@ -25,9 +25,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_mutex.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
+#include "systemc/ext/core/sc_process_handle.hh"
 
 namespace sc_core
 {
@@ -53,14 +53,14 @@ sc_mutex::trylock()
 {
     if (holder.valid())
         return -1;
-    holder = ::sc_gem5::scheduler().current();
+    holder = ::sc_gem5::getCurrentProcess();
     return 0;
 }
 
 int
 sc_mutex::unlock()
 {
-    if (holder != ::sc_gem5::scheduler().current()) {
+    if (holder != ::sc_gem5::getCurrentProcess()) {
         return -1;
     }
 

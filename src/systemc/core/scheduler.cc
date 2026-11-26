@@ -27,6 +27,8 @@
 
 #include "systemc/core/scheduler.hh"
 
+#include <cstdint>
+
 #include "base/fiber.hh"
 #include "base/logging.hh"
 #include "sim/eventq.hh"
@@ -35,6 +37,8 @@
 #include "systemc/core/sc_main_fiber.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/core/sc_prim.hh"
+#include "systemc/ext/core/sc_process_handle.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/utils/report.hh"
@@ -502,6 +506,12 @@ Process *
 getCurrentProcess()
 {
     return scheduler().current();
+}
+
+uint64_t
+getChangeStamp()
+{
+    return scheduler().changeStamp();
 }
 
 namespace {

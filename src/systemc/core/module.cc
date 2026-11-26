@@ -30,8 +30,10 @@
 #include <cassert>
 
 #include "base/logging.hh"
+#include "systemc/core/object.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_export.hh"
+#include "systemc/ext/core/sc_object.hh"
 #include "systemc/ext/core/sc_port.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
@@ -195,7 +197,7 @@ Module::endOfSimulation()
 }
 
 Module *
-currentModule()
+getCurrentModule()
 {
     if (_modules.empty())
         return nullptr;
@@ -203,7 +205,7 @@ currentModule()
 }
 
 Module *
-newModuleChecked()
+getUnfinishedModuleChecked()
 {
     if (!_new_module)
         SC_REPORT_ERROR(sc_core::SC_ID_MODULE_NAME_STACK_EMPTY_, "");
@@ -211,9 +213,81 @@ newModuleChecked()
 }
 
 Module *
-newModule()
+getUnfinishedModule()
 {
     return _new_module;
+}
+
+Module *
+pickParentModule()
+{
+    ::sc_core::sc_object *obj = pickParentObj();
+    auto mod = dynamic_cast<::sc_core::sc_module *>(obj);
+    if (!mod) {
+        return nullptr;
+    }
+    return Module::fromScModule(mod);
+}
+
+Module *
+newModule(const char *name)
+{
+    return new Module(name);
+}
+
+void
+popModule(Module *m)
+{
+    m->pop();
+}
+
+void
+destroyModule(Module *m)
+{
+    delete m;
+}
+
+const char *
+getModuleName(const Module *m)
+{
+    return m->name();
+}
+
+Object *
+getModuleObject(Module *m)
+{
+    return m->obj();
+}
+
+void
+endModule(Module *m)
+{
+    m->endModule();
+}
+
+void
+markModuleDeprecatedConstructor(Module *m)
+{
+    m->deprecatedConstructor();
+}
+
+void
+bindModulePorts(Module *m,
+                std::vector<const sc_core::sc_bind_proxy *> &proxies)
+{
+    m->bindPorts(proxies);
+}
+
+void
+addModulePort(Module *m, sc_core::sc_port_base *port)
+{
+    m->ports.push_back(port);
+}
+
+void
+addModuleExport(Module *m, sc_core::sc_export_base *exp)
+{
+    m->exports.push_back(exp);
 }
 
 std::list<Module *> allModules;

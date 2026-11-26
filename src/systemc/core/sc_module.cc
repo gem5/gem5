@@ -26,22 +26,24 @@
  */
 
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "base/logging.hh"
-#include "systemc/core/event.hh"
-#include "systemc/core/kernel.hh"
-#include "systemc/core/module.hh"
-#include "systemc/core/object.hh"
-#include "systemc/core/port.hh"
+#include "systemc/core/module_ops.hh"
+#include "systemc/core/object_ops.hh"
+#include "systemc/core/process_ops.hh"
 #include "systemc/core/process_types.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/core/sensitivity.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/sc_in.hh"
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_out.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/messages.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/dt/bit/sc_logic.hh"
@@ -119,7 +121,10 @@ sc_module::gem5_getPort(const std::string &if_name, int idx)
     fatal("%s does not have any port named %s\n", name(), if_name);
 }
 
-sc_module::~sc_module() { delete _gem5_module; }
+sc_module::~sc_module()
+{
+    ::sc_gem5::destroyModule(_gem5_module);
+}
 
 void
 sc_module::operator () (const sc_bind_proxy &p001,
@@ -210,7 +215,7 @@ sc_module::operator () (const sc_bind_proxy &p001,
     insert(p053) && insert(p054) && insert(p055) && insert(p056) &&
     insert(p057) && insert(p058) && insert(p059) && insert(p060) &&
     insert(p061) && insert(p062) && insert(p063) && insert(p064);
-    _gem5_module->bindPorts(proxies);
+    ::sc_gem5::bindModulePorts(_gem5_module, proxies);
 }
 
 sc_module &
@@ -244,22 +249,24 @@ sc_module::operator , (sc_port_base &pb)
 const std::vector<sc_object *> &
 sc_module::get_child_objects() const
 {
-    return _gem5_module->obj()->get_child_objects();
+    return ::sc_gem5::getChildObjects(
+        ::sc_gem5::getModuleObject(_gem5_module));
 }
 
 const std::vector<sc_event *> &
 sc_module::get_child_events() const
 {
-    return _gem5_module->obj()->get_child_events();
+    return ::sc_gem5::getChildEvents(::sc_gem5::getModuleObject(_gem5_module));
 }
 
-sc_module::sc_module() :
-    sc_object(sc_gem5::newModuleChecked()->name()),
-    _gem5_module(sc_gem5::currentModule())
+sc_module::sc_module()
+    : sc_object(
+          ::sc_gem5::getModuleName(::sc_gem5::getUnfinishedModuleChecked())),
+      _gem5_module(::sc_gem5::getCurrentModule())
 {
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
     }
 }
@@ -267,20 +274,20 @@ sc_module::sc_module() :
 sc_module::sc_module(const sc_module_name &) : sc_module() {}
 sc_module::sc_module(const char *_name) : sc_module(sc_module_name(_name))
 {
-    _gem5_module->deprecatedConstructor();
+    ::sc_gem5::markModuleDeprecatedConstructor(_gem5_module);
     SC_REPORT_WARNING(SC_ID_BAD_SC_MODULE_CONSTRUCTOR_, _name);
 }
 sc_module::sc_module(const std::string &_name) :
     sc_module(sc_module_name(_name.c_str()))
 {
-    _gem5_module->deprecatedConstructor();
+    ::sc_gem5::markModuleDeprecatedConstructor(_gem5_module);
     SC_REPORT_WARNING(SC_ID_BAD_SC_MODULE_CONSTRUCTOR_, _name.c_str());
 }
 
 void
 sc_module::end_module()
 {
-    _gem5_module->endModule();
+    ::sc_gem5::endModule(_gem5_module);
 }
 
 void
@@ -665,8 +672,9 @@ void
 wait(int n)
 {
     if (n <= 0) {
-        std::string msg = gem5::csprintf("n = %d", n);
-        SC_REPORT_ERROR(SC_ID_WAIT_N_INVALID_, msg.c_str());
+        std::ostringstream ss;
+        ss << "n = " << n;
+        SC_REPORT_ERROR(SC_ID_WAIT_N_INVALID_, ss.str().c_str());
     }
     sc_gem5::Process *p = sc_gem5::scheduler().current();
     p->waitCount(n - 1);
@@ -825,33 +833,25 @@ sc_gen_unique_name(const char *seed)
         seed = "unnamed";
     }
 
-    auto mod = sc_gem5::pickParentModule();
-    if (mod)
-        return mod->uniqueName(seed);
-
-    sc_gem5::Process *p = sc_gem5::scheduler().current();
-    if (p)
-        return p->uniqueName(seed);
-
-    return ::sc_gem5::globalNameGen().gen(seed);
+    return ::sc_gem5::genUniqueName(seed);
 }
 
 bool
 sc_hierarchical_name_exists(const char *name)
 {
-    return sc_gem5::findEvent(name) || ::sc_gem5::findObject(name);
+    return ::sc_gem5::hierarchicalNameExists(name);
 }
 
 bool
 sc_start_of_simulation_invoked()
 {
-    return ::sc_gem5::kernel->startOfSimulationComplete();
+    return ::sc_gem5::startOfSimulationComplete();
 }
 
 bool
 sc_end_of_simulation_invoked()
 {
-    return ::sc_gem5::kernel->endOfSimulationComplete();
+    return ::sc_gem5::endOfSimulationComplete();
 }
 
 sc_module *

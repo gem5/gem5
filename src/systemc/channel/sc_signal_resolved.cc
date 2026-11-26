@@ -25,10 +25,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "systemc/core/process.hh"
-#include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_signal_resolved.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
+#include "systemc/ext/core/sc_process_handle.hh"
 
 namespace sc_core
 {
@@ -48,7 +47,7 @@ void sc_signal_resolved::register_port(sc_port_base &, const char *) {}
 void
 sc_signal_resolved::write(const sc_dt::sc_logic &l)
 {
-    ::sc_gem5::Process *p = ::sc_gem5::scheduler().current();
+    ::sc_gem5::Process *p = ::sc_gem5::getCurrentProcess();
 
     auto it = inputs.find(p);
     if (it == inputs.end()) {

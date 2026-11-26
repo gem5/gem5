@@ -25,12 +25,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/cprintf.hh"
-#include "systemc/core/module.hh"
-#include "systemc/core/scheduler.hh"
+#include <sstream>
+
+#include "systemc/core/module_ops.hh"
+#include "systemc/core/sim_state_ops.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -42,13 +44,12 @@ void
 reportError(const char *id, const char *add_msg,
         const char *name, const char *kind)
 {
-    std::string msg;
+    std::ostringstream ss;
     if (add_msg)
-        msg = gem5::csprintf("%s: export '%s' (%s)", add_msg, name, kind);
-    else
-        msg = gem5::csprintf("export '%s' (%s)", name, kind);
+        ss << add_msg << ": ";
+    ss << "export '" << name << "' (" << kind << ")";
 
-    SC_REPORT_ERROR(id, msg.c_str());
+    SC_REPORT_ERROR(id, ss.str().c_str());
 }
 
 }
@@ -59,7 +60,7 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
         reportError(SC_ID_INSERT_EXPORT_, "simulation running",
                 name(), kind());
     }
-    if (::sc_gem5::scheduler().elaborationDone()) {
+    if (::sc_gem5::elaborationDone()) {
         reportError(SC_ID_INSERT_EXPORT_, "elaboration done", name(), kind());
     }
 
@@ -67,7 +68,7 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
     if (!m)
         reportError(SC_ID_EXPORT_OUTSIDE_MODULE_, nullptr, name(), kind());
     else
-        m->exports.push_back(this);
+        ::sc_gem5::addModuleExport(m, this);
 }
 sc_export_base::~sc_export_base() {}
 

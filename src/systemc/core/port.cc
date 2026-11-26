@@ -28,6 +28,7 @@
 #include "systemc/core/port.hh"
 
 #include "base/logging.hh"
+#include "systemc/core/port_ops.hh"
 #include "systemc/core/process.hh"
 #include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/messages.hh"
@@ -186,6 +187,42 @@ void
 Port::endOfSimulation()
 {
     portBase->end_of_simulation();
+}
+
+Port *
+newPort(::sc_core::sc_port_base *port_base, int max)
+{
+    return new Port(port_base, max);
+}
+
+void
+destroyPort(Port *port)
+{
+    delete port;
+}
+
+int
+getPortMaxSize(Port *port)
+{
+    return port->maxSize();
+}
+
+int
+getPortSize(Port *port)
+{
+    return port->size();
+}
+
+void
+bindPortToInterface(Port *port, ::sc_core::sc_interface *interface)
+{
+    port->bind(interface);
+}
+
+void
+bindPortToPort(Port *port, ::sc_core::sc_port_base *other)
+{
+    port->bind(other);
 }
 
 std::list<Port *> allPorts;

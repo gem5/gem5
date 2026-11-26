@@ -27,10 +27,11 @@
 
 #include <sstream>
 
-#include "systemc/core/scheduler.hh"
+#include "systemc/core/process_ops.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_signal.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/core/sc_process_handle.hh"
 
 namespace sc_gem5
 {
@@ -122,12 +123,12 @@ WriteChecker<sc_core::SC_ONE_WRITER>::checkPort(sc_core::sc_port_base &port,
 void
 WriteChecker<sc_core::SC_ONE_WRITER>::checkWriter()
 {
-    Process *p = scheduler().current();
+    Process *p = getCurrentProcess();
     if (!p)
         return;
     uint64_t stamp = getChangeStamp();
     if (proc && proc != p)
-        reportSignalError(sig, proc, p);
+        reportSignalError(sig, getProcessObject(proc), getProcessObject(p));
     proc = p;
     writeStamp = stamp;
 }
@@ -146,12 +147,13 @@ WriteChecker<sc_core::SC_MANY_WRITERS>::checkPort(sc_core::sc_port_base &port,
 void
 WriteChecker<sc_core::SC_MANY_WRITERS>::checkWriter()
 {
-    Process *p = scheduler().current();
+    Process *p = getCurrentProcess();
     if (!p)
         return;
     uint64_t stamp = getChangeStamp();
     if (writeStamp == stamp && proc && proc != p)
-        reportSignalError(sig, proc, p, writeStamp == stamp);
+        reportSignalError(sig, getProcessObject(proc), getProcessObject(p),
+                          writeStamp == stamp);
     proc = p;
     writeStamp = stamp;
 }
@@ -187,7 +189,7 @@ ScSignalBaseBinary::negedge() const
 void
 ScSignalBaseBinary::_signalReset(sc_gem5::Reset *r)
 {
-    r->update();
+    updateReset(r);
 }
 
 void

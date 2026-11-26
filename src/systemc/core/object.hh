@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 
+#include "systemc/core/object_ops.hh"
 #include "systemc/ext/core/sc_attr.hh"
 #include "systemc/ext/core/sc_object.hh"
 
@@ -107,14 +108,7 @@ class Object
 
 std::string pickUniqueName(::sc_core::sc_object *parent, std::string name);
 
-extern Objects topLevelObjects;
-extern Objects allObjects;
-
-sc_core::sc_object *findObject(const char *name);
-
 sc_core::sc_object *pickParentObj();
-void pushParentObj(sc_core::sc_object *obj);
-void popParentObj();
 
 } // namespace sc_gem5
 

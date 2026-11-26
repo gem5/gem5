@@ -436,4 +436,16 @@ newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p, bool s, bool v)
         delete reset;
 }
 
+void
+updateReset(Reset *reset)
+{
+    reset->update();
+}
+
+sc_core::sc_object *
+getProcessObject(Process *p)
+{
+    return p;
+}
+
 } // namespace sc_gem5

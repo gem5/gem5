@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 
+#include "systemc/core/module_ops.hh"
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_module.hh"
 
@@ -133,19 +134,8 @@ class Module
     void endOfSimulation();
 };
 
-Module *currentModule();
-Module *newModuleChecked();
-Module *newModule();
+Module *getUnfinishedModule();
 
-static inline Module *
-pickParentModule()
-{
-    ::sc_core::sc_object *obj = pickParentObj();
-    auto mod = dynamic_cast<::sc_core::sc_module *>(obj);
-    if (!mod)
-        return nullptr;
-    return Module::fromScModule(mod);
-}
 static inline void
 pushParentModule(Module *m)
 {
