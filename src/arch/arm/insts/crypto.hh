@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2025 ARM Limited
+ * Copyright (c) 2018, 2025-2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,15 +94,28 @@ class Crypto
     void aesInvShiftRows(uint8_t *output, uint8_t *input);
     void aesAddRoundKey(uint8_t *output, uint8_t *input, uint8_t *key);
 
-    uint32_t ror(uint32_t x, uint8_t shift)
+    uint32_t
+    ror(uint32_t x, uint8_t shift)
     {
         return (x >> shift) | (x << (32 - shift));
+    }
+
+    uint64_t
+    ror(uint64_t x, uint8_t shift)
+    {
+        return (x >> shift) | (x << (64 - shift));
     }
 
     uint32_t
     rol(uint32_t x, uint8_t shift)
     {
         return (x << shift) | (x >> (32 - shift));
+    }
+
+    uint64_t
+    rol(uint64_t x, uint8_t shift)
+    {
+        return (x << shift) | (x >> (64 - shift));
     }
 
     uint32_t choose(uint32_t X, uint32_t Y, uint32_t Z)
@@ -160,6 +173,31 @@ class Crypto
 
     void sm4e(uint32_t *output, uint32_t *input, uint32_t *key);
     void sm4ekey(uint32_t *output, uint32_t *input, uint32_t *key);
+
+    void sm3partw1(uint32_t *output, uint32_t *input, uint32_t *input2);
+    void sm3partw2(uint32_t *output, uint32_t *input, uint32_t *input2);
+    void sm3ss1(uint32_t *output, uint32_t *input, uint32_t *input2,
+                uint32_t *input3);
+    void sm3tt1a(uint32_t *output, uint32_t *input, uint32_t *input2,
+                 uint8_t imm);
+    void sm3tt1b(uint32_t *output, uint32_t *input, uint32_t *input2,
+                 uint8_t imm);
+    void sm3tt2a(uint32_t *output, uint32_t *input, uint32_t *input2,
+                 uint8_t imm);
+    void sm3tt2b(uint32_t *output, uint32_t *input, uint32_t *input2,
+                 uint8_t imm);
+
+    void bcax(uint64_t *output, uint64_t *input, uint64_t *input2,
+              uint64_t *input3);
+    void eor3(uint64_t *output, uint64_t *input, uint64_t *input2,
+              uint64_t *input3);
+    void rax1(uint64_t *output, uint64_t *input, uint64_t *input2);
+    void xar(uint64_t *output, uint64_t *input, uint64_t *input2, uint8_t imm);
+
+    void sha512h(uint64_t *output, uint64_t *input, uint64_t *input2);
+    void sha512h2(uint64_t *output, uint64_t *input, uint64_t *input2);
+    void sha512su0(uint64_t *output, uint64_t *input);
+    void sha512su1(uint64_t *output, uint64_t *input, uint64_t *input2);
 };
 
 } // namespace ArmISA

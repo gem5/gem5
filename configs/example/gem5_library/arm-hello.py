@@ -62,7 +62,9 @@ cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600(size="32MiB")
 
 # We use a simple Timing processor with one core.
-processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.ARM, num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.TIMING, isa=ISA.ARM, num_cores=1, clk_freq="3GHz"
+)
 
 # The gem5 library simple board which can be used to run SE-mode simulations.
 board = SimpleBoard(

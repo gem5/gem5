@@ -108,7 +108,7 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
                 proc->name());
     }
 
-    scheduler.reg(proc);
+    scheduler().reg(proc);
 
     return proc;
 }

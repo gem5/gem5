@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 //
-// Copyright (c) 2018, 2024 Arm Limited
+// Copyright (c) 2018, 2024, 2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -46,6 +46,37 @@ let {{
         }
     ''' + simd64EnabledCheckCode
 
+    cryptoRegRegRegRegPrefix = '''
+        Crypto crypto;
+        RegVect srcReg1, srcReg2, srcReg3, destReg;
+        // Read source and destination registers.
+    '''
+    for reg in range(4):
+        cryptoRegRegRegRegPrefix += '''
+            srcReg1.regs[%(reg)d] = htole(AA64FpOp1P%(reg)d_uw);
+            srcReg2.regs[%(reg)d] = htole(AA64FpOp2P%(reg)d_uw);
+            srcReg3.regs[%(reg)d] = htole(AA64FpOp3P%(reg)d_uw);
+            destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
+        ''' % { "reg" : reg }
+    cryptoRegRegRegRegPrefixI64 = cryptoRegRegRegRegPrefix + '''
+        uint64_t *output = (uint64_t *)(&destReg.regs[0]);
+        uint64_t *input  = (uint64_t *)(&srcReg1.regs[0]);
+        uint64_t *input2 = (uint64_t *)(&srcReg2.regs[0]);
+        uint64_t *input3 = (uint64_t *)(&srcReg3.regs[0]);
+    '''
+    cryptoRegRegRegRegPrefixI32 = cryptoRegRegRegRegPrefix + '''
+        uint32_t *output = (uint32_t *)(&destReg.regs[0]);
+        uint32_t *input  = (uint32_t *)(&srcReg1.regs[0]);
+        uint32_t *input2 = (uint32_t *)(&srcReg2.regs[0]);
+        uint32_t *input3 = (uint32_t *)(&srcReg3.regs[0]);
+    '''
+    cryptoRegRegRegRegPrefixI8 = cryptoRegRegRegRegPrefix + '''
+        unsigned char *output = (unsigned char *)(&destReg.regs[0]);
+        unsigned char *input  = (unsigned char *)(&srcReg1.regs[0]);
+        unsigned char *input2 = (unsigned char *)(&srcReg2.regs[0]);
+        unsigned char *input3 = (unsigned char *)(&srcReg3.regs[0]);
+    '''
+
     cryptoRegRegRegPrefix = '''
         Crypto crypto;
         RegVect srcReg1, srcReg2, destReg;
@@ -57,7 +88,17 @@ let {{
             srcReg2.regs[%(reg)d] = htole(AA64FpOp2P%(reg)d_uw);
             destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
         ''' % { "reg" : reg }
-    cryptoRegRegRegPrefix += '''
+    cryptoRegRegRegPrefixI64 = cryptoRegRegRegPrefix + '''
+        uint64_t *output = (uint64_t *)(&destReg.regs[0]);
+        uint64_t *input  = (uint64_t *)(&srcReg1.regs[0]);
+        uint64_t *input2 = (uint64_t *)(&srcReg2.regs[0]);
+    '''
+    cryptoRegRegRegPrefixI32 = cryptoRegRegRegPrefix + '''
+        uint32_t *output = (uint32_t *)(&destReg.regs[0]);
+        uint32_t *input  = (uint32_t *)(&srcReg1.regs[0]);
+        uint32_t *input2 = (uint32_t *)(&srcReg2.regs[0]);
+    '''
+    cryptoRegRegRegPrefixI8 = cryptoRegRegRegPrefix + '''
         unsigned char *output = (unsigned char *)(&destReg.regs[0]);
         unsigned char *input  = (unsigned char *)(&srcReg1.regs[0]);
         unsigned char *input2 = (unsigned char *)(&srcReg2.regs[0]);
@@ -80,16 +121,55 @@ let {{
             destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
         ''' % { "reg" : reg }
 
-    cryptoRegRegPrefix += '''
+    cryptoRegRegPrefixI64 = cryptoRegRegPrefix + '''
+        // cast into format passed to aes encrypt method.
+        uint64_t *output = (uint64_t *)(&destReg.regs[0]);
+        uint64_t *input  = (uint64_t *)(&srcReg1.regs[0]);
+    '''
+
+    cryptoRegRegPrefixI32 = cryptoRegRegPrefix + '''
+        // cast into format passed to aes encrypt method.
+        uint32_t *output = (uint32_t *)(&destReg.regs[0]);
+        uint32_t *input  = (uint32_t *)(&srcReg1.regs[0]);
+    '''
+
+    cryptoRegRegPrefixI8 = cryptoRegRegPrefix + '''
         // cast into format passed to aes encrypt method.
         unsigned char *output = (unsigned char *)(&destReg.regs[0]);
         unsigned char *input  = (unsigned char *)(&srcReg1.regs[0]);
     '''
 
-    def cryptoRegRegRegInst(name, Name, opClass, enable_check, crypto_func):
+    def cryptoRegRegRegRegInst(name, Name, opClass, enable_check, crypto_func,
+                               i32=False, i64=False):
         global header_output, decoder_output, exec_output
 
-        crypto_prefix = enable_check + cryptoRegRegRegPrefix
+        if i64:
+            crypto_prefix = enable_check + cryptoRegRegRegRegPrefixI64
+        elif i32:
+            crypto_prefix = enable_check + cryptoRegRegRegRegPrefixI32
+        else:
+            crypto_prefix = enable_check + cryptoRegRegRegRegPrefixI8
+        cryptocode = crypto_prefix + crypto_func + cryptoSuffix
+
+        cryptoiop = ArmInstObjParams(name, Name, "RegRegRegRegOp",
+                                     { "code": cryptocode,
+                                       "r_count": 4,
+                                       "predicate_test": predicateTest,
+                                       "op_class": opClass}, [])
+        header_output += RegRegRegRegOpDeclare.subst(cryptoiop)
+        decoder_output += RegRegRegRegOpConstructor.subst(cryptoiop)
+        exec_output += CryptoPredOpExecute.subst(cryptoiop)
+
+    def cryptoRegRegRegInst(name, Name, opClass, enable_check, crypto_func,
+                            i32=False, i64=False):
+        global header_output, decoder_output, exec_output
+
+        if i64:
+            crypto_prefix = enable_check + cryptoRegRegRegPrefixI64
+        elif i32:
+            crypto_prefix = enable_check + cryptoRegRegRegPrefixI32
+        else:
+            crypto_prefix = enable_check + cryptoRegRegRegPrefixI8
         cryptocode = crypto_prefix + crypto_func + cryptoSuffix
 
         cryptoiop = ArmInstObjParams(name, Name, "RegRegRegOp",
@@ -101,10 +181,37 @@ let {{
         decoder_output += RegRegRegOpConstructor.subst(cryptoiop)
         exec_output += CryptoPredOpExecute.subst(cryptoiop)
 
-    def cryptoRegRegInst(name, Name, opClass, enable_check, crypto_func):
+    def cryptoRegRegRegImmInst(name, Name, opClass, enable_check, crypto_func,
+                               i32=False, i64=False):
         global header_output, decoder_output, exec_output
 
-        crypto_prefix = enable_check + cryptoRegRegPrefix
+        if i64:
+            crypto_prefix = enable_check + cryptoRegRegRegPrefixI64
+        elif i32:
+            crypto_prefix = enable_check + cryptoRegRegRegPrefixI32
+        else:
+            crypto_prefix = enable_check + cryptoRegRegRegPrefixI8
+        cryptocode = crypto_prefix + crypto_func + cryptoSuffix
+
+        cryptoiop = ArmInstObjParams(name, Name, "RegRegRegImmOp",
+                                     { "code": cryptocode,
+                                       "r_count": 4,
+                                       "predicate_test": predicateTest,
+                                       "op_class": opClass}, [])
+        header_output += RegRegRegImmOpDeclare.subst(cryptoiop)
+        decoder_output += RegRegRegImmOpConstructor.subst(cryptoiop)
+        exec_output += CryptoPredOpExecute.subst(cryptoiop)
+
+    def cryptoRegRegInst(name, Name, opClass, enable_check, crypto_func,
+                         i32=False, i64=False):
+        global header_output, decoder_output, exec_output
+
+        if i64:
+            crypto_prefix = enable_check + cryptoRegRegPrefixI64
+        elif i32:
+            crypto_prefix = enable_check + cryptoRegRegPrefixI32
+        else:
+            crypto_prefix = enable_check + cryptoRegRegPrefixI8
         cryptocode = crypto_prefix + crypto_func + cryptoSuffix
 
         cryptoiop = ArmInstObjParams(name, Name, "RegRegOp",
@@ -172,4 +279,75 @@ let {{
                      sha2_enabled, sha256_su0Code)
     cryptoRegRegRegInst("sha256su1", "SHA256SU164", "SimdShaSigma3Op",
                         sha2_enabled, sha256_su1Code)
+
+    sha512hCode = "crypto.sha512h(output, input, input2);"
+    sha512h2Code = "crypto.sha512h2(output, input, input2);"
+    sha512su0Code = "crypto.sha512su0(output, input);"
+    sha512su1Code = "crypto.sha512su1(output, input, input2);"
+
+    sha512_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SHA512"
+    }
+    cryptoRegRegRegInst("sha512h", "SHA512H", "SimdSha512HashOp",
+                        sha512_enabled, sha512hCode, i64=True)
+    cryptoRegRegRegInst("sha512h2", "SHA512H2", "SimdSha512HashOp",
+                        sha512_enabled, sha512h2Code, i64=True)
+    cryptoRegRegInst("sha512su0", "SHA512SU0", "SimdSha512HashOp",
+                     sha512_enabled, sha512su0Code, i64=True)
+    cryptoRegRegRegInst("sha512su1", "SHA512SU1", "SimdSha512HashOp",
+                        sha512_enabled, sha512su1Code, i64=True)
+
+    bcaxCode = "crypto.bcax(output, input, input2, input3);"
+    eor3Code = "crypto.eor3(output, input, input2, input3);"
+    rax1Code = "crypto.rax1(output, input, input2);"
+    xarCode = "crypto.xar(output, input, input2, imm);"
+
+    sha3_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SHA3"
+    }
+    cryptoRegRegRegRegInst("bcax", "BCAX", "SimdSha3Op",
+                           sha3_enabled, bcaxCode, i64=True)
+    cryptoRegRegRegRegInst("eor3", "EOR3", "SimdSha3Op",
+                           sha3_enabled, eor3Code, i64=True)
+    cryptoRegRegRegInst("rax1", "RAX1", "SimdSha3Op",
+                        sha3_enabled, rax1Code, i64=True)
+    cryptoRegRegRegImmInst("xar", "XAR", "SimdSha3Op",
+                           sha3_enabled, xarCode, i64=True)
+
+    sm3partw1Code = "crypto.sm3partw1(output, input, input2);"
+    sm3partw2Code = "crypto.sm3partw2(output, input, input2);"
+    sm3ss1Code = "crypto.sm3ss1(output, input, input2, input3);"
+    sm3tt1aCode = "crypto.sm3tt1a(output, input, input2, imm);"
+    sm3tt1bCode = "crypto.sm3tt1b(output, input, input2, imm);"
+    sm3tt2aCode = "crypto.sm3tt2a(output, input, input2, imm);"
+    sm3tt2bCode = "crypto.sm3tt2b(output, input, input2, imm);"
+
+    sm3_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SM3"
+    }
+    cryptoRegRegRegInst("sm3partw1", "SM3PARTW1", "SimdSm3Op",
+                        sm3_enabled, sm3partw1Code, i32=True)
+    cryptoRegRegRegInst("sm3partw2", "SM3PARTW2", "SimdSm3Op",
+                        sm3_enabled, sm3partw2Code, i32=True)
+    cryptoRegRegRegRegInst("sm3ss1", "SM3SS1", "SimdSm3Op",
+                           sm3_enabled, sm3ss1Code, i32=True)
+    cryptoRegRegRegImmInst("sm3tt1a", "SM3TT1A", "SimdSm3Op",
+                           sm3_enabled, sm3tt1aCode, i32=True)
+    cryptoRegRegRegImmInst("sm3tt1b", "SM3TT1B", "SimdSm3Op",
+                           sm3_enabled, sm3tt1bCode, i32=True)
+    cryptoRegRegRegImmInst("sm3tt2a", "SM3TT2A", "SimdSm3Op",
+                           sm3_enabled, sm3tt2aCode, i32=True)
+    cryptoRegRegRegImmInst("sm3tt2b", "SM3TT2B", "SimdSm3Op",
+                           sm3_enabled, sm3tt2bCode, i32=True)
+
+    sm4eCode = "crypto.sm4e(output, output, input);"
+    sm4ekeyCode = "crypto.sm4ekey(output, input, input2);"
+
+    sm4_enabled = cryptoEnabledCheckCode % {
+        "extension" : "ArmExtension::FEAT_SM4"
+    }
+    cryptoRegRegInst("sm4e", "SM4E", "SimdSm4eOp",
+                     sm4_enabled, sm4eCode, i32=True)
+    cryptoRegRegRegInst("sm4ekey", "SM4EKEY", "SimdSm4eOp",
+                        sm4_enabled, sm4ekeyCode, i32=True)
 }};

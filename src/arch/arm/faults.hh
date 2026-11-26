@@ -783,6 +783,9 @@ template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
  */
 bool getFaultVAddr(Fault fault, Addr &va);
 
+ArmFault::FaultSource llFaultSource(ArmFault::FaultSource baseLL,
+                                    enums::ArmLookupLevel level);
+
 } // namespace ArmISA
 } // namespace gem5
 

@@ -49,13 +49,15 @@ from .attrdict import (
     optiondict,
 )
 from .multidict import multidict
+from .terminal import get_termcap
 
 
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5
 # bug).
 def panic(fmt, *args):
-    print("panic:", fmt % args, file=sys.stderr)
+    tc = get_termcap(sys.stderr)
+    print(f"{tc.Bold}{tc.Red}panic{tc.Normal}:", fmt % args, file=sys.stderr)
     sys.exit(1)
 
 
@@ -63,7 +65,8 @@ def panic(fmt, *args):
 # some condition that is the user's fault (bad configuration, invalid
 # arguments, etc.) and not a simulator bug.
 def fatal(fmt, *args):
-    print("fatal:", fmt % args, file=sys.stderr)
+    tc = get_termcap(sys.stderr)
+    print(f"{tc.Bold}{tc.Red}fatal{tc.Normal}:", fmt % args, file=sys.stderr)
     sys.exit(1)
 
 
@@ -71,13 +74,15 @@ def fatal(fmt, *args):
 # that may or may not be the user's fault, but that they should be made aware
 # of as it may affect the simulation or results.
 def warn(fmt, *args):
-    print("warn:", fmt % args, file=sys.stderr)
+    tc = get_termcap(sys.stderr)
+    print(f"{tc.Bold}{tc.Yellow}warn{tc.Normal}:", fmt % args, file=sys.stderr)
 
 
 # inform() should be called when the user should be informed about some
 # condition that they may be interested in.
 def inform(fmt, *args):
-    print("info:", fmt % args, file=sys.stdout)
+    tc = get_termcap(sys.stdout)
+    print(f"{tc.Bold}{tc.Cyan}info{tc.Normal}:", fmt % args, file=sys.stdout)
 
 
 def callOnce(func):

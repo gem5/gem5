@@ -35,15 +35,13 @@ class tex_formatter(code_formatter):
 
 def printTexTable(sm, code):
     tex = tex_formatter()
-    tex(
-        r"""
+    tex(r"""
 %& latex
 \documentclass[12pt]{article}
 \usepackage{graphics}
 \begin{document}
 \begin{tabular}{|l||$<<"l" * len(sm.events)>>|} \hline
-"""
-    )
+""")
 
     for event in sm.events:
         code(r" & \rotatebox{90}{$<<event.short>>}")
@@ -66,12 +64,10 @@ def printTexTable(sm, code):
                     state_str += "/"
                 state_str += nextState
         tex(r"$0 \\", state_str)
-    tex(
-        r"""
+    tex(r"""
 \hline
 \end{tabular}
 \end{document}
-"""
-    )
+""")
 
     code.append(tex)

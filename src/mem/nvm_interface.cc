@@ -44,6 +44,7 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "debug/NVM.hh"
+#include "mem/mem_ctrl.hh"
 #include "sim/system.hh"
 
 namespace gem5

@@ -35,6 +35,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <type_traits>
 
 #include "arch/amdgpu/common/dtype/mxfp_convert.hh"
 
@@ -44,22 +45,29 @@ namespace gem5
 namespace AMDGPU
 {
 
+// Forward declaration for the SFINAE guard below.
+template <typename FMT> class mxfp;
+
+// Trait to restrict math/comparison operators to mxfp<> instantiations.
+template <typename T> struct is_mxfp : std::false_type
+{
+};
+template <typename FMT> struct is_mxfp<mxfp<FMT>> : std::true_type
+{
+};
+
 // Base class for all microscaling types. The sizes of everything are
 // determined by the enum fields in the FMT struct. All of these share the
 // same operator overloads which convert to float before arithmetic and
 // convert back if assigned to a microscaling type.
-template<typename FMT>
-class mxfp
+template <typename FMT> class mxfp
 {
   public:
     mxfp() = default;
-    mxfp(float f) : mode(roundTiesToEven)
-    {
-        data = float_to_mxfp(f);
-    }
+    mxfp(float f) : mode(roundTiesToEven) { data = float_to_mxfp(f); }
 
     // Set raw bits, used by gem5 to set a raw value read from VGPRs.
-    mxfp(const uint32_t& raw)
+    mxfp(const uint32_t &raw)
     {
         // The info unions end up being "left" aligned. For example, in FP4
         // only the bits 31:28 are used. Shift the input by the storage size
@@ -68,22 +76,22 @@ class mxfp
         data <<= (32 - int(FMT::sbits) - int(FMT::ebits) - int(FMT::mbits));
     }
 
-    mxfp(const mxfp& f)
+    mxfp(const mxfp &f)
     {
         FMT conv_out;
         conv_out = convertMXFP<FMT, decltype(f.getFmt())>(f.getFmt());
         data = conv_out.storage;
     }
 
-    mxfp&
-    operator=(const float& f)
+    mxfp &
+    operator=(const float &f)
     {
-       data = float_to_mxfp(f);
-       return *this;
+        data = float_to_mxfp(f);
+        return *this;
     }
 
-    mxfp&
-    operator=(const mxfp& f)
+    mxfp &
+    operator=(const mxfp &f)
     {
         FMT conv_out;
         conv_out = convertMXFP<FMT, decltype(f.getFmt())>(f.getFmt());
@@ -127,7 +135,7 @@ class mxfp
 
     // Used for upcasting
     void
-    scaleMul(const float& f)
+    scaleMul(const float &f)
     {
         binary32 bfp;
         bfp.fp32 = f;
@@ -147,6 +155,11 @@ class mxfp
 
         // Our value is zero, scaling by anything remains zero.
         if (exp == 0 && in.mant == 0) {
+            return;
+        }
+
+        // Infinity and NaN stay the same when scaled.
+        if (std::isinf(in) || std::isnan(in)) {
             return;
         }
 
@@ -163,7 +176,7 @@ class mxfp
 
     // Used for downcasting
     void
-    scaleDiv(const float& f)
+    scaleDiv(const float &f)
     {
         binary32 bfp;
         bfp.fp32 = f;
@@ -183,6 +196,11 @@ class mxfp
 
         // Our value is zero, scaling by anything remains zero.
         if (exp == 0 && in.mant == 0) {
+            return;
+        }
+
+        // Infinity and NaN stay the same when scaled.
+        if (std::isinf(in) || std::isnan(in)) {
             return;
         }
 
@@ -219,9 +237,15 @@ class mxfp
         //   3:  Divide by 2 (multiply by 1/2)
         assert(omod < 4);
 
-        if (omod == 1) scaleMul(2.0f);
-        if (omod == 2) scaleMul(4.0f);
-        if (omod == 3) scaleDiv(2.0f);
+        if (omod == 1) {
+            scaleMul(2.0f);
+        }
+        if (omod == 2) {
+            scaleMul(4.0f);
+        }
+        if (omod == 3) {
+            scaleDiv(2.0f);
+        }
     }
 
     void
@@ -266,137 +290,157 @@ class mxfp
     }
 };
 
-// Unary operators
-template<typename T>
-inline T operator+(T a)
+// Unary operators — restricted to mxfp<> types.
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator+(T a)
 {
     return a;
 }
 
-template<typename T>
-inline T operator-(T a)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator-(T a)
 {
     // Flip sign bit
     a.data ^= 0x80000000;
     return a;
 }
 
-template<typename T>
-inline T operator++(T a)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator++(T a)
 {
     a = a + T(1.0f);
     return a;
 }
 
-template<typename T>
-inline T operator--(T a)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator--(T a)
 {
     a = a - T(1.0f);
     return a;
 }
 
-template<typename T>
-inline T operator++(T a, int)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator++(T a, int)
 {
     T original = a;
     ++a;
     return original;
 }
 
-template<typename T>
-inline T operator--(T a, int)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator--(T a, int)
 {
     T original = a;
     --a;
     return original;
 }
 
-// Math operators
-template<typename T>
-inline T operator+(T a, T b)
+// Math operators — restricted to mxfp<> types to avoid matching unrelated T.
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator+(T a, T b)
 {
     return T(float(a) + float(b));
 }
 
-template<typename T>
-inline T operator-(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator-(T a, T b)
 {
     return T(float(a) - float(b));
 }
 
-template<typename T>
-inline T operator*(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator*(T a, T b)
 {
     return T(float(a) * float(b));
 }
 
-template<typename T>
-inline T operator/(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator/(T a, T b)
 {
     return T(float(a) / float(b));
 }
 
-template<typename T>
-inline T operator+=(T &a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator+=(T &a, T b)
 {
     a = a + b;
     return a;
 }
 
-template<typename T>
-inline T operator-=(T &a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator-=(T &a, T b)
 {
     a = a - b;
     return a;
 }
 
-template<typename T>
-inline T operator*=(T &a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator*=(T &a, T b)
 {
     a = a * b;
     return a;
 }
 
-template<typename T>
-inline T operator/=(T &a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline T
+operator/=(T &a, T b)
 {
     a = a / b;
     return a;
 }
 
-// Comparison operators
-template<typename T>
-inline bool operator<(T a, T b)
+// Comparison operators — restricted to mxfp<> types.
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline bool
+operator<(T a, T b)
 {
     return float(a) < float(b);
 }
 
-template<typename T>
-inline bool operator>(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline bool
+operator>(T a, T b)
 {
     return float(a) > float(b);
 }
 
-template<typename T>
-inline bool operator<=(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline bool
+operator<=(T a, T b)
 {
     return float(a) <= float(b);
 }
 
-template<typename T>
-inline bool operator>=(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline bool
+operator>=(T a, T b)
 {
     return float(a) >= float(b);
 }
 
-template<typename T>
-inline bool operator==(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline bool
+operator==(T a, T b)
 {
     return float(a) == float(b);
 }
 
-template<typename T>
-inline bool operator!=(T a, T b)
+template <typename T, std::enable_if_t<is_mxfp<T>::value, int> = 0>
+inline bool
+operator!=(T a, T b)
 {
     return float(a) != float(b);
 }

@@ -30,8 +30,9 @@ please see <http://www.gem5.org/documentation> and
 ## Building gem5
 
 To build gem5, you will need the following software: g++ or clang,
-Python (gem5 links in the Python interpreter), SCons, zlib, m4, and lastly
-protobuf if you want trace capture and playback support. Please see
+Python (gem5 links in the Python interpreter), SCons, zlib 1.2+, GNU m4
+1.4+, and lastly protobuf if you want trace capture and playback support.
+Please see
 <http://www.gem5.org/documentation/general_docs/building> for more details
 concerning the minimum versions of these tools.
 
@@ -81,11 +82,6 @@ discussions or ask questions. Available at
 <https://github.com/orgs/gem5/discussions>.
 * **GitHub Issues**: A GitHub Issues page for reporting bugs or requesting
 features. Available at <https://github.com/gem5/gem5/issues>.
-* **Jira Issue Tracker**: A Jira Issue Tracker for reporting bugs or requesting
-features. Available at <https://gem5.atlassian.net/>.
-* **Slack**: A Slack server with a variety of channels for the gem5 community
-to engage in a variety of discussions. Please visit
-<https://www.gem5.org/join-slack> to join.
 * **gem5-users@gem5.org**: A mailing list for users of gem5 to ask questions
 or start discussions. To join the mailing list please visit
 <https://www.gem5.org/mailing_lists>.
@@ -98,3 +94,16 @@ or start discussions. To join the mailing list please visit
 We hope you enjoy using gem5. When appropriate we advise sharing your
 contributions to the project. <https://www.gem5.org/contributing> can help you
 get started. Additional information can be found in the CONTRIBUTING.md file.
+
+## Funding
+
+gem5 acknowledges past and ongoing funding from the National Science
+Foundation (NSF) under awards
+[OAC-2311888][nsf-oac] and [TIP-2533192][nsf-tip], and from the U.S. Department
+of Energy (DOE) under awards [DE-SC0024502][doe-24502] and
+[DE-SC0024206][doe-24206].
+
+[nsf-oac]: https://www.nsf.gov/awardsearch/showAward?AWD_ID=2311888
+[nsf-tip]: https://www.nsf.gov/awardsearch/show-award/?AWD_ID=2533192
+[doe-24502]: https://pamspublic.science.energy.gov/WebPAMSExternal/Interface/Common/ViewPublicAbstract.aspx?PRoleId=10&rtc=24&rv=cc328a17-8db6-42af-aa73-8e96b6ad93a2
+[doe-24206]: https://pamspublic.science.energy.gov/webpamsexternal/interface/awards/awardsearchexternal.aspx

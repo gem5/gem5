@@ -92,7 +92,7 @@ def tick_parser(cast=lambda i: i):
 def addr_range_parser(cls, flags, param):
     sys.stdout.flush()
     _param = param.split(":")
-    (start, end) = _param[0:2]
+    start, end = _param[0:2]
     if len(_param) == 2:
         return m5.objects.AddrRange(start=int(start), end=int(end))
     else:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,13 @@ namespace gem5::ArmISA::mpam
 const uint64_t DEFAULT_PARTITION_ID = 0;
 const uint64_t DEFAULT_PARTITION_MONITORING_ID = 0;
 
+struct MpamBundle
+{
+    uint64_t _partitionID = DEFAULT_PARTITION_ID;
+    uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
+    bool _ns = true;
+};
+
 class PartitionFieldExtension : public Extension<Request,
                                                  PartitionFieldExtension>
 {
@@ -93,9 +100,7 @@ class PartitionFieldExtension : public Extension<Request,
     void setMpamNS(bool ns);
 
   private:
-    uint64_t _partitionID = DEFAULT_PARTITION_ID;
-    uint64_t _partitionMonitoringID = DEFAULT_PARTITION_MONITORING_ID;
-    bool _ns = true;
+    MpamBundle bundle;
 };
 
 /** Partition ID data type */

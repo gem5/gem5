@@ -28,6 +28,7 @@
 
 #include "arch/riscv/insts/vector.hh"
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 
@@ -190,13 +191,16 @@ std::string VectorSlideMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
+    bool is_vi = (machInst.funct3 == 0x3);
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) <<  ", ";
-    if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", "
-        << registerName(srcRegIdx(1)) << ", " << machInst.vecimm;
+    ss << registerName(srcRegIdx(!is_vi));
+    if (numVs2Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(!is_vi + numVs2Regs - 1));
+    }
+    if (is_vi) {
+        ss << ", " << machInst.vecimm;
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", "
-        << registerName(srcRegIdx(2)) << ", " << registerName(srcRegIdx(0));
+        ss << ", " << registerName(srcRegIdx(0));
     }
     if (machInst.vm == 0) ss << ", v0.t";
     return ss.str();
@@ -206,13 +210,98 @@ std::string VectorSlideMacroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss << mnemonic << ' ' << registerName(vecRegClass[machInst.vd]) << ", "
+       << registerName(vecRegClass[machInst.vs2]) << ", ";
     if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+        ss << machInst.vecimm;
+    } else if (machInst.funct3 == 0x5) {
+        ss << registerName(floatRegClass[machInst.rs1]);
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+        ss << registerName(intRegClass[machInst.rs1]);
     }
     if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VectorGatherMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(vecRegClass[machInst.vd]) << ", "
+       << registerName(vecRegClass[machInst.vs2]) << ", ";
+    if (machInst.funct3 == 0x3) {
+        ss << machInst.vecimm;
+    } else if (machInst.funct3 == 0x1) {
+        ss << registerName(intRegClass[machInst.rs1]);
+    } else {
+        ss << registerName(vecRegClass[machInst.vs1]);
+    }
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorGatherMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss << registerName(srcRegIdx(0));
+    if (numVs2Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs - 1));
+    }
+    ss << ", " << registerName(srcRegIdx(numVs2Regs));
+    if (numVs1Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs + numVs1Regs - 1));
+    }
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorNarrowingMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(vecRegClass[machInst.vd]) << ", "
+       << registerName(vecRegClass[machInst.vs2]);
+    if (machInst.funct3 == 0x3) { // OPIVI
+        ss << ", " << machInst.vecimm;
+    } else if (machInst.funct3 == 0x4) { // OPIVX
+        ss << ", " << registerName(intRegClass[machInst.rs1]);
+    } else if (machInst.funct3 == 0x0) { // OPIVV
+        ss << ", " << registerName(vecRegClass[machInst.vs1]);
+    }
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorNarrowingMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss << registerName(srcRegIdx(0));
+    if (numVs2Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs - 1));
+    }
+    if (machInst.funct3 == 0x3) { // OPIVI
+        ss << ", " << machInst.vecimm;
+    } else if (machInst.funct3 == 0x4 ||
+               machInst.funct3 == 0x0) { // OPIVX, OPIVV
+        ss << ", " << registerName(srcRegIdx(numVs2Regs));
+    }
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
     return ss.str();
 }
 
@@ -404,6 +493,32 @@ std::string VsIndexMicroInst::generateDisassembly(Addr pc,
 }
 
 std::string
+VectorUnaryMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0));
+    if (!machInst.vm) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorUnaryMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", "
+       << registerName(srcRegIdx(0));
+    if (!machInst.vm) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
 VMvWholeMacroInst::generateDisassembly(Addr pc,
     const loader::SymbolTable *symtab) const
 {
@@ -454,10 +569,6 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     auto Vd = tmp_d0.as<uint8_t>();
     uint32_t vlenb = vlen >> 3;
     const uint32_t elems_per_vreg = vlenb / elemSize;
-    size_t bit_cnt = 0;
-
-    // mask tails are always treated as agnostic: writting 1s
-    tmp_d0.set(0xff);
 
     vreg_t tmp_s;
     for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
@@ -467,14 +578,21 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
             const uint32_t m = (1 << elems_per_vreg) - 1;
             const uint32_t mask = m << (i * elems_per_vreg % 8);
             // clr & ext bits
-            Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
-            Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
-            bit_cnt += elems_per_vreg;
+            Vd[(i * elems_per_vreg) / 8] &= ~mask;
+            Vd[(i * elems_per_vreg) / 8] |= s[(i * elems_per_vreg) / 8] & mask;
         } else {
             const uint32_t byte_offset = elems_per_vreg / 8;
             memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
         }
     }
+
+    // Handle tail: mask-producing instructions are always tail-agnostic.
+    // We treat agnostic as 1s.
+    uint32_t vl = machInst.vl;
+    for (uint32_t i = vl; i < vlen; ++i) {
+        Vd[i / 8] |= (1 << (i % 8));
+    }
+
     if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
     }
@@ -498,9 +616,11 @@ VMaskMergeMicroInst::generateDisassembly(Addr pc,
 Fault
 VxsatMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    xc->setMiscReg(MISCREG_VXSAT, *vxsat);
-    auto vcsr = xc->readMiscReg(MISCREG_VCSR);
-    xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+    if (*vxsat) {
+        xc->setMiscReg(MISCREG_VXSAT, *vxsat);
+        auto vcsr = xc->readMiscReg(MISCREG_VCSR);
+        xc->setMiscReg(MISCREG_VCSR, ((vcsr & ~1) | *vxsat));
+    }
     return NoFault;
 }
 
@@ -541,14 +661,26 @@ uint32_t
 VlFFTrimVlMicroOp::calcVl() const
 {
     uint32_t vl = 0;
-    for (uint8_t i=0; i<microIdx; i++) {
-        VleMicroInst& micro = static_cast<VleMicroInst&>(*microops[i]);
-        vl += micro.faultIdx;
-
-        if (micro.trimVl)
-            break;
+    for (uint32_t i = 0; i < microIdx; i++) {
+        if (microops[i]->opClass() ==
+            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+            const auto &micro =
+                static_cast<const VlSegMicroInst &>(*microops[i]);
+            vl += micro.faultIdx;
+            if (micro.trimVl) {
+                break;
+            }
+        } else {
+            const auto &micro =
+                static_cast<const VleMicroInst &>(*microops[i]);
+            vl += micro.faultIdx;
+            if (micro.trimVl) {
+                break;
+            }
+        }
     }
-    return vl;
+    // Count only complete segments in the contiguous raw-slot prefix.
+    return vl / (machInst.nf + 1);
 }
 
 Fault
@@ -597,6 +729,84 @@ VlFFTrimVlMicroOp::generateDisassembly(Addr pc,
     std::stringstream ss;
     ss << mnemonic << " vl";
     return ss.str();
+}
+
+namespace
+{
+
+/**
+ * Shared fault-only-first handling for the RISC-V unit-stride (vle*ff) and
+ * segmented (vlseg*ff) fault-only-first loads.
+ *
+ * Per the RVV spec such an access only traps when element 0 faults.  If a
+ * later element faults the trap is suppressed and vl is trimmed down to the
+ * leading elements that loaded cleanly.  The trailing VlFFTrimVlMicroOp later
+ * reads back trimVl/faultIdx from every load microop to compute the new vl.
+ *
+ * This runs from StaticInst::handleMemFault() so that it is applied both when
+ * the fault is returned synchronously (atomic CPU) and when it is delivered
+ * asynchronously after translation (timing CPU).
+ *
+ * @param fault     Fault raised by the memory access.
+ * @param vaddr     Virtual address the access was initiated at, i.e. the EA
+ *                  of element 0 of this microop.
+ * @param elem_offset Offset of this microop in raw EEW slots relative to
+ *                    the start of the entire access.
+ * @param micro_vl  Number of elements this microop covers.
+ * @param eew_bytes Size of a single element in bytes.
+ * @param num_fields Number of fields per segment; 1 for unit-stride loads.
+ * @param trim_vl   Set when the fault is suppressed.
+ * @param fault_idx Receives the index of the first faulting element within
+ *                  this microop (== number of cleanly loaded elements).
+ * @return NoFault if the fault was suppressed, otherwise the original fault.
+ */
+Fault
+faultOnlyFirstTrim(const Fault &fault, Addr vaddr, uint32_t elem_offset,
+                   uint32_t micro_vl, uint64_t eew_bytes, uint32_t num_fields,
+                   bool &trim_vl, uint32_t &fault_idx)
+{
+    Addr fault_addr;
+    if (fault != NoFault && getFaultVAddr(fault, fault_addr)) {
+        assert(fault_addr >= vaddr);
+        // Clamp to this access's slot count so an out-of-range fault
+        // address cannot inflate vl.
+        fault_idx =
+            std::min<uint64_t>((fault_addr - vaddr) / eew_bytes, micro_vl);
+        // All fields of a segment belong to the same architectural element.
+        if ((elem_offset + fault_idx) / num_fields != 0) {
+            trim_vl = true;
+            return NoFault;
+        }
+    }
+    return fault;
+}
+
+} // anonymous namespace
+
+Fault
+VleMicroInst::handleMemFault(const Fault &fault, Addr vaddr) const
+{
+    // Only fault-only-first loads may suppress a fault; every other
+    // unit-stride load must take the fault normally.
+    if (opClass() != SimdUnitStrideFaultOnlyFirstLoadOp) {
+        return fault;
+    }
+
+    return faultOnlyFirstTrim(
+        fault, vaddr, microIdx * (vlen / width_EEW(machInst.width)), microVl,
+        width_EEW(machInst.width) / 8, 1, trimVl, faultIdx);
+}
+
+Fault
+VlSegMicroInst::handleMemFault(const Fault &fault, Addr vaddr) const
+{
+    if (opClass() != SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+        return fault;
+    }
+
+    return faultOnlyFirstTrim(fault, vaddr, elemOffset, microVl,
+                              width_EEW(machInst.width) / 8, numFields, trimVl,
+                              faultIdx);
 }
 
 std::string VlSegMacroInst::generateDisassembly(Addr pc,
@@ -890,10 +1100,9 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _hasVdOffset)
+                                 uint32_t _vlen)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
-                           _microIdx, _elen, _vlen),
-      hasVdOffset(_hasVdOffset)
+                           _microIdx, _elen, _vlen)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -905,10 +1114,15 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     _numDestRegs = 0;
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
-    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)
-                              || hasVdOffset) {
+
+    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
     }
+
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+
     RegId Vd = destRegIdx(0);
     Vd.setNumPinnedWrites(_numVdPins);
     setDestRegIdx(0, Vd);
@@ -922,19 +1136,50 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
+    const uint32_t vl = machInst.vl;
+    const uint32_t sewb = getSew(machInst.vtype8.vsew) >> 3;
+    const uint32_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+    const uint32_t micro_vl = std::min(vl - micro_vlmax*microIdx, micro_vlmax);
+    const uint32_t active_bytes = micro_vl * sewb;
+    const uint32_t total_bytes  = micro_vlmax*sewb;
+
+    vreg_t& vd_container = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    uint8_t* vd = vd_container.as<uint8_t>();
+
     // tail/mask policy: both undisturbed if one is, 1s if none
-    vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, 0);
-    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                            || hasVdOffset) {
-        vreg_t old_vd;
-        xc->getRegOperand(this, 0, &old_vd);
-        vd = old_vd;
+    uint8_t* old_vd;
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) {
+        vreg_t old_vd_container;
+        xc->getRegOperand(this, 0, &old_vd_container);
+        old_vd = old_vd_container.as<uint8_t>();
+    }
+
+    // apply tail policy
+    if (machInst.vtype8.vta && (machInst.vm || machInst.vtype8.vma)) {
+        memset(vd+active_bytes, 0xff, total_bytes-active_bytes);
     } else {
-        vd.set(0xff);
+        memcpy(vd+active_bytes, old_vd+active_bytes, total_bytes-active_bytes);
+    }
+
+    // apply mask policy
+    if (!machInst.vm) {
+        vreg_t v0_container;
+        xc->getRegOperand(this, _numSrcRegs-1, &v0_container);
+        uint8_t* v0 = v0_container.as<uint8_t>();
+
+        for (uint32_t i=0; i<micro_vl; i++) {
+            if (!machInst.vm && !elem_mask(v0, i + microIdx*micro_vlmax)) {
+                if (machInst.vtype8.vma && machInst.vtype8.vta) {
+                    memset(vd + i*sewb, 0xff, sewb);
+                } else {
+                    memcpy(vd + i*sewb, old_vd + i*sewb, sewb);
+                }
+            }
+        }
     }
 
     if (traceData) {
-        traceData->setData(vecRegClass, &vd);
+        traceData->setData(vecRegClass, &vd_container);
     }
 
     return NoFault;
@@ -947,8 +1192,7 @@ VPinVdMicroInst::generateDisassembly(Addr pc,
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
 
-    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || hasVdOffset) {
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) {
         ss << registerName(srcRegIdx(0));
     } else {
         ss << "~0";

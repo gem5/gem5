@@ -41,7 +41,7 @@ from .spatter_kernel import SpatterKernel
 class SpatterGeneratorCore(AbstractGeneratorCore):
     def __init__(
         self,
-        processing_mode: Union[SpatterProcessingMode, str],
+        processing_mode: SpatterProcessingMode | str,
         int_regfile_size: int,
         fp_regfile_size: int,
         request_gen_latency: int,

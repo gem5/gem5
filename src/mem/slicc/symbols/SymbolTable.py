@@ -164,8 +164,7 @@ class SymbolTable:
 
     def writeProtocolInfo(self, path):
         code = self.codeFormatter()
-        code(
-            f"""
+        code(f"""
 #ifndef __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
 #define __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
 
@@ -185,8 +184,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
   public:
       {self.slicc.protocol}ProtocolInfo() :
           ProtocolInfo("{self.slicc.protocol}",
-"""
-        )
+""")
         options = ",\n".join(
             [
                 f"                       {'true' if value else 'false'}"
@@ -194,8 +192,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
             ]
         )
         code(options)
-        code(
-            f"""          )
+        code(f"""          )
       {{
       }}
 }};
@@ -205,8 +202,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
 }}
 
 #endif // __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
-"""
-        )
+""")
         code.write(
             path, f"{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"
         )
@@ -225,8 +221,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
             name = "empty.html"
 
         code = self.codeFormatter()
-        code(
-            """
+        code("""
 <html>
 <head>
 <title>$path</title>
@@ -236,8 +231,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
     <frame name="Status" src="empty.html">
 </frameset>
 </html>
-"""
-        )
+""")
         code.write(path, "index.html")
 
         code = self.codeFormatter()

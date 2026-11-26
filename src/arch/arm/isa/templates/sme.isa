@@ -1,4 +1,4 @@
-// Copyright (c) 2022 ARM Limited
+// Copyright (c) 2022, 2025-2026 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -123,7 +123,7 @@ def template SmeAddVlDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                        RegIndex dest, RegIndex op1,
-                       int8_t imm)
+                       uint64_t imm)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                              dest, op1, imm)
         {
@@ -144,12 +144,12 @@ def template SmeLd1xDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+        %(class_name)s(ExtMachInst machInst, uint64_t zad, uint64_t imm,
                        RegIndex op1, RegIndex mpop1,
                        RegIndex op2, RegIndex op3,
                        bool V)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                             imm, op1, mpop1, op2, op3, V)
+                             zad, imm, op1, mpop1, op2, op3, V)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -307,11 +307,7 @@ def template SmeLdrExecute {{
         }
 
         if (fault == NoFault) {
-            auto row = getTileHSlice<uint8_t>(ZA, 0, vec_index);
-            for (int i = 0; i < eCount; ++i) {
-                row[i] = data[i];
-            }
-
+            %(zaWriteCode)s;
             %(op_wb)s;
         }
 
@@ -356,13 +352,121 @@ def template SmeLdrCompleteAcc {{
             return fault;
         }
 
-        if (fault == NoFault) {
-            // Get the data out of the packet
-            auto row = getTileHSlice<uint8_t>(ZA, 0, vec_index);
-            for (int i = 0; i < eCount; ++i) {
-                row[i] = pkt->getPtr<uint8_t>()[i];
-            }
+        uint8_t data[MaxSmeVecLenInBytes];
+        if (xc->readMemAccPredicate()) {
+            memcpy(data, pkt->getPtr<uint8_t>(), pkt->getSize());
+        }
 
+        if (fault == NoFault) {
+            %(zaWriteCode)s;
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLdrTableDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, RegIndex op1)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+
+        void
+        annotateFault(ArmISA::ArmFault *fault) override
+        {
+            %(fa_code)s
+        }
+    };
+}};
+
+def template SmeLdrTableExecute {{
+    Fault %(class_name)s::execute(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        auto rdEn = std::vector<bool>(eCount, true);
+
+        // We need a buffer in which to store the data:
+        uint8_t data[eCount];
+
+        if (fault == NoFault) {
+            fault = xc->readMem(EA, (uint8_t*)data, eCount, flags, rdEn);
+        }
+
+        if (fault == NoFault) {
+            %(zaWriteCode)s;
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLdrTableInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        auto rdEn = std::vector<bool>(eCount, true);
+
+        if (fault == NoFault) {
+            fault = xc->initiateMemRead(EA, eCount, flags, rdEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLdrTableCompleteAcc {{
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        // The O3 CPU will call this with a NULL-pointer if the access was
+        // disabled. Just return.
+        if (pkt == NULL) {
+            return fault;
+        }
+
+        uint8_t data[eCount];
+        if (xc->readMemAccPredicate()) {
+            memcpy(data, pkt->getPtr<uint8_t>(), pkt->getSize());
+        }
+
+        if (fault == NoFault) {
+            %(zaWriteCode)s;
             %(op_wb)s;
         }
 
@@ -389,6 +493,26 @@ def template SMEMgmtDeclare {{
     };
 }};
 
+def template SmeZeroArrayDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, RegIndex index, uint8_t imm)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
 def template SmeMovaExtractDeclare {{
     template <typename TPElem>
     class %(class_name)s : public %(base_class)s
@@ -399,10 +523,10 @@ def template SmeMovaExtractDeclare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, RegIndex op1,
-                       uint8_t imm, RegIndex gp,
+                       uint8_t zan, uint8_t imm, RegIndex gp,
                        RegIndex op2, bool v)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                             op1, imm, gp, op2, v)
+                             op1, zan, imm, gp, op2, v)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -421,11 +545,214 @@ def template SmeMovaInsertDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, uint8_t imm,
-                       RegIndex op1, RegIndex gp,
-                       RegIndex op2, bool v)
+        %(class_name)s(ExtMachInst machInst, uint8_t zad, uint8_t imm,
+                       RegIndex op1, RegIndex gp, RegIndex op2, bool v)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                             imm, op1, gp, op2, v)
+                             zad, imm, op1, gp, op2, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaExtract1RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t zan, RegIndex index,
+                       uint8_t imm, RegIndex dest1, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             zan, index, imm, dest1, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaExtract2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t zan, RegIndex index,
+                       uint8_t imm, RegIndex dest1, RegIndex dest2, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             zan, index, imm, dest1, dest2, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaInsert2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t zad, RegIndex index,
+                       uint8_t imm, RegIndex op1, RegIndex op2, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             zad, index, imm, op1, op2, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaExtract4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t zan, RegIndex index,
+                       uint8_t imm, RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             zan, index, imm, dest1, dest2, dest3, dest4, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaInsert4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t zad, RegIndex index,
+                       uint8_t imm, RegIndex op1, RegIndex op2,
+                       RegIndex op3, RegIndex op4, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             zad, index, imm, op1, op2, op3, op4, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaArrayExtract2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex dest1,
+                       RegIndex dest2)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, dest1, dest2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaArrayExtract4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex dest1,
+                       RegIndex dest2, RegIndex dest3, RegIndex dest4)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, dest1, dest2, dest3, dest4)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaArrayInsert2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaArrayInsert4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op3, RegIndex op4)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2, op3, op4)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -490,7 +817,7 @@ def template SmeRdsvlDeclare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                       RegIndex dest, int8_t imm)
+                       RegIndex dest, uint64_t imm)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                              dest, imm)
         {
@@ -511,11 +838,11 @@ def template SmeSt1xDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+        %(class_name)s(ExtMachInst machInst, uint64_t zan, uint64_t imm,
                        RegIndex op1, RegIndex mpop1,
                        RegIndex op2, RegIndex op3, bool V)
             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                             imm, op1, mpop1, op2, op3, V)
+                             zan, imm, op1, mpop1, op2, op3, V)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -655,6 +982,86 @@ def template SmeStrCompleteAcc {{
     }
 }};
 
+def template SmeStrTableDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, RegIndex op1)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+
+        void
+        annotateFault(ArmISA::ArmFault *fault) override
+        {
+            %(fa_code)s
+        }
+    };
+}};
+
+def template SmeStrTableExecute {{
+    Fault %(class_name)s::execute(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+
+        if (fault == NoFault) {
+            auto wrEn = std::vector<bool>(eCount, true);
+            fault = xc->writeMem((uint8_t*)data, eCount, EA,
+                                 flags, NULL, wrEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeStrTableInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            auto wrEn = std::vector<bool>(eCount, true);
+            fault = xc->writeMem((uint8_t*)data, eCount, EA,
+                                 flags, NULL, wrEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeStrTableCompleteAcc {{
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        // TODO-SME: Can this fail?
+        return NoFault;
+    }
+}};
+
 def template SmeSt1xExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
@@ -767,6 +1174,855 @@ def template SmeTripleTemplatedExecute {{
 }};
 
 def template SmeOpExecDeclare {{
+    template
+    Fault %(class_name)s<%(targs)s>::execute(
+            ExecContext *, trace::InstRecord *) const;
+}};
+
+def template Sme2NonDestr1x2InstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest, RegIndex op1,
+                       RegIndex op2)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest, op1, op2, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2NonDestr1x4InstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest, RegIndex op1,
+                       RegIndex op2, RegIndex op3,
+                       RegIndex op4)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest, op1, op2, op3, op4, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2NonDestr2x1InstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2, RegIndex op1)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, op1, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2NonDestr2x2InstDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex op1, RegIndex op2)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, op1, op2, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2NonDestr4x1InstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex op1)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, dest3, dest4, op1, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2NonDestr4x2InstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex op1, RegIndex op2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             dest1, dest2, dest3, dest4, op1, op2, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2NonDestr4x4InstDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex op1, RegIndex op2,
+                       RegIndex op3, RegIndex op4)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, dest3, dest4,
+                              op1, op2, op3, op4, false)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Destr2x1InstDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex op1)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, op1, true)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Destr2x2InstDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex op1, RegIndex op2)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, op1, op2, true)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Destr4x1InstDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex op1)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, dest3, dest4, op1, true)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Destr4x4InstDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex op1, RegIndex op2,
+                       RegIndex op3, RegIndex op4)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, dest3, dest4,
+                              op1, op2, op3, op4, true)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiSgl1RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op5)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op5)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiSgl2RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op5)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2, op5)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiSgl4RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op3, RegIndex op4,
+                       RegIndex op5)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2, op3, op4, op5)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiVec2RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op5, RegIndex op6)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2, op5, op6)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiVec4RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op3, RegIndex op4,
+                       RegIndex op5, RegIndex op6, RegIndex op7,
+                       RegIndex op8)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2, op3, op4, op5, op6, op7, op8)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiIdx1RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op5, uint8_t idx)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+          imm, op1, op5, idx)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiIdx2RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op5, uint8_t idx)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+          imm, op1, op2, op5, idx)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2MultiIdx4RegDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op3, RegIndex op4,
+                       RegIndex op5, uint8_t idx)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+          imm, op1, op2, op3, op4, op5, idx)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2ZlutDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst)
+          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+
+    };
+}};
+
+def template SME2ZaZ2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2ZaZ4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex index, uint8_t imm, RegIndex op1,
+                       RegIndex op2, RegIndex op3, RegIndex op4)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, index,
+           imm, op1, op2, op3, op4)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2Clamp2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2, RegIndex op1,
+                       RegIndex op2)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, dest1, dest2,
+           op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SME2Clamp4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2, RegIndex dest3,
+                       RegIndex dest4, RegIndex op1, RegIndex op2)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+           dest1, dest2, dest3, dest4, op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Rshr2RegInstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest, RegIndex op1,
+                       RegIndex op2, uint8_t imm)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest, op1, op2, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Rshr4RegInstDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest, RegIndex op1,
+                       RegIndex op2, RegIndex op3,
+                       RegIndex op4, uint8_t imm)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest, op1, op2, op3, op4, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        };
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Sel2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex gp, RegIndex op1,
+                       RegIndex op2, RegIndex op5,
+                       RegIndex op6)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, gp, op1, op2, op5, op6)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+
+def template Sme2Sel4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex gp, RegIndex op1,
+                       RegIndex op2, RegIndex op3,
+                       RegIndex op4, RegIndex op5,
+                       RegIndex op6, RegIndex op7,
+                       RegIndex op8)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             dest1, dest2, dest3, dest4, gp,
+                             op1, op2, op3, op4, op5, op6, op7, op8)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Luti1RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, RegIndex dest1, RegIndex op1,
+                       uint64_t imm)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, op1, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Luti2RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2, RegIndex op1,
+                       uint64_t imm)
+             : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              dest1, dest2, op1, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Luti4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4, RegIndex op1,
+                       uint64_t imm)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             dest1, dest2, dest3, dest4, op1, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Luti4to8b4RegDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest1, RegIndex dest2,
+                       RegIndex dest3, RegIndex dest4,
+                       RegIndex op1, RegIndex op2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             dest1, dest2, dest3, dest4, op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template Sme2Execute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                                    trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template Sme2TemplatedExecute {{
+    template <typename TPElem>
+    Fault
+    %(class_name)s<TPElem>::execute(ExecContext *xc,
+                                    trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template Sme2Templated1Src1DstExecute {{
+    template <typename TPSElem, typename TPDElem>
+    Fault
+    %(class_name)s<TPSElem, TPDElem>::execute(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template Sme2Templated2Src1DstExecute {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    Fault
+    %(class_name)s<TPS1Elem, TPS2Elem, TPDElem>::execute(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template Sme2OpExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
             ExecContext *, trace::InstRecord *) const;

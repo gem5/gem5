@@ -112,7 +112,7 @@ def _include_matcher_fname(fname, **kwargs):
     base_matcher = _include_matcher(**kwargs)
 
     def matcher(context, line):
-        (keyword, fname, extra) = base_matcher(context, line)
+        keyword, fname, extra = base_matcher(context, line)
         if fname and rex.match(fname):
             return (keyword, fname, extra)
         else:
@@ -134,7 +134,7 @@ def _include_matcher_main():
         if not m:
             return (None,) * 3
         base, ext = m.groups()
-        (keyword, fname, extra) = base_matcher(context, line)
+        keyword, fname, extra = base_matcher(context, line)
         try:
             if fname == f"{base}.{header_map[ext]}":
                 return (keyword, fname, extra)

@@ -63,8 +63,8 @@ class AbstractClient(ABC):
     @abstractmethod
     def get_resources(
         self,
-        client_queries: List[ClientQuery],
-    ) -> List[Dict[str, Any]]:
+        client_queries: list[ClientQuery],
+    ) -> list[dict[str, Any]]:
         """
         :param client_queries: A list of client queries containing the
                                 information to query the resources. Each
@@ -82,7 +82,7 @@ class AbstractClient(ABC):
         """
         raise NotImplementedError
 
-    def sort_resources(self, resources: List) -> List:
+    def sort_resources(self, resources: list) -> list:
         """
         Sorts the resources by ID.
 
@@ -93,7 +93,7 @@ class AbstractClient(ABC):
         :return: A list of sorted resources.
         """
 
-        def sort_tuple(resource: Dict) -> Tuple:
+        def sort_tuple(resource: dict) -> tuple:
             """This is used for sorting resources by ID and version. First
             the ID is sorted, then the version. In cases where the version
             contains periods, it's assumed this is to separate a
@@ -137,9 +137,9 @@ class AbstractClient(ABC):
 
     def filter_incompatible_resources(
         self,
-        resources_to_filter: List[Dict[str, Any]],
-        gem5_version: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        resources_to_filter: list[dict[str, Any]],
+        gem5_version: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Returns a filtered list resources based on gem5 version
         compatibility.
@@ -175,8 +175,8 @@ class AbstractClient(ABC):
         return filtered_resources
 
     def get_resources_by_id(
-        self, client_queries: List[ClientQuery]
-    ) -> List[Dict[str, Any]]:
+        self, client_queries: list[ClientQuery]
+    ) -> list[dict[str, Any]]:
         """
         :param client_queries: A list of ClientQuery objects containing the
                             information to query the resources. Each
@@ -193,7 +193,7 @@ class AbstractClient(ABC):
     def get_all_resources(
         self,
         gem5_version: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         :param gem5_version: The version of gem5.
         :return: A list of all the Resources compatible with the given gem5 version.

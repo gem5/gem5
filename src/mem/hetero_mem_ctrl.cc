@@ -426,7 +426,7 @@ HeteroMemCtrl::drain()
 
         // the only queue that is not drained automatically over time
         // is the write queue, thus kick things into action if needed
-        if (!totalWriteQueueSize && !nextReqEvent.scheduled()) {
+        if (totalWriteQueueSize && !nextReqEvent.scheduled()) {
             schedule(nextReqEvent, curTick());
         }
 

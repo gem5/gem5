@@ -44,17 +44,18 @@ SimplePoolManager::minAllocatedElements(uint32_t size)
     fatal_if(size <= 0 || size > poolSize(), "Illegal VGPR region size=%d\n",
              size);
 
-    return size % minAllocation() > 0 ?
-        (minAllocation() - (size % minAllocation())) + size : size;
+    return size % minAllocation() > 0
+               ? (minAllocation() - (size % minAllocation())) + size
+               : size;
 }
 
 std::string
 SimplePoolManager::printRegion()
 {
     std::string _cout;
-    if (_reservedGroups == 0)
+    if (_reservedGroups == 0) {
         _cout = "VRF is empty\n";
-    else if (_reservedGroups > 0) {
+    } else if (_reservedGroups > 0) {
         uint32_t reservedEntries = _reservedGroups * _regionSize;
         _cout = "VRF reserves " + std::to_string(reservedEntries) + " VGPRs\n";
     }
@@ -74,8 +75,9 @@ SimplePoolManager::freeRegion(uint32_t firstIdx, uint32_t lastIdx)
     assert(_reservedGroups > 0);
     --_reservedGroups;
 
-    if (!_reservedGroups)
+    if (!_reservedGroups) {
         _nxtFreeIdx = 0;
+    }
 }
 
 uint32_t

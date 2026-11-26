@@ -28,7 +28,8 @@ LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV CXX="g++"
-ENV CXXFLAGS="-std=c++17"
+# Match the gem5 adapter's standard for SystemC's API version check.
+ENV CXXFLAGS="-std=c++20"
 
 RUN wget https://www.accellera.org/images/downloads/standards/systemc/systemc-2.3.3.tar.gz; \
     tar xf systemc-2.3.3.tar.gz && \

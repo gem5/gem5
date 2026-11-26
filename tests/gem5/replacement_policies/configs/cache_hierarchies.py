@@ -37,7 +37,7 @@ from gem5.utils.override import overrides
 
 
 class ModMIExampleCacheHierarchy(MIExampleCacheHierarchy):
-    def __init__(self, replacement_policy_class: Type[BaseReplacementPolicy]):
+    def __init__(self, replacement_policy_class: type[BaseReplacementPolicy]):
         super().__init__(size="512B", assoc=4)
         self._replacement_policy_class = replacement_policy_class
 

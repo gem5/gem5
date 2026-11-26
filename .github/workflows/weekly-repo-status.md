@@ -6,6 +6,11 @@ description: |
 on:
   workflow_dispatch:
 
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_HEADERS: ""
+  GH_AW_OTLP_ENDPOINTS: "[]"
+
 permissions:
   contents: read
   issues: read
@@ -16,6 +21,7 @@ permissions:
 network: defaults
 
 tools:
+  bash: ["cat", "ls", "find", "grep", "head", "tail", "wc"]
   github:
     # If in a public repo, setting `lockdown: false` allows
     # reading issues, pull requests and comments from 3rd-parties
@@ -28,7 +34,7 @@ safe-outputs:
   allowed-github-references: []
   create-issue:
     title-prefix: "misc: "
-    labels: [misc]
+    labels: [misc, agentic-workflows]
     close-older-issues: true
   report-failure-as-issue: false
 

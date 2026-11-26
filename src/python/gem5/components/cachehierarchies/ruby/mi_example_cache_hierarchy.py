@@ -94,7 +94,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
                 core=core,
                 cache_line_size=board.get_cache_line_size(),
                 target_isa=board.get_processor().get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             cache.sequencer = RubySequencer(

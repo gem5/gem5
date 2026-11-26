@@ -57,9 +57,7 @@ class AST(PairContainer):
         if args:
             message = message % args
         code = self.slicc.codeFormatter()
-        code(
-            """
+        code("""
 panic("Runtime Error at ${{self.location}}: %s for machine %s.\\n", $message, name());
-"""
-        )
+""")
         return code

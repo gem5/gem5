@@ -45,16 +45,22 @@ class PkBfloat16
   public:
     AMDGPU::mxbfloat16 data[2];
 
-    uint32_t get() { return data[0].data | (uint32_t(data[1].data) << 16); }
+    uint32_t
+    get()
+    {
+        return data[0].data | (uint32_t(data[1].data) << 16);
+    }
 
-    PkBfloat16 operator+=(const PkBfloat16& rhs)
+    PkBfloat16
+    operator+=(const PkBfloat16 &rhs)
     {
         data[0] = data[0] + rhs.data[0];
         data[1] = data[1] + rhs.data[1];
         return *this;
     }
 
-    PkBfloat16 operator+(const PkBfloat16& rhs)
+    PkBfloat16
+    operator+(const PkBfloat16 &rhs)
     {
         data[0] = data[0] + rhs.data[0];
         data[1] = data[1] + rhs.data[1];
@@ -62,7 +68,8 @@ class PkBfloat16
     }
 
     // Conversions
-    PkBfloat16 operator=(const int& rhs)
+    PkBfloat16
+    operator=(const int &rhs)
     {
         data[0].data = bits(rhs, 15, 0);
         data[1].data = bits(rhs, 31, 16);

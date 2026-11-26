@@ -105,7 +105,7 @@ struct dp_rom
      * for perfect match memory.
      * the linux driver doesn't use any other ROM
      */
-    uint8_t perfectMatch[ETH_ADDR_LEN];
+    uint8_t perfectMatch[ETHER_ADDR_LEN];
 
     /**
      * for hash table memory.

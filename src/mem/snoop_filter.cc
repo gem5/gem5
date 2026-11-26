@@ -42,6 +42,8 @@
 
 #include "mem/snoop_filter.hh"
 
+#include <algorithm>
+
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/SnoopFilter.hh"
@@ -57,6 +59,15 @@ SnoopFilter::eraseIfNullEntry(SnoopFilterCache::iterator& sf_it)
 {
     SnoopItem& sf_item = sf_it->second;
     if ((sf_item.requested | sf_item.holder).none()) {
+        // A nested request or snoop can clear the last mask bit while an
+        // outer lookup still needs this entry for finishRequest(). Retain it
+        // until the last lookup for the line has completed. Lookups treat
+        // this zero-mask entry as absent while it is retained.
+        for (const auto &lookup : reqLookupResults) {
+            if (lookup.hasEntry && lookup.lineAddr == sf_it->first) {
+                return;
+            }
+        }
         cachedLocations.erase(sf_it);
         DPRINTF(SnoopFilter, "%s:   Removed SF entry.\n",
                 __func__);
@@ -77,9 +88,13 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
     if (cpkt->isSecure()) {
         line_addr |= LineSecure;
     }
+    reqLookupResults.emplace_back(line_addr);
+    auto &req_lookup = reqLookupResults.back();
     SnoopMask req_port = portToMask(cpu_side_port);
-    reqLookupResult.it = cachedLocations.find(line_addr);
-    bool is_hit = (reqLookupResult.it != cachedLocations.end());
+    auto sf_it = cachedLocations.find(line_addr);
+    bool has_entry = (sf_it != cachedLocations.end());
+    bool is_hit =
+        has_entry && (sf_it->second.requested | sf_it->second.holder).any();
 
     // If the snoop filter has no entry, and we should not allocate,
     // do not create a new snoop filter entry, simply return a NULL
@@ -87,18 +102,18 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
     if (!is_hit && !allocate)
         return snoopDown(lookupLatency);
 
-    // If no hit in snoop filter create a new element and update iterator
-    if (!is_hit) {
-        reqLookupResult.it =
-            cachedLocations.emplace(line_addr, SnoopItem()).first;
+    // A retained empty entry can be reused; only allocate if none exists.
+    if (!has_entry) {
+        sf_it = cachedLocations.emplace(line_addr, SnoopItem()).first;
     }
-    SnoopItem& sf_item = reqLookupResult.it->second;
+    req_lookup.hasEntry = true;
+    SnoopItem &sf_item = sf_it->second;
     SnoopMask interested = sf_item.holder | sf_item.requested;
 
     // Store unmodified value of snoop filter item in temp storage in
     // case we need to revert because of a send retry in
     // updateRequest.
-    reqLookupResult.retryItem = sf_item;
+    req_lookup.retryItem = sf_item;
 
     stats.totRequests++;
     if (is_hit) {
@@ -124,6 +139,7 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
                      sf_item.requested, sf_item.holder);
 
             // Mark in-flight requests to distinguish later on
+            req_lookup.changedRequested = req_port;
             sf_item.requested |= req_port;
             DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
                     __func__,  sf_item.requested, sf_item.holder);
@@ -147,6 +163,7 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
         // CleanEvicts and Writebacks -> the sender and all caches above
         // it may not have the line anymore.
         if (!cpkt->isBlockCached()) {
+            req_lookup.changedHolder = req_port;
             sf_item.holder &= ~req_port;
             DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
                     __func__,  sf_item.requested, sf_item.holder);
@@ -159,24 +176,32 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
 void
 SnoopFilter::finishRequest(bool will_retry, Addr addr, bool is_secure)
 {
-    if (reqLookupResult.it != cachedLocations.end()) {
-        // since we rely on the caller, do a basic check to ensure
-        // that finishRequest is being called following lookupRequest
-        assert(reqLookupResult.it->first == \
-                (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure) : \
-                 (addr & ~(Addr(linesize - 1)))));
+    assert(!reqLookupResults.empty());
+    ReqLookupResult req_lookup = reqLookupResults.back();
+    reqLookupResults.pop_back();
+    assert(req_lookup.lineAddr ==
+           (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure)
+                      : (addr & ~(Addr(linesize - 1)))));
+    if (req_lookup.hasEntry) {
+        auto sf_it = cachedLocations.find(req_lookup.lineAddr);
+        // eraseIfNullEntry retains entries with pending lookups.
+        assert(sf_it != cachedLocations.end());
         if (will_retry) {
-            SnoopItem retry_item = reqLookupResult.retryItem;
-            // Undo any changes made in lookupRequest to the snoop filter
-            // entry if the request will come again. retryItem holds
-            // the previous value of the snoopfilter entry.
-            reqLookupResult.it->second = retry_item;
+            // Only undo this lookup's bits. A nested request for the same
+            // line may have changed other ports before this request retried.
+            SnoopItem &sf_item = sf_it->second;
+            const SnoopItem &retry_item = req_lookup.retryItem;
+            sf_item.requested =
+                (sf_item.requested & ~req_lookup.changedRequested) |
+                (retry_item.requested & req_lookup.changedRequested);
+            sf_item.holder = (sf_item.holder & ~req_lookup.changedHolder) |
+                             (retry_item.holder & req_lookup.changedHolder);
 
-            DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n",
-                    __func__,  retry_item.requested, retry_item.holder);
+            DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n", __func__,
+                    sf_item.requested, sf_item.holder);
         }
 
-        eraseIfNullEntry(reqLookupResult.it);
+        eraseIfNullEntry(sf_it);
     }
 }
 
@@ -192,11 +217,21 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
         line_addr |= LineSecure;
     }
     auto sf_it = cachedLocations.find(line_addr);
-    bool is_hit = (sf_it != cachedLocations.end());
+    bool is_hit = sf_it != cachedLocations.end() &&
+                  (sf_it->second.requested | sf_it->second.holder).any();
 
-    panic_if(!is_hit && (cachedLocations.size() >= maxEntryCount),
-             "snoop filter exceeded capacity of %d cache blocks\n",
-             maxEntryCount);
+    // A zero-mask entry is retained only for a pending request. It is not
+    // a live entry and must not count toward the capacity limit.
+    if (!is_hit && cachedLocations.size() >= maxEntryCount) {
+        const auto live_entries = std::count_if(
+            cachedLocations.begin(), cachedLocations.end(),
+            [](const auto &entry) {
+                return (entry.second.requested | entry.second.holder).any();
+            });
+        panic_if(live_entries >= maxEntryCount,
+                 "snoop filter exceeded capacity of %d cache blocks\n",
+                 maxEntryCount);
+    }
 
     // If the snoop filter has no entry, simply return a NULL
     // portlist, there is no point creating an entry only to remove it

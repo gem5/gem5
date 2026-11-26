@@ -89,7 +89,6 @@ class LTAGE : public TAGE
                            bool uncond, void * &bp_history) override;
     void init() override;
 
-  protected:
     /** The loop predictor object */
     LoopPredictor *loopPredictor;
 
@@ -127,8 +126,8 @@ class LTAGE : public TAGE
      * @param b Reference to wrapping pointer to allow storing
      * derived class prediction information in the base class.
      */
-    bool predict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
+    Prediction predict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                       void *&b) override;
 };
 
 } // namespace branch_prediction

@@ -45,6 +45,7 @@ TlbEntry::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(vaddr);
     SERIALIZE_SCALAR(logBytes);
     SERIALIZE_SCALAR(asid);
+    SERIALIZE_SCALAR(trieKey);
     SERIALIZE_SCALAR(pte);
     SERIALIZE_SCALAR(lruSeq);
 }
@@ -56,6 +57,9 @@ TlbEntry::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(vaddr);
     UNSERIALIZE_SCALAR(logBytes);
     UNSERIALIZE_SCALAR(asid);
+    if (!UNSERIALIZE_OPT_SCALAR(trieKey)) {
+        trieKey = 0;
+    }
     UNSERIALIZE_SCALAR(pte);
     UNSERIALIZE_SCALAR(lruSeq);
 }
@@ -74,6 +78,85 @@ getVPNFromVAddr(Addr vaddr, Addr mode)
         return bits(vaddr, 56, 12);
     default:
         panic("Unknown address translation mode %d\n", mode);
+    }
+}
+
+Addr
+getVAddrBits(Addr mode)
+{
+    switch (mode) {
+        case BARE:
+            return BARE_VADDR_BITS;
+        case SV39:
+            return SV39_VADDR_BITS;
+        case SV48:
+            return SV48_VADDR_BITS;
+        case SV57:
+            return SV57_VADDR_BITS;
+        default:
+            panic("Unknown address translation mode %d\n", mode);
+    }
+}
+
+Addr
+getLevels(Addr mode)
+{
+    switch (mode) {
+        case SV39:
+            return SV39_LEVELS;
+        case SV48:
+            return SV48_LEVELS;
+        case SV57:
+            return SV57_LEVELS;
+        default:
+            panic("Unknown address translation mode %d\n", mode);
+    }
+}
+
+Addr
+getLevelBits(Addr mode)
+{
+    switch (mode) {
+        case SV39:
+            return SV39_LEVEL_BITS;
+        case SV48:
+            return SV48_LEVEL_BITS;
+        case SV57:
+            return SV57_LEVEL_BITS;
+        default:
+            panic("Unknown address translation mode %d\n", mode);
+    }
+}
+
+Addr
+getWidenedBits(Addr mode)
+{
+    switch (mode) {
+        case SV39:
+            return SV39X4_WIDENED_BITS;
+        case SV48:
+            return SV48X4_WIDENED_BITS;
+        case SV57:
+            return SV57X4_WIDENED_BITS;
+        default:
+            panic("Unknown address translation mode %d\n", mode);
+    }
+}
+
+Addr
+getSextVAddr(Addr vaddr, Addr mode)
+{
+    switch (mode) {
+        case BARE:
+            return Addr(sext<BARE_VADDR_BITS>(vaddr));
+        case SV39:
+            return Addr(sext<SV39_VADDR_BITS>(vaddr));
+        case SV48:
+            return Addr(sext<SV48_VADDR_BITS>(vaddr));
+        case SV57:
+            return Addr(sext<SV57_VADDR_BITS>(vaddr));
+        default:
+            panic("Unknown address translation mode %d\n", mode);
     }
 }
 

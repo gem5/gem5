@@ -187,7 +187,8 @@ class GitRepo(AbstractRepo):
             # repository/commit.
             return ""
 
-    def status(self, filter=None, files=[], cached=False):
+    def status(self, filter=None, files=None, cached=False):
+        files = [] if files is None else files
         cmd = [self.git, "diff-index", "--name-status"]
         if cached:
             cmd.append("--cached")

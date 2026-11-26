@@ -119,81 +119,101 @@ class Mesh_XY(SimpleTopology):
         # Create the mesh links.
         int_links = []
 
+        # --per-vnet-links: create one dedicated link per vnet per direction.
+        # Default (off): one shared link per direction (supported_vnets=[]).
+        per_vnet = getattr(options, "per_vnet_links", False)
+        num_vnets = network.number_of_virtual_networks
+        vnets = list(range(num_vnets)) if per_vnet else [None]
+
+        if per_vnet:
+            print(
+                f"Mesh_XY: per_vnet_links enabled, "
+                f"{num_vnets} links per direction per router pair"
+            )
+
         # East output to West input links (weight = 1)
-        for row in range(num_rows):
-            for col in range(num_columns):
-                if col + 1 < num_columns:
-                    east_out = col + (row * num_columns)
-                    west_in = (col + 1) + (row * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[east_out],
-                            dst_node=routers[west_in],
-                            src_outport="East",
-                            dst_inport="West",
-                            latency=link_latency,
-                            weight=1,
+        for v in vnets:
+            for row in range(num_rows):
+                for col in range(num_columns):
+                    if col + 1 < num_columns:
+                        east_out = col + (row * num_columns)
+                        west_in = (col + 1) + (row * num_columns)
+                        int_links.append(
+                            IntLink(
+                                link_id=link_count,
+                                src_node=routers[east_out],
+                                dst_node=routers[west_in],
+                                src_outport="East",
+                                dst_inport="West",
+                                latency=link_latency,
+                                weight=1,
+                                supported_vnets=[v] if v is not None else [],
+                            )
                         )
-                    )
-                    link_count += 1
+                        link_count += 1
 
         # West output to East input links (weight = 1)
-        for row in range(num_rows):
-            for col in range(num_columns):
-                if col + 1 < num_columns:
-                    east_in = col + (row * num_columns)
-                    west_out = (col + 1) + (row * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[west_out],
-                            dst_node=routers[east_in],
-                            src_outport="West",
-                            dst_inport="East",
-                            latency=link_latency,
-                            weight=1,
+        for v in vnets:
+            for row in range(num_rows):
+                for col in range(num_columns):
+                    if col + 1 < num_columns:
+                        east_in = col + (row * num_columns)
+                        west_out = (col + 1) + (row * num_columns)
+                        int_links.append(
+                            IntLink(
+                                link_id=link_count,
+                                src_node=routers[west_out],
+                                dst_node=routers[east_in],
+                                src_outport="West",
+                                dst_inport="East",
+                                latency=link_latency,
+                                weight=1,
+                                supported_vnets=[v] if v is not None else [],
+                            )
                         )
-                    )
-                    link_count += 1
+                        link_count += 1
 
         # North output to South input links (weight = 2)
-        for col in range(num_columns):
-            for row in range(num_rows):
-                if row + 1 < num_rows:
-                    north_out = col + (row * num_columns)
-                    south_in = col + ((row + 1) * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[north_out],
-                            dst_node=routers[south_in],
-                            src_outport="North",
-                            dst_inport="South",
-                            latency=link_latency,
-                            weight=2,
+        for v in vnets:
+            for col in range(num_columns):
+                for row in range(num_rows):
+                    if row + 1 < num_rows:
+                        north_out = col + (row * num_columns)
+                        south_in = col + ((row + 1) * num_columns)
+                        int_links.append(
+                            IntLink(
+                                link_id=link_count,
+                                src_node=routers[north_out],
+                                dst_node=routers[south_in],
+                                src_outport="North",
+                                dst_inport="South",
+                                latency=link_latency,
+                                weight=2,
+                                supported_vnets=[v] if v is not None else [],
+                            )
                         )
-                    )
-                    link_count += 1
+                        link_count += 1
 
         # South output to North input links (weight = 2)
-        for col in range(num_columns):
-            for row in range(num_rows):
-                if row + 1 < num_rows:
-                    north_in = col + (row * num_columns)
-                    south_out = col + ((row + 1) * num_columns)
-                    int_links.append(
-                        IntLink(
-                            link_id=link_count,
-                            src_node=routers[south_out],
-                            dst_node=routers[north_in],
-                            src_outport="South",
-                            dst_inport="North",
-                            latency=link_latency,
-                            weight=2,
+        for v in vnets:
+            for col in range(num_columns):
+                for row in range(num_rows):
+                    if row + 1 < num_rows:
+                        north_in = col + (row * num_columns)
+                        south_out = col + ((row + 1) * num_columns)
+                        int_links.append(
+                            IntLink(
+                                link_id=link_count,
+                                src_node=routers[south_out],
+                                dst_node=routers[north_in],
+                                src_outport="South",
+                                dst_inport="North",
+                                latency=link_latency,
+                                weight=2,
+                                supported_vnets=[v] if v is not None else [],
+                            )
                         )
-                    )
-                    link_count += 1
+                        link_count += 1
 
         network.int_links = int_links
 

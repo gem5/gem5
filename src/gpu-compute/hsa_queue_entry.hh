@@ -60,32 +60,46 @@ namespace gem5
 class HSAQueueEntry
 {
   public:
-    HSAQueueEntry(std::string kernel_name, uint32_t queue_id,
-                  int dispatch_id, void *disp_pkt, AMDKernelCode *akc,
-                  Addr host_pkt_addr, Addr code_addr, GfxVersion gfx_version)
-        : _gfxVersion(gfx_version), kernName(kernel_name),
-          _wgSize{{(int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_x,
-                  (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_y,
-                  (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_z}},
-          _gridSize{{(int)((_hsa_dispatch_packet_t*)disp_pkt)->grid_size_x,
-                    (int)((_hsa_dispatch_packet_t*)disp_pkt)->grid_size_y,
-                    (int)((_hsa_dispatch_packet_t*)disp_pkt)->grid_size_z}},
-          _queueId(queue_id), _dispatchId(dispatch_id), dispPkt(disp_pkt),
+    HSAQueueEntry(std::string kernel_name, uint32_t queue_id, int dispatch_id,
+                  void *disp_pkt, AMDKernelCode *akc, Addr host_pkt_addr,
+                  Addr code_addr, GfxVersion gfx_version)
+        : _gfxVersion(gfx_version),
+          kernName(kernel_name),
+          _wgSize{
+              {(int)((_hsa_dispatch_packet_t *)disp_pkt)->workgroup_size_x,
+               (int)((_hsa_dispatch_packet_t *)disp_pkt)->workgroup_size_y,
+               (int)((_hsa_dispatch_packet_t *)disp_pkt)->workgroup_size_z}},
+          _gridSize{{(int)((_hsa_dispatch_packet_t *)disp_pkt)->grid_size_x,
+                     (int)((_hsa_dispatch_packet_t *)disp_pkt)->grid_size_y,
+                     (int)((_hsa_dispatch_packet_t *)disp_pkt)->grid_size_z}},
+          _queueId(queue_id),
+          _dispatchId(dispatch_id),
+          dispPkt(disp_pkt),
           _hostDispPktAddr(host_pkt_addr),
-          _completionSignal(((_hsa_dispatch_packet_t*)disp_pkt)
-                            ->completion_signal),
+          _completionSignal(
+              ((_hsa_dispatch_packet_t *)disp_pkt)->completion_signal),
           codeAddress(code_addr),
-          kernargAddress(((_hsa_dispatch_packet_t*)disp_pkt)->kernarg_address),
-          _outstandingInvs(-1), _outstandingWbs(0),
-          _ldsSize((int)((_hsa_dispatch_packet_t*)disp_pkt)->
-                   group_segment_size),
-          _privMemPerItem((int)((_hsa_dispatch_packet_t*)disp_pkt)->
-                         private_segment_size),
-          _contextId(0), _wgId{{ 0, 0, 0 }},
-          _numWgTotal(1), numWgArrivedAtBarrier(0), _numWgCompleted(0),
-          _globalWgId(0), dispatchComplete(false)
-
+          kernargAddress(
+              ((_hsa_dispatch_packet_t *)disp_pkt)->kernarg_address),
+          _outstandingInvs(-1),
+          _outstandingWbs(0),
+          _ldsSize(
+              (int)((_hsa_dispatch_packet_t *)disp_pkt)->group_segment_size),
+          _privMemPerItem(
+              (int)((_hsa_dispatch_packet_t *)disp_pkt)->private_segment_size),
+          _contextId(0),
+          _wgId{{0, 0, 0}},
+          _numWgTotal(1),
+          numWgArrivedAtBarrier(0),
+          _numWgCompleted(0),
+          _globalWgId(0),
+          dispatchComplete(false)
     {
+        // Set if wave32 and check the ISA is valid.
+        // This will be updated for future gfx12 support
+        _isWave32 = akc->enable_wavefront_size32;
+        panic_if(_isWave32, "Wave32 not supported in gfx9");
+
         // Use the resource descriptors to determine number of GPRs. This will
         // round up in some cases, however the exact number field in the AMD
         // kernel code struct is not backwards compatible and that field is
@@ -112,7 +126,7 @@ class HSAQueueEntry
             gfx_version == GfxVersion::gfx90a ||
             gfx_version == GfxVersion::gfx942 ||
             gfx_version == GfxVersion::gfx950) {
-            numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16)/2;
+            numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16) / 2;
         } else {
             panic("Saw unknown gfx version setting up GPR counts\n");
         }
@@ -131,15 +145,17 @@ class HSAQueueEntry
         // Granularity 4. Value 0-63. 0 - accum-offset = 4,
         // 1 - accum-offset = 8, ..., 63 - accum-offset = 256.
         _accumOffset = (akc->accum_offset + 1) * 4;
+
+        _akc = akc;
     }
 
-    const GfxVersion&
+    const GfxVersion &
     gfxVersion() const
     {
         return _gfxVersion;
     }
 
-    const std::string&
+    const std::string &
     kernelName() const
     {
         return kernName;
@@ -183,7 +199,7 @@ class HSAQueueEntry
         return _dispatchId;
     }
 
-    void*
+    void *
     dispPktPtr()
     {
         return dispPkt;
@@ -219,7 +235,11 @@ class HSAQueueEntry
         return _ldsSize;
     }
 
-    int privMemPerItem() const { return _privMemPerItem; }
+    int
+    privMemPerItem() const
+    {
+        return _privMemPerItem;
+    }
 
     int
     contextId() const
@@ -311,12 +331,14 @@ class HSAQueueEntry
         return numWgArrivedAtBarrier;
     }
 
-    bool vgprBitEnabled(int bit) const
+    bool
+    vgprBitEnabled(int bit) const
     {
         return initialVgprState.test(bit);
     }
 
-    bool sgprBitEnabled(int bit) const
+    bool
+    sgprBitEnabled(int bit) const
     {
         return initialSgprState.test(bit);
     }
@@ -339,7 +361,8 @@ class HSAQueueEntry
 
     /* getter */
     int
-    outstandingInvs() {
+    outstandingInvs()
+    {
         return _outstandingInvs;
     }
 
@@ -409,6 +432,12 @@ class HSAQueueEntry
         return _accumOffset;
     }
 
+    int
+    waveSize() const
+    {
+        return _isWave32 ? 32 : 64;
+    }
+
     void
     preloadLength(unsigned val)
     {
@@ -435,35 +464,47 @@ class HSAQueueEntry
         return &(_preloadArgs[0]);
     }
 
+    void
+    setEmulated()
+    {
+        _wasEmulated = true;
+    }
+
+    bool
+    wasEmulated() const
+    {
+        return _wasEmulated;
+    }
+
+    AMDKernelCode *
+    akc() const
+    {
+        assert(_akc != nullptr);
+        return _akc;
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
     {
         /** set the enable bits for the initial SGPR state */
         initialSgprState.set(PrivateSegBuf,
-            akc->enable_sgpr_private_segment_buffer);
-        initialSgprState.set(DispatchPtr,
-            akc->enable_sgpr_dispatch_ptr);
-        initialSgprState.set(QueuePtr,
-            akc->enable_sgpr_queue_ptr);
+                             akc->enable_sgpr_private_segment_buffer);
+        initialSgprState.set(DispatchPtr, akc->enable_sgpr_dispatch_ptr);
+        initialSgprState.set(QueuePtr, akc->enable_sgpr_queue_ptr);
         initialSgprState.set(KernargSegPtr,
-            akc->enable_sgpr_kernarg_segment_ptr);
-        initialSgprState.set(DispatchId,
-            akc->enable_sgpr_dispatch_id);
+                             akc->enable_sgpr_kernarg_segment_ptr);
+        initialSgprState.set(DispatchId, akc->enable_sgpr_dispatch_id);
         initialSgprState.set(FlatScratchInit,
-            akc->enable_sgpr_flat_scratch_init);
+                             akc->enable_sgpr_flat_scratch_init);
         initialSgprState.set(PrivateSegSize,
-            akc->enable_sgpr_private_segment_size);
-        initialSgprState.set(WorkgroupIdX,
-            akc->enable_sgpr_workgroup_id_x);
-        initialSgprState.set(WorkgroupIdY,
-            akc->enable_sgpr_workgroup_id_y);
-        initialSgprState.set(WorkgroupIdZ,
-            akc->enable_sgpr_workgroup_id_z);
-        initialSgprState.set(WorkgroupInfo,
-            akc->enable_sgpr_workgroup_info);
+                             akc->enable_sgpr_private_segment_size);
+        initialSgprState.set(WorkgroupIdX, akc->enable_sgpr_workgroup_id_x);
+        initialSgprState.set(WorkgroupIdY, akc->enable_sgpr_workgroup_id_y);
+        initialSgprState.set(WorkgroupIdZ, akc->enable_sgpr_workgroup_id_z);
+        initialSgprState.set(WorkgroupInfo, akc->enable_sgpr_workgroup_info);
         initialSgprState.set(PrivSegWaveByteOffset,
-            akc->enable_private_segment);
+                             akc->enable_private_segment);
 
         /**
          * set the enable bits for the initial VGPR state. the
@@ -532,6 +573,7 @@ class HSAQueueEntry
     std::bitset<NumScalarInitFields> initialSgprState;
 
     unsigned _accumOffset;
+    bool _isWave32 = false;
 
     // For preloading args there are extra bytes of space after the dispatch
     // packet containing values that should be preloaded into SGPRs. This
@@ -539,6 +581,12 @@ class HSAQueueEntry
     // max amount. It is of dword type to easily access during wave start.
     unsigned _preloadLength = 0;
     uint32_t _preloadArgs[KernargPreloadPktSize / sizeof(uint32_t)];
+
+    // Set if the task was emulated instead of simulated (e.g., BLIT kernel).
+    // We keep a copy of the akc pointer in case emulated needs to back out
+    // due to an unsupported kernel type.
+    bool _wasEmulated = false;
+    AMDKernelCode *_akc;
 };
 
 } // namespace gem5

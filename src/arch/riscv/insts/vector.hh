@@ -205,7 +205,12 @@ public:
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)
         const override
     {
-        return fault;
+        if (fault != NoFault) {
+            return fault;
+        }
+        // This micro-op does not modify vector state, so set_dirty is false.
+        // The vector specification allows VS to remain unchanged in this case.
+        return updateVPUStatus(xc, machInst, false, true);
     }
 
     std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
@@ -289,20 +294,80 @@ class VectorSlideMacroInst : public VectorMacroInst
 class VectorSlideMicroInst : public VectorMicroInst
 {
   protected:
-    uint32_t vdIdx;
-    uint32_t vs2Idx;
-    uint32_t vs3Idx;
+    uint8_t numVs2Regs = 0;
     VectorSlideMicroInst(const char *mnem, ExtMachInst _machInst,
                          OpClass __opClass, uint32_t _microVl,
-                         uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs2Idx,
-                         uint32_t _vs3Idx, uint32_t _elen, uint32_t _vlen)
+                         uint32_t _microIdx, uint32_t _elen, uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
                           _elen, _vlen)
-        , vdIdx(_vdIdx), vs2Idx(_vs2Idx), vs3Idx(_vs3Idx)
     {}
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorGatherMacroInst : public VectorMacroInst
+{
+  protected:
+    VectorGatherMacroInst(const char *mnem, ExtMachInst _machInst,
+                          OpClass __opClass, uint32_t _elen, uint32_t _vlen)
+        : VectorMacroInst(mnem, _machInst, __opClass, _elen, _vlen)
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
+class VectorGatherMicroInst : public VectorMicroInst
+{
+  protected:
+    uint8_t numVs1Regs = 0;
+    uint8_t numVs2Regs = 0;
+    VectorGatherMicroInst(const char *mnem, ExtMachInst _machInst,
+                          OpClass __opClass, uint32_t _microVl,
+                          uint32_t _microIdx, uint32_t _elen, uint32_t _vlen)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
+                          _elen, _vlen)
+    {}
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
+class VectorNarrowingMacroInst : public VectorMacroInst
+{
+  protected:
+    VectorNarrowingMacroInst(const char *mnem, ExtMachInst _machInst,
+                             OpClass __opClass, uint32_t _elen, uint32_t _vlen)
+        : VectorMacroInst(mnem, _machInst, __opClass, _elen, _vlen)
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
+class VectorNarrowingMicroInst : public VectorMicroInst
+{
+  protected:
+    uint8_t numVs2Regs = 0;
+    VectorNarrowingMicroInst(const char *mnem, ExtMachInst _machInst,
+                             OpClass __opClass, uint32_t _microVl,
+                             uint32_t _microIdx, uint32_t _elen,
+                             uint32_t _vlen)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
+                          _elen, _vlen)
+    {}
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class VectorMemMicroInst : public VectorMicroInst
@@ -368,6 +433,10 @@ class VleMicroInst : public VectorMicroInst
   public:
     mutable bool trimVl;
     mutable uint32_t faultIdx;
+
+    // Fault-only-first loads (vle*ff) suppress a fault on any element but
+    // the first and trim vl instead; see handleMemFault() in vector.cc.
+    Fault handleMemFault(const Fault &fault, Addr vaddr) const override;
 
   protected:
     Request::Flags memAccessFlags;
@@ -596,6 +665,16 @@ class VsIndexMicroInst : public VectorMemMicroInst
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+class VectorUnaryMacroInst : public VectorArithMacroInst
+{
+  public:
+    using VectorArithMacroInst::VectorArithMacroInst;
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
 class VMvWholeMacroInst : public VectorArithMacroInst
 {
   protected:
@@ -606,6 +685,16 @@ class VMvWholeMacroInst : public VectorArithMacroInst
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorUnaryMicroInst : public VectorArithMicroInst
+{
+  public:
+    using VectorArithMicroInst::VectorArithMicroInst;
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class VMvWholeMicroInst : public VectorArithMicroInst
@@ -688,20 +777,30 @@ class VlSegMacroInst : public VectorMemMacroInst
 
 class VlSegMicroInst : public VectorMicroInst
 {
+  public:
+    // faultIdx counts raw EEW slots; the trim microop converts to segments.
+    mutable bool trimVl;
+    mutable uint32_t faultIdx;
+    Fault handleMemFault(const Fault &fault, Addr vaddr) const override;
+
   protected:
     Request::Flags memAccessFlags;
     uint8_t regIdx;
-    mutable bool trimVl;
-    mutable uint32_t faultIdx;
+    const uint32_t elemOffset;
+    const uint32_t numFields;
 
-    VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
-                   OpClass __opClass, uint32_t _microVl,
-                   uint32_t _microIdx, uint32_t _numMicroops,
-                   uint32_t _field, uint32_t _numFields,
+    VlSegMicroInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                   uint32_t _microVl, uint32_t _microIdx,
+                   uint32_t _numMicroops, uint32_t _field, uint32_t _numFields,
                    uint32_t _elen, uint32_t _vlen)
-        : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
-                          _microIdx, _elen, _vlen)
-        , trimVl(false), faultIdx(_microVl)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
+                          _elen, _vlen),
+          trimVl(false),
+          faultIdx(_microVl),
+          elemOffset(_microIdx * (_vlen / width_EEW(_machInst.width)) *
+                         _numFields +
+                     _field * _microVl),
+          numFields(_numFields)
     {
       this->flags[IsLoad] = true;
     }
@@ -713,7 +812,7 @@ class VlSegMicroInst : public VectorMicroInst
 class VlSegDeIntrlvMicroInst : public VectorArithMicroInst
 {
   private:
-    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId srcRegIdxArr[NumVecInternalRegs + 2];
     RegId destRegIdxArr[1];
     uint32_t numSrcs;
     uint32_t numMicroops;
@@ -808,14 +907,12 @@ class VCpyVsMicroInst : public VectorArithMicroInst
 class VPinVdMicroInst : public VectorArithMicroInst
 {
     private:
-        RegId srcRegIdxArr[1];
+        RegId srcRegIdxArr[3];
         RegId destRegIdxArr[1];
-        const bool hasVdOffset;
 
       public:
         VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
-                        uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen,
-                        bool _hasVdOffset = false);
+                        uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;

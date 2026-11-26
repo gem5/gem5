@@ -122,7 +122,7 @@ WriteChecker<sc_core::SC_ONE_WRITER>::checkPort(sc_core::sc_port_base &port,
 void
 WriteChecker<sc_core::SC_ONE_WRITER>::checkWriter()
 {
-    Process *p = scheduler.current();
+    Process *p = scheduler().current();
     if (!p)
         return;
     uint64_t stamp = getChangeStamp();
@@ -146,7 +146,7 @@ WriteChecker<sc_core::SC_MANY_WRITERS>::checkPort(sc_core::sc_port_base &port,
 void
 WriteChecker<sc_core::SC_MANY_WRITERS>::checkWriter()
 {
-    Process *p = scheduler.current();
+    Process *p = scheduler().current();
     if (!p)
         return;
     uint64_t stamp = getChangeStamp();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -90,6 +90,9 @@ class PerfectCacheMemory
     void allocate(Addr address);
 
     void deallocate(Addr address);
+
+    // Flush all entries within the cache
+    void flushEntries();
 
     // Returns with the physical address of the conflicting cache line
     Addr cacheProbe(Addr newAddress) const;
@@ -182,6 +185,14 @@ PerfectCacheMemory<ENTRY>::deallocate(Addr address)
     Addr line_addr = makeLineAddress(address, floorLog2(m_block_size));
     [[maybe_unused]] auto num_erased = m_map.erase(line_addr);
     assert(num_erased == 1);
+}
+
+// deallocate entry
+template <class ENTRY>
+inline void
+PerfectCacheMemory<ENTRY>::flushEntries()
+{
+    m_map.clear();
 }
 
 // Returns with the physical address of the conflicting cache line

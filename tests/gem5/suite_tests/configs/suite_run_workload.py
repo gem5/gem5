@@ -31,6 +31,7 @@ Characteristics
 ---------------
 * User needs to specify the isa in lower case.
 """
+
 import argparse
 
 from m5.util import panic
@@ -101,7 +102,9 @@ memory = SingleChannelDDR3_1600(size="3GiB")
 
 
 def get_processor(isa):
-    processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1)
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1, clk_freq="1GHz"
+    )
     return processor
 
 

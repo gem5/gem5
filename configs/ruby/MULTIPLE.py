@@ -82,7 +82,7 @@ def create_system(options, *args, **kwargs):
     print("WARNING: The Ruby.py file is deprecated.")
 
     protocol_module = importlib.import_module(f".{protocol}", package="ruby")
-    (cpu_sequencers, dir_cntrls, topology) = protocol_module.create_system(
+    cpu_sequencers, dir_cntrls, topology = protocol_module.create_system(
         options, *args, **kwargs
     )
 

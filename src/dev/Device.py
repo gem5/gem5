@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016,2019-2020 ARM Limited
+# Copyright (c) 2012-2016,2019-2020,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -155,4 +155,5 @@ class IsaFake(BasicPioDevice):
 
 class BadAddr(IsaFake):
     pio_addr = 0
-    ret_bad_addr = Param.Bool(True, "Return pkt status bad address on access")
+    pio_size = 0
+    ret_bad_addr = True

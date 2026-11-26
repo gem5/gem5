@@ -48,7 +48,7 @@ class GUPSGeneratorCore(AbstractGeneratorCore):
         start_addr: Addr,
         mem_size: str,
         update_limit: int,
-        clk_freq: Optional[str],
+        clk_freq: str | None,
     ):
         """
         Create a GUPSGeneratorCore as the main generator.

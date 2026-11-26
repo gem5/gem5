@@ -33,17 +33,90 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.PciUpstream import PciUpstream
+from m5.objects.Bridge import (
+    Bridge,
+    BridgeBase,
+)
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.PciDevice import PciDevice
+from m5.objects.PciUpstream import (
+    PciBus,
+    PciConfigError,
+    PciUpDownBridge,
+)
 from m5.objects.Platform import Platform
 from m5.params import *
 from m5.proxy import *
 
 
-class PciHost(PciUpstream):
+class PciHost(ClockedObject):
     type = "PciHost"
     cxx_class = "gem5::PciHost"
     cxx_header = "dev/pci/host.hh"
     abstract = True
+
+    up_to_down = Param.PciUpDownBridge(
+        PciUpDownBridge(), "Bridge upstream -> downstream"
+    )
+    down_to_up = Param.BridgeBase(Bridge(), "Bridge downstream -> upstream")
+
+    internal_bus = Param.PciBus(
+        PciBus(),
+        "Internal PCI bus XBar used to transmit packets between devices",
+    )
+
+    config_error = Param.PciConfigError(
+        PciConfigError(), "Device to handle config errors"
+    )
+
+    devices = VectorParam.PciDevice(
+        [], "List of all PCI device connected to this upstream"
+    )
+
+    def internal_connect(self):
+        """Helper function to connect the host bridge internal ports"""
+        self.up_to_down.mem_side_port = self.internal_bus.cpu_side_ports
+        self.down_to_up.cpu_side_port = self.internal_bus.default
+        self.config_error.pio = self.internal_bus.config_error_port
+
+    def connect_upper_bus(self, bus, connect_dma):
+        """
+        Connect the host bridge to given bus. If connect_dma is set to False,
+        the DMA port will not be connected to the bus and it will be returned,
+        allowing it to be connected on a ruby hierarchy. Otherwise, the port
+        is connected to the bus and None is returned.
+        """
+        self.up_to_down.cpu_side_port = bus.mem_side_ports
+
+        if not connect_dma:
+            return self.down_to_up.mem_side_port
+
+        self.down_to_up.mem_side_port = bus.cpu_side_ports
+        return None
+
+    def dma_port(self):
+        return self.down_to_up.mem_side_port
+
+    def connect_device(self, device: PciDevice):
+        """Connect given PCI device to the host bridge"""
+        if device in self.devices:
+            raise ValueError(
+                f"Device {device} is already connected to this PCI host"
+            )
+        for existing in self.devices:
+            if (
+                existing.pci_dev == device.pci_dev
+                and existing.pci_func == device.pci_func
+            ):
+                raise ValueError(
+                    f"PCI slot (dev={existing.pci_dev}, func={existing.pci_func}) is already "
+                    f"occupied by {existing}"
+                )
+
+        self.devices.append(device)
+
+        device.pio = self.internal_bus.mem_side_ports
+        device.dma = self.internal_bus.cpu_side_ports
 
 
 class GenericPciHost(PciHost):

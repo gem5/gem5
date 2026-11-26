@@ -36,8 +36,7 @@ namespace gem5
 
 GPURenderDriver::GPURenderDriver(const GPURenderDriverParams &p)
     : EmulatedDriver(p)
-{
-}
+{}
 
 /* ROCm 4 utilizes the render driver located at /dev/dri/renderDXXX. This
  * patch implements a very simple driver that just returns a file
@@ -55,8 +54,9 @@ GPURenderDriver::open(ThreadContext *tc, int mode, int flags)
 /* DGPUs try to mmap the driver file. It doesn't appear they do anything
  * with it, so we just return the address that's provided
  */
-Addr GPURenderDriver::mmap(ThreadContext *tc, Addr start, uint64_t length,
-                           int prot, int tgt_flags, int tgt_fd, off_t offset)
+Addr
+GPURenderDriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
+                      int tgt_flags, int tgt_fd, off_t offset)
 {
     warn_once("GPURenderDriver::mmap returning start address %#x", start);
     return start;

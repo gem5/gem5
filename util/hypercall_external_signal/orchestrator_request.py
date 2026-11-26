@@ -256,7 +256,13 @@ def main():
     )
     parser.add_argument(
         "function",
-        choices=["status", "get_stats", "update_debug_flags"],
+        choices=[
+            "status",
+            "get_stats",
+            "update_debug_flags",
+            "trace_on",
+            "trace_off",
+        ],
         help="Function to execute",
     )
     parser.add_argument(
@@ -265,7 +271,9 @@ def main():
         help="Sets the flags for debug output. This flag will only work if "
         "positional argument 'update_debug_flags' is passed. To disable "
         "a flag you can pass the flag name starting with '-' for example "
-        "-FLAG1. If an invalid flag is passed the flag will be skipped.",
+        "-FLAG1. To auto-disable a flag after N ticks append ':Nt' to the "
+        "flag name, for example FLAG1:1000000t. If an invalid flag is "
+        "passed the flag will be skipped.",
     )
     parser.add_argument(
         "--output", type=str, help="Write response to specified file"

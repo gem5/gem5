@@ -53,15 +53,16 @@ sc_mutex::trylock()
 {
     if (holder.valid())
         return -1;
-    holder = ::sc_gem5::scheduler.current();
+    holder = ::sc_gem5::scheduler().current();
     return 0;
 }
 
 int
 sc_mutex::unlock()
 {
-    if (holder != ::sc_gem5::scheduler.current())
+    if (holder != ::sc_gem5::scheduler().current()) {
         return -1;
+    }
 
     holder = nullptr;
     unlockEvent.notify();

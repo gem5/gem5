@@ -73,6 +73,10 @@ class Process(SimObject):
     simpoint = Param.UInt64(0, "simulation point at which to start simulation")
     drivers = VectorParam.EmulatedDriver([], "Available emulated drivers")
     release = Param.String("5.1.0", "Linux kernel uname release")
+    seconds_since_epoch = Param.UInt64(
+        1_000_000_000,
+        "Starting seconds since epoch for simulation (default: 10^9, 2001/09/09)",
+    )
 
     @classmethod
     def export_methods(cls, code):

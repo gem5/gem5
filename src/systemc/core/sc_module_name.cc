@@ -36,16 +36,18 @@
 namespace sc_core
 {
 
+// clang-format off
 sc_module_name::sc_module_name(const char *name) :
     _name(name), _gem5_module(nullptr), _on_the_stack(true)
 {
     if (sc_is_running())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
-    else if (::sc_gem5::scheduler.elaborationDone())
+    else if (::sc_gem5::scheduler().elaborationDone())
         SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
     else
         _gem5_module = new sc_gem5::Module(name);
 }
+// clang-format on
 
 sc_module_name::sc_module_name(const sc_module_name &other) :
     _name(other._name), _gem5_module(other._gem5_module), _on_the_stack(false)

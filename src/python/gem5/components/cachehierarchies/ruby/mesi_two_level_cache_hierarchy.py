@@ -112,7 +112,7 @@ class MESITwoLevelCacheHierarchy(
                 self._num_l2_banks,
                 cache_line_size,
                 board.processor.get_isa(),
-                board.get_clock_domain(),
+                board.get_processor().get_clock_domain(),
             )
 
             cache.sequencer = RubySequencer(

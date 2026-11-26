@@ -85,10 +85,8 @@ def create_system(
     options, full_system, system, dma_ports, bootmem, ruby_system, cpus
 ):
     if buildEnv["PROTOCOL"] != "MESI_Three_Level_HTM":
-        fatal(
-            "This script requires the MESI_Three_Level protocol to be\
-               built."
-        )
+        fatal("This script requires the MESI_Three_Level protocol to be\
+               built.")
 
     cpu_sequencers = []
 
@@ -387,8 +385,7 @@ def create_system(
                 line_size=options.cacheline_size,
                 assoc=options.l2_assoc,
                 cpus=[
-                    n
-                    for n in range(
+                    *range(
                         i * num_cpus_per_cluster,
                         (i + 1) * num_cpus_per_cluster,
                     )

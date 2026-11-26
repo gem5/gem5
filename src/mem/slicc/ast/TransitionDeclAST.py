@@ -1,3 +1,15 @@
+# Copyright (c) 2026 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -31,7 +43,14 @@ from slicc.symbols import Transition
 
 class TransitionDeclAST(DeclAST):
     def __init__(
-        self, slicc, request_types, states, events, next_state, actions
+        self,
+        slicc,
+        request_types,
+        states,
+        events,
+        next_state,
+        actions,
+        transition_decl_type,
     ):
         super().__init__(slicc)
 
@@ -40,6 +59,8 @@ class TransitionDeclAST(DeclAST):
         self.events = events
         self.next_state = next_state
         self.actions = actions
+        assert transition_decl_type in ["transition", "transition_no_stall"]
+        self.no_stall = transition_decl_type == "transition_no_stall"
 
     def __repr__(self):
         return "[TransitionDecl: ]"
@@ -83,5 +104,6 @@ class TransitionDeclAST(DeclAST):
                     self.actions,
                     self.request_types,
                     self.location,
+                    self.no_stall,
                 )
                 machine.addTransition(t)

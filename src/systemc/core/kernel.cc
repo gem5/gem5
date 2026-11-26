@@ -59,7 +59,7 @@ Kernel::Kernel(const Params &params, int) :
     t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
-    ::sc_gem5::scheduler.setEventQueue(eventQueue());
+    ::sc_gem5::scheduler().setEventQueue(eventQueue());
 }
 
 void
@@ -73,13 +73,13 @@ Kernel::init()
 
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
     for (auto p: allPorts)
-        p->sc_port_base()->before_end_of_elaboration();
+        p->beforeEndOfElaboration();
     for (auto m: sc_gem5::allModules)
         m->beforeEndOfElaboration();
     for (auto c: sc_gem5::allChannels)
-        c->sc_chan()->before_end_of_elaboration();
+        c->beforeEndOfElaboration();
 
-    ::sc_gem5::scheduler.elaborationDone(true);
+    ::sc_gem5::scheduler().elaborationDone(true);
 }
 
 void
@@ -98,13 +98,13 @@ Kernel::regStats()
 
         status(::sc_core::SC_END_OF_ELABORATION);
         for (auto p: allPorts)
-            p->sc_port_base()->end_of_elaboration();
+            p->endOfElaboration();
         for (auto m: sc_gem5::allModules)
             m->endOfElaboration();
         for (auto c: sc_gem5::allChannels)
-            c->sc_chan()->end_of_elaboration();
+            c->endOfElaboration();
     } catch (...) {
-        ::sc_gem5::scheduler.throwUp();
+        ::sc_gem5::scheduler().throwUp();
     }
 }
 
@@ -122,13 +122,13 @@ Kernel::startup()
     try {
         status(::sc_core::SC_START_OF_SIMULATION);
         for (auto p: allPorts)
-            p->sc_port_base()->start_of_simulation();
+            p->startOfSimulation();
         for (auto m: sc_gem5::allModules)
             m->startOfSimulation();
         for (auto c: sc_gem5::allChannels)
-            c->sc_chan()->start_of_simulation();
+            c->startOfSimulation();
     } catch (...) {
-        ::sc_gem5::scheduler.throwUp();
+        ::sc_gem5::scheduler().throwUp();
     }
 
     startComplete = true;
@@ -154,13 +154,13 @@ Kernel::stopWork()
     status(::sc_core::SC_END_OF_SIMULATION);
     try {
         for (auto p: allPorts)
-            p->sc_port_base()->end_of_simulation();
+            p->endOfSimulation();
         for (auto m: sc_gem5::allModules)
             m->endOfSimulation();
         for (auto c: sc_gem5::allChannels)
-            c->sc_chan()->end_of_simulation();
+            c->endOfSimulation();
     } catch (...) {
-        ::sc_gem5::scheduler.throwUp();
+        ::sc_gem5::scheduler().throwUp();
     }
 
     endComplete = true;
@@ -172,11 +172,11 @@ void
 Kernel::t0Handler()
 {
     if (stopAfterCallbacks) {
-        scheduler.clear();
-        ::sc_gem5::scheduler.initPhase();
-        scheduler.scheduleStop(false);
+        scheduler().clear();
+        ::sc_gem5::scheduler().initPhase();
+        scheduler().scheduleStop(false);
     } else {
-        ::sc_gem5::scheduler.initPhase();
+        ::sc_gem5::scheduler().initPhase();
         status(::sc_core::SC_RUNNING);
     }
 }

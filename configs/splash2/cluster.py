@@ -292,13 +292,11 @@ elif args.benchmark == "WaterNSquared":
 elif args.benchmark == "WaterSpatial":
     root.workload = Water_spatial()
 else:
-    m5.util.panic(
-        """
+    m5.util.panic("""
 The --benchmark environment variable was set to something improper.
 Use Cholesky, FFT, LUContig, LUNoncontig, Radix, Barnes, FMM, OceanContig,
 OceanNoncontig, Raytrace, WaterNSquared, or WaterSpatial
-"""
-    )
+""")
 
 # --------------------
 # Assign the workload to the cpus

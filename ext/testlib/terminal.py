@@ -27,9 +27,11 @@
 # Author: Steve Reinhardt
 
 import fcntl
+import os
 import struct
 import sys
 import termios
+from typing import TextIO
 
 # Intended usage example:
 #
@@ -99,18 +101,33 @@ class ColorStrings:
 termcap = ColorStrings(cap_string)
 no_termcap = ColorStrings(null_cap_string)
 
-if sys.stdout.isatty():
+
+def should_use_colors(out: TextIO):
+    must_not_colour = (
+        os.getenv("NO_COLOR", default="") != ""
+        or os.getenv("NOCOLOR", default="") != ""
+    )
+    should_force = (
+        os.getenv("CLICOLOR_FORCE", default="") != ""
+        or os.getenv("FORCE_COLOR", default="") != ""
+    )
+    istty = out.isatty() and os.getenv("TERM", default="dumb") != "dumb"
+    return should_force or ((not must_not_colour) and istty)
+
+
+if should_use_colors(sys.stdout):
     tty_termcap = termcap
 else:
     tty_termcap = no_termcap
 
 
-def get_termcap(use_colors=None):
+def get_termcap(stream=sys.stdout, use_colors=None):
+    if use_colors is None:
+        # option unspecified; default behavior is to use colors iff isatty && NO_COLOR is not set
+        use_colors = should_use_colors(stream)
+
     if use_colors:
         return termcap
-    elif use_colors is None:
-        # option unspecified; default behavior is to use colors iff isatty
-        return tty_termcap
     else:
         return no_termcap
 
@@ -136,7 +153,7 @@ def separator(char=default_separator, color=None):
     Return a separator of the given character that is the length of the full
     width of the terminal screen.
     """
-    (w, h) = terminal_size()
+    w, h = terminal_size()
     if color:
         return color + char * w + termcap.Normal
     else:

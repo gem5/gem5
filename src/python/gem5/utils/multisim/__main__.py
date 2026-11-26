@@ -29,6 +29,7 @@ This module is the entry point for the multi-simulation (MultiSim) framework.
 It provides a CLI using argparse to obtain the path to the simulation
 configuration script and the number of processes to run in parallel.
 """
+
 from gem5.utils.multisim.multisim import (
     module_run,
     run,

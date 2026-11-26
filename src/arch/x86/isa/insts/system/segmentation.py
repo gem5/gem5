@@ -35,6 +35,97 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 microcode = """
+def macroop SGDT_M
+{
+    .adjust_env maxOsz
+
+    # Store the limit followed by the base.
+    rdlimit t1, tsg, dataSize=2
+    rdbase t2, tsg
+    st t1, seg, sib, disp, dataSize=2
+    st t2, seg, sib, 'adjustedDisp + 2'
+};
+
+def macroop SGDT_P
+{
+    .adjust_env maxOsz
+
+    rdip t7
+    rdlimit t1, tsg, dataSize=2
+    rdbase t2, tsg
+    st t1, seg, riprel, disp, dataSize=2
+    st t2, seg, riprel, 'adjustedDisp + 2'
+};
+
+def macroop SGDT_16_M
+{
+    .adjust_env maxOsz
+
+    # The base field is 32 bits, with bits 31:24 stored as zero.
+    rdlimit t1, tsg, dataSize=2
+    rdbase t2, tsg
+    zexti t2, t2, 23, dataSize=8
+    st t1, seg, sib, disp, dataSize=2
+    st t2, seg, sib, 'adjustedDisp + 2', dataSize=4
+};
+
+def macroop SGDT_16_P
+{
+    .adjust_env maxOsz
+
+    rdip t7
+    rdlimit t1, tsg, dataSize=2
+    rdbase t2, tsg
+    zexti t2, t2, 23, dataSize=8
+    st t1, seg, riprel, disp, dataSize=2
+    st t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
+};
+
+def macroop SIDT_M
+{
+    .adjust_env maxOsz
+
+    rdlimit t1, idtr, dataSize=2
+    rdbase t2, idtr
+    st t1, seg, sib, disp, dataSize=2
+    st t2, seg, sib, 'adjustedDisp + 2'
+};
+
+def macroop SIDT_P
+{
+    .adjust_env maxOsz
+
+    rdip t7
+    rdlimit t1, idtr, dataSize=2
+    rdbase t2, idtr
+    st t1, seg, riprel, disp, dataSize=2
+    st t2, seg, riprel, 'adjustedDisp + 2'
+};
+
+def macroop SIDT_16_M
+{
+    .adjust_env maxOsz
+
+    # The base field is 32 bits, with bits 31:24 stored as zero.
+    rdlimit t1, idtr, dataSize=2
+    rdbase t2, idtr
+    zexti t2, t2, 23, dataSize=8
+    st t1, seg, sib, disp, dataSize=2
+    st t2, seg, sib, 'adjustedDisp + 2', dataSize=4
+};
+
+def macroop SIDT_16_P
+{
+    .adjust_env maxOsz
+
+    rdip t7
+    rdlimit t1, idtr, dataSize=2
+    rdbase t2, idtr
+    zexti t2, t2, 23, dataSize=8
+    st t1, seg, riprel, disp, dataSize=2
+    st t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
+};
+
 def macroop LGDT_M
 {
     .serialize_after
@@ -340,4 +431,55 @@ def macroop SWAPGS
     wrbase gs, t1, dataSize=8
     wrval kernel_gs_base, t2, dataSize=8
 };
+
+def macroop RDFSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    rdbase reg, fs
+};
+
+def macroop RDGSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    rdbase reg, gs
+};
+
+def macroop WRFSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    wrbase fs, reg
+    wrval fs_eff_base, reg
+};
+
+def macroop WRGSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    wrbase gs, reg
+    wrval gs_eff_base, reg
+};
+
 """

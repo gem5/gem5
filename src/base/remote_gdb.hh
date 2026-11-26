@@ -44,7 +44,9 @@
 
 
 #include <cstdint>
+#include <cstring>
 #include <exception>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -162,6 +164,7 @@ class BaseRemoteGDB
     void connect();
 
     const ListenSocket &hostSocket() const;
+    std::string getListenerOutput() const;
 
     void attach(int fd);
     void detach();
@@ -242,7 +245,11 @@ class BaseRemoteGDB
     void putbyte(uint8_t b);
 
     void recv(std::vector<char> &bp);
-    void send(const char *data);
+    void
+    send(const char *data)
+    {
+        sendBinary(data, std::strlen(data));
+    }
     void send(const std::string &data) { send(data.c_str()); }
 
     template <typename ...Args>
@@ -251,6 +258,9 @@ class BaseRemoteGDB
     {
         send(csprintf(format, args...));
     }
+
+    // Send a packet with len bytes of data, which may contain '\0'.
+    void sendBinary(const char *data, size_t len);
 
     /*
      * Process commands from remote GDB. If simulation has been
@@ -461,14 +471,38 @@ class BaseRemoteGDB
     virtual std::vector<std::string> availableFeatures() const;
 
     /**
-     * Get an XML target description.
+     * Handler for qXfer:<object>:read:<annex>:<offset>,<length> queries.
      *
-     * @param[in] annex the XML filename
-     * @param[out] output set to the decoded XML
-     * @return true if the given annex was found
+     * @param[in] annex the annex of the query
+     * @param[out] output set to the full unencoded content of the object
+     * @return true if the annex is valid and its content was read
      */
-    virtual bool getXferFeaturesRead(const std::string &annex,
-            std::string &output);
+    using XferReadHandler =
+        std::function<bool(const std::string &annex, std::string &output)>;
+
+    /**
+     * Register the read handler of a qXfer object. If the object is already
+     * registered, its handler is replaced. Each registered object is
+     * advertised to GDB as "qXfer:<object>:read+" by the default
+     * availableFeatures().
+     *
+     * @param object the name of the qXfer object
+     * @param handler the read handler of the object
+     */
+    void setXferReadHandler(const std::string &object,
+                            XferReadHandler handler);
+
+  private:
+    /**
+     * Map from qXfer object names to their read handlers. The offset and
+     * length of the query are applied by queryXfer on the content returned
+     * by the handler. It is only modified by setXferReadHandler, which keeps
+     * xferReadFeatures in sync with its keys.
+     */
+    std::map<std::string, XferReadHandler> queryXferReadMap;
+
+    /** The "qXfer:<object>:read+" feature of each object in the map. */
+    std::vector<std::string> xferReadFeatures;
 };
 
 template <class T>

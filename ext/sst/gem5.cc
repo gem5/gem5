@@ -231,9 +231,9 @@ gem5Component::init(unsigned phase)
             threadInitialized = true;
             gem5::simulate_limit_event = new gem5::GlobalSimLoopExitEvent(
                 gem5::mainEventQueue[0]->getCurTick(),
-                "simulate() limit reached",
-                0
-            );
+                "simulate() limit reached", 0, 0,
+                static_cast<uint64_t>(gem5::ExitHypercall::CLASSIC_GENERATOR),
+                gem5::classicGeneratorPayload("simulate() limit reached"));
         }
 
     }
@@ -349,7 +349,7 @@ gem5Component::doSimLoop(gem5::EventQueue* eventq)
 
             if (gem5::async_exit) {
                 gem5::async_exit = false;
-                gem5::exitSimLoop("user interrupt received");
+                gem5::exitSimulationLoopClassic("user interrupt received");
             }
 
             if (gem5::async_exception) {

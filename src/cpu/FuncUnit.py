@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017-2018, 2020, 2022, 2025 Arm Limited
+# Copyright (c) 2010, 2017-2018, 2020, 2022, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -90,7 +90,9 @@ class OpClass(Enum):
         "SimdSha256Hash2",
         "SimdShaSigma2",
         "SimdShaSigma3",
+        "SimdSha512Hash",
         "SimdSha3",
+        "SimdSm3",
         "SimdSm4e",
         "SimdCrc",
         "SimdPredAlu",

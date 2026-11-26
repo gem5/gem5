@@ -57,7 +57,7 @@ sc_unwind_exception::~sc_unwind_exception() throw() {}
 void
 sc_set_location(const char *file, int lineno)
 {
-    sc_process_b *current = ::sc_gem5::scheduler.current();
+    sc_process_b *current = ::sc_gem5::scheduler().current();
     if (!current)
         return;
     current->file = file;
@@ -68,9 +68,8 @@ sc_set_location(const char *file, int lineno)
 sc_process_b *
 sc_get_curr_process_handle()
 {
-    return ::sc_gem5::scheduler.current();
+    return ::sc_gem5::scheduler().current();
 }
-
 
 sc_process_handle::sc_process_handle() : _gem5_process(nullptr) {}
 
@@ -312,7 +311,7 @@ sc_process_handle
 sc_get_current_process_handle()
 {
     if (sc_is_running())
-        return sc_process_handle(::sc_gem5::scheduler.current());
+        return sc_process_handle(::sc_gem5::scheduler().current());
     else
         return sc_process_handle(::sc_gem5::Process::newest());
 }

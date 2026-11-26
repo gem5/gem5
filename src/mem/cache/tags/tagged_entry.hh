@@ -178,6 +178,23 @@ class TaggedEntry : public ReplaceableEntry
         }
     }
 
+    /**
+     * Copy the tag and secure bit directly from another entry without
+     * re-extracting via the indexing policy callback.
+     *
+     * @param other The entry to copy tags from.
+     */
+    virtual void
+    copyTagsFrom(const TaggedEntry &other)
+    {
+        setTag(other.getTag());
+        if (other.isSecure()) {
+            setSecure();
+        } else {
+            clearSecure();
+        }
+    }
+
     /** Invalidate the block. Its contents are no longer valid. */
     virtual void invalidate()
     {

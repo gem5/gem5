@@ -192,8 +192,8 @@ LoopPredictor::optionalAgeInc() const
 void
 LoopPredictor::loopUpdate(Addr pc, bool taken, BranchInfo* bi, bool tage_pred)
 {
-    int idx = finallindex(bi->loopIndex, bi->loopIndexB, bi->loopHit);
     if (bi->loopHit >= 0) {
+        int idx = finallindex(bi->loopIndex, bi->loopIndexB, bi->loopHit);
         //already a hit
         if (bi->loopPredValid) {
             if (taken != bi->loopPred) {
@@ -260,7 +260,7 @@ LoopPredictor::loopUpdate(Addr pc, bool taken, BranchInfo* bi, bool tage_pred)
             int nrand = rng->random<int>();
             for (int i = 0; i < (1 << logLoopTableAssoc); i++) {
                 int loop_hit = (nrand + i) & ((1 << logLoopTableAssoc) - 1);
-                idx = finallindex(bi->loopIndex, bi->loopIndexB, loop_hit);
+                int idx = finallindex(bi->loopIndex, bi->loopIndexB, loop_hit);
                 if (ltable[idx].age == 0) {
                     DPRINTF(LTage,
                             "Allocating loop pred entry for branch %lx\n",

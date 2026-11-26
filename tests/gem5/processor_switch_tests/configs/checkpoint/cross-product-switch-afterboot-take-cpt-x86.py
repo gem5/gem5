@@ -86,6 +86,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=CPUTypes.KVM,
     isa=ISA.X86,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 board = X86Board(

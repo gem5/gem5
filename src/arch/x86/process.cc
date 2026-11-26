@@ -390,6 +390,7 @@ X86_64Process::initState()
             cr4.tsd = 0; // Time Stamp Disable
             cr4.pvi = 0; // Protected-Mode Virtual Interrupts
             cr4.vme = 0; // Virtual-8086 Mode Extensions
+            cr4.fsgsbase = 1; // Enable FSGSBASE instructions
 
             tc->setMiscReg(misc_reg::Cr4, cr4);
 
@@ -629,6 +630,7 @@ X86_64Process::initState()
             // Setting pcide bit in CR4
             CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
             cr4.pcide = 1;
+            cr4.fsgsbase = 1; // Enable FSGSBASE instructions
             tc->setMiscReg(misc_reg::Cr4, cr4);
         }
     }

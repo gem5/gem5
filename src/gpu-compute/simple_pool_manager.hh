@@ -47,17 +47,15 @@ class SimplePoolManager : public PoolManager
 {
   public:
     SimplePoolManager(const PoolManagerParams &p)
-        : PoolManager(p), _regionSize(0), _nxtFreeIdx(0),
-          _reservedGroups(0)
-    {
-    }
+        : PoolManager(p), _regionSize(0), _nxtFreeIdx(0), _reservedGroups(0)
+    {}
 
     uint32_t minAllocatedElements(uint32_t size);
     std::string printRegion();
     bool canAllocate(uint32_t numRegions, uint32_t size);
     uint32_t allocateRegion(const uint32_t size, uint32_t *reservedPoolSize);
     void freeRegion(uint32_t firstIdx, uint32_t lastIdx);
-    uint32_t regionSize(std::pair<uint32_t,uint32_t> &region);
+    uint32_t regionSize(std::pair<uint32_t, uint32_t> &region);
 
   private:
     // actual size of a region (normalized to the minimum size that can

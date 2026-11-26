@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019-2022 ARM Limited
+ * Copyright (c) 2017,2019-2022, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -117,6 +117,16 @@ AbstractController::init()
     upstreamDestinations.resize();
     for (auto abs_cntrl : params().upstream_destinations) {
         upstreamDestinations.add(abs_cntrl->getMachineID());
+    }
+}
+
+DrainState
+AbstractController::drain()
+{
+    if (noInTransactions()) {
+        return DrainState::Drained;
+    } else {
+        return DrainState::Draining;
     }
 }
 
@@ -454,7 +464,6 @@ const
         name(), addr, mtype);
 }
 
-
 void
 AbstractController::memRespQueueDequeued() {
     if (m_mem_ctrl_waiting_retry && !mRetryRespEvent.scheduled()) {
@@ -537,12 +546,12 @@ AbstractController::MemoryPort::MemoryPort(const std::string &_name,
 {
 }
 
-AbstractController::
-ControllerStats::ControllerStats(statistics::Group *parent)
+AbstractController::ControllerStats::ControllerStats(statistics::Group *parent)
     : statistics::Group(parent),
-      ADD_STAT(fullyBusyCycles,
+      ADD_STAT(fullyBusyCycles, statistics::units::Cycle::get(),
                "cycles for which number of transistions == max transitions"),
-      ADD_STAT(delayHistogram, "delay_histogram")
+      ADD_STAT(delayHistogram, statistics::units::Cycle::get(),
+               "delay_histogram")
 {
     fullyBusyCycles
         .flags(statistics::nozero);

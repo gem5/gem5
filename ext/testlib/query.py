@@ -43,7 +43,7 @@ class QueryRunner:
         return tags
 
     def suites(self):
-        return [suite for suite in self.schedule]
+        return [*self.schedule]
 
     def suites_with_tag(self, tag):
         return filter(lambda suite: tag in suite.tags, self.suites())

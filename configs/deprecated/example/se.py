@@ -176,7 +176,7 @@ else:
     sys.exit(1)
 
 
-(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
+CPUClass, test_mem_mode, FutureClass = Simulation.setCPUClass(args)
 CPUClass.numThreads = numThreads
 
 # Check -- do not allow SMT with multiple CPUs

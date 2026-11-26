@@ -43,12 +43,12 @@ TraceFile::TraceFile(const std::string &name) :
     _os(gem5::simout.create(name, true, true)), timeUnitTicks(0),
     timeUnitValue(0.0), timeUnitUnit(::sc_core::SC_PS), _traceDeltas(false)
 {
-    ::sc_gem5::scheduler.registerTraceFile(this);
+    ::sc_gem5::scheduler().registerTraceFile(this);
 }
 
 TraceFile::~TraceFile()
 {
-    ::sc_gem5::scheduler.unregisterTraceFile(this);
+    ::sc_gem5::scheduler().unregisterTraceFile(this);
     gem5::simout.close(_os);
 }
 

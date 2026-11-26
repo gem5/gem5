@@ -155,7 +155,7 @@ TAGE_SC_L_TAGE::calculateIndicesAndTags(
     }
 
     Addr t = (shifted_pc ^ (threadHistory[tid].pathHist &
-                    ((1 << histLengths[firstLongTagTable]) - 1)))
+                    ((1ULL << histLengths[firstLongTagTable]) - 1)))
              % longTagsTageFactor;
 
     for (int i = firstLongTagTable; i <= nHistoryTables; i++) {
@@ -168,7 +168,7 @@ TAGE_SC_L_TAGE::calculateIndicesAndTags(
     }
 
     t = (shifted_pc ^ (threadHistory[tid].pathHist &
-                    ((1 << histLengths[1]) - 1)))
+                    ((1ULL << histLengths[1]) - 1)))
         % shortTagsTageFactor;
 
     for (int i = 1; i <= firstLongTagTable - 1; i++) {
@@ -401,8 +401,8 @@ TAGE_SC_L::branchPlaceholder(ThreadID tid, Addr pc, bool uncond,
     bp_history = (void *)(bi);
 }
 
-bool
-TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
+Prediction
+TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void *&b)
 {
     TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
                                                   *statisticalCorrector,
@@ -454,7 +454,7 @@ TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
     // record final prediction
     bi->lpBranchInfo->predTaken = pred_taken;
 
-    return pred_taken;
+    return predictWithDefaultLatency(pred_taken);
 }
 
 void
