@@ -154,6 +154,4 @@ class Device : public SimObject
 } // namespace ps2
 } // namespace gem5
 
-GEM5_DEPRECATED_CLASS(PS2Device, gem5::ps2::Device);
-
 #endif // __DEV_PS2_HOUSE_HH__

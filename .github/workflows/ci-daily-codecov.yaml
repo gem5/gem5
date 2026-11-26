@@ -193,7 +193,7 @@ jobs:
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make
             - name: Run gem5 within SystemC test
-              run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
+              run: ./build/ARM/gem5.opt configs/learning_gem5/part1/simple-arm.py
             - name: Continue gem5 within SystemC test
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
             - name: Upload coverage reports to Codecov

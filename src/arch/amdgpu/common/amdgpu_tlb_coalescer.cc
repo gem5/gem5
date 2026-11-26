@@ -48,6 +48,13 @@ VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p)
       TLBProbesPerCycle(p.probesPerCycle),
       coalescingWindow(p.coalescingWindow),
       disableCoalescing(p.disableCoalescing),
+      uncoalescedAccesses(this, "uncoalesced_accesses"),
+      coalescedAccesses(this, "coalesced_accesses"),
+      queuingCycles(this, "queuing_cycles"),
+      localqueuingCycles(this, "local_queuing_cycles"),
+      localCycles(this, "local_cycles"),
+      localLatency(this, "local_latency"),
+      latency(this, "latency"),
       probeTLBEvent([this] { processProbeTLBEvent(); }, "Probe the TLB below",
                     false, Event::CPU_Tick_Pri),
       cleanupEvent([this] { processCleanupEvent(); },
@@ -56,6 +63,7 @@ VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p)
       tlb_level(p.tlb_level),
       maxDownstream(p.maxDownstream),
       numDownstream(0)
+
 {
     // create the response ports based on the number of connected ports
     for (size_t i = 0; i < p.port_cpu_side_ports_connection_count; ++i) {
@@ -702,26 +710,20 @@ VegaTLBCoalescer::regStats()
 {
     ClockedObject::regStats();
 
-    uncoalescedAccesses.name(name() + ".uncoalesced_accesses")
-        .desc("Number of uncoalesced TLB accesses");
+    uncoalescedAccesses.desc("Number of uncoalesced TLB accesses");
 
-    coalescedAccesses.name(name() + ".coalesced_accesses")
-        .desc("Number of coalesced TLB accesses");
+    coalescedAccesses.desc("Number of coalesced TLB accesses");
 
-    queuingCycles.name(name() + ".queuing_cycles")
-        .desc("Number of cycles spent in queue");
+    queuingCycles.desc("Number of cycles spent in queue");
 
-    localqueuingCycles.name(name() + ".local_queuing_cycles")
-        .desc("Number of cycles spent in queue for all incoming reqs");
+    localqueuingCycles.desc(
+        "Number of cycles spent in queue for all incoming reqs");
 
-    localCycles.name(name() + ".local_cycles")
-        .desc("Number of cycles spent in queue for all incoming reqs");
+    localCycles.desc("Number of cycles spent in queue for all incoming reqs");
 
-    localLatency.name(name() + ".local_latency")
-        .desc("Avg. latency over all incoming pkts");
+    localLatency.desc("Avg. latency over all incoming pkts");
 
-    latency.name(name() + ".latency")
-        .desc("Avg. latency over all incoming pkts");
+    latency.desc("Avg. latency over all incoming pkts");
 
     localLatency = localqueuingCycles / uncoalescedAccesses;
     latency = localCycles / uncoalescedAccesses;

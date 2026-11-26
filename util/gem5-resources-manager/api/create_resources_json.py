@@ -221,10 +221,7 @@ class ResourceJsonCreator:
         return new_resources
 
     def _get_example_usage(self, resource):
-        if resource["category"] == "workload":
-            return f"Workload(\"{resource['id']}\")"
-        else:
-            return f"obtain_resource(resource_id=\"{resource['id']}\")"
+        return f"obtain_resource(resource_id=\"{resource['id']}\")"
 
     def _parse_readme(self, url):
         metadata = {

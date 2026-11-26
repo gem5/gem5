@@ -48,34 +48,34 @@ class TestInfo : public statistics::Info
 };
 
 /** Test that a name is properly assigned under the new style. */
-TEST(StatsInfoTest, NameNewStyle)
+TEST(StatsInfoTest, Name)
 {
     TestInfo info;
-    info.setName("InfoNameNewStyle", false);
-    ASSERT_EQ(info.name, "InfoNameNewStyle");
+    info.setName("InfoName");
+    ASSERT_EQ(info.name, "InfoName");
 }
 
 /** Test that the first character accepts alpha and underscore. */
 TEST(StatsInfoTest, NameFirstCharacter)
 {
     TestInfo info;
-    info.setName("X", false);
+    info.setName("X");
     ASSERT_EQ(info.name, "X");
 
     TestInfo info2;
-    info2.setName("a", false);
+    info2.setName("a");
     ASSERT_EQ(info2.name, "a");
 
     TestInfo info3;
-    info3.setName("_", false);
+    info3.setName("_");
     ASSERT_EQ(info3.name, "_");
 
     TestInfo info4;
-    info4.setName("X.Y", false);
+    info4.setName("X.Y");
     ASSERT_EQ(info4.name, "X.Y");
 
     TestInfo info5;
-    info5.setName("a.b._.d.e", false);
+    info5.setName("a.b._.d.e");
     ASSERT_EQ(info5.name, "a.b._.d.e");
 }
 
@@ -83,89 +83,40 @@ TEST(StatsInfoTest, NameFirstCharacter)
 TEST(StatsInfoTest, NameOtherCharacters)
 {
     TestInfo info;
-    info.setName("abCde", false);
+    info.setName("abCde");
     ASSERT_EQ(info.name, "abCde");
 
     TestInfo info2;
-    info2.setName("ab_de", false);
+    info2.setName("ab_de");
     ASSERT_EQ(info2.name, "ab_de");
 
     TestInfo info3;
-    info3.setName("ab9de", false);
+    info3.setName("ab9de");
     ASSERT_EQ(info3.name, "ab9de");
 
     TestInfo info4;
-    info4.setName("a_bCD12_ef", false);
+    info4.setName("a_bCD12_ef");
     ASSERT_EQ(info4.name, "a_bCD12_ef");
 
     TestInfo info5;
-    info5.setName("a_._bC.D12_ef", false);
+    info5.setName("a_._bC.D12_ef");
     ASSERT_EQ(info5.name, "a_._bC.D12_ef");
 }
 
 /**
- * Test that a name is properly assigned under the old style. The name map
- * must be checked to make sure it can resolved.
- */
-TEST(StatsInfoTest, NameOldStyle)
-{
-    TestInfo info;
-    info.setName("InfoNameOldStyle", true);
-    ASSERT_EQ(info.name, "InfoNameOldStyle");
-
-    const auto &it = statistics::nameMap().find(info.name);
-    ASSERT_NE(it, statistics::nameMap().cend());
-    ASSERT_EQ(info.id, it->second->id);
-}
-
-/**
- * @todo Test the behavior when set name is called twice on the same old-style
- * info. Should it be allowed? If so, the old name should be removed from the
- * name map.
- */
-TEST(StatsInfoTest, DISABLED_NameOldStyleTwice)
-{
-    TestInfo info;
-    std::string old_name = "InfoNameOldStyleTwice";
-    info.setName(old_name, true);
-    info.setName("InfoNameOldStyleTwice2", true);
-    ASSERT_EQ(info.name, "InfoNameOldStyleTwice2");
-
-    const auto &it = statistics::nameMap().find(old_name);
-    ASSERT_EQ(it, statistics::nameMap().cend());
-}
-
-/**
- * Test that a name can be duplicated when using the new styles. Duplicating
+ * Test that a name can be duplicated within different groups. Duplicating
  * is not a problem that must be solved by Info in this case. The stats name
  * resolver does that.
  */
-TEST(StatsInfoTest, NameNewStyleDuplicate)
+TEST(StatsInfoTest, NameDuplicate)
 {
     TestInfo info;
-    std::string name = "InfoNameNewStyleDuplicate";
-    info.setName(name, false);
+    std::string name = "InfoNameDuplicate";
+    info.setName(name);
     EXPECT_EQ(info.name, name);
 
     TestInfo info2;
-    info2.setName(name, false);
-    ASSERT_EQ(info2.name, name);
-}
-
-/**
- * Test that a name can be duplicated when mixing styles. Duplicating
- * is not a problem that must be solved by Info in this case. The stats
- * name resolver does that.
- */
-TEST(StatsInfoTest, NameMixStyleDuplicate)
-{
-    TestInfo info;
-    std::string name = "InfoNameMixStyleDuplicate";
-    info.setName(name, false);
-    EXPECT_EQ(info.name, name);
-
-    TestInfo info2;
-    info2.setName(name, true);
+    info2.setName(name);
     ASSERT_EQ(info2.name, name);
 }
 
@@ -232,49 +183,49 @@ TEST(StatsInfoTest, LessSub)
 TEST(StatsInfoDeathTest, NameEmpty)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("", false));
+    ASSERT_ANY_THROW(info.setName(""));
 }
 
 /** Test that a sub-group's name cannot be empty. */
 TEST(StatsInfoDeathTest, NameSubEmpty)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName(".a", false));
+    ASSERT_ANY_THROW(info.setName(".a"));
 }
 
 /** Test that a sub-group's name cannot be empty. */
 TEST(StatsInfoDeathTest, NameSubEmpty2)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("A.", false));
+    ASSERT_ANY_THROW(info.setName("A."));
 }
 
 /** Test that a sub-group's name cannot be empty. */
 TEST(StatsInfoDeathTest, NameSubEmpty3)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("a.b..c", false));
+    ASSERT_ANY_THROW(info.setName("a.b..c"));
 }
 
 /** Test that the first character does not accept numbers. */
 TEST(StatsInfoDeathTest, NameFirstCharacterNumber)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("1", false));
+    ASSERT_ANY_THROW(info.setName("1"));
 }
 
 /** Test that the first character does not accept numbers (sub-group). */
 TEST(StatsInfoDeathTest, NameFirstCharacterNumberSub)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("A.1", false));
+    ASSERT_ANY_THROW(info.setName("A.1"));
 }
 
 /** Test that the first character does not accept special characters. */
 TEST(StatsInfoDeathTest, NameFirstCharacterSpecial)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("!", false));
+    ASSERT_ANY_THROW(info.setName("!"));
 }
 
 /**
@@ -284,26 +235,14 @@ TEST(StatsInfoDeathTest, NameFirstCharacterSpecial)
 TEST(StatsInfoDeathTest, NameFirstCharacterSpecialSub)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("A.!", false));
+    ASSERT_ANY_THROW(info.setName("A.!"));
 }
 
 /** Test that the non-first characters do not accept special characters. */
 TEST(StatsInfoDeathTest, NameOtherCharacterSpecial)
 {
     TestInfo info;
-    ASSERT_ANY_THROW(info.setName("ab!de", false));
-}
-
-/** Test that a name cannot be duplicated under the old style. */
-TEST(StatsInfoDeathTest, NameOldStyleDuplicate)
-{
-    TestInfo info;
-    std::string name = "InfoNameOldStyleDuplicate";
-    info.setName(name, true);
-    EXPECT_EQ(info.name, name);
-
-    TestInfo info2;
-    ASSERT_ANY_THROW(info2.setName(name, true));
+    ASSERT_ANY_THROW(info.setName("ab!de"));
 }
 
 /** Test that checking Info without setting the init flag fails. */

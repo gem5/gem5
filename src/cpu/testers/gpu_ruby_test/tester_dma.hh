@@ -30,7 +30,7 @@
  */
 
 /*
- * This is a fake DMA device to pass to Ruby.py so it will create the DMA
+ * This is a fake DMA device passed to ruby.configuration to create the DMA
  * sequencers and controllers without being protocol specific. It otherwise
  * does nothing.
  */

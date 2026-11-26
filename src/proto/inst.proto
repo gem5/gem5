@@ -102,8 +102,8 @@ message Inst {
 
   optional InstType type = 6; // add, mul, fp add, load, store, simd add, …
 
-  // Deprecated:
-  optional uint32 inst_flags = 7; // execution mode information
+  reserved 7;
+  reserved "inst_flags";
 
   // If the operation does one or more memory accesses
   message MemAccess {

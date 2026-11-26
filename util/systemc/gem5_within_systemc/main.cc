@@ -271,11 +271,11 @@ SimControl::SimControl(sc_core::sc_module_name name,
                 "run");
     }
 
-    CxxConfig::statsEnable();
     getEventQueue(0)->dump();
 
     try {
         config_manager->instantiate();
+        CxxConfig::statsEnable();
     } catch (CxxConfigManager::Exception &e) {
         fatal("Config problem in sim object %s: %s", e.name, e.message);
     }

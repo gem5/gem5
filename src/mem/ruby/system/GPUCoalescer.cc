@@ -207,11 +207,14 @@ UncoalescedTable::checkDeadlock(Tick threshold)
 
 GPUCoalescer::GPUCoalescer(const Params &p)
     : RubyPort(p),
-      issueEvent([this]{ completeIssue(); }, "Issue coalesced request",
-                 false, Event::Progress_Event_Pri),
+      issueEvent([this] { completeIssue(); }, "Issue coalesced request", false,
+                 Event::Progress_Event_Pri),
       uncoalescedTable(this),
-      deadlockCheckEvent([this]{ wakeup(); }, "GPUCoalescer deadlock check"),
+      deadlockCheckEvent([this] { wakeup(); }, "GPUCoalescer deadlock check"),
       stats(this),
+      m_outstandReqHist(this),
+      m_latencyHist(this),
+      m_missLatencyHist(this),
       gmTokenPort(name() + ".gmTokenPort")
 {
     m_store_waiting_on_load_cycles = 0;
@@ -248,29 +251,29 @@ GPUCoalescer::GPUCoalescer(const Params &p)
     m_missLatencyHist.init(10);
 
     for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHist.push_back(new statistics::Histogram());
+        m_typeLatencyHist.push_back(new statistics::Histogram(this));
         m_typeLatencyHist[i]->init(10);
 
-        m_missTypeLatencyHist.push_back(new statistics::Histogram());
+        m_missTypeLatencyHist.push_back(new statistics::Histogram(this));
         m_missTypeLatencyHist[i]->init(10);
     }
 
     for (int i = 0; i < MachineType_NUM; i++) {
-        m_missMachLatencyHist.push_back(new statistics::Histogram());
+        m_missMachLatencyHist.push_back(new statistics::Histogram(this));
         m_missMachLatencyHist[i]->init(10);
 
-        m_IssueToInitialDelayHist.push_back(new statistics::Histogram());
+        m_IssueToInitialDelayHist.push_back(new statistics::Histogram(this));
         m_IssueToInitialDelayHist[i]->init(10);
 
-        m_InitialToForwardDelayHist.push_back(new statistics::Histogram());
+        m_InitialToForwardDelayHist.push_back(new statistics::Histogram(this));
         m_InitialToForwardDelayHist[i]->init(10);
 
         m_ForwardToFirstResponseDelayHist.push_back(
-            new statistics::Histogram());
+            new statistics::Histogram(this));
         m_ForwardToFirstResponseDelayHist[i]->init(10);
 
         m_FirstResponseToCompletionDelayHist.push_back(
-            new statistics::Histogram());
+            new statistics::Histogram(this));
         m_FirstResponseToCompletionDelayHist[i]->init(10);
     }
 
@@ -280,7 +283,7 @@ GPUCoalescer::GPUCoalescer(const Params &p)
 
         for (int j = 0; j < MachineType_NUM; j++) {
             m_missTypeMachLatencyHist[i].push_back(
-                new statistics::Histogram());
+                new statistics::Histogram(this));
             m_missTypeMachLatencyHist[i][j]->init(10);
         }
     }
@@ -358,24 +361,7 @@ GPUCoalescer::printRequestTable(std::stringstream& ss)
 void
 GPUCoalescer::resetStats()
 {
-    m_latencyHist.reset();
-    m_missLatencyHist.reset();
-    for (int i = 0; i < RubyRequestType_NUM; i++) {
-        m_typeLatencyHist[i]->reset();
-        m_missTypeLatencyHist[i]->reset();
-        for (int j = 0; j < MachineType_NUM; j++) {
-            m_missTypeMachLatencyHist[i][j]->reset();
-        }
-    }
-
-    for (int i = 0; i < MachineType_NUM; i++) {
-        m_missMachLatencyHist[i]->reset();
-
-        m_IssueToInitialDelayHist[i]->reset();
-        m_InitialToForwardDelayHist[i]->reset();
-        m_ForwardToFirstResponseDelayHist[i]->reset();
-        m_FirstResponseToCompletionDelayHist[i]->reset();
-    }
+    RubyPort::resetStats();
 }
 
 void

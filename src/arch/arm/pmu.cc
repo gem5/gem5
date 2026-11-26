@@ -906,8 +906,7 @@ PMU::Stats::registerEvent(EventTypeId id, const char *stat_name)
                     this, stat_name,
                     statistics::units::Count::get(),
                     stat_name));
-    map[id]
-        .precision(0);
+    map.at(id).precision(0);
 }
 
 void

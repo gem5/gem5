@@ -55,7 +55,7 @@ class AMDGPUDevice(PciEndpoint):
     cxx_class = "gem5::AMDGPUDevice"
 
     # Human readable name for device ID
-    device_name = Param.String("Vega10", "Codename for device")
+    device_name = Param.String("Codename for device")
 
     # IDs for AMD Vega 10
     VendorID = 0x1002

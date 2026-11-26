@@ -44,7 +44,7 @@ from common import (
     FSConfig,
     Options,
 )
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 import m5
 from m5.objects import *
@@ -194,7 +194,7 @@ class BaseSystem(metaclass=ABCMeta):
             # Add the ruby specific and protocol specific options
             parser = argparse.ArgumentParser()
             Options.addCommonOptions(parser, default_isa=ISA.ARM)
-            Ruby.define_options(parser)
+            Ruby.define_options(parser, protocol=Ruby.parse_protocol())
             # Ruby defaults to an x86 CPU even for an Arm-only build.
             parser.set_defaults(cpu_type=self.cpu_class.__name__)
             args, extra = parser.parse_known_args()
@@ -212,7 +212,13 @@ class BaseSystem(metaclass=ABCMeta):
 
             bootmem = getattr(system, "_bootmem", None)
             Ruby.create_system(
-                args, True, system, system.iobus, system._dma_ports, bootmem
+                args,
+                True,
+                system,
+                system.iobus,
+                system._dma_ports,
+                bootmem,
+                protocol=args.protocol,
             )
 
             # Create a seperate clock domain for Ruby

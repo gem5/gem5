@@ -126,7 +126,7 @@ class ScmiPlatform(Scp):
     )
 
     sys = Param.System(Parent.any, "System object parameter")
-    dma = MasterPort("DMA port")
+    dma = RequestPort("DMA port")
 
     # Protocol params
     base_vendor = Param.String(

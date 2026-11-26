@@ -89,7 +89,7 @@ board.set_kernel_disk_workload(
     disk_image=obtain_resource("x86-ubuntu-18.04-img"),
 )
 
-sim = Simulator(board=board, full_system=True, max_ticks=10**6)
+sim = Simulator(board=board, max_ticks=10**6)
 print("Beginning simulation!")
 
 

@@ -126,10 +126,6 @@ __all__ = [
     "VectorPort",
     "VectorRequestPort",
     "VectorResponsePort",
-    "MasterPort",
-    "SlavePort",
-    "VectorMasterPort",
-    "VectorSlavePort",
     # power_params
     "Voltage",
     "Current",

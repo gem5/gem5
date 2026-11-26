@@ -46,18 +46,11 @@ class SMMUv3DeviceInterface(ClockedObject):
     cxx_class = "gem5::SMMUv3DeviceInterface"
 
     device_port = ResponsePort("Device port")
-    slave = DeprecatedParam(device_port, "`slave` is now called `device_port`")
     ats_mem_side_port = RequestPort(
         "ATS mem side port,sends requests and receives responses"
     )
-    ats_master = DeprecatedParam(
-        ats_mem_side_port, "`ats_master` is now called `ats_mem_side_port`"
-    )
     ats_dev_side_port = ResponsePort(
         "ATS dev_side_port,sends responses and receives requests"
-    )
-    ats_slave = DeprecatedParam(
-        ats_dev_side_port, "`ats_slave` is now called `ats_dev_side_port`"
     )
 
     port_width = Param.Unsigned(16, "Port width in bytes (= 1 beat)")

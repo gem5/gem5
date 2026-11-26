@@ -30,7 +30,7 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath
 
-from .Ruby import (
+from .configuration import (
     create_directories,
     create_topology,
 )
@@ -50,7 +50,7 @@ def define_options(parser):
 def create_system(
     options, full_system, system, dma_ports, bootmem, ruby_system, cpus
 ):
-    if buildEnv["PROTOCOL"] != "Garnet_standalone":
+    if not buildEnv.get("RUBY_PROTOCOL_Garnet_standalone", False):
         panic("This script requires Garnet_standalone protocol to be built.")
 
     cpu_sequencers = []
@@ -87,7 +87,7 @@ def create_system(
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.
         #
-        l1_cntrl = L1Cache_Controller(
+        l1_cntrl = Garnet_standalone_L1Cache_Controller(
             version=i, cacheMemory=cache, ruby_system=ruby_system
         )
 

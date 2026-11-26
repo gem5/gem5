@@ -88,9 +88,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         romRange = RangeSize(VGA_ROM_DEFAULT, ROM_SIZE);
     }
 
-    if (p.device_name == "Vega10") {
-        gfx_version = GfxVersion::gfx900;
-    } else if (p.device_name == "MI100") {
+    if (p.device_name == "MI100") {
         gfx_version = GfxVersion::gfx908;
     } else if (p.device_name == "MI200") {
         gfx_version = GfxVersion::gfx90a;
@@ -124,16 +122,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     sdmaFunc.insert({0x80, &SDMAEngine::setGfxSize});
     sdmaFunc.insert({0xb2, &SDMAEngine::setGfxWptrLo});
     sdmaFunc.insert({0xb3, &SDMAEngine::setGfxWptrHi});
-    if (p.device_name == "Vega10") {
-        sdmaFunc.insert({0xe1, &SDMAEngine::setPageBaseLo});
-        sdmaFunc.insert({0xe9, &SDMAEngine::setPageRptrLo});
-        sdmaFunc.insert({0xe8, &SDMAEngine::setPageRptrHi});
-        sdmaFunc.insert({0xf2, &SDMAEngine::setPageDoorbellLo});
-        sdmaFunc.insert({0x10b, &SDMAEngine::setPageDoorbellOffsetLo});
-        sdmaFunc.insert({0xe0, &SDMAEngine::setPageSize});
-        sdmaFunc.insert({0x113, &SDMAEngine::setPageWptrLo});
-    } else if (p.device_name == "MI100" || p.device_name == "MI200" ||
-               p.device_name == "MI300X" || p.device_name == "MI355X") {
+    if (p.device_name == "MI100" || p.device_name == "MI200" ||
+        p.device_name == "MI300X" || p.device_name == "MI355X") {
         sdmaFunc.insert({0xd9, &SDMAEngine::setPageBaseLo});
         sdmaFunc.insert({0xe1, &SDMAEngine::setPageRptrLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageRptrHi});
@@ -208,10 +198,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
 
     // There are different registers for different GPUs, so we set the value
     // based on the GPU type specified by the user.
-    if (p.device_name == "Vega10") {
-        setRegVal(VEGA10_FB_LOCATION_BASE, mmhubBase >> 24);
-        setRegVal(VEGA10_FB_LOCATION_TOP, mmhubTop >> 24);
-    } else if (p.device_name == "MI100") {
+    if (p.device_name == "MI100") {
         setRegVal(MI100_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(MI100_FB_LOCATION_TOP, mmhubTop >> 24);
         setRegVal(MI100_MEM_SIZE_REG, mmio_mem_size);

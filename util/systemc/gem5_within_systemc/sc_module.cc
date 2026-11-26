@@ -125,7 +125,7 @@ Module::catchup()
     eventq->setCurTick(systemc_time);
 
     if (!eventq->empty()) {
-        gem5::Tick next_event_time M5_VAR_USED = eventq->nextTick();
+        [[maybe_unused]] gem5::Tick next_event_time = eventq->nextTick();
 
         fatal_if(gem5_time > next_event_time,
             "Missed an event at time %d gem5: %d, SystemC: %d",

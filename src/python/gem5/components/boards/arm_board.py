@@ -360,8 +360,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.system_port = port
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
-        root = super()._pre_instantiate(full_system=full_system)
+    def _pre_instantiate(self) -> Root:
+        root = super()._pre_instantiate()
 
         # Add the PCI devices.
         self.pci_devices = self._pci_devices

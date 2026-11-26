@@ -65,12 +65,6 @@ Plic::Plic(const Params &params) :
     registers(params.name, pioAddr, this),
     update([this]{updateOutput();}, name() + ".update")
 {
-    fatal_if(params.hart_config != "" && params.n_contexts != 0,
-             "the hart_config and n_contexts can't be set simultaneously");
-
-    if (params.n_contexts != 0) {
-        initContextFromNContexts(params.n_contexts);
-    }
     if (params.hart_config != "") {
         initContextFromHartConfig(params.hart_config);
     }
@@ -452,16 +446,6 @@ Plic::propagateOutput()
     if (!update.scheduled()) {
         DPRINTF(Plic, "Update scheduled - tick: %d\n", next_update);
         schedule(update, next_update);
-    }
-}
-
-void
-Plic::initContextFromNContexts(int n_contexts)
-{
-    contextConfigs.reserve(n_contexts);
-    for (uint32_t i = 0; i < (uint32_t)n_contexts; i += 2) {
-      contextConfigs.emplace_back((i >> 1), ExceptionCode::INT_EXT_MACHINE);
-      contextConfigs.emplace_back((i >> 1), ExceptionCode::INT_EXT_SUPER);
     }
 }
 

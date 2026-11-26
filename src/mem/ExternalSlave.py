@@ -42,7 +42,7 @@ class ExternalSlave(SimObject):
     cxx_header = "mem/external_slave.hh"
     cxx_class = "gem5::ExternalSlave"
 
-    port = SlavePort("Slave port")
+    port = ResponsePort("Slave port")
 
     addr_ranges = VectorParam.AddrRange(
         [], "Addresses served by this port's external agent"

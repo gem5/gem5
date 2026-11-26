@@ -69,7 +69,9 @@ class MessageBufferConsumerTest : public ClockedObject, Consumer
           num_msgs(0),
           max_msgs(p.num_msgs),
           rate(p.rate),
-          stall_prob(p.stall_prob)
+          stall_prob(p.stall_prob),
+          msgsTotal(this),
+          msgsPerCy(this)
     {
         buffer->setConsumer(this);
     }
@@ -82,8 +84,8 @@ class MessageBufferConsumerTest : public ClockedObject, Consumer
     {
         ClockedObject::regStats();
 
-        msgsTotal.name(name() + ".msgsTotal").desc("Messages");
-        msgsPerCy.name(name() + ".msgsPerCy").desc("Messages per cycle");
+        msgsTotal.name("msgsTotal").desc("Messages");
+        msgsPerCy.name("msgsPerCy").desc("Messages per cycle");
         msgsPerCy = msgsTotal / (simTicks / cyclesToTicks(Cycles(1)));
     }
 
@@ -135,7 +137,9 @@ class MessageBufferProducerTest : public ClockedObject
           num_msgs(0),
           pending_msgs(0),
           prod_event([this] { produce(); }, "Produce Event"),
-          enq_event([this] { enqueue(); }, "Enqueue Event")
+          enq_event([this] { enqueue(); }, "Enqueue Event"),
+          msgsTotal(this),
+          msgsPerCy(this)
     {}
 
     void
@@ -176,8 +180,8 @@ class MessageBufferProducerTest : public ClockedObject
     {
         ClockedObject::regStats();
 
-        msgsTotal.name(name() + ".msgsTotal").desc("Messages");
-        msgsPerCy.name(name() + ".msgsPerCy").desc("Messages per cycle");
+        msgsTotal.name("msgsTotal").desc("Messages");
+        msgsPerCy.name("msgsPerCy").desc("Messages per cycle");
         msgsPerCy = msgsTotal / (simTicks / cyclesToTicks(Cycles(1)));
     }
 

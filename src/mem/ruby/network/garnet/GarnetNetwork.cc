@@ -62,7 +62,34 @@ namespace garnet
  */
 
 GarnetNetwork::GarnetNetwork(const Params &p)
-    : Network(p)
+    : Network(p),
+      m_packets_received(this, "packets_received"),
+      m_packets_injected(this, "packets_injected"),
+      m_packet_network_latency(this, "packet_network_latency"),
+      m_packet_queueing_latency(this, "packet_queueing_latency"),
+      m_avg_packet_vnet_latency(this, "average_packet_vnet_latency"),
+      m_avg_packet_vqueue_latency(this, "average_packet_vqueue_latency"),
+      m_avg_packet_network_latency(this, "average_packet_network_latency"),
+      m_avg_packet_queueing_latency(this, "average_packet_queueing_latency"),
+      m_avg_packet_latency(this, "average_packet_latency"),
+      m_flits_received(this, "flits_received"),
+      m_flits_injected(this, "flits_injected"),
+      m_flit_network_latency(this, "flit_network_latency"),
+      m_flit_queueing_latency(this, "flit_queueing_latency"),
+      m_avg_flit_vnet_latency(this, "average_flit_vnet_latency"),
+      m_avg_flit_vqueue_latency(this, "average_flit_vqueue_latency"),
+      m_avg_flit_network_latency(this, "average_flit_network_latency"),
+      m_avg_flit_queueing_latency(this, "average_flit_queueing_latency"),
+      m_avg_flit_latency(this, "average_flit_latency"),
+      m_total_ext_in_link_utilization(this, "ext_in_link_utilization"),
+      m_total_ext_out_link_utilization(this, "ext_out_link_utilization"),
+      m_total_int_link_utilization(this, "int_link_utilization"),
+      m_average_link_utilization(this, "avg_link_utilization"),
+      m_average_vc_load(this, "avg_vc_load"),
+      m_total_hops(this),
+      m_avg_hops(this, "average_hops"),
+      m_data_traffic_distribution(this, "data_traffic_distribution"),
+      m_ctrl_traffic_distribution(this, "ctrl_traffic_distribution")
 {
     m_num_rows = p.num_rows;
     m_ni_flit_size = p.ni_flit_size;
@@ -387,31 +414,19 @@ GarnetNetwork::regStats()
     Network::regStats();
 
     // Packets
-    m_packets_received
-        .init(m_virtual_networks)
-        .name(name() + ".packets_received")
+    m_packets_received.init(m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_packets_injected
-        .init(m_virtual_networks)
-        .name(name() + ".packets_injected")
+    m_packets_injected.init(m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_packet_network_latency
-        .init(m_virtual_networks)
-        .name(name() + ".packet_network_latency")
-        .flags(statistics::oneline)
-        ;
+    m_packet_network_latency.init(m_virtual_networks)
+        .flags(statistics::oneline);
 
-    m_packet_queueing_latency
-        .init(m_virtual_networks)
-        .name(name() + ".packet_queueing_latency")
-        .flags(statistics::oneline)
-        ;
+    m_packet_queueing_latency.init(m_virtual_networks)
+        .flags(statistics::oneline);
 
     for (int i = 0; i < m_virtual_networks; i++) {
         m_packets_received.subname(i, csprintf("vnet-%i", i));
@@ -420,59 +435,36 @@ GarnetNetwork::regStats()
         m_packet_queueing_latency.subname(i, csprintf("vnet-%i", i));
     }
 
-    m_avg_packet_vnet_latency
-        .name(name() + ".average_packet_vnet_latency")
-        .flags(statistics::oneline);
+    m_avg_packet_vnet_latency.flags(statistics::oneline);
     m_avg_packet_vnet_latency =
         m_packet_network_latency / m_packets_received;
 
-    m_avg_packet_vqueue_latency
-        .name(name() + ".average_packet_vqueue_latency")
-        .flags(statistics::oneline);
+    m_avg_packet_vqueue_latency.flags(statistics::oneline);
     m_avg_packet_vqueue_latency =
         m_packet_queueing_latency / m_packets_received;
 
-    m_avg_packet_network_latency
-        .name(name() + ".average_packet_network_latency");
     m_avg_packet_network_latency =
         sum(m_packet_network_latency) / sum(m_packets_received);
 
     m_avg_packet_queueing_latency
-        .name(name() + ".average_packet_queueing_latency");
-    m_avg_packet_queueing_latency
         = sum(m_packet_queueing_latency) / sum(m_packets_received);
 
-    m_avg_packet_latency
-        .name(name() + ".average_packet_latency");
     m_avg_packet_latency
         = m_avg_packet_network_latency + m_avg_packet_queueing_latency;
 
     // Flits
-    m_flits_received
-        .init(m_virtual_networks)
-        .name(name() + ".flits_received")
+    m_flits_received.init(m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_flits_injected
-        .init(m_virtual_networks)
-        .name(name() + ".flits_injected")
+    m_flits_injected.init(m_virtual_networks)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
-    m_flit_network_latency
-        .init(m_virtual_networks)
-        .name(name() + ".flit_network_latency")
-        .flags(statistics::oneline)
-        ;
+    m_flit_network_latency.init(m_virtual_networks).flags(statistics::oneline);
 
-    m_flit_queueing_latency
-        .init(m_virtual_networks)
-        .name(name() + ".flit_queueing_latency")
-        .flags(statistics::oneline)
-        ;
+    m_flit_queueing_latency.init(m_virtual_networks)
+        .flags(statistics::oneline);
 
     for (int i = 0; i < m_virtual_networks; i++) {
         m_flits_received.subname(i, csprintf("vnet-%i", i));
@@ -481,71 +473,50 @@ GarnetNetwork::regStats()
         m_flit_queueing_latency.subname(i, csprintf("vnet-%i", i));
     }
 
-    m_avg_flit_vnet_latency
-        .name(name() + ".average_flit_vnet_latency")
-        .flags(statistics::oneline);
+    m_avg_flit_vnet_latency.flags(statistics::oneline);
     m_avg_flit_vnet_latency = m_flit_network_latency / m_flits_received;
 
-    m_avg_flit_vqueue_latency
-        .name(name() + ".average_flit_vqueue_latency")
-        .flags(statistics::oneline);
+    m_avg_flit_vqueue_latency.flags(statistics::oneline);
     m_avg_flit_vqueue_latency =
         m_flit_queueing_latency / m_flits_received;
 
-    m_avg_flit_network_latency
-        .name(name() + ".average_flit_network_latency");
     m_avg_flit_network_latency =
         sum(m_flit_network_latency) / sum(m_flits_received);
 
-    m_avg_flit_queueing_latency
-        .name(name() + ".average_flit_queueing_latency");
     m_avg_flit_queueing_latency =
         sum(m_flit_queueing_latency) / sum(m_flits_received);
 
-    m_avg_flit_latency
-        .name(name() + ".average_flit_latency");
     m_avg_flit_latency =
         m_avg_flit_network_latency + m_avg_flit_queueing_latency;
 
-
     // Hops
-    m_avg_hops.name(name() + ".average_hops");
     m_avg_hops = m_total_hops / sum(m_flits_received);
 
     // Links
-    m_total_ext_in_link_utilization
-        .name(name() + ".ext_in_link_utilization");
-    m_total_ext_out_link_utilization
-        .name(name() + ".ext_out_link_utilization");
-    m_total_int_link_utilization
-        .name(name() + ".int_link_utilization");
-    m_average_link_utilization
-        .name(name() + ".avg_link_utilization");
-    m_average_vc_load
-        .init(m_virtual_networks * m_max_vcs_per_vnet)
-        .name(name() + ".avg_vc_load")
+    m_average_vc_load.init(m_virtual_networks * m_max_vcs_per_vnet)
         .flags(statistics::pdf | statistics::total | statistics::nozero |
-            statistics::oneline)
-        ;
+               statistics::oneline);
 
     // Traffic distribution
-    for (int source = 0; source < m_routers.size(); ++source) {
-        m_data_traffic_distribution.push_back(
-            std::vector<statistics::Scalar *>());
-        m_ctrl_traffic_distribution.push_back(
-            std::vector<statistics::Scalar *>());
+    m_data_traffic_distribution.init(m_routers.size());
+    m_ctrl_traffic_distribution.init(m_routers.size());
+}
 
-        for (int dest = 0; dest < m_routers.size(); ++dest) {
-            statistics::Scalar *data_packets = new statistics::Scalar();
-            statistics::Scalar *ctrl_packets = new statistics::Scalar();
-
-            data_packets->name(name() + ".data_traffic_distribution." + "n" +
-                    std::to_string(source) + "." + "n" + std::to_string(dest));
-            m_data_traffic_distribution[source].push_back(data_packets);
-
-            ctrl_packets->name(name() + ".ctrl_traffic_distribution." + "n" +
-                    std::to_string(source) + "." + "n" + std::to_string(dest));
-            m_ctrl_traffic_distribution[source].push_back(ctrl_packets);
+void
+GarnetNetwork::TrafficDistributionStats::init(unsigned num_routers)
+{
+    sources.reserve(num_routers);
+    counters.resize(num_routers);
+    for (unsigned source = 0; source < num_routers; ++source) {
+        const std::string source_name = "n" + std::to_string(source);
+        sources.push_back(
+            std::make_unique<statistics::Group>(this, source_name.c_str()));
+        auto &row = counters[source];
+        row.reserve(num_routers);
+        for (unsigned dest = 0; dest < num_routers; ++dest) {
+            const std::string dest_name = "n" + std::to_string(dest);
+            row.push_back(std::make_unique<statistics::Scalar>(
+                sources.back().get(), dest_name.c_str()));
         }
     }
 }
@@ -585,15 +556,7 @@ GarnetNetwork::collateStats()
 void
 GarnetNetwork::resetStats()
 {
-    for (int i = 0; i < m_routers.size(); i++) {
-        m_routers[i]->resetStats();
-    }
-    for (int i = 0; i < m_networklinks.size(); i++) {
-        m_networklinks[i]->resetStats();
-    }
-    for (int i = 0; i < m_creditlinks.size(); i++) {
-        m_creditlinks[i]->resetStats();
-    }
+    Network::resetStats();
 }
 
 void
@@ -610,9 +573,9 @@ GarnetNetwork::update_traffic_distribution(RouteInfo route)
     int vnet = route.vnet;
 
     if (m_vnet_type[vnet] == DATA_VNET_)
-        (*m_data_traffic_distribution[src_node][dest_node])++;
+        (*m_data_traffic_distribution.counters[src_node][dest_node])++;
     else
-        (*m_ctrl_traffic_distribution[src_node][dest_node])++;
+        (*m_ctrl_traffic_distribution.counters[src_node][dest_node])++;
 }
 
 bool

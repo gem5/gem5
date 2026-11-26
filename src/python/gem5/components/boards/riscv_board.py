@@ -878,7 +878,7 @@ class RiscvBoard(
         return "/dev/vda"
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
+    def _pre_instantiate(self) -> Root:
         self._configure_kvm_cores()
 
         # This is a bit of a hack necessary to get the RiscDemoBoard working
@@ -910,7 +910,7 @@ class RiscvBoard(
                 m5.options.outdir, "device.dtb"
             )
 
-        return super()._pre_instantiate(full_system=full_system)
+        return super()._pre_instantiate()
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource):

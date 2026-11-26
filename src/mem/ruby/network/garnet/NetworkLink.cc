@@ -46,11 +46,17 @@ namespace garnet
 {
 
 NetworkLink::NetworkLink(const Params &p)
-    : ClockedObject(p), Consumer(this), m_id(p.link_id),
+    : ClockedObject(p),
+      Consumer(this),
+      m_id(p.link_id),
       m_type(NUM_LINK_TYPES_),
-      m_latency(p.link_latency), m_link_utilized(0),
-      m_virt_nets(p.virt_nets), linkBuffer(),
-      link_consumer(nullptr), link_srcQueue(nullptr)
+      m_latency(p.link_latency),
+      m_link_utilized(0),
+      m_flits_per_vnet(this, "flits_per_vnet"),
+      m_virt_nets(p.virt_nets),
+      linkBuffer(),
+      link_consumer(nullptr),
+      link_srcQueue(nullptr)
 {
     int num_vnets = (p.supported_vnets).size();
     mVnets.resize(num_vnets);
@@ -65,8 +71,7 @@ NetworkLink::regStats()
 {
     ClockedObject::regStats();
 
-    m_flits_per_vnet.name(name() + ".flits_per_vnet")
-        .desc("Number of flits transmitted per virtual network")
+    m_flits_per_vnet.desc("Number of flits transmitted per virtual network")
         .flags(statistics::nozero | statistics::total)
         .init(m_virt_nets);
     for (int v = 0; v < (int)m_virt_nets; v++) {
@@ -127,11 +132,9 @@ NetworkLink::wakeup()
 void
 NetworkLink::resetStats()
 {
+    ClockedObject::resetStats();
     for (int i = 0; i < m_vc_load.size(); i++) {
         m_vc_load[i] = 0;
-    }
-    for (int v = 0; v < (int)m_virt_nets; v++) {
-        m_flits_per_vnet[v] = 0;
     }
     m_link_utilized = 0;
 }

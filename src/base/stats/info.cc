@@ -61,13 +61,6 @@ int Info::id_count = 0;
 
 int debug_break_id = -1;
 
-NameMapType &
-nameMap()
-{
-    static NameMapType the_map;
-    return the_map;
-}
-
 Info::Info()
     : flags(none), precision(-1), prereq(0), storageParams()
 {
@@ -124,20 +117,10 @@ validateStatName(const std::string &name)
 }
 
 void
-Info::setName(const std::string &name, bool old_style)
+Info::setName(const std::string &name)
 {
     if (!validateStatName(name))
         panic("invalid stat name '%s'", name);
-
-    // We only register the stat with the nameMap() if we are using
-    // old-style stats without a parent group. New-style stats should
-    // be unique since their names should correspond to a member
-    // variable.
-    if (old_style) {
-        auto p = nameMap().insert(make_pair(name, this));
-
-        panic_if(!p.second, "same statistic name used twice! name=%s\n", name);
-    }
 
     this->name = name;
 }

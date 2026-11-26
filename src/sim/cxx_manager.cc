@@ -662,6 +662,19 @@ CxxConfigManager::instantiate(bool build_all)
     DPRINTF(CxxConfig, "Registering stats\n");
     forEachObject(&SimObject::regStats);
 
+    for (const auto &[name, object] : objectsByName) {
+        std::vector<std::string> children;
+        configFile.getObjectChildren(unRename(name), children, true);
+        for (const auto &child_name : children) {
+            const auto child = objectsByName.find(rename(child_name));
+            if (child != objectsByName.end()) {
+                const auto local_name =
+                    child_name.substr(child_name.find_last_of('.') + 1);
+                object->addStatGroup(local_name.c_str(), child->second);
+            }
+        }
+    }
+
     DPRINTF(CxxConfig, "Registering probe points\n");
     forEachObject(&SimObject::regProbePoints);
 

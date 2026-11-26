@@ -39,7 +39,7 @@ from common import (
     GPUTLBOptions,
     Options,
 )
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 import m5
 
@@ -104,7 +104,7 @@ def runMI200GPUFS(cpu_type):
     runfs.addRunFSOptions(parser)
     Options.addCommonOptions(parser)
     AmdGPUOptions.addAmdGPUOptions(parser)
-    Ruby.define_options(parser)
+    Ruby.define_options(parser, protocol=Ruby.parse_protocol())
     GPUTLBOptions.tlb_options(parser)
     addDemoOptions(parser)
 

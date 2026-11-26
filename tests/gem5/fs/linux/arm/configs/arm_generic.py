@@ -174,6 +174,7 @@ class LinuxArmSystemBuilder:
             self.num_cpus,
             sc,
             ruby=self.use_ruby,
+            ruby_protocol=Ruby.parse_protocol() if self.use_ruby else None,
             bootloader=bootloader,
         )
 

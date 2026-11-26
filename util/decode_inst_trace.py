@@ -120,7 +120,6 @@ def main():
     optional_fields = (
         "tick",
         "type",
-        "inst_flags",
         "addr",
         "size",
         "mem_flags",

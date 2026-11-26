@@ -37,7 +37,7 @@ from m5.util import addToPath
 addToPath("../")
 
 from common import Options
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -61,7 +61,7 @@ parser.add_argument(
 #
 # Add the ruby specific and protocol specific options
 #
-Ruby.define_options(parser)
+Ruby.define_options(parser, protocol=Ruby.parse_protocol())
 
 exec(
     compile(
@@ -92,9 +92,9 @@ args.l3_assoc = 2
 
 # Check the protocol
 check_flush = False
-if buildEnv["PROTOCOL"] == "MOESI_hammer":
+if args.protocol == "MOESI_hammer":
     check_flush = True
-if buildEnv["PROTOCOL"] == "MESI_Three_Level":
+if args.protocol == "MESI_Three_Level":
     check_flush = True
 
 tester = RubyTester(
@@ -123,7 +123,7 @@ system.clk_domain = SrcClockDomain(
 # tester object, num_cpus is not necessarily equal to the
 # size of system.cpu
 cpu_list = [system.cpu] * args.num_cpus
-Ruby.create_system(args, False, system, cpus=cpu_list)
+Ruby.create_system(args, False, system, cpus=cpu_list, protocol=args.protocol)
 
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(

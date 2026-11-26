@@ -44,7 +44,6 @@ from m5.objects import *
 from m5.util import (
     addToPath,
     fatal,
-    warn,
 )
 
 
@@ -68,7 +67,7 @@ def define_options(parser):
         "--network",
         default="simple",
         choices=["simple", "garnet"],
-        help="""'simple'|'garnet' (garnet2.0 will be deprecated.)""",
+        help="""'simple'|'garnet'""",
     )
     parser.add_argument(
         "--router-latency",
@@ -152,16 +151,6 @@ def define_options(parser):
 
 
 def create_network(options, ruby):
-    # Allow legacy users to use garnet through garnet2.0 option
-    # until next gem5 release.
-    if options.network == "garnet2.0":
-        warn(
-            "Usage of option 'garnet2.0' will be depracated. "
-            "Please use 'garnet' for using the latest garnet "
-            "version. Current version: 3.0"
-        )
-        options.network = "garnet"
-
     # Set the network classes based on the command line options
     if options.network == "garnet":
         NetworkClass = GarnetNetwork
@@ -170,12 +159,17 @@ def create_network(options, ruby):
         RouterClass = GarnetRouter
         InterfaceClass = GarnetNetworkInterface
 
-    else:
+    elif options.network == "simple":
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
         ExtLinkClass = SimpleExtLink
         RouterClass = Switch
         InterfaceClass = None
+    else:
+        fatal(
+            "Unknown Ruby network '%s'; expected 'garnet' or 'simple'",
+            options.network,
+        )
 
     # Instantiate the network object
     # so that the controllers can connect to it.

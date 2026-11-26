@@ -108,13 +108,11 @@ class Info
     virtual ~Info();
 
     /**
-     * Set the name of this statistic. Special handling must be done when
-     * creating an old-style statistic (i.e., stats without a parent group).
+     * Set the name of this statistic within its owning group.
      *
      * @param name The new name.
-     * @param old_style Whether we are using the old style.
      */
-    void setName(const std::string &name, bool old_style=true);
+    void setName(const std::string &name);
 
     void setSeparator(std::string _sep) { separatorString = _sep;}
 
@@ -253,9 +251,6 @@ class SparseHistInfo : public Info
     /** Local storage for the entry values, used for printing. */
     SparseHistData data;
 };
-
-typedef std::map<std::string, Info *> NameMapType;
-NameMapType &nameMap();
 
 } // namespace statistics
 } // namespace gem5

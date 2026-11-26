@@ -56,43 +56,11 @@ namespace gem5
 namespace statistics
 {
 
-// We wrap these in a function to make sure they're built in time.
-std::list<Info *> &
-statsList()
-{
-    static std::list<Info *> the_list;
-    return the_list;
-}
-
-MapType &
-statsMap()
-{
-    static MapType the_map;
-    return the_map;
-}
-
 void
-InfoAccess::setInfo(Group *parent, Info *info)
+InfoAccess::setInfo(Info *info)
 {
-    panic_if(statsMap().find(this) != statsMap().end() ||
-             _info != nullptr,
-             "shouldn't register stat twice!");
-
-    // New-style stats are reachable through the hierarchy and
-    // shouldn't be added to the global lists.
-    if (parent) {
-        _info = info;
-        return;
-    }
-
-    statsList().push_back(info);
-
-#ifndef NDEBUG
-    std::pair<MapType::iterator, bool> result =
-#endif
-        statsMap().insert(std::make_pair(this, info));
-    assert(result.second && "this should never fail");
-    assert(statsMap().find(this) != statsMap().end());
+    gem5_assert(!_info, "Statistic '%s' was registered twice", info->name);
+    _info = info;
 }
 
 void
@@ -110,35 +78,13 @@ InfoAccess::setInit()
 Info *
 InfoAccess::info()
 {
-    if (newStyleStats()) {
-        // New-style stats
-        return _info;
-    } else {
-        // Legacy stats
-        MapType::const_iterator i = statsMap().find(this);
-        assert(i != statsMap().end());
-        return (*i).second;
-    }
+    return _info;
 }
 
 const Info *
 InfoAccess::info() const
 {
-    if (newStyleStats()) {
-        // New-style stats
-        return _info;
-    } else {
-        // Legacy stats
-        MapType::const_iterator i = statsMap().find(this);
-        assert(i != statsMap().end());
-        return (*i).second;
-    }
-}
-
-bool
-InfoAccess::newStyleStats() const
-{
-    return _info != nullptr;
+    return _info;
 }
 
 Formula::Formula(Group *parent, const char *name, const char *desc)
@@ -317,12 +263,7 @@ reset()
 const Info *
 resolve(const std::string &name)
 {
-    const auto &it = nameMap().find(name);
-    if (it != nameMap().cend()) {
-        return it->second;
-    } else {
-        return Root::root()->resolveStat(name);
-    }
+    return Root::root()->resolveStat(name);
 }
 
 void

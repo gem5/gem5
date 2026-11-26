@@ -198,19 +198,21 @@ TraceCPU::checkAndSchedExitEvent()
         }
     }
 }
- TraceCPU::TraceStats::TraceStats(TraceCPU *trace) :
-    statistics::Group(trace),
-    ADD_STAT(numSchedDcacheEvent, statistics::units::Count::get(),
-             "Number of events scheduled to trigger data request generator"),
-    ADD_STAT(numSchedIcacheEvent, statistics::units::Count::get(),
-             "Number of events scheduled to trigger instruction request "
-             "generator"),
-    ADD_STAT(numOps, statistics::units::Count::get(),
-             "Number of micro-ops simulated by the Trace CPU"),
-    ADD_STAT(cpi, statistics::units::Rate<
-                    statistics::units::Cycle, statistics::units::Count>::get(),
-             "Cycles per micro-op used as a proxy for CPI",
-             trace->traceStats.numCycles / numOps)
+TraceCPU::TraceStats::TraceStats(TraceCPU *trace)
+    : statistics::Group(trace),
+      ADD_STAT(numSchedDcacheEvent, statistics::units::Count::get(),
+               "Number of events scheduled to trigger data request generator"),
+      ADD_STAT(numSchedIcacheEvent, statistics::units::Count::get(),
+               "Number of events scheduled to trigger instruction request "
+               "generator"),
+      ADD_STAT(numOps, statistics::units::Count::get(),
+               "Number of micro-ops simulated by the Trace CPU"),
+      numCycles(this),
+      ADD_STAT(cpi,
+               statistics::units::Rate<statistics::units::Cycle,
+                                       statistics::units::Count>::get(),
+               "Cycles per micro-op used as a proxy for CPI",
+               trace->traceStats.numCycles / numOps)
 {
     cpi.precision(6);
 }

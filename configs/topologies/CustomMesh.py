@@ -41,7 +41,7 @@ from m5.objects import *
 from m5.params import *
 from m5.util import fatal
 
-if buildEnv["PROTOCOL"] == "CHI":
+if buildEnv.get("RUBY_PROTOCOL_CHI", False):
     import ruby.CHI_config as CHI
 
 from topologies.BaseTopology import SimpleTopology
@@ -264,7 +264,7 @@ class CustomMesh(SimpleTopology):
     # --------------------------------------------------------------------------
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
-        assert buildEnv["PROTOCOL"] == "CHI"
+        assert options.protocol == "CHI"
 
         num_rows = options.num_rows
         num_cols = options.num_cols

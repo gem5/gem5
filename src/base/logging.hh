@@ -361,11 +361,5 @@ class Logger
 
 /** @} */ // end of api_logger
 
-#define chatty_assert(...)                                                   \
-    (                                                                        \
-        gem5_assert(args...),                                                \
-        GEM5_DEPRECATED_MACRO(chatty_assert, {}, "Please use gem5_assert()") \
-    )
-
 } // namespace gem5
 #endif // __BASE_LOGGING_HH__

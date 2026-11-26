@@ -269,3 +269,21 @@ gem5_verify_config(
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
+
+
+gem5_verify_config(
+    name="garnet-grouped-stats-reset-test",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "garnet_reset_check.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)

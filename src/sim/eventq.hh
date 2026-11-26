@@ -1102,14 +1102,7 @@ class MemberEventWrapper final: public Event, public Named
     static_assert(std::is_same_v<void, MemberFunctionReturn_t<F>>);
     static_assert(std::is_same_v<MemberFunctionArgsTuple_t<F>, std::tuple<>>);
 
-public:
-    [[deprecated("Use reference version of this constructor instead")]]
-    MemberEventWrapper(CLASS *object,
-                       bool del = false,
-                       Priority p = Default_Pri):
-        MemberEventWrapper{*object, del, p}
-    {}
-
+  public:
     /**
      * @brief Construct a new MemberEventWrapper object
      *
@@ -1136,10 +1129,6 @@ public:
 private:
     CLASS *mObject;
 };
-
-template <class T, void (T::* F)()>
-using EventWrapper [[deprecated("Use MemberEventWrapper instead")]]
-    = MemberEventWrapper<F>;
 
 class EventFunctionWrapper : public Event
 {

@@ -80,11 +80,6 @@ class RubyController(ClockedObject):
     )
 
     memory_out_port = RequestPort("Port for attaching a memory controller")
-    memory = DeprecatedParam(
-        memory_out_port,
-        "The request port for Ruby "
-        "memory output to the main memory is now called `memory_out_port`",
-    )
 
     system = Param.System(Parent.any, "system object parameter")
 

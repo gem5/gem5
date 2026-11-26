@@ -64,9 +64,3 @@ class RubyPrefetcher(SimObject):
     block_size = Param.UInt32(
         "Size of block to prefetch, usually cache line size"
     )
-
-
-class Prefetcher(RubyPrefetcher):
-    """DEPRECATED"""
-
-    pass

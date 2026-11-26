@@ -109,10 +109,9 @@ pybind_init_stats(py::module_ &m_native)
 {
     py::module_ m = m_native.def_submodule("stats");
 
-    m
-        .def("initSimStats", &statistics::initSimStats)
+    m.def("initSimStats", &statistics::initSimStats)
         .def("initText", &statistics::initText,
-            py::return_value_policy::reference)
+             py::return_value_policy::reference)
 #if HAVE_HDF5
         .def("initHDF5", &statistics::initHDF5)
 #endif
@@ -124,9 +123,7 @@ pybind_init_stats(py::module_ &m_native)
         .def("processResetQueue", &statistics::processResetQueue)
         .def("processDumpQueue", &statistics::processDumpQueue)
         .def("enable", &statistics::enable)
-        .def("enabled", &statistics::enabled)
-        .def("statsList", &statistics::statsList)
-        ;
+        .def("enabled", &statistics::enabled);
 
     py::class_<statistics::Output>(m, "Output")
         .def("begin", &statistics::Output::begin)

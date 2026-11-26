@@ -40,7 +40,7 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath
 
-from .Ruby import (
+from .configuration import (
     create_topology,
     send_evicts,
 )
@@ -978,7 +978,7 @@ def construct_tccs(options, system, ruby_system, network):
 def create_system(
     options, full_system, system, dma_devices, bootmem, ruby_system, cpus
 ):
-    if buildEnv["PROTOCOL"] != "GPU_VIPER":
+    if not buildEnv.get("RUBY_PROTOCOL_GPU_VIPER", False):
         panic("This script requires the GPU_VIPER protocol to be built.")
 
     cpu_sequencers = []

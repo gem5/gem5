@@ -43,13 +43,13 @@
 
 // This class is a garden variety sc_module, except that it uses DPRINTFN in
 // one of its methods, and maintains a gem5 statistic.
-class Printer : public sc_core::sc_module
+class Printer : public sc_core::sc_module, public gem5::statistics::Group
 {
   public:
     sc_core::sc_in<const char *> input;
     std::string prefix;
 
-    SC_CTOR(Printer)
+    SC_CTOR(Printer) : gem5::statistics::Group(nullptr), numWords(this)
     {
         SC_THREAD(print);
     }
@@ -78,10 +78,7 @@ class Printer : public sc_core::sc_module
     void
     end_of_elaboration() override
     {
-        numWords
-            .name(std::string(name()) + ".numWords")
-            .desc("number of words printed")
-            ;
+        numWords.name("numWords").desc("number of words printed");
     }
 };
 

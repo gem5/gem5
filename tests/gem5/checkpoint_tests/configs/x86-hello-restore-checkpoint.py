@@ -72,7 +72,7 @@ board.set_se_binary_workload(
     ),
 )
 
-sim = Simulator(board=board, full_system=False)
+sim = Simulator(board=board)
 sim.run()
 print(
     "Exiting @ tick {} because {}.".format(

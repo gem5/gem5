@@ -466,30 +466,17 @@ class AbstractBoard:
             self.get_cache_hierarchy()._post_instantiate()
         self.get_memory()._post_instantiate()
 
-    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
+    def _pre_instantiate(self) -> Root:
         """To be called immediately before ``m5.instantiate``. This is where
         ``_connect_things`` is executed by default and the root object is Root
-        object is created and returned.
-
-        :param full_system: Used to pass the full system flag to the board from
-                            the Simulator module. **Note**: This was
-                            implemented solely to maintain backawards
-                            compatibility with while the Simululator module's
-                            `full_system` flag is in state of deprecation. This
-                            parameter will be removed when it is. When this
-                            occurs whether a simulation is to be run in FS or
-                            SE mode will be determined by the board set."""
+        object is created and returned."""
 
         # 1. Connect the memory, processor, and cache hierarchy.
         self._connect_things()
 
         # 2. Create the root object
         root = Root(
-            full_system=(
-                full_system
-                if full_system is not None
-                else self.is_fullsystem()
-            ),
+            full_system=self.is_fullsystem(),
             board=self,
         )
 

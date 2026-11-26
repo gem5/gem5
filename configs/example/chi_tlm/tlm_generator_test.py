@@ -51,8 +51,8 @@ from m5.util import addToPath
 m5.util.addToPath(os.path.join(m5.util.repoPath(), "configs"))
 from ruby import (
     CHI,
-    Ruby,
 )
+from ruby import configuration as Ruby
 from ruby.CHI_config import (
     CHI_MN,
     CHI_Node,
@@ -161,7 +161,7 @@ parser = argparse.ArgumentParser(
 #
 # Add the ruby specific and protocol specific options
 #
-Ruby.define_options(parser)
+Ruby.define_options(parser, protocol=Ruby.parse_protocol())
 parser.add_argument(
     "suite",
     type=str,

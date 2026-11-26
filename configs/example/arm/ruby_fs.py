@@ -54,7 +54,7 @@ from common.cores.arm import (
     HPI,
     O3_ARM_v7a,
 )
-from ruby import Ruby
+from ruby import configuration as Ruby
 
 default_kernel = "vmlinux.arm64"
 default_disk = "linaro-minimal-aarch64.img"
@@ -92,6 +92,7 @@ def config_ruby(system, args):
         system._dma_ports,
         system.realview.bootmem,
         cpus,
+        protocol=args.protocol,
     )
 
     # Create a seperate clock domain for Ruby
@@ -295,7 +296,7 @@ def main():
     parser.add_argument("--l3_assoc", type=int, default=16)
     parser.add_argument("--cacheline_size", type=int, default=64)
 
-    Ruby.define_options(parser)
+    Ruby.define_options(parser, protocol=Ruby.parse_protocol())
     args = parser.parse_args()
 
     root = Root(full_system=True)

@@ -163,8 +163,8 @@ system.l2cache.connectMemSideBus(system.membus)
 system.cpu.createInterruptController()
 if args.cpu == "X86DerivO3CPU":
     system.cpu.interrupts[0].pio = system.membus.mem_side_ports
-    system.cpu.interrupts[0].int_master = system.membus.cpu_side_ports
-    system.cpu.interrupts[0].int_slave = system.membus.mem_side_ports
+    system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
+    system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
 system.mem_ctrl = valid_mem[args.mem]()
 system.mem_ctrl.range = system.mem_ranges[0]

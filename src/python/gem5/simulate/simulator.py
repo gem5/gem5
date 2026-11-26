@@ -88,7 +88,6 @@ class Simulator:
     def __init__(
         self,
         board: AbstractBoard,
-        full_system: bool | None = None,
         on_exit_event: None | (
             dict[
                 ExitEvent,
@@ -107,15 +106,6 @@ class Simulator:
     ) -> None:
         """
         :param board: The board to be simulated.
-        :param full_system: Whether to run as a full-system simulation or not.
-                            This is optional and used to override default
-                            behavior. If not set, whether or not to run in FS
-                            mode will be determined via the board's
-                            ``is_fullsystem()`` function.
-                            **Warning: This parameter is deprecated. The board
-                            determines if the simulation is full system or not.
-                            This parameter will be removed in a future gem5
-                            release.**
         :param on_exit_event: An optional map to specify what to execute on
                               each exit event. There are three possibilities here:
                               a generator, a list of functions, or a single function.
@@ -165,15 +155,6 @@ class Simulator:
         See ClassicGeneratorExitHandler for details on
         """
 
-        if full_system is not None:
-            warn(
-                "Setting the full_system parameter via the Simulator "
-                "constructor is deprecated and will be removed in future "
-                "releases of gem5. "
-                "The board determines if the simulation is full system or not "
-                "via it's `is_fullsystem` method."
-            )
-
         self._hypercall_max_ticks = None
         self.set_max_ticks(max_ticks)
 
@@ -182,7 +163,6 @@ class Simulator:
 
         self._instantiated = False
         self._board = board
-        self._full_system = full_system
         self._tick_stopwatch = []
 
         self._last_exit_event = None
@@ -570,9 +550,7 @@ class Simulator:
             # Before anything else we run the AbstractBoard's
             # `_pre_instantiate` function. This returns the root object which
             # is required for instantiation.
-            self._root = self._board._pre_instantiate(
-                full_system=self._full_system
-            )
+            self._root = self._board._pre_instantiate()
             assert self._root is not None
 
             if m5._simulate_module._instantiated:

@@ -263,7 +263,6 @@ class Plic : public PlicBase
     /**
      * The function for handling context config from params
      */
-    void initContextFromNContexts(int n_contexts);
     void initContextFromHartConfig(const std::string& hart_config);
 
     /**

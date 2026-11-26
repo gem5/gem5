@@ -68,7 +68,6 @@ from gem5.components.processors.simple_switchable_processor import (
 from gem5.isas import ISA
 from gem5.resources.resource import (
     DiskImageResource,
-    Resource,
     obtain_resource,
 )
 from gem5.simulate.exit_handler import (
