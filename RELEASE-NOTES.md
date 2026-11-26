@@ -1,3 +1,57 @@
+# Unreleased
+
+## Removed deprecated interfaces
+
+The following interfaces have been retained for at least two major release
+cycles and are removed in this release:
+
+* The deprecated configuration examples under `configs/deprecated`, the
+  error-only `configs/example/fs.py` and `se.py` stubs, and the retired CI
+  scripts under `tests/deprecated`. New configurations should use the gem5
+  standard library. The SystemC CI example uses
+  `configs/learning_gem5/part1/simple-arm.py`.
+* The `Resource`, `CustomResource`, `CustomDiskImageResource`, `Workload`,
+  `CustomWorkload`, and `gem5.utils.simpoint.SimPoint` compatibility APIs.
+  Resources use `obtain_resource` or the appropriate resource class;
+  SimPoints use `SimpointResource` or `SimpointDirectoryResource`.
+* The `Simulator(full_system=...)` override and its board compatibility
+  plumbing. The configured workload determines the board's simulation mode.
+* The old `master`/`slave` port classes and parameter aliases,
+  `RubyController.memory`, and the Ruby `Prefetcher` alias. Configurations
+  use the request/response port names, `memory_out_port`, and `RubyPrefetcher`.
+* `Plic.n_contexts`. PLIC configurations specify hart privilege modes using
+  `hart_config`.
+* The implicit `configs/ruby/Ruby.py` and `MULTIPLE.py` protocol dispatch and
+  unprefixed generated controller aliases. The remaining low-level examples
+  use `ruby.configuration` with an explicit protocol and protocol-qualified
+  controller names; selecting a protocol no longer changes `buildEnv`.
+  The `garnet2.0` network spelling is also removed; use `garnet`.
+* The Vega10 full-system device mode. The supported MI100, MI200, MI300X,
+  and MI355X device paths retain their shared GPU instruction support.
+* Legacy statistics without a `statistics::Group` parent and the global
+  legacy-stat registries. Model and C++ configuration statistics now use
+  the statistics hierarchy. The deprecated `UNIT_*` macros are removed;
+  statistics specify their unit using `statistics::units`.
+* The C++ `MasterPort`, `SlavePort`, `PS2Device`, `PS2TouchKit`, and
+  `AuxVector` aliases, the old auxiliary-vector enum names, `EventWrapper`,
+  and the pointer-taking `MemberEventWrapper` constructor. Their replacements
+  are `RequestPort`, `ResponsePort`, `ps2::Device`, `ps2::TouchKit`,
+  `auxv::AuxVector`, the `auxv` enum names, and `MemberEventWrapper` with an
+  object reference.
+* The `M5_*` compiler macro aliases, `GEM5_FALLTHROUGH`, `GEM5_DEPRECATED`,
+  `GEM5_DEPRECATED_ENUM_VAL`, `GEM5_NO_DISCARD`, `GEM5_VAR_USED`, `DTRACE`,
+  and `chatty_assert`. Code uses the corresponding supported `GEM5_*`
+  macros, standard C++ attributes, debug flags directly, and `gem5_assert`.
+* Implicit nonstandard SimObject creation methods and SCons `--gold-linker`.
+  SimObjects provide a constructor taking `const Params&` or explicitly
+  set `override_create=True`; gold is selected with `--linker=gold`.
+* The `Inst.inst_flags` trace field and checkpoint upgrader support for
+  `Globals.version_tags`. The trace field number and name remain reserved;
+  checkpoint version tags use `root.globals.version_tags`.
+
+The simulation-exit compatibility APIs and `ExitHandler.hypercall_num` first
+deprecated in 26.0 remain available through the next major release.
+
 # Version 26.0
 
 gem5 Version 26.0 is the first major release of 2026.
