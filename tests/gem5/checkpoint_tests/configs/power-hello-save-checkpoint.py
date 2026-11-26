@@ -76,7 +76,7 @@ board.set_se_binary_workload(
     obtain_resource("power-hello", resource_version="1.0.0")
 )
 
-sim = Simulator(board=board, full_system=False, max_ticks=10**6)
+sim = Simulator(board=board, max_ticks=10**6)
 
 sim.run()
 print(

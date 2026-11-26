@@ -144,8 +144,14 @@ else:
 
 board.set_workload(list(suite)[0])
 
+if board.is_fullsystem() != args.fs_sim:
+    raise ValueError(
+        f"The selected workload has full_system={board.is_fullsystem()}, "
+        f"but --fs-sim specifies full_system={args.fs_sim}."
+    )
 
-simulator = Simulator(board=board, full_system=args.fs_sim)
+
+simulator = Simulator(board=board)
 
 if args.tick_exit:
     simulator.set_max_ticks(args.tick_exit)

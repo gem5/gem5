@@ -87,7 +87,7 @@ board.set_kernel_disk_workload(
     ),
 )
 
-sim = Simulator(board=board, full_system=True, max_ticks=10**10)
+sim = Simulator(board=board, max_ticks=10**10)
 print("Beginning simulation!")
 
 sim.run()
