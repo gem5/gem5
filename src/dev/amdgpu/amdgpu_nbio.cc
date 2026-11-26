@@ -53,14 +53,6 @@ AMDGPUNbio::setGPUDevice(AMDGPUDevice *gpu_device)
 void
 AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
 {
-    // For Vega10 we rely on the golden values in an MMIO trace. Return
-    // immediately as to not clobber those values.
-    if (gpuDevice->getGfxVersion() == GfxVersion::gfx900) {
-        if (offset == AMDGPU_PCIE_DATA || offset == AMDGPU_PCIE_DATA2) {
-            return;
-        }
-    }
-
     DPRINTF(AMDGPUDevice, "NBIO Read MMIO offset %#x\n", offset);
     switch (offset) {
         // PCIE_DATA, PCIE_DATA2, PCIE_INDEX, and PCIE_INDEX2 handle "indirect

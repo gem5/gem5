@@ -169,7 +169,7 @@ class AMDGPUDevice : public PciEndpoint
     System *system;
 
     /* Device information */
-    GfxVersion gfx_version = GfxVersion::gfx900;
+    GfxVersion gfx_version;
     const int gpuId;
     Addr vramSize;
 

@@ -34,7 +34,7 @@ from common import (
 from common.Benchmarks import *
 from common.FSConfig import *
 from example.gpufs.Disjoint_VIPER import *
-from ruby import Ruby
+from ruby import configuration as Ruby
 from system.amdgpu import *
 
 from m5.objects import (
@@ -155,11 +155,7 @@ def makeGpuFSSystem(args):
     num_sdmas = 2
     sdma_bases = []
     sdma_sizes = []
-    if args.gpu_device == "Vega10":
-        num_sdmas = 2
-        sdma_bases = [0x4980, 0x5180]
-        sdma_sizes = [0x800] * 2
-    elif args.gpu_device == "MI100":
+    if args.gpu_device == "MI100":
         num_sdmas = 8
         sdma_bases = [
             0x4980,
