@@ -1431,6 +1431,24 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
     // use request from 1st target
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
 
+    if (tgt_pkt->cmd == MemCmd::StoreCondFailReq &&
+        !tags->findBlock({mshr->blkAddr, mshr->isSecure})) {
+        // CPU-originated SC whose block was invalidated by a snoop that
+        // precedes our not-yet-issued request. It can only fail, so fail
+        // it here instead of invalidating every other copy.
+        if (mshr == noTargetMSHR) {
+            clearBlocked(Blocked_NoTargets);
+            noTargetMSHR = nullptr;
+        }
+        tgt_pkt->req->setExtraData(0);
+        tgt_pkt->makeTimingResponse();
+        cpuSidePort.schedTimingResp(tgt_pkt, clockEdge(responseLatency));
+        if (mshrQueue.forceDeallocateTarget(mshr)) {
+            clearBlocked(Blocked_NoMSHRs);
+        }
+        return false;
+    }
+
     if (tgt_pkt->cmd == MemCmd::HardPFReq && forwardSnoops) {
         DPRINTF(Cache, "%s: MSHR %s\n", __func__, tgt_pkt->print());
 

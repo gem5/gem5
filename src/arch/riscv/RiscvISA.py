@@ -229,7 +229,7 @@ _EXTENSION_REGISTRY = {
     "Ziccamoc": {"implemented": False},
     "Ziccif": {"implemented": False},
     "Zicclsm": {"implemented": False},
-    "Ziccrse": {"implemented": False},
+    "Ziccrse": {"implemented": True},
     "Zicfilp": {"implemented": False},
     "Zicfiss": {"implemented": False},
     "Zicntr": {"implemented": True},
