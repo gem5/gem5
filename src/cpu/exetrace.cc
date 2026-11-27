@@ -50,6 +50,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/base.hh"
+#include "cpu/inst_res.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
@@ -57,8 +58,8 @@
 #include "debug/ExecCPSeq.hh"
 #include "debug/ExecEffAddr.hh"
 #include "debug/ExecEnable.hh"
-#include "debug/ExecFetchSeq.hh"
 #include "debug/ExecFaulting.hh"
+#include "debug/ExecFetchSeq.hh"
 #include "debug/ExecFlags.hh"
 #include "debug/ExecKernel.hh"
 #include "debug/ExecMacro.hh"
@@ -76,6 +77,25 @@ namespace gem5
 {
 
 namespace trace {
+
+static void
+printMatrixResult(std::ostream &os, const InstResult &result)
+{
+    const auto *bytes = static_cast<const uint8_t *>(result.asBlob());
+    const auto size = result.regClass().regBytes();
+    ccprintf(os, "matrix[%uB", size);
+    for (size_t i = 0; i < size;) {
+        if (bytes[i] == 0) {
+            ++i;
+            continue;
+        }
+        ccprintf(os, " %#x:", i);
+        do {
+            ccprintf(os, "%02x", static_cast<unsigned>(bytes[i++]));
+        } while (i < size && bytes[i] != 0);
+    }
+    os << ']';
+}
 
 InstRecord *
 ExeTracer::getInstRecord(Tick when, ThreadContext *tc,
@@ -151,10 +171,16 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
 
         if (debug::ExecResult && dataStatus != DataInvalid) {
             if (dataStatus == DataReg) {
-                if (vectorLengthInBytes > 0 && inst->isVector()) {
-                    outs << " D=" << data.asReg.asString(vectorLengthInBytes);
+                const auto &result = data.asReg;
+                const auto type = result.regClass().type();
+                outs << " D=";
+                if (type == MatRegClass && result.isBlob()) {
+                    printMatrixResult(outs, result);
+                } else if (type == VecRegClass && result.isBlob() &&
+                           vectorLengthInBytes > 0) {
+                    outs << result.asString(vectorLengthInBytes);
                 } else {
-                    ccprintf(outs, " D=%s", data.asReg.asString());
+                    outs << result.asString();
                 }
             } else {
                 ccprintf(outs, " D=%#018x", data.asInt);
