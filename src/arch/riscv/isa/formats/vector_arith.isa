@@ -1486,7 +1486,8 @@ def format VectorReduceFormat(code, category, *flags) {{
     set_vlenb = setVlenb()
 
     if is_float:
-        code = fflags_wrapper(code)
+        # Reductions round with frm like other vector FP instructions.
+        code = "VRM_REQUIRED;\n" + fflags_wrapper(code)
         type_def = '''
             using et = ElemType;
             using vu = decltype(et::v);
