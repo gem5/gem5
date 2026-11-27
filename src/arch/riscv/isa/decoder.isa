@@ -2117,6 +2117,30 @@ decode QUADRANT default Unknown::unknown() {
                                       *b = htole(new_data);
                                   });
                 }}, mem_flags=ATOMIC_RETURN_OP);
+                0x6: decode AQ {
+                    0x1: decode RS2 {
+                        0x0: decode RL {
+                            0x0: AtomicLoadAcquire::lb_aq({{
+                                Rd_sd = Mem_sb;
+                            }});
+                            0x1: AtomicLoadAcquire::lb_aqrl({{
+                                Rd_sd = Mem_sb;
+                            }});
+                        }
+                    }
+                }
+                0x7: decode RL {
+                    0x1: decode RD {
+                        0x0: decode AQ {
+                            0x0: AtomicStoreRelease::sb_rl({{
+                                Mem_ub = Rs2_ub;
+                            }});
+                            0x1: AtomicStoreRelease::sb_aqrl({{
+                                Mem_ub = Rs2_ub;
+                            }});
+                        }
+                    }
+                }
                 0x8: AtomicMemOp::amoor_b({{
                     Rd_sd = Mem_sb;
                 }}, {{
@@ -2214,6 +2238,30 @@ decode QUADRANT default Unknown::unknown() {
                                       *b = htole(new_data);
                                   });
                 }}, mem_flags=ATOMIC_RETURN_OP);
+                0x6: decode AQ {
+                    0x1: decode RS2 {
+                        0x0: decode RL {
+                            0x0: AtomicLoadAcquire::lh_aq({{
+                                Rd_sd = Mem_sh;
+                            }});
+                            0x1: AtomicLoadAcquire::lh_aqrl({{
+                                Rd_sd = Mem_sh;
+                            }});
+                        }
+                    }
+                }
+                0x7: decode RL {
+                    0x1: decode RD {
+                        0x0: decode AQ {
+                            0x0: AtomicStoreRelease::sh_rl({{
+                                Mem_uh = Rs2_uh;
+                            }});
+                            0x1: AtomicStoreRelease::sh_aqrl({{
+                                Mem_uh = Rs2_uh;
+                            }});
+                        }
+                    }
+                }
                 0x8: AtomicMemOp::amoor_h({{
                     Rd_sd = Mem_sh;
                 }}, {{
@@ -2333,6 +2381,30 @@ decode QUADRANT default Unknown::unknown() {
                                       }
                                   });
                 }}, mem_flags=ATOMIC_RETURN_OP);
+                0x6: decode AQ {
+                    0x1: decode RS2 {
+                        0x0: decode RL {
+                            0x0: AtomicLoadAcquire::lw_aq({{
+                                Rd_sd = Mem_sw;
+                            }});
+                            0x1: AtomicLoadAcquire::lw_aqrl({{
+                                Rd_sd = Mem_sw;
+                            }});
+                        }
+                    }
+                }
+                0x7: decode RL {
+                    0x1: decode RD {
+                        0x0: decode AQ {
+                            0x0: AtomicStoreRelease::sw_rl({{
+                                Mem_uw = Rs2_uw;
+                            }});
+                            0x1: AtomicStoreRelease::sw_aqrl({{
+                                Mem_uw = Rs2_uw;
+                            }});
+                        }
+                    }
+                }
                 0x8: AtomicMemOp::amoor_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
@@ -2453,6 +2525,30 @@ decode QUADRANT default Unknown::unknown() {
                                          }
                                     });
                     }}, mem_flags=ATOMIC_RETURN_OP);
+                    0x6: decode AQ {
+                        0x1: decode RS2 {
+                            0x0: decode RL {
+                                0x0: AtomicLoadAcquire::ld_aq({{
+                                    Rd_sd = Mem_sd;
+                                }});
+                                0x1: AtomicLoadAcquire::ld_aqrl({{
+                                    Rd_sd = Mem_sd;
+                                }});
+                            }
+                        }
+                    }
+                    0x7: decode RL {
+                        0x1: decode RD {
+                            0x0: decode AQ {
+                                0x0: AtomicStoreRelease::sd_rl({{
+                                    Mem_ud = Rs2_ud;
+                                }});
+                                0x1: AtomicStoreRelease::sd_aqrl({{
+                                    Mem_ud = Rs2_ud;
+                                }});
+                            }
+                        }
+                    }
                     0x8: AtomicMemOp::amoor_d({{
                         Rd_sd = Mem_sd;
                     }}, {{

@@ -116,6 +116,47 @@ StoreCondMicro::generateDisassembly(
     return ss.str();
 }
 
+// Zalasr load-acquire / store-release
+std::string
+AtomicLoadAcquire::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(intRegClass[machInst.rd]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
+    return ss.str();
+}
+
+std::string
+AtomicLoadAcquireMicro::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(intRegClass[machInst.rd]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
+    return ss.str();
+}
+
+std::string
+AtomicStoreRelease::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(intRegClass[machInst.rs2]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
+    return ss.str();
+}
+
+std::string
+AtomicStoreReleaseMicro::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(intRegClass[machInst.rs2]) << ", ("
+       << registerName(intRegClass[machInst.rs1]) << ')';
+    return ss.str();
+}
+
 // AMOs
 std::string
 AtomicMemOp::generateDisassembly(
