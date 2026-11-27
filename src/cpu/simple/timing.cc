@@ -567,6 +567,19 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
     req->taskId(taskId());
 
+    if (!byte_enable.empty() &&
+        !isAnyActiveElement(byte_enable.cbegin(), byte_enable.cend())) {
+        req->setFlags(Request::NO_ACCESS);
+        _status = DcacheWaitResponse;
+        schedule(new EventFunctionWrapper(
+                     [this, req, newData] {
+                         sendData(req, newData, nullptr, false);
+                     },
+                     name() + ".maskedWrite", true),
+                 clockEdge(Cycles(1)));
+        return NoFault;
+    }
+
     Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
