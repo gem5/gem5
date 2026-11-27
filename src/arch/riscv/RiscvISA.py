@@ -173,10 +173,10 @@ _EXTENSION_REGISTRY = {
     "Supm": {"implemented": False},
     "Sv32": {"implemented": False},
     "Sv39": {"implemented": True},
-    "Sv48": {"implemented": False},
-    "Sv57": {"implemented": False},
-    "Svade": {"implemented": False},
-    "Svadu": {"implemented": False},
+    "Sv48": {"implemented": True, "isa": "sv48"},
+    "Sv57": {"implemented": True, "isa": "sv57"},
+    "Svade": {"implemented": True, "isa": "svade"},
+    "Svadu": {"implemented": True, "isa": "svadu"},
     "Svbare": {"implemented": True},
     "Svinval": {"implemented": False},
     "Svnapot": {
@@ -549,6 +549,7 @@ class RiscvISA(BaseISA):
             "Zvfbfwma",
             "Zvfh",
             # "Smrnmi",     # Not enabled by default, changes trapping behavior
+            "Sv48",
         ],
         "Implemented extensions to expose in addition to the selected "
         "profile.",
@@ -607,11 +608,19 @@ class RiscvISA(BaseISA):
             for extension in self.extra_extensions
         }
         effective = mandatory | requested
+        if "Sv57" in effective:
+            effective.add("Sv48")
+        if "Sv48" in effective:
+            effective.add("Sv39")
+        if effective.intersection(("Sv39", "Svadu")):
+            effective.add("Svade")
         if "Zvfbfwma" in effective:
             effective.update(("Zfbfmin", "Zvfbfmin"))
         return mandatory, requested, effective
 
     def _is_supported(self, extension):
+        if extension in ("Sv39", "Sv48", "Sv57", "Svade", "Svadu"):
+            return self._effective_riscv_type() == "RV64"
         if extension == "H" and self.privilege_mode_set.value != "MHSU":
             return False
         return _EXTENSION_REGISTRY[extension]["implemented"]

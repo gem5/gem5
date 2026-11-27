@@ -176,6 +176,7 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
     if (newEntry) {
         // update PTE flags (maybe we set the dirty/writable flag)
         newEntry->pte = entry.pte;
+        newEntry->gpte = entry.gpte;
         assert(newEntry->vaddr == entry.vaddr);
         assert(newEntry->asid == entry.asid);
         assert(newEntry->logBytes == entry.logBytes);
@@ -307,19 +308,20 @@ TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
         if (!pte.x) {
             pf = true; DPRINTF(TLB, "HLVX with no exec perm, raising PF\n");
         }
-    }
-    else if (mode == BaseMMU::Read && !pte.r) {
+    } else if (mode == BaseMMU::VsPteRead && !pte.r) {
+        pf = true;
+        DPRINTF(TLB, "G-stage PTE has no read perm, raising PF\n");
+    } else if (mode == BaseMMU::Read && !pte.r) {
         if (mxr && pte.x) {
             DPRINTF(TLBVerbose, "MXR bit on, load from exec page success\n");
         }
         else {
             pf = true; DPRINTF(TLB, "PTE has no read perm, raising PF\n");
         }
-    }
-    else if (mode == BaseMMU::Write && !pte.w) {
+    } else if ((mode == BaseMMU::Write || mode == BaseMMU::VsPteWrite) &&
+               !pte.w) {
         pf = true; DPRINTF(TLB, "PTE has no write perm, raising PF\n");
-    }
-    else if (mode == BaseMMU::Execute && !pte.x) {
+    } else if (mode == BaseMMU::Execute && !pte.x) {
         pf = true; DPRINTF(TLB, "PTE has no exec perm, raising PF\n");
     }
 
@@ -338,25 +340,23 @@ TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
 }
 
 Fault
-TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode,
-                     Addr gvaddr, bool gpf, bool virt)
+TLB::createPagefault(Addr vaddr, BaseMMU::Mode mode, Addr gvaddr, bool gpf,
+                     bool virt, RegVal tinst)
 {
     ExceptionCode code;
-    if (mode == BaseMMU::Read) {
+    if (mode == BaseMMU::Read || mode == BaseMMU::VsPteRead) {
         code = gpf ? ExceptionCode::LOAD_GUEST_PAGE :
                      ExceptionCode::LOAD_PAGE;
-    }
-    else if (mode == BaseMMU::Write) {
+    } else if (mode == BaseMMU::Write || mode == BaseMMU::VsPteWrite) {
         code = gpf ? ExceptionCode::STORE_GUEST_PAGE :
                      ExceptionCode::STORE_PAGE;
-    }
-    else {
+    } else {
         code = gpf ? ExceptionCode::INST_GUEST_PAGE :
                      ExceptionCode::INST_PAGE;
     }
 
     if (gpf) { assert(virt); }
-    return std::make_shared<AddressFault>(vaddr, code, gvaddr, virt);
+    return std::make_shared<AddressFault>(vaddr, code, gvaddr, virt, tinst);
 }
 
 Addr
@@ -426,6 +426,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     }
 
     Fault fault;
+    bool needs_dirty = false;
     if (memaccess.bypassTLB()) {
         fault = NoFault;
     }
@@ -437,21 +438,34 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
                          ? tc->readMiscReg(MISCREG_HGATP)
                          : (RegVal)0;
         if (memaccess.virt && hgatp.mode != AddrXlateMode::BARE) {
-            if (e->gpte != 0) {
+            if (satp.mode != AddrXlateMode::BARE) {
                 fault = checkPermissions(
                     tc, memaccess, vaddr, mode, e->gpte);
+                needs_dirty = !e->gpte.d && mode == BaseMMU::Write;
             } else {
                 fault = NoFault;
+            }
+
+            if (fault == NoFault && !needs_dirty) {
+                fault = checkPermissions(tc, memaccess, vaddr, mode, e->pte, 0,
+                                         XlateStage::GSTAGE);
             }
         } else {
             fault = checkPermissions(
                 tc, memaccess, vaddr, mode, e->pte);
         }
+        needs_dirty |= !e->pte.d && mode == BaseMMU::Write;
     }
 
-    // if we want to write and it isn't writable, do a page table walk
-    // again to update the dirty flag.
-    if (e && (mode == BaseMMU::Write) && !e->pte.w) {
+    if (fault != NoFault) {
+        if (memaccess.bypassTLB()) {
+            delete e;
+        }
+        return fault;
+    }
+
+    // Rewalk writable entries whose memory PTE still needs D set.
+    if (needs_dirty) {
         DPRINTF(TLB, "Dirty bit not set, repeating PT walk\n");
         fault = walker->start(tc, translation, req, mode);
         // Atomic translations have translation == nullptr
@@ -475,12 +489,6 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
                 delete e;
             return fault;
         }
-    }
-
-    if (fault != NoFault) {
-        if (memaccess.bypassTLB())
-            delete e;
-        return fault;
     }
 
     Addr paddr = ((e->paddr >> (e->logBytes - PageShift)) << e->logBytes)
@@ -686,13 +694,16 @@ TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc,
             tc, mode, req->getArchFlags());
         PrivilegeMode pmode = memaccess.priv;
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
-        SATP satp = tc->readMiscReg(MISCREG_SATP);
+        SATP satp = memaccess.virt ? tc->readMiscReg(MISCREG_VSATP)
+                                   : tc->readMiscReg(MISCREG_SATP);
+        SATP hgatp = memaccess.virt ? tc->readMiscReg(MISCREG_HGATP) : 0;
         if (misa.rvs && pmode != PrivilegeMode::PRV_M &&
-            satp.mode != AddrXlateMode::BARE) {
+            (satp.mode != AddrXlateMode::BARE ||
+             hgatp.mode != AddrXlateMode::BARE)) {
             Walker *walker = mmu->getDataWalker();
             unsigned logBytes;
-            Fault fault = walker->startFunctional(
-                    tc, paddr, logBytes, mode);
+            Fault fault = walker->startFunctional(tc, paddr, logBytes, mode,
+                                                  req->getArchFlags());
             if (fault != NoFault)
                 return fault;
 
@@ -785,6 +796,12 @@ TLB::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(lruSeq);
 
     for (uint32_t x = 0; x < _size; x++) {
+        // Old entries lack the VS PTE and may contain an artificial W=0.
+        if (!cp.entryExists(csprintf("%s.Entry%d", currentSection(), x),
+                            "gpte")) {
+            continue;
+        }
+
         TlbEntry *newEntry = freeList.front();
         freeList.pop_front();
 

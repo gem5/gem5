@@ -391,7 +391,7 @@ class RISCVMatchedBoard(
             node = FdtNode(f"cpu@{i}")
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
-            node.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
+            node.append(FdtPropertyStrings("mmu-type", "riscv,sv39"))
             node.append(FdtPropertyStrings("status", "okay"))
             node.append(FdtPropertyStrings("riscv,isa", "rv64imafdc"))
             freq = self.clk_domain.clock[0].frequency
