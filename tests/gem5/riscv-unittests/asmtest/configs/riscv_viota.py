@@ -27,6 +27,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Check VIOTA prefix counts when O3 executes its pieces out of order."""
+
 import sys
 from pathlib import Path
 
