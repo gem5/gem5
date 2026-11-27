@@ -1,0 +1,12 @@
+
+---------- Begin Simulation Statistics : before reset ----------
+simInsts                                      100
+simOps                                        200
+
+---------- End Simulation Statistics   ----------
+
+---------- Begin Simulation Statistics : after reset ----------
+simInsts                                        2
+simOps                                          4
+
+---------- End Simulation Statistics   ----------
