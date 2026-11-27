@@ -12,10 +12,12 @@
 
 namespace {
 
-// A imagem e o limite de iterações são fixos para manter a interface simples.
-constexpr int LARGURA = 800;
-constexpr int ALTURA = 600;
-constexpr int MAX_ITERACOES = 1000;
+// Parâmetros da imagem. Os valores abaixo são os padrões; podem ser trocados
+// pela linha de comando (largura, altura e máximo de iterações), o que permite
+// calibrar o custo da execução sem recompilar.
+int LARGURA = 600;
+int ALTURA = 450;
+int MAX_ITERACOES = 1000;
 
 /* Bloco QUADRADO (o enunciado pede blocos quadrados; antes eram faixas de
    linhas com a largura inteira). Os blocos da borda direita/inferior podem ser
@@ -79,12 +81,29 @@ bool le_inteiro(const char *texto, long minimo, long maximo, long &valor)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 5) {
+    if (argc != 5 && argc != 8) {
         std::fprintf(stderr,
                      "Uso: %s <num_trabalhadores> <estatica|roubo|sequencial> "
-                     "<semente> <tamanho_bloco>\n",
+                     "<semente> <tamanho_bloco> [largura altura max_iteracoes]\n"
+                     "  padrão: 600 450 1000\n",
                      argv[0]);
         return 1;
+    }
+
+    /* Dimensões opcionais: lidas ANTES, pois o tamanho do bloco é limitado pela
+       largura. */
+    if (argc == 8) {
+        long largura, altura, max_iter;
+        if (!le_inteiro(argv[5], 1, 8192, largura) ||
+            !le_inteiro(argv[6], 1, 8192, altura) ||
+            !le_inteiro(argv[7], 1, 1000000, max_iter)) {
+            std::fprintf(stderr, "Largura e altura devem estar em [1, 8192] e "
+                                 "max_iteracoes em [1, 1000000].\n");
+            return 1;
+        }
+        LARGURA = static_cast<int>(largura);
+        ALTURA = static_cast<int>(altura);
+        MAX_ITERACOES = static_cast<int>(max_iter);
     }
 
     long num_trabalhadores;
@@ -147,7 +166,8 @@ int main(int argc, char *argv[])
         for (const Bloco &bloco : blocos)
             soma_iteracoes += bloco.soma_iteracoes;
 
-        std::printf("Imagem: %dx%d\n", LARGURA, ALTURA);
+        std::printf("Imagem: %dx%d (máx. %d iterações)\n", LARGURA, ALTURA,
+                    MAX_ITERACOES);
         std::printf("Blocos submetidos: %zu\n", quantidade_blocos);
         std::printf("Tarefas executadas: %llu\n",
                     static_cast<unsigned long long>(tarefas_executadas));
