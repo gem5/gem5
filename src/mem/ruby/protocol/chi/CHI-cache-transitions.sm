@@ -468,7 +468,7 @@ transition({SD, SD_RSD, SD_RSC, SC, SC_RSC},
   ProcessNextState;
 }
 
-transition({RSD,RUSD,RUSC,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+transition({RSD,RUSD,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_Writeback;
   Profile_Miss;
@@ -476,7 +476,9 @@ transition({RSD,RUSD,RUSC,RU}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_B
   ProcessNextState;
 }
 
-transition({RSC,I}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
+// In RSC and RUSC upstream copies are clean and won't return data on the
+// invalidating snoop, but memory is up-to-date so just write the new data
+transition({RSC,RUSC,I}, {WriteUniquePtl_PoC, WriteUniqueFull_PoC}, BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_PartialWrite;
   Profile_Miss;
@@ -1212,6 +1214,37 @@ transition(BUSY_BLKD,SendSnpStash) {
   ProcessNextState_ClearPending;
 }
 
+// Cache maintenance operations
+
+transition({I,SC,UC,SD,UD,UD_T,RU,RSC,RSD,RUSD,RUSC,
+            SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC},
+           {CleanShared,CleanInvalid}, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_CMO;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,RUSC,
+            SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC},
+           CleanShared_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_CMO_PoC;
+  Initiate_CleanShared_PoC;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,RUSC,
+            SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC},
+           CleanInvalid_PoC, BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_CMO_PoC;
+  Initiate_CleanInvalid_PoC;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 // Stalls
 
 transition({BUSY_BLKD,BUSY_INTR},
@@ -1230,7 +1263,8 @@ transition({BUSY_BLKD,BUSY_INTR},
             AtomicReturn,AtomicReturn_PoC, AtomicReturn_PoC_Alloc
             AtomicNoReturn,AtomicNoReturn_PoC, AtomicNoReturn_PoC_Alloc
             StashOnceShared,StashOnceUnique,StashShared,StashUnique,
-            StashOnceShared_PoC,StashOnceUnique_PoC,StashShared_PoC,StashUnique_PoC}) {
+            StashOnceShared_PoC,StashOnceUnique_PoC,StashShared_PoC,StashUnique_PoC,
+            CleanShared,CleanInvalid,CleanShared_PoC,CleanInvalid_PoC}) {
   StallRequest;
 }
 
@@ -1322,6 +1356,25 @@ transition(BUSY_BLKD, SendEvict, BUSY_INTR) {DestinationAvailable} {
   Pop_TriggerQueue;
   Send_Evict;
   Profile_OutgoingStart;
+  ProcessNextState_ClearPending;
+}
+
+transition(BUSY_BLKD, SendCMO, BUSY_INTR) {DestinationAvailable} {
+  Pop_TriggerQueue;
+  Send_CMO;
+  Profile_OutgoingStart;
+  ProcessNextState_ClearPending;
+}
+
+transition({BUSY_BLKD,BUSY_INTR}, CMOWriteBack, BUSY_BLKD) {
+  Pop_TriggerQueue;
+  Initiate_CMOWriteBack;
+  ProcessNextState_ClearPending;
+}
+
+transition({BUSY_BLKD,BUSY_INTR}, FinishCMO, BUSY_BLKD) {
+  Pop_TriggerQueue;
+  Finish_CMO;
   ProcessNextState_ClearPending;
 }
 

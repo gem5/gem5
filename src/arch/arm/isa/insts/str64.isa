@@ -77,6 +77,10 @@ let {{
 
             if self.micro:
                 self.instFlags.append("IsMicroop")
+                # Micro-ops of non-temporal pairs (LDNP/STNP) get the
+                # NON_TEMPORAL flag at construction time
+                self.memFlags.append(
+                    "(this->memAccessFlags & Request::NON_TEMPORAL)")
 
             if self.flavor in ("release", "relex", "relexp"):
                 self.instFlags.extend(["IsWriteBarrier",

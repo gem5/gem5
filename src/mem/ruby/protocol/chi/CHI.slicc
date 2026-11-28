@@ -1,4 +1,4 @@
-protocol "CHI" partial_func_reads;
+protocol "CHI" partial_func_reads, supports_flushes, supports_cleans;
 
 include "CHI-msg.sm";
 include "CHI-cache.sm";
